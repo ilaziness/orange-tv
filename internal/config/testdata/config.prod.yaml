@@ -1,0 +1,17 @@
+app:
+  name: prod-app
+  env: prod
+http:
+  port: 80
+log:
+  level: warn
+database:
+  driver: mysql
+  host: db.example.com
+  port: 3306
+  user: dbuser
+  database: production
+redis:
+  enabled: true
+  host: redis.example.com
+  port: 6379

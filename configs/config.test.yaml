@@ -1,0 +1,24 @@
+# Test environment configuration
+app:
+  env: test
+
+http:
+  enabled: true
+  port: 8081
+  shutdown_timeout: 5
+
+log:
+  level: warn
+  format: json
+  output: stdout
+
+# Database configuration (SQLite for tests)
+database:
+  driver: sqlite
+  database: ":memory:"
+  max_open_conns: 5
+  max_idle_conns: 2
+  conn_max_lifetime: 60
+
+redis:
+  enabled: false

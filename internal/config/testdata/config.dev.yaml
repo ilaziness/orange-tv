@@ -1,0 +1,6 @@
+app:
+  name: dev-app
+http:
+  port: 9091
+log:
+  level: debug

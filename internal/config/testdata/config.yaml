@@ -1,0 +1,16 @@
+app:
+  name: test-app
+  version: 1.0.0
+http:
+  host: 127.0.0.1
+  port: 9090
+  read_timeout: 15
+  write_timeout: 15
+log:
+  level: info
+  format: json
+database:
+  driver: sqlite
+  database: test.db
+redis:
+  enabled: false

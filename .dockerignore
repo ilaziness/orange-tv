@@ -1,0 +1,57 @@
+# 构建产物
+build/
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# 测试文件
+*_test.go
+coverage.out
+coverage.html
+
+# 文档（保留 docs/swagger/docs.go 供编译，排除其余 markdown/swagger 静态文件）
+docs/*
+!docs/swagger/
+docs/swagger/*
+!docs/swagger/docs.go
+*.md
+!README.md
+!README_CN.md
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.iml
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# 临时文件
+*.tmp
+*.log
+data/
+*.db
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# 操作系统
+.DS_Store
+Thumbs.db
+
+# 依赖缓存
+vendor/

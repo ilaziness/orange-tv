@@ -1,0 +1,30 @@
+# Production environment configuration
+app:
+  env: prod
+
+http:
+  port: 80
+  shutdown_timeout: 30
+
+log:
+  level: info
+  format: json
+  output: both
+  filename: /var/log/orange-tv/app.log
+  max_size: 100
+  max_backups: 30
+  max_age: 7
+  compress: true
+
+# Database configuration (MySQL/PostgreSQL for production)
+database:
+  driver: mysql
+  host: ${DB_HOST}
+  port: 3306
+  user: ${DB_USER}
+  password: ${DB_PASSWORD}
+  database: ${DB_NAME}
+  ssl_mode: require
+  max_open_conns: 50
+  max_idle_conns: 25
+  conn_max_lifetime: 300

@@ -1,0 +1,20 @@
+# Development environment configuration
+app:
+  env: dev
+
+http:
+  port: 8080
+  shutdown_timeout: 30
+
+log:
+  level: debug
+  format: console
+  output: stdout
+
+# Database configuration (SQLite for development)
+database:
+  driver: sqlite
+  database: ./data/app_dev.db
+  max_open_conns: 25
+  max_idle_conns: 10
+  conn_max_lifetime: 300

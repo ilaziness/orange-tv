@@ -1,0 +1,73 @@
+version: "2"
+run:
+  timeout: 5m
+  issues-exit-code: 1
+linters:
+  enable:
+    - errcheck
+    - govet
+    - gocyclo
+    - ineffassign
+    - gosec
+    - staticcheck
+    - unused
+    - misspell
+  disable:
+    - depguard
+  settings:
+    errcheck:
+      check-type-assertions: true
+      check-blank: false
+    gocyclo:
+      min-complexity: 60
+    govet:
+      enable:
+        - shadow
+    misspell:
+      locale: US
+  exclusions:
+    generated: lax
+    rules:
+      - linters:
+          - errcheck
+          - gosec
+        path: _test\.go
+      - linters:
+          - gosec
+        path: test/
+      - linters:
+          - errcheck
+          - gosec
+        path: cmd/
+      - linters:
+          - gosec
+        path: internal/errcode/code\.go
+        text: weak cryptographic primitive
+      - linters:
+          - errcheck
+          - gosec
+          - staticcheck
+        path: internal/database/gen/
+      - linters:
+          - gosec
+        path: internal/database/migrate/
+      - linters:
+          - misspell
+        path: internal/event/example_test\.go
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
