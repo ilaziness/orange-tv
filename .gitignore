@@ -50,9 +50,17 @@ logs/
 tmp/
 temp/
 
+# Local runtime data (SQLite etc.)
+data
+
 # Config files with secrets
 configs/config.local.yaml
 configs/.env.local
+
+# Accidental root-level npm install (frontend lives in web/)
+/package.json
+/package-lock.json
+/node_modules/
 
 node_modules
 skills-lock.json

@@ -112,6 +112,80 @@ type VideoSourceGroup struct {
 	Episodes []VideoSourceEpisode `json:"episodes"`
 }
 
+// LiveChannelItem is a live channel payload for admin and client.
+type LiveChannelItem struct {
+	ID          int64  `json:"id"`
+	Name        string `json:"name"`
+	Category    string `json:"category"`
+	StreamURL   string `json:"stream_url"`
+	Logo        string `json:"logo"`
+	Description string `json:"description"`
+	SortOrder   int32  `json:"sort_order"`
+	Status      int8   `json:"status,omitempty"`
+}
+
+// ThemeCurrentResponse is the merged active theme for the client.
+type ThemeCurrentResponse struct {
+	Name       string         `json:"name"`
+	Identifier string         `json:"identifier"`
+	Version    string         `json:"version"`
+	Config     map[string]any `json:"config"`
+	Templates  map[string]any `json:"templates,omitempty"`
+	CustomCSS  string         `json:"custom_css"`
+	CustomJS   string         `json:"custom_js"`
+}
+
+// ThemeListItem is an admin theme list entry.
+type ThemeListItem struct {
+	ID           int64          `json:"id"`
+	Name         string         `json:"name"`
+	Identifier   string         `json:"identifier"`
+	Version      string         `json:"version"`
+	Author       string         `json:"author"`
+	Description  string         `json:"description"`
+	PreviewImage string         `json:"preview_image"`
+	Config       map[string]any `json:"config"`
+	CustomCSS    string         `json:"custom_css"`
+	CustomJS     string         `json:"custom_js"`
+	IsDefault    int8           `json:"is_default"`
+	IsActive     int8           `json:"is_active"`
+}
+
+// CollectSourceItem is an admin collect source payload.
+// API key is never returned in list/detail responses.
+type CollectSourceItem struct {
+	ID            int64  `json:"id"`
+	Name          string `json:"name"`
+	Type          int8   `json:"type"`
+	CollectURL    string `json:"collect_url"`
+	Config        string `json:"config,omitempty"`
+	CronExpr      string `json:"cron_expr"`
+	PlaySourceID  int64  `json:"play_source_id"`
+	LastCollectAt string `json:"last_collect_at,omitempty"`
+	Status        int8   `json:"status"`
+}
+
+// CollectCategoryMapItem is an external→internal category mapping.
+type CollectCategoryMapItem struct {
+	ID               int64  `json:"id"`
+	SourceID         int64  `json:"source_id"`
+	ExternalCategory string `json:"external_category"`
+	CategoryID       int64  `json:"category_id"`
+}
+
+// CollectLogItem is one collect run log entry.
+type CollectLogItem struct {
+	ID           int64  `json:"id"`
+	SourceID     int64  `json:"source_id"`
+	Status       int8   `json:"status"`
+	TotalCount   int32  `json:"total_count"`
+	SuccessCount int32  `json:"success_count"`
+	FailedCount  int32  `json:"failed_count"`
+	ErrorMessage string `json:"error_message,omitempty"`
+	DurationMs   int32  `json:"duration_ms"`
+	CreatedAt    string `json:"created_at,omitempty"`
+}
+
 // VideoDetailResponse is a full video detail payload.
 type VideoDetailResponse struct {
 	ID            int64              `json:"id"`

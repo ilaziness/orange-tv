@@ -6,12 +6,17 @@ import {
   apiPost,
   apiPut,
   type Category,
+  type CollectCategoryMap,
+  type CollectLog,
+  type CollectSource,
+  type LiveChannel,
   type LoginResult,
   type NamedItem,
   type PageData,
   type PlayEpisode,
   type PlaySource,
   type AdminProfile,
+  type ThemeItem,
   type VideoDetail,
   type VideoListItem,
 } from '@orange-tv/shared'
@@ -102,6 +107,41 @@ export const adminApi = {
   createEpisode: (body: unknown) =>
     withAuth((token) => apiPost(ADMIN_API_BASE, '/play-episodes', body, { token })),
   deleteEpisode: (id: number) => withAuth((token) => apiDelete(ADMIN_API_BASE, `/play-episodes/${id}`, { token })),
+
+  listLive: (query?: Record<string, string | number | undefined>) =>
+    withAuth((token) => apiGet<PageData<LiveChannel>>(ADMIN_API_BASE, '/live', { token, query })),
+  createLive: (body: unknown) =>
+    withAuth((token) => apiPost<LiveChannel>(ADMIN_API_BASE, '/live', body, { token })),
+  updateLive: (id: number, body: unknown) =>
+    withAuth((token) => apiPut<LiveChannel>(ADMIN_API_BASE, `/live/${id}`, body, { token })),
+  deleteLive: (id: number) => withAuth((token) => apiDelete(ADMIN_API_BASE, `/live/${id}`, { token })),
+
+  listCollectSources: () =>
+    withAuth((token) => apiGet<PageData<CollectSource>>(ADMIN_API_BASE, '/collect-sources', { token })),
+  createCollectSource: (body: unknown) =>
+    withAuth((token) => apiPost<CollectSource>(ADMIN_API_BASE, '/collect-sources', body, { token })),
+  updateCollectSource: (id: number, body: unknown) =>
+    withAuth((token) => apiPut<CollectSource>(ADMIN_API_BASE, `/collect-sources/${id}`, body, { token })),
+  deleteCollectSource: (id: number) =>
+    withAuth((token) => apiDelete(ADMIN_API_BASE, `/collect-sources/${id}`, { token })),
+  getCollectCategories: (id: number) =>
+    withAuth((token) => apiGet<CollectCategoryMap[]>(ADMIN_API_BASE, `/collect-sources/${id}/categories`, { token })),
+  setCollectCategories: (id: number, body: unknown) =>
+    withAuth((token) =>
+      apiPost<CollectCategoryMap[]>(ADMIN_API_BASE, `/collect-sources/${id}/categories`, body, { token }),
+    ),
+  startCollect: (sourceId: number) =>
+    withAuth((token) => apiPost(ADMIN_API_BASE, `/collect/${sourceId}/start`, null, { token })),
+  stopCollect: (sourceId: number) =>
+    withAuth((token) => apiPost(ADMIN_API_BASE, `/collect/${sourceId}/stop`, null, { token })),
+  listCollectLogs: (query?: Record<string, string | number | undefined>) =>
+    withAuth((token) => apiGet<PageData<CollectLog>>(ADMIN_API_BASE, '/collect/logs', { token, query })),
+
+  listThemes: () => withAuth((token) => apiGet<ThemeItem[]>(ADMIN_API_BASE, '/themes', { token })),
+  updateTheme: (id: number, body: unknown) =>
+    withAuth((token) => apiPut<ThemeItem>(ADMIN_API_BASE, `/themes/${id}`, body, { token })),
+  activateTheme: (id: number) =>
+    withAuth((token) => apiPost(ADMIN_API_BASE, `/themes/${id}/activate`, null, { token })),
 }
 
 export function errorMessage(err: unknown): string {

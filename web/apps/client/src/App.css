@@ -168,3 +168,11 @@ button.primary { background: #f97316; border-color: #f97316; color: #fff; }
   .detail { grid-template-columns: 1fr; }
   .nav { flex-wrap: wrap; }
 }
+
+.banner { display: grid; grid-template-columns: 1.2fr 1fr; gap: 1rem; align-items: center; }
+.banner-cover { min-height: 220px; border-radius: 16px; background: #1f2937 center/cover no-repeat; }
+.banner-body h1 { margin: 0 0 0.5rem; }
+.player-page .video-js { width: 100%; border-radius: 12px; overflow: hidden; }
+.episode.active, .live-card.active { outline: 2px solid #f97316; }
+a.episode { display: inline-block; }
+.stack { display: flex; flex-direction: column; gap: 1rem; }

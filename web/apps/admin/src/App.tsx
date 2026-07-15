@@ -84,10 +84,17 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
       return [
         { to: '/content/categories', label: '分类管理' },
         { to: '/content/videos', label: '影视管理' },
+        { to: '/content/live', label: '直播管理' },
+        { to: '/content/collect', label: '数据采集' },
         { to: '/content/directors', label: '导演管理' },
         { to: '/content/actors', label: '演员管理' },
         { to: '/content/tags', label: '标签管理' },
         { to: '/content/play-sources', label: '播放源管理' },
+      ]
+    }
+    if (location.pathname.startsWith('/system')) {
+      return [
+        { to: '/system/theme', label: '主题管理' },
       ]
     }
     return []
@@ -100,6 +107,7 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
         <nav className="topnav">
           <Link className={location.pathname === '/' ? 'active' : ''} to="/">首页</Link>
           <Link className={location.pathname.startsWith('/content') ? 'active' : ''} to="/content/categories">内容管理</Link>
+          <Link className={location.pathname.startsWith('/system') ? 'active' : ''} to="/system/theme">系统设置</Link>
         </nav>
         <div className="userbox">
           <span>{profile?.username} ({profile?.role})</span>
@@ -722,6 +730,407 @@ function VideoEditPage() {
   )
 }
 
+
+function LivePage() {
+  const [list, setList] = useState<import('@orange-tv/shared').LiveChannel[]>([])
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [form, setForm] = useState({ name: '', category: '', stream_url: '', logo: '', description: '', sort_order: 0, status: 1 })
+  const [editId, setEditId] = useState(0)
+
+  async function load() {
+    setLoading(true)
+    setError('')
+    try {
+      const res = await adminApi.listLive({ page: 1, page_size: 100 })
+      setList(res.data.list || [])
+    } catch (err) {
+      setError(errorMessage(err))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { void load() }, [])
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError('')
+    try {
+      if (editId) await adminApi.updateLive(editId, form)
+      else await adminApi.createLive(form)
+      setForm({ name: '', category: '', stream_url: '', logo: '', description: '', sort_order: 0, status: 1 })
+      setEditId(0)
+      await load()
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+  }
+
+  async function onDelete(id: number) {
+    if (!confirm('确认删除该直播频道？')) return
+    try {
+      await adminApi.deleteLive(id)
+      await load()
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+  }
+
+  function startEdit(item: import('@orange-tv/shared').LiveChannel) {
+    setEditId(item.id)
+    setForm({
+      name: item.name,
+      category: item.category || '',
+      stream_url: item.stream_url,
+      logo: item.logo || '',
+      description: item.description || '',
+      sort_order: item.sort_order || 0,
+      status: item.status ?? 1,
+    })
+  }
+
+  return (
+    <div className="page-card stack">
+      <div className="page-header"><h1>直播管理</h1></div>
+      {error ? <p className="error">{error}</p> : null}
+      <form className="stack" onSubmit={onSubmit}>
+        <div className="toolbar">
+          <input placeholder="频道名称" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+          <input placeholder="分类" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} />
+          <input placeholder="直播流地址" value={form.stream_url} onChange={(e) => setForm({ ...form, stream_url: e.target.value })} required style={{ minWidth: 280 }} />
+        </div>
+        <div className="toolbar">
+          <input placeholder="Logo URL" value={form.logo} onChange={(e) => setForm({ ...form, logo: e.target.value })} />
+          <input placeholder="简介" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          <input type="number" placeholder="排序" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) })} />
+          <select value={form.status} onChange={(e) => setForm({ ...form, status: Number(e.target.value) })}>
+            <option value={1}>启用</option>
+            <option value={0}>禁用</option>
+          </select>
+          <button className="primary" type="submit">{editId ? '保存修改' : '新增频道'}</button>
+          {editId ? <button type="button" onClick={() => { setEditId(0); setForm({ name: '', category: '', stream_url: '', logo: '', description: '', sort_order: 0, status: 1 }) }}>取消</button> : null}
+          <button type="button" onClick={() => void load()} disabled={loading}>刷新</button>
+        </div>
+      </form>
+      <table className="table">
+        <thead>
+          <tr>
+            <th>ID</th><th>名称</th><th>分类</th><th>状态</th><th>排序</th><th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {list.map((item) => (
+            <tr key={item.id}>
+              <td>{item.id}</td>
+              <td>
+                <strong>{item.name}</strong>
+                <div className="muted" style={{ maxWidth: 360, overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.stream_url}</div>
+              </td>
+              <td>{item.category || '-'}</td>
+              <td><span className={`badge ${item.status === 1 ? 'ok' : 'off'}`}>{item.status === 1 ? '启用' : '禁用'}</span></td>
+              <td>{item.sort_order}</td>
+              <td className="actions">
+                <button onClick={() => startEdit(item)}>编辑</button>
+                <button className="danger" onClick={() => void onDelete(item.id)}>删除</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {!list.length ? <p className="muted">暂无直播频道</p> : null}
+    </div>
+  )
+}
+
+
+function CollectPage() {
+  const [sources, setSources] = useState<import('@orange-tv/shared').CollectSource[]>([])
+  const [playSources, setPlaySources] = useState<PlaySource[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [logs, setLogs] = useState<import('@orange-tv/shared').CollectLog[]>([])
+  const [maps, setMaps] = useState<import('@orange-tv/shared').CollectCategoryMap[]>([])
+  const [error, setError] = useState('')
+  const [selectedId, setSelectedId] = useState(0)
+  const [form, setForm] = useState({
+    name: '', type: 2, collect_url: '', api_key: '', cron_expr: '', play_source_id: 0, status: 1, config: '',
+  })
+  const [mapText, setMapText] = useState('[]')
+
+  async function load() {
+    setError('')
+    try {
+      const [s, p, c, l] = await Promise.all([
+        adminApi.listCollectSources(),
+        adminApi.listPlaySources(),
+        adminApi.listCategories(),
+        adminApi.listCollectLogs({ page: 1, page_size: 30 }),
+      ])
+      setSources(s.data.list || [])
+      setPlaySources(p.data.list || [])
+      setCategories(c.data || [])
+      setLogs(l.data.list || [])
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+  }
+
+  useEffect(() => { void load() }, [])
+
+  const flatCats = flattenCategories(categories)
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    try {
+      const body = { ...form, play_source_id: Number(form.play_source_id), type: Number(form.type), status: Number(form.status) }
+      if (selectedId) await adminApi.updateCollectSource(selectedId, body)
+      else await adminApi.createCollectSource(body)
+      setSelectedId(0)
+      setForm({ name: '', type: 2, collect_url: '', api_key: '', cron_expr: '', play_source_id: 0, status: 1, config: '' })
+      await load()
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+  }
+
+  async function editSource(item: import('@orange-tv/shared').CollectSource) {
+    setSelectedId(item.id)
+    setForm({
+      name: item.name,
+      type: item.type,
+      collect_url: item.collect_url,
+      api_key: '',
+      cron_expr: item.cron_expr || '',
+      play_source_id: item.play_source_id,
+      status: item.status,
+      config: item.config || '',
+    })
+    try {
+      const res = await adminApi.getCollectCategories(item.id)
+      setMaps(res.data || [])
+      setMapText(JSON.stringify((res.data || []).map((m) => ({ external_category: m.external_category, category_id: m.category_id })), null, 2))
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+  }
+
+  async function saveMaps() {
+    if (!selectedId) return
+    try {
+      const items = JSON.parse(mapText || '[]')
+      const res = await adminApi.setCollectCategories(selectedId, { items })
+      setMaps(res.data || [])
+      setMapText(JSON.stringify((res.data || []).map((m) => ({
+        external_category: m.external_category,
+        category_id: m.category_id,
+      })), null, 2))
+      await load()
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+  }
+
+  async function start(id: number) {
+    try {
+      await adminApi.startCollect(id)
+      await load()
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+  }
+
+  async function stop(id: number) {
+    try {
+      await adminApi.stopCollect(id)
+      await load()
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+  }
+
+  async function remove(id: number) {
+    if (!confirm('确认删除采集源？')) return
+    try {
+      await adminApi.deleteCollectSource(id)
+      await load()
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+  }
+
+  return (
+    <div className="page-card stack">
+      <div className="page-header"><h1>数据采集</h1></div>
+      <p className="muted">支持默认 JSON 与苹果 CMS；手动触发异步执行，可配置 cron 定时采集。请先配置分类映射并绑定播放源。</p>
+      {error ? <p className="error">{error}</p> : null}
+      <form className="stack" onSubmit={onSubmit}>
+        <div className="toolbar">
+          <input placeholder="源名称" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+          <select value={form.type} onChange={(e) => setForm({ ...form, type: Number(e.target.value) })}>
+            <option value={1}>默认格式</option>
+            <option value={2}>苹果CMS</option>
+          </select>
+          <input placeholder="采集地址" style={{ minWidth: 280 }} value={form.collect_url} onChange={(e) => setForm({ ...form, collect_url: e.target.value })} required />
+        </div>
+        <div className="toolbar">
+          <input placeholder="API Key" value={form.api_key} onChange={(e) => setForm({ ...form, api_key: e.target.value })} />
+          <input placeholder="cron 表达式(空=不定时)" value={form.cron_expr} onChange={(e) => setForm({ ...form, cron_expr: e.target.value })} />
+          <select value={form.play_source_id} onChange={(e) => setForm({ ...form, play_source_id: Number(e.target.value) })} required>
+            <option value={0}>绑定播放源</option>
+            {playSources.map((ps) => <option key={ps.id} value={ps.id}>{ps.name}</option>)}
+          </select>
+          <select value={form.status} onChange={(e) => setForm({ ...form, status: Number(e.target.value) })}>
+            <option value={1}>启用</option>
+            <option value={0}>禁用</option>
+          </select>
+          <button className="primary" type="submit">{selectedId ? '保存源' : '新增源'}</button>
+          <button type="button" onClick={() => void load()}>刷新</button>
+        </div>
+      </form>
+
+      <table className="table">
+        <thead>
+          <tr><th>ID</th><th>名称</th><th>类型</th><th>状态</th><th>最后采集</th><th>操作</th></tr>
+        </thead>
+        <tbody>
+          {sources.map((s) => (
+            <tr key={s.id}>
+              <td>{s.id}</td>
+              <td>
+                <strong>{s.name}</strong>
+                <div className="muted" style={{ maxWidth: 320, overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.collect_url}</div>
+              </td>
+              <td>{s.type === 2 ? '苹果CMS' : '默认'}</td>
+              <td><span className={`badge ${s.status === 1 ? 'ok' : 'off'}`}>{s.status === 1 ? '启用' : '禁用'}</span></td>
+              <td className="muted">{s.last_collect_at || '-'}</td>
+              <td className="actions">
+                <button onClick={() => void editSource(s)}>编辑/映射</button>
+                <button className="primary" onClick={() => void start(s.id)}>开始</button>
+                <button onClick={() => void stop(s.id)}>停止</button>
+                <button className="danger" onClick={() => void remove(s.id)}>删除</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {selectedId ? (
+        <div className="stack">
+          <h3>分类映射（JSON 数组）— 源 #{selectedId}</h3>
+          <p className="muted">示例：{`[{"external_category":"1","category_id":11}]`}。外部分类键对应苹果 type_id 或默认 category 字段。</p>
+          <div className="muted">可用系统分类：{flatCats.map((c) => `${c.id}:${c.name}`).join('， ') || '暂无'}</div>
+          <textarea rows={8} value={mapText} onChange={(e) => setMapText(e.target.value)} style={{ width: '100%' }} />
+          <button className="primary" onClick={() => void saveMaps()}>保存映射</button>
+          {maps.length ? <div className="muted">当前映射 {maps.length} 条</div> : null}
+        </div>
+      ) : null}
+
+      <div className="stack">
+        <h3>采集日志</h3>
+        <table className="table">
+          <thead>
+            <tr><th>ID</th><th>源</th><th>状态</th><th>总数</th><th>成功</th><th>失败</th><th>耗时ms</th><th>时间</th></tr>
+          </thead>
+          <tbody>
+            {logs.map((l) => (
+              <tr key={l.id}>
+                <td>{l.id}</td>
+                <td>{l.source_id}</td>
+                <td>{l.status}</td>
+                <td>{l.total_count}</td>
+                <td>{l.success_count}</td>
+                <td>{l.failed_count}</td>
+                <td>{l.duration_ms}</td>
+                <td className="muted">{l.created_at || '-'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+function ThemesPage() {
+  const [list, setList] = useState<import('@orange-tv/shared').ThemeItem[]>([])
+  const [error, setError] = useState('')
+  const [selected, setSelected] = useState<import('@orange-tv/shared').ThemeItem | null>(null)
+  const [configText, setConfigText] = useState('{}')
+  const [customCss, setCustomCss] = useState('')
+  const [customJs, setCustomJs] = useState('')
+
+  async function load() {
+    setError('')
+    try {
+      const res = await adminApi.listThemes()
+      setList(res.data || [])
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+  }
+
+  useEffect(() => { void load() }, [])
+
+  function pick(item: import('@orange-tv/shared').ThemeItem) {
+    setSelected(item)
+    setConfigText(JSON.stringify(item.config || {}, null, 2))
+    setCustomCss(item.custom_css || '')
+    setCustomJs(item.custom_js || '')
+  }
+
+  async function save() {
+    if (!selected) return
+    try {
+      const config = JSON.parse(configText || '{}')
+      await adminApi.updateTheme(selected.id, { config, custom_css: customCss, custom_js: customJs })
+      await load()
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+  }
+
+  async function activate(id: number) {
+    try {
+      await adminApi.activateTheme(id)
+      await load()
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+  }
+
+  return (
+    <div className="page-card stack">
+      <div className="page-header"><h1>主题管理</h1></div>
+      <p className="muted">最小可用：切换激活主题、覆盖 config / custom_css / custom_js。上传第三方主题包不在本阶段。</p>
+      {error ? <p className="error">{error}</p> : null}
+      <div className="tree">
+        {list.map((item) => (
+          <div key={item.id} className="tree-item">
+            <div>
+              <strong>{item.name}</strong>
+              <div className="muted">{item.identifier} · v{item.version}</div>
+            </div>
+            <div className="actions">
+              <span className={`badge ${item.is_active ? 'ok' : 'off'}`}>{item.is_active ? '使用中' : '未激活'}</span>
+              <button onClick={() => pick(item)}>编辑</button>
+              {!item.is_active ? <button className="primary" onClick={() => void activate(item.id)}>激活</button> : null}
+            </div>
+          </div>
+        ))}
+      </div>
+      {selected ? (
+        <div className="stack">
+          <h3>编辑：{selected.name}</h3>
+          <label>Config JSON<textarea rows={8} value={configText} onChange={(e) => setConfigText(e.target.value)} style={{ width: '100%' }} /></label>
+          <label>Custom CSS<textarea rows={4} value={customCss} onChange={(e) => setCustomCss(e.target.value)} style={{ width: '100%' }} /></label>
+          <label>Custom JS<textarea rows={3} value={customJs} onChange={(e) => setCustomJs(e.target.value)} style={{ width: '100%' }} /></label>
+          <button className="primary" onClick={() => void save()}>保存配置</button>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -746,6 +1155,9 @@ export default function App() {
                   <NamedResourcePage title="标签管理" list={adminApi.listTags} create={adminApi.createTag} remove={adminApi.deleteTag} />
                 } />
                 <Route path="/content/play-sources" element={<PlaySourcesPage />} />
+                <Route path="/content/live" element={<LivePage />} />
+                <Route path="/content/collect" element={<CollectPage />} />
+                <Route path="/system/theme" element={<ThemesPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </AdminLayout>

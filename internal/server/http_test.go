@@ -38,8 +38,13 @@ func TestNewHTTPServer_registersRoutes(t *testing.T) {
 	handlers.AdminVideo = b.AdminVideo
 	handlers.AdminMetadata = b.AdminMetadata
 	handlers.AdminPlay = b.AdminPlay
+	handlers.AdminLive = b.AdminLive
+	handlers.AdminCollect = b.AdminCollect
+	handlers.AdminTheme = b.AdminTheme
 	handlers.ClientCategory = b.ClientCategory
 	handlers.ClientVideo = b.ClientVideo
+	handlers.ClientLive = b.ClientLive
+	handlers.ClientTheme = b.ClientTheme
 
 	srv, err := NewHTTPServer(cfg, logger, handlers, nil, nil)
 	require.NoError(t, err)

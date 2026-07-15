@@ -20,6 +20,7 @@ orange-tv/
 │   ├── app/                         # 应用组装与生命周期（手动 DI 唯一入口）
 │   ├── auth/                        # JWT 认证与令牌管理
 │   ├── cache/                       # 缓存抽象与实现（内存、Redis、多级）
+│   ├── collect/                     # 影视采集引擎（默认 JSON / 苹果 CMS 解析与入库）
 │   ├── config/                      # 配置结构体、加载与校验
 │   ├── constant/                    # 应用级常量
 │   ├── crypto/                      # 密码哈希等加密工具

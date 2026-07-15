@@ -21,8 +21,13 @@ type BusinessHandlers struct {
 	AdminVideo     *adminhandler.VideoHandler
 	AdminMetadata  *adminhandler.MetadataHandler
 	AdminPlay      *adminhandler.PlayHandler
+	AdminLive      *adminhandler.LiveHandler
+	AdminCollect   *adminhandler.CollectHandler
+	AdminTheme     *adminhandler.ThemeHandler
 	ClientCategory *clienthandler.CategoryHandler
 	ClientVideo    *clienthandler.VideoHandler
+	ClientLive     *clienthandler.LiveHandler
+	ClientTheme    *clienthandler.ThemeHandler
 }
 
 type authSvc struct{}
@@ -139,6 +144,70 @@ func (s clientVideoSvc) Search(ctx context.Context, req *clientdto.SearchRequest
 func (s clientVideoSvc) Get(ctx context.Context, id int64) (*shareddto.VideoDetailResponse, error) {
 	return &shareddto.VideoDetailResponse{ID: id}, nil
 }
+func (s clientVideoSvc) Related(ctx context.Context, id int64, limit int) ([]shareddto.VideoListItem, error) {
+	return []shareddto.VideoListItem{}, nil
+}
+
+type adminLiveSvc struct{}
+
+func (s adminLiveSvc) List(ctx context.Context, req *admindto.LiveListRequest) ([]shareddto.LiveChannelItem, int, error) {
+	return []shareddto.LiveChannelItem{}, 0, nil
+}
+func (s adminLiveSvc) Create(ctx context.Context, req *admindto.CreateLiveRequest) (*shareddto.LiveChannelItem, error) {
+	return &shareddto.LiveChannelItem{}, nil
+}
+func (s adminLiveSvc) Update(ctx context.Context, id int64, req *admindto.UpdateLiveRequest) (*shareddto.LiveChannelItem, error) {
+	return &shareddto.LiveChannelItem{ID: id}, nil
+}
+func (s adminLiveSvc) Delete(ctx context.Context, id int64) error { return nil }
+
+type clientLiveSvc struct{}
+
+func (s clientLiveSvc) List(ctx context.Context, req *clientdto.LiveListRequest) ([]shareddto.LiveChannelItem, int, error) {
+	return []shareddto.LiveChannelItem{}, 0, nil
+}
+
+type adminCollectSvc struct{}
+
+func (s adminCollectSvc) ListSources(ctx context.Context, req *admindto.CollectSourceListRequest) ([]shareddto.CollectSourceItem, int, error) {
+	return nil, 0, nil
+}
+func (s adminCollectSvc) CreateSource(ctx context.Context, req *admindto.CreateCollectSourceRequest) (*shareddto.CollectSourceItem, error) {
+	return &shareddto.CollectSourceItem{}, nil
+}
+func (s adminCollectSvc) UpdateSource(ctx context.Context, id int64, req *admindto.UpdateCollectSourceRequest) (*shareddto.CollectSourceItem, error) {
+	return &shareddto.CollectSourceItem{ID: id}, nil
+}
+func (s adminCollectSvc) DeleteSource(ctx context.Context, id int64) error { return nil }
+func (s adminCollectSvc) ListCategories(ctx context.Context, sourceID int64) ([]shareddto.CollectCategoryMapItem, error) {
+	return nil, nil
+}
+func (s adminCollectSvc) SetCategories(ctx context.Context, sourceID int64, req *admindto.SetCollectCategoriesRequest) ([]shareddto.CollectCategoryMapItem, error) {
+	return nil, nil
+}
+func (s adminCollectSvc) Start(ctx context.Context, sourceID int64) error { return nil }
+func (s adminCollectSvc) Stop(ctx context.Context, sourceID int64) error  { return nil }
+func (s adminCollectSvc) ListLogs(ctx context.Context, req *admindto.CollectLogListRequest) ([]shareddto.CollectLogItem, int, error) {
+	return nil, 0, nil
+}
+func (s adminCollectSvc) ReloadScheduler(ctx context.Context) error { return nil }
+func (s adminCollectSvc) StartScheduler(ctx context.Context) error  { return nil }
+func (s adminCollectSvc) StopScheduler(ctx context.Context) error   { return nil }
+
+type adminThemeSvc struct{}
+
+func (s adminThemeSvc) List(ctx context.Context) ([]shareddto.ThemeListItem, error) { return nil, nil }
+func (s adminThemeSvc) Update(ctx context.Context, id int64, req *admindto.UpdateThemeRequest) (*shareddto.ThemeListItem, error) {
+	return &shareddto.ThemeListItem{ID: id}, nil
+}
+func (s adminThemeSvc) Activate(ctx context.Context, id int64) error { return nil }
+func (s adminThemeSvc) EnsureDefaultTheme(ctx context.Context) error { return nil }
+
+type clientThemeSvc struct{}
+
+func (s clientThemeSvc) Current(ctx context.Context) (*shareddto.ThemeCurrentResponse, error) {
+	return &shareddto.ThemeCurrentResponse{Name: "默认主题", Identifier: "default", Config: map[string]any{}}, nil
+}
 
 // NewBusinessHandlers builds no-op business handlers for tests.
 func NewBusinessHandlers() BusinessHandlers {
@@ -150,7 +219,12 @@ func NewBusinessHandlers() BusinessHandlers {
 		AdminVideo:     adminhandler.NewVideoHandler(adminVideoSvc{}),
 		AdminMetadata:  adminhandler.NewMetadataHandler(adminMetadataSvc{}),
 		AdminPlay:      adminhandler.NewPlayHandler(adminPlaySvc{}),
+		AdminLive:      adminhandler.NewLiveHandler(adminLiveSvc{}),
+		AdminCollect:   adminhandler.NewCollectHandler(adminCollectSvc{}),
+		AdminTheme:     adminhandler.NewThemeHandler(adminThemeSvc{}),
 		ClientCategory: clienthandler.NewCategoryHandler(clientCategorySvc{}),
 		ClientVideo:    clienthandler.NewVideoHandler(clientVideoSvc{}),
+		ClientLive:     clienthandler.NewLiveHandler(clientLiveSvc{}),
+		ClientTheme:    clienthandler.NewThemeHandler(clientThemeSvc{}),
 	}
 }

@@ -17,6 +17,7 @@ type VideoService interface {
 	List(ctx context.Context, req *clientdto.VideoListRequest) ([]shareddto.VideoListItem, int, error)
 	Search(ctx context.Context, req *clientdto.SearchRequest) ([]shareddto.VideoListItem, int, error)
 	Get(ctx context.Context, id int64) (*shareddto.VideoDetailResponse, error)
+	Related(ctx context.Context, id int64, limit int) ([]shareddto.VideoListItem, error)
 }
 
 type videoService struct {
@@ -54,6 +55,11 @@ func (s *videoService) List(ctx context.Context, req *clientdto.VideoListRequest
 func (s *videoService) Search(ctx context.Context, req *clientdto.SearchRequest) ([]shareddto.VideoListItem, int, error) {
 	items, total, err := s.videoRepo.List(ctx, repository.VideoListFilter{
 		Keyword:    strings.TrimSpace(req.Keyword),
+		CategoryID: req.CategoryID,
+		Year:       req.Year,
+		Region:     strings.TrimSpace(req.Region),
+		Language:   strings.TrimSpace(req.Language),
+		Sort:       req.Sort,
 		OnlyOnline: true,
 		Offset:     req.GetOffset(),
 		Limit:      req.GetLimit(),
@@ -62,6 +68,70 @@ func (s *videoService) Search(ctx context.Context, req *clientdto.SearchRequest)
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return mapVideoList(items), total, nil
+}
+
+func (s *videoService) Related(ctx context.Context, id int64, limit int) ([]shareddto.VideoListItem, error) {
+	if limit <= 0 {
+		limit = 12
+	}
+	if limit > 50 {
+		limit = 50
+	}
+	video, err := s.videoRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	if video == nil || video.PublishStatus != constant.PublishStatusOnline {
+		return nil, errcode.VideoNotFound
+	}
+	// practical related: same category first (skip if category unset), then same region fill
+	out := make([]model.Videos, 0, limit)
+	seen := map[int64]bool{id: true}
+	if video.CategoryID > 0 {
+		candidates, _, err := s.videoRepo.List(ctx, repository.VideoListFilter{
+			CategoryID: video.CategoryID,
+			Sort:       "rating_desc",
+			OnlyOnline: true,
+			Offset:     0,
+			Limit:      limit + 5,
+		})
+		if err != nil {
+			return nil, errcode.Wrap(errcode.DatabaseError, err)
+		}
+		for _, it := range candidates {
+			if seen[it.ID] {
+				continue
+			}
+			seen[it.ID] = true
+			out = append(out, it)
+			if len(out) >= limit {
+				break
+			}
+		}
+	}
+	if len(out) < limit && strings.TrimSpace(video.Region) != "" {
+		more, _, err := s.videoRepo.List(ctx, repository.VideoListFilter{
+			Region:     strings.TrimSpace(video.Region),
+			Sort:       "view_count_desc",
+			OnlyOnline: true,
+			Offset:     0,
+			Limit:      limit + 5,
+		})
+		if err != nil {
+			return nil, errcode.Wrap(errcode.DatabaseError, err)
+		}
+		for _, it := range more {
+			if seen[it.ID] {
+				continue
+			}
+			seen[it.ID] = true
+			out = append(out, it)
+			if len(out) >= limit {
+				break
+			}
+		}
+	}
+	return mapVideoList(out), nil
 }
 
 func (s *videoService) Get(ctx context.Context, id int64) (*shareddto.VideoDetailResponse, error) {

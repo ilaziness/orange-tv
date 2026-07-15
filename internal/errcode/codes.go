@@ -52,6 +52,25 @@ var (
 	PlayEpisodeNotFound  = &Code{4000060, "剧集不存在", 404, nil}
 	PlayEpisodeDuplicate = &Code{4000061, "同一影视与播放源下集数已存在", 409, nil}
 
+	// 直播 (40007xx)
+	LiveChannelNotFound = &Code{4000070, "直播频道不存在", 404, nil}
+
+	// 采集 (40008xx)
+	CollectSourceNotFound   = &Code{4000080, "采集源不存在", 404, nil}
+	CollectSourceDisabled   = &Code{4000081, "采集源已禁用", 400, nil}
+	CollectAlreadyRunning   = &Code{4000082, "该采集源正在执行中", 409, nil}
+	CollectNotRunning       = &Code{4000083, "该采集源未在执行", 400, nil}
+	CollectInvalidCron      = &Code{4000084, "定时采集 cron 表达式无效", 400, nil}
+	CollectFetchFailed      = &Code{4000085, "采集拉取失败", 502, nil}
+	CollectParseFailed      = &Code{4000086, "采集数据解析失败", 422, nil}
+	CollectCategoryMapEmpty = &Code{4000087, "请先配置分类映射", 400, nil}
+
+	// 主题 (40009xx)
+	ThemeNotFound      = &Code{4000090, "主题不存在", 404, nil}
+	ThemeIdentifierDup = &Code{4000091, "主题标识已存在", 409, nil}
+	ThemeCannotDelete  = &Code{4000092, "当前激活或默认主题不可删除", 409, nil}
+	ThemeNoActive      = &Code{4000093, "未配置激活主题", 404, nil}
+
 	// 系统模块 (900xxxx)
 	InternalError        = &Code{9000001, "服务器内部错误", 500, nil}
 	DatabaseError        = &Code{9000002, "数据库错误", 500, nil}

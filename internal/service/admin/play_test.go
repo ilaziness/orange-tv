@@ -118,6 +118,8 @@ func (f *fakePlayRepo) SoftDeleteEpisode(ctx context.Context, id int64) error {
 	return nil
 }
 
+func (f *fakePlayRepo) WithTx(tx bun.Tx) repository.PlayRepository { return f }
+
 type videoRepoStub struct {
 	videos map[int64]*model.Videos
 }

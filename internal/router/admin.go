@@ -22,7 +22,7 @@ func registerAdminRoutes(engine *gin.Engine, h *Handlers) {
 	registerAdminProtectedAuthRoutes(v1, h)
 	registerAdminContentRoutes(v1, h)
 	registerAdminUserRoutes(v1, h.Stub)
-	registerAdminSystemRoutes(v1, h.Stub)
+	registerAdminSystemRoutes(v1, h)
 }
 
 func registerAdminProtectedAuthRoutes(v1 *gin.RouterGroup, h *Handlers) {
@@ -71,21 +71,21 @@ func registerAdminContentRoutes(v1 *gin.RouterGroup, h *Handlers) {
 	v1.PUT("/tags/:id", h.AdminMetadata.UpdateTag)
 	v1.DELETE("/tags/:id", h.AdminMetadata.DeleteTag)
 
-	// live / collect remain stubs for later phases
-	v1.GET("/live", h.Stub.EmptyList)
-	v1.POST("/live", h.Stub.NotImplemented)
-	v1.PUT("/live/:id", h.Stub.NotImplemented)
-	v1.DELETE("/live/:id", h.Stub.NotImplemented)
+	// live
+	v1.GET("/live", h.AdminLive.List)
+	v1.POST("/live", h.AdminLive.Create)
+	v1.PUT("/live/:id", h.AdminLive.Update)
+	v1.DELETE("/live/:id", h.AdminLive.Delete)
 
-	v1.GET("/collect-sources", h.Stub.EmptyList)
-	v1.POST("/collect-sources", h.Stub.NotImplemented)
-	v1.PUT("/collect-sources/:id", h.Stub.NotImplemented)
-	v1.DELETE("/collect-sources/:id", h.Stub.NotImplemented)
-	v1.GET("/collect-sources/:id/categories", h.Stub.EmptyArray)
-	v1.POST("/collect-sources/:id/categories", h.Stub.NotImplemented)
-	v1.POST("/collect/:source_id/start", h.Stub.NotImplemented)
-	v1.POST("/collect/:source_id/stop", h.Stub.NotImplemented)
-	v1.GET("/collect/logs", h.Stub.EmptyList)
+	v1.GET("/collect-sources", h.AdminCollect.ListSources)
+	v1.POST("/collect-sources", h.AdminCollect.CreateSource)
+	v1.PUT("/collect-sources/:id", h.AdminCollect.UpdateSource)
+	v1.DELETE("/collect-sources/:id", h.AdminCollect.DeleteSource)
+	v1.GET("/collect-sources/:id/categories", h.AdminCollect.ListCategories)
+	v1.POST("/collect-sources/:id/categories", h.AdminCollect.SetCategories)
+	v1.POST("/collect/:source_id/start", h.AdminCollect.Start)
+	v1.POST("/collect/:source_id/stop", h.AdminCollect.Stop)
+	v1.GET("/collect/logs", h.AdminCollect.ListLogs)
 }
 
 func registerAdminUserRoutes(v1 *gin.RouterGroup, stub *httphandler.StubHandler) {
@@ -105,13 +105,13 @@ func registerAdminUserRoutes(v1 *gin.RouterGroup, stub *httphandler.StubHandler)
 	v1.GET("/users/:id/login-logs", stub.EmptyList)
 }
 
-func registerAdminSystemRoutes(v1 *gin.RouterGroup, stub *httphandler.StubHandler) {
-	v1.GET("/settings", stub.NotImplemented)
-	v1.PUT("/settings", stub.NotImplemented)
+func registerAdminSystemRoutes(v1 *gin.RouterGroup, h *Handlers) {
+	v1.GET("/settings", h.Stub.NotImplemented)
+	v1.PUT("/settings", h.Stub.NotImplemented)
 
-	v1.GET("/themes", stub.EmptyList)
-	v1.POST("/themes", stub.NotImplemented)
-	v1.PUT("/themes/:id", stub.NotImplemented)
-	v1.DELETE("/themes/:id", stub.NotImplemented)
-	v1.POST("/themes/:id/activate", stub.NotImplemented)
+	v1.GET("/themes", h.AdminTheme.List)
+	v1.POST("/themes", h.Stub.NotImplemented) // theme upload later
+	v1.PUT("/themes/:id", h.AdminTheme.Update)
+	v1.DELETE("/themes/:id", h.Stub.NotImplemented)
+	v1.POST("/themes/:id/activate", h.AdminTheme.Activate)
 }

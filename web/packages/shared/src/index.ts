@@ -205,3 +205,70 @@ export type PlayEpisode = {
   sort_order: number
   status: number
 }
+
+export type LiveChannel = {
+  id: number
+  name: string
+  category: string
+  stream_url: string
+  logo: string
+  description: string
+  sort_order: number
+  status?: number
+}
+
+export type ThemeCurrent = {
+  name: string
+  identifier: string
+  version: string
+  config: Record<string, unknown>
+  templates?: Record<string, unknown>
+  custom_css: string
+  custom_js: string
+}
+
+export type ThemeItem = {
+  id: number
+  name: string
+  identifier: string
+  version: string
+  author: string
+  description: string
+  preview_image: string
+  config: Record<string, unknown>
+  custom_css: string
+  custom_js: string
+  is_default: number
+  is_active: number
+}
+
+export type CollectSource = {
+  id: number
+  name: string
+  type: number
+  collect_url: string
+  config?: string
+  cron_expr: string
+  play_source_id: number
+  last_collect_at?: string
+  status: number
+}
+
+export type CollectCategoryMap = {
+  id: number
+  source_id: number
+  external_category: string
+  category_id: number
+}
+
+export type CollectLog = {
+  id: number
+  source_id: number
+  status: number
+  total_count: number
+  success_count: number
+  failed_count: number
+  error_message?: string
+  duration_ms: number
+  created_at?: string
+}

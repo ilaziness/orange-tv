@@ -57,3 +57,18 @@ func (h *VideoHandler) Get(c *gin.Context) {
 	}
 	response.Success(c, item)
 }
+
+func (h *VideoHandler) Related(c *gin.Context) {
+	var uri shareddto.IDURI
+	if !httphandler.BindURI(c, &uri) {
+		return
+	}
+	var req clientdto.RelatedRequest
+	_ = c.ShouldBindQuery(&req)
+	list, err := h.svc.Related(c.Request.Context(), uri.ID, req.Limit)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	response.Success(c, list)
+}

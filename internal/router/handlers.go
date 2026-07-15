@@ -20,11 +20,16 @@ type Handlers struct {
 	AdminVideo    *adminhandler.VideoHandler
 	AdminMetadata *adminhandler.MetadataHandler
 	AdminPlay     *adminhandler.PlayHandler
+	AdminLive     *adminhandler.LiveHandler
+	AdminCollect  *adminhandler.CollectHandler
+	AdminTheme    *adminhandler.ThemeHandler
 	AuthService   adminsvc.AuthService
 
 	// Client surface
 	ClientCategory *clienthandler.CategoryHandler
 	ClientVideo    *clienthandler.VideoHandler
+	ClientLive     *clienthandler.LiveHandler
+	ClientTheme    *clienthandler.ThemeHandler
 
 	InternalServiceKey string
 	// RequireAdminAuth enables auth middleware on admin business routes.
@@ -71,8 +76,13 @@ func (h *Handlers) validateForRoutes() error {
 		{"admin video handler", h.AdminVideo != nil},
 		{"admin metadata handler", h.AdminMetadata != nil},
 		{"admin play handler", h.AdminPlay != nil},
+		{"admin live handler", h.AdminLive != nil},
+		{"admin collect handler", h.AdminCollect != nil},
+		{"admin theme handler", h.AdminTheme != nil},
 		{"client category handler", h.ClientCategory != nil},
 		{"client video handler", h.ClientVideo != nil},
+		{"client live handler", h.ClientLive != nil},
+		{"client theme handler", h.ClientTheme != nil},
 	}
 	for _, item := range required {
 		if !item.ok {

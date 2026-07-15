@@ -17,6 +17,7 @@ type MetadataRepository interface {
 	// Directors
 	ListDirectors(ctx context.Context, keyword string, offset, limit int) ([]model.Directors, int, error)
 	GetDirector(ctx context.Context, id int64) (*model.Directors, error)
+	GetDirectorByName(ctx context.Context, name string) (*model.Directors, error)
 	GetDirectorsByIDs(ctx context.Context, ids []int64) ([]model.Directors, error)
 	ExistsDirectorName(ctx context.Context, name string, excludeID int64) (bool, error)
 	CreateDirector(ctx context.Context, m *model.Directors) error
@@ -27,6 +28,7 @@ type MetadataRepository interface {
 	// Actors
 	ListActors(ctx context.Context, keyword string, offset, limit int) ([]model.Actors, int, error)
 	GetActor(ctx context.Context, id int64) (*model.Actors, error)
+	GetActorByName(ctx context.Context, name string) (*model.Actors, error)
 	GetActorsByIDs(ctx context.Context, ids []int64) ([]model.Actors, error)
 	ExistsActorName(ctx context.Context, name string, excludeID int64) (bool, error)
 	CreateActor(ctx context.Context, m *model.Actors) error
@@ -37,6 +39,7 @@ type MetadataRepository interface {
 	// Tags
 	ListTags(ctx context.Context, keyword string, offset, limit int) ([]model.Tags, int, error)
 	GetTag(ctx context.Context, id int64) (*model.Tags, error)
+	GetTagByName(ctx context.Context, name string) (*model.Tags, error)
 	GetTagsByIDs(ctx context.Context, ids []int64) ([]model.Tags, error)
 	ExistsTagName(ctx context.Context, name string, excludeID int64) (bool, error)
 	CreateTag(ctx context.Context, m *model.Tags) error
@@ -78,6 +81,18 @@ func (r *metadataRepo) GetDirector(ctx context.Context, id int64) (*model.Direct
 	}
 	if err != nil {
 		return nil, fmt.Errorf("get director: %w", err)
+	}
+	return item, nil
+}
+
+func (r *metadataRepo) GetDirectorByName(ctx context.Context, name string) (*model.Directors, error) {
+	item := new(model.Directors)
+	err := r.db.NewSelect().Model(item).Where("name = ?", name).Where("deleted_at IS NULL").Scan(ctx)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("get director by name: %w", err)
 	}
 	return item, nil
 }
@@ -179,6 +194,18 @@ func (r *metadataRepo) GetActor(ctx context.Context, id int64) (*model.Actors, e
 	return item, nil
 }
 
+func (r *metadataRepo) GetActorByName(ctx context.Context, name string) (*model.Actors, error) {
+	item := new(model.Actors)
+	err := r.db.NewSelect().Model(item).Where("name = ?", name).Where("deleted_at IS NULL").Scan(ctx)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("get actor by name: %w", err)
+	}
+	return item, nil
+}
+
 func (r *metadataRepo) GetActorsByIDs(ctx context.Context, ids []int64) ([]model.Actors, error) {
 	if len(ids) == 0 {
 		return nil, nil
@@ -271,6 +298,18 @@ func (r *metadataRepo) GetTag(ctx context.Context, id int64) (*model.Tags, error
 	}
 	if err != nil {
 		return nil, fmt.Errorf("get tag: %w", err)
+	}
+	return item, nil
+}
+
+func (r *metadataRepo) GetTagByName(ctx context.Context, name string) (*model.Tags, error) {
+	item := new(model.Tags)
+	err := r.db.NewSelect().Model(item).Where("name = ?", name).Where("deleted_at IS NULL").Scan(ctx)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("get tag by name: %w", err)
 	}
 	return item, nil
 }

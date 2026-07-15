@@ -147,3 +147,21 @@ const (
 	PlayFormatDASH = "dash"
 	PlayFormatFLV  = "flv"
 )
+
+// Collect source formats (collect_sources.type).
+const (
+	CollectTypeDefault  int8 = 1 // system JSON format
+	CollectTypeAppleCMS int8 = 2 // 苹果 CMS
+)
+
+// Collect log status (collect_logs.status).
+const (
+	CollectLogSuccess        int8 = 1
+	CollectLogFailed         int8 = 2
+	CollectLogPartialSuccess int8 = 3
+	CollectLogRunning        int8 = 4
+	CollectLogCancelled      int8 = 5
+)
+
+// Theme identifier for the built-in default theme.
+const ThemeIdentifierDefault = "default"

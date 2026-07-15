@@ -9,6 +9,7 @@ import (
 
 	"github.com/ilaziness/orange-tv/internal/database"
 	"github.com/ilaziness/orange-tv/internal/model"
+	"github.com/uptrace/bun"
 )
 
 // PlayRepository manages play sources and episodes.
@@ -34,15 +35,20 @@ type PlayRepository interface {
 	// HardDeleteEpisodeByKey permanently removes soft-deleted rows for the unique key.
 	HardDeleteEpisodeByKey(ctx context.Context, videoID, sourceID int64, episodeNumber int32, excludeID int64) error
 	SoftDeleteEpisode(ctx context.Context, id int64) error
+	WithTx(tx bun.Tx) PlayRepository
 }
 
 type playRepo struct {
-	db *database.DB
+	db bun.IDB
 }
 
 // NewPlayRepo creates a PlayRepository.
 func NewPlayRepo(db *database.DB) PlayRepository {
 	return &playRepo{db: db}
+}
+
+func (r *playRepo) WithTx(tx bun.Tx) PlayRepository {
+	return &playRepo{db: tx}
 }
 
 func (r *playRepo) ListSources(ctx context.Context) ([]model.PlaySources, error) {
@@ -178,6 +184,8 @@ func (r *playRepo) GetEpisodeByKey(ctx context.Context, videoID, sourceID int64,
 		Where("video_id = ?", videoID).
 		Where("source_id = ?", sourceID).
 		Where("episode_number = ?", episodeNumber).
+		OrderExpr("id DESC").
+		Limit(1).
 		Scan(ctx)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil

@@ -6,15 +6,19 @@
 
 ```text
 dto/
-├── common.go            # 共享类型（分页、IDURI、分类/影视公共响应等）
+├── common.go            # 共享类型（分页、IDURI、分类/影视/直播/主题/采集公共响应等）
 ├── admin/               # 管理端 DTO
 │   ├── auth.go
 │   ├── category.go
 │   ├── video.go
 │   ├── metadata.go
-│   └── play.go
+│   ├── play.go
+│   ├── live.go
+│   ├── collect.go
+│   └── theme.go
 └── client/              # 用户端 DTO
-    └── video.go
+    ├── video.go
+    └── live.go
 ```
 
 ## 约定
