@@ -27,6 +27,30 @@ var (
 	InsufficientPermission = &Code{3000003, "权限不足", 403, nil}
 	InvalidToken           = &Code{3000004, "无效的Token", 401, nil}
 	TokenRevoked           = &Code{3000005, "Token已吊销", 401, nil}
+	InvalidCredentials     = &Code{3000006, "用户名或密码错误", 401, nil}
+	AdminDisabled          = &Code{3000007, "管理员账号已禁用", 403, nil}
+
+	// 内容模块 (400xxxx)
+	CategoryNotFound     = &Code{4000001, "分类不存在", 404, nil}
+	CategoryNameExists   = &Code{4000002, "分类名称已存在", 409, nil}
+	CategoryHasChildren  = &Code{4000003, "分类下仍有子分类，无法删除", 409, nil}
+	CategoryHasVideos    = &Code{4000004, "分类下仍有影视，无法删除", 409, nil}
+	CategoryCycle        = &Code{4000005, "分类父级设置会导致循环", 400, nil}
+	VideoNotFound        = &Code{4000010, "影视不存在", 404, nil}
+	DirectorNotFound     = &Code{4000020, "导演不存在", 404, nil}
+	DirectorNameExists   = &Code{4000021, "导演名称已存在", 409, nil}
+	DirectorInUse        = &Code{4000022, "导演仍被影视引用，无法删除", 409, nil}
+	ActorNotFound        = &Code{4000030, "演员不存在", 404, nil}
+	ActorNameExists      = &Code{4000031, "演员名称已存在", 409, nil}
+	ActorInUse           = &Code{4000032, "演员仍被影视引用，无法删除", 409, nil}
+	TagNotFound          = &Code{4000040, "标签不存在", 404, nil}
+	TagNameExists        = &Code{4000041, "标签名称已存在", 409, nil}
+	TagInUse             = &Code{4000042, "标签仍被影视引用，无法删除", 409, nil}
+	PlaySourceNotFound   = &Code{4000050, "播放源不存在", 404, nil}
+	PlaySourceNameExists = &Code{4000051, "播放源名称已存在", 409, nil}
+	PlaySourceInUse      = &Code{4000052, "播放源仍被剧集引用，无法删除", 409, nil}
+	PlayEpisodeNotFound  = &Code{4000060, "剧集不存在", 404, nil}
+	PlayEpisodeDuplicate = &Code{4000061, "同一影视与播放源下集数已存在", 409, nil}
 
 	// 系统模块 (900xxxx)
 	InternalError        = &Code{9000001, "服务器内部错误", 500, nil}

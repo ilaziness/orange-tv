@@ -58,7 +58,27 @@ func TestGenerateModelCode_includesBunAndJSONTags(t *testing.T) {
 	}, nil)
 
 	assert.Contains(t, code, "type SampleItem struct")
-	assert.Contains(t, code, `bun:"id"`)
-	assert.Contains(t, code, `json:"id"`)
+	assert.Contains(t, code, "\tID int32 `bun:\"id\" json:\"id\"`")
+	assert.Contains(t, code, "\tTitle string `bun:\"title\" json:\"title\"`")
 	assert.Contains(t, code, `bun:"table:sample_items,alias:s"`)
+}
+
+func TestGenerateModelCode_hidesPasswordJSON(t *testing.T) {
+	code := GenerateModelCode(GenerateOptions{
+		PackageName: "model",
+		JSONTags:    true,
+	}, "Users", "users", []Column{
+		{Name: "id", Type: "bigint", Nullable: false},
+		{Name: "password", Type: "varchar", Nullable: false},
+	}, nil)
+
+	assert.Contains(t, code, "\tPassword string `bun:\"password\" json:\"-\"`")
+	assert.NotContains(t, code, `"time"`)
+	assert.NotContains(t, code, `json:"password"`)
+}
+
+func TestIsSensitiveColumn(t *testing.T) {
+	assert.True(t, isSensitiveColumn("password"))
+	assert.True(t, isSensitiveColumn("api_key"))
+	assert.False(t, isSensitiveColumn("username"))
 }

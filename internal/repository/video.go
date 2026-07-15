@@ -1,0 +1,256 @@
+package repository
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/ilaziness/orange-tv/internal/constant"
+	"github.com/ilaziness/orange-tv/internal/database"
+	"github.com/ilaziness/orange-tv/internal/model"
+	"github.com/uptrace/bun"
+)
+
+// VideoListFilter filters video queries.
+type VideoListFilter struct {
+	Keyword       string
+	CategoryID    int64
+	PublishStatus *int8
+	Year          int32
+	Region        string
+	Language      string
+	Sort          string
+	OnlyOnline    bool
+	Offset        int
+	Limit         int
+}
+
+// VideoRepository provides video and association persistence.
+type VideoRepository interface {
+	List(ctx context.Context, f VideoListFilter) ([]model.Videos, int, error)
+	GetByID(ctx context.Context, id int64) (*model.Videos, error)
+	Create(ctx context.Context, v *model.Videos) error
+	Update(ctx context.Context, v *model.Videos) error
+	SoftDelete(ctx context.Context, id int64) error
+	ReplaceDirectors(ctx context.Context, videoID int64, directorIDs []int64) error
+	ReplaceActors(ctx context.Context, videoID int64, actors []model.VideoActors) error
+	ReplaceTags(ctx context.Context, videoID int64, tagIDs []int64) error
+	ListDirectorIDs(ctx context.Context, videoID int64) ([]int64, error)
+	ListActorRels(ctx context.Context, videoID int64) ([]model.VideoActors, error)
+	ListTagIDs(ctx context.Context, videoID int64) ([]int64, error)
+	RunInTx(ctx context.Context, fn func(ctx context.Context, tx bun.Tx) error) error
+	WithTx(tx bun.Tx) VideoRepository
+}
+
+type videoRepo struct {
+	db bun.IDB
+}
+
+// NewVideoRepo creates a VideoRepository.
+func NewVideoRepo(db *database.DB) VideoRepository {
+	return &videoRepo{db: db}
+}
+
+func (r *videoRepo) WithTx(tx bun.Tx) VideoRepository {
+	return &videoRepo{db: tx}
+}
+
+func (r *videoRepo) RunInTx(ctx context.Context, fn func(ctx context.Context, tx bun.Tx) error) error {
+	return r.db.RunInTx(ctx, nil, fn)
+}
+
+func (r *videoRepo) List(ctx context.Context, f VideoListFilter) ([]model.Videos, int, error) {
+	var items []model.Videos
+	q := r.db.NewSelect().Model(&items).Where("deleted_at IS NULL")
+	if f.OnlyOnline {
+		q = q.Where("publish_status = ?", constant.PublishStatusOnline)
+	}
+	if f.PublishStatus != nil {
+		q = q.Where("publish_status = ?", *f.PublishStatus)
+	}
+	if f.CategoryID > 0 {
+		q = q.Where("category_id = ?", f.CategoryID)
+	}
+	if f.Year > 0 {
+		q = q.Where("year = ?", f.Year)
+	}
+	if f.Region != "" {
+		q = q.Where("region = ?", f.Region)
+	}
+	if f.Language != "" {
+		q = q.Where("language = ?", f.Language)
+	}
+	if kw := strings.TrimSpace(f.Keyword); kw != "" {
+		like := "%" + kw + "%"
+		q = q.WhereGroup(" AND ", func(sq *bun.SelectQuery) *bun.SelectQuery {
+			return sq.WhereOr("title LIKE ?", like).
+				WhereOr("subtitle LIKE ?", like).
+				WhereOr("description LIKE ?", like)
+		})
+	}
+
+	total, err := q.Count(ctx)
+	if err != nil {
+		return nil, 0, fmt.Errorf("count videos: %w", err)
+	}
+
+	order := videoSortExpr(f.Sort)
+	if err := q.OrderExpr(order).Offset(f.Offset).Limit(f.Limit).Scan(ctx); err != nil {
+		return nil, 0, fmt.Errorf("list videos: %w", err)
+	}
+	return items, total, nil
+}
+
+func videoSortExpr(sort string) string {
+	switch sort {
+	case "year", "year_asc":
+		return "year ASC, id DESC"
+	case "year_desc":
+		return "year DESC, id DESC"
+	case "rating", "rating_desc":
+		return "rating DESC, id DESC"
+	case "rating_asc":
+		return "rating ASC, id DESC"
+	case "view_count", "view_count_desc":
+		return "view_count DESC, id DESC"
+	case "created_at_asc":
+		return "created_at ASC, id ASC"
+	default:
+		return "created_at DESC, id DESC"
+	}
+}
+
+func (r *videoRepo) GetByID(ctx context.Context, id int64) (*model.Videos, error) {
+	item := new(model.Videos)
+	err := r.db.NewSelect().Model(item).
+		Where("id = ?", id).
+		Where("deleted_at IS NULL").
+		Scan(ctx)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("get video: %w", err)
+	}
+	return item, nil
+}
+
+func (r *videoRepo) Create(ctx context.Context, v *model.Videos) error {
+	_, err := r.db.NewInsert().Model(v).Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("create video: %w", err)
+	}
+	return nil
+}
+
+func (r *videoRepo) Update(ctx context.Context, v *model.Videos) error {
+	now := time.Now()
+	v.UpdatedAt = &now
+	_, err := r.db.NewUpdate().Model(v).WherePK().Where("deleted_at IS NULL").Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("update video: %w", err)
+	}
+	return nil
+}
+
+func (r *videoRepo) SoftDelete(ctx context.Context, id int64) error {
+	now := time.Now()
+	_, err := r.db.NewUpdate().Model((*model.Videos)(nil)).
+		Set("deleted_at = ?", now).
+		Set("updated_at = ?", now).
+		Where("id = ?", id).
+		Where("deleted_at IS NULL").
+		Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("delete video: %w", err)
+	}
+	return nil
+}
+
+func (r *videoRepo) ReplaceDirectors(ctx context.Context, videoID int64, directorIDs []int64) error {
+	if _, err := r.db.NewDelete().Model((*model.VideoDirectors)(nil)).
+		Where("video_id = ?", videoID).Exec(ctx); err != nil {
+		return fmt.Errorf("clear video directors: %w", err)
+	}
+	if len(directorIDs) == 0 {
+		return nil
+	}
+	rows := make([]model.VideoDirectors, 0, len(directorIDs))
+	for _, id := range directorIDs {
+		rows = append(rows, model.VideoDirectors{VideoID: videoID, DirectorID: id})
+	}
+	if _, err := r.db.NewInsert().Model(&rows).Exec(ctx); err != nil {
+		return fmt.Errorf("insert video directors: %w", err)
+	}
+	return nil
+}
+
+func (r *videoRepo) ReplaceActors(ctx context.Context, videoID int64, actors []model.VideoActors) error {
+	if _, err := r.db.NewDelete().Model((*model.VideoActors)(nil)).
+		Where("video_id = ?", videoID).Exec(ctx); err != nil {
+		return fmt.Errorf("clear video actors: %w", err)
+	}
+	if len(actors) == 0 {
+		return nil
+	}
+	for i := range actors {
+		actors[i].VideoID = videoID
+	}
+	if _, err := r.db.NewInsert().Model(&actors).Exec(ctx); err != nil {
+		return fmt.Errorf("insert video actors: %w", err)
+	}
+	return nil
+}
+
+func (r *videoRepo) ReplaceTags(ctx context.Context, videoID int64, tagIDs []int64) error {
+	if _, err := r.db.NewDelete().Model((*model.VideoTags)(nil)).
+		Where("video_id = ?", videoID).Exec(ctx); err != nil {
+		return fmt.Errorf("clear video tags: %w", err)
+	}
+	if len(tagIDs) == 0 {
+		return nil
+	}
+	rows := make([]model.VideoTags, 0, len(tagIDs))
+	for _, id := range tagIDs {
+		rows = append(rows, model.VideoTags{VideoID: videoID, TagID: id})
+	}
+	if _, err := r.db.NewInsert().Model(&rows).Exec(ctx); err != nil {
+		return fmt.Errorf("insert video tags: %w", err)
+	}
+	return nil
+}
+
+func (r *videoRepo) ListDirectorIDs(ctx context.Context, videoID int64) ([]int64, error) {
+	var rows []model.VideoDirectors
+	if err := r.db.NewSelect().Model(&rows).Where("video_id = ?", videoID).Scan(ctx); err != nil {
+		return nil, fmt.Errorf("list video directors: %w", err)
+	}
+	ids := make([]int64, 0, len(rows))
+	for _, row := range rows {
+		ids = append(ids, row.DirectorID)
+	}
+	return ids, nil
+}
+
+func (r *videoRepo) ListActorRels(ctx context.Context, videoID int64) ([]model.VideoActors, error) {
+	var rows []model.VideoActors
+	if err := r.db.NewSelect().Model(&rows).Where("video_id = ?", videoID).Scan(ctx); err != nil {
+		return nil, fmt.Errorf("list video actors: %w", err)
+	}
+	return rows, nil
+}
+
+func (r *videoRepo) ListTagIDs(ctx context.Context, videoID int64) ([]int64, error) {
+	var rows []model.VideoTags
+	if err := r.db.NewSelect().Model(&rows).Where("video_id = ?", videoID).Scan(ctx); err != nil {
+		return nil, fmt.Errorf("list video tags: %w", err)
+	}
+	ids := make([]int64, 0, len(rows))
+	for _, row := range rows {
+		ids = append(ids, row.TagID)
+	}
+	return ids, nil
+}

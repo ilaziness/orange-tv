@@ -7,7 +7,7 @@
 Go 后端应用模板，模块路径 `github.com/ilaziness/orange-tv`，Go 1.26.4。
 
 | 类别 | 技术 |
-|------|------|
+| ------ | ------ |
 | Web | Gin |
 | 依赖组装 | 手动构造函数注入（`internal/app`） |
 | CLI | Cobra |
@@ -17,6 +17,10 @@ Go 后端应用模板，模块路径 `github.com/ilaziness/orange-tv`，Go 1.26.
 | 迁移 | 内置 migrate 命令 |
 
 支持 HTTP 服务，通过 `configs/config.yaml` 中 `enabled` 控制。
+
+开发默认 **MySQL**；迁移为 MySQL DDL；业务模型优先用 `orange-tv gen model` 从库表生成。
+API 路径：用户端 `/api/client/v1`、管理端 `/api/admin/v1`、内网 `/api/internal/v1`。
+前端 monorepo：`web/apps/client`、`web/apps/admin`、`web/packages/shared`。
 
 ## 核心规则（始终遵守）
 
@@ -35,7 +39,7 @@ Go 后端应用模板，模块路径 `github.com/ilaziness/orange-tv`，Go 1.26.
 ## 按需查阅
 
 | 主题 | 文件 | 何时阅读 |
-|------|------|----------|
+| ------ | ------ | ---------- |
 | 文档索引 | [docs/agents/README.md](docs/agents/README.md) | 查找全部 Agent 专题文档 |
 | 目录结构 | [docs/agents/structure.md](docs/agents/structure.md) | 不确定代码应放在哪个包 |
 | 编码规范详情 | [docs/agents/coding-standards.md](docs/agents/coding-standards.md) | 数据库、配置、健康检查、缓存/事件 |

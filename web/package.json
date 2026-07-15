@@ -1,0 +1,16 @@
+{
+  "name": "orange-tv-web",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:client": "npm run dev -w @orange-tv/client",
+    "dev:admin": "npm run dev -w @orange-tv/admin",
+    "build": "npm run build -w @orange-tv/shared && npm run build -w @orange-tv/client && npm run build -w @orange-tv/admin",
+    "build:client": "npm run build -w @orange-tv/client",
+    "build:admin": "npm run build -w @orange-tv/admin"
+  }
+}

@@ -7,12 +7,14 @@ orange-tv/
 ├── go.mod / go.sum                  # 模块依赖
 ├── cmd/                             # CLI 命令层（Cobra：serve、config、migrate、gen 等）
 ├── configs/                         # 配置文件（config.yaml 及环境覆盖）
-├── migrations/                      # 数据库迁移脚本（*.up.sql / *.down.sql）
+├── migrations/                      # 数据库迁移脚本（MySQL *.up.sql / *.down.sql）
 ├── docs/                            # 项目文档
 │   ├── agents/                      # Agent 专题文档（从 AGENTS.md 拆分）
+│   ├── PRD.md                       # 产品需求
 │   └── swagger/                     # Swagger 生成代码与 OpenAPI 规范（make swagger）
+├── web/                             # 前端 monorepo（apps/client、apps/admin）
 ├── scripts/                         # 构建、部署、测试脚本
-├── data/                            # 本地运行时数据（如 SQLite 文件）
+├── data/                            # 本地运行时数据
 ├── test/                            # 集成测试
 ├── internal/                        # 私有业务代码（外部不可导入）
 │   ├── app/                         # 应用组装与生命周期（手动 DI 唯一入口）
@@ -21,7 +23,7 @@ orange-tv/
 │   ├── config/                      # 配置结构体、加载与校验
 │   ├── constant/                    # 应用级常量
 │   ├── crypto/                      # 密码哈希等加密工具
-│   ├── database/                    # 数据库连接与 Bun ORM 初始化
+│   ├── database/                    # 数据库连接与 Bun ORM 初始化；gen model 生成器
 │   ├── dto/                         # 请求/响应数据传输对象
 │   ├── errcode/                     # 业务错误码定义
 │   ├── event/                       # 发布/订阅事件总线
@@ -31,10 +33,10 @@ orange-tv/
 │   ├── metrics/                     # Prometheus 指标采集与暴露
 │   ├── middleware/                  # 协议层中间件
 │   │   └── http/                    # HTTP 中间件（认证、限流、CORS 等）
-│   ├── model/                       # Bun 数据模型
+│   ├── model/                       # Bun 数据模型（由 gen model 从库表生成）
 │   ├── repository/                  # 数据访问层
 │   ├── response/                    # 统一 HTTP 响应结构
-│   ├── router/                      # Gin 路由注册（Handlers 聚合 + 按 API 面分文件，领域函数同文件）
+│   ├── router/                      # Gin 路由注册：/api/client、/api/admin、/api/internal
 │   ├── server/                      # HTTP 服务器实现
 │   ├── service/                     # 业务逻辑层
 │   ├── tracing/                     # OpenTelemetry 链路追踪

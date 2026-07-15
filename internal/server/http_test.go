@@ -27,7 +27,7 @@ func TestNewHTTPServer_registersRoutes(t *testing.T) {
 	}
 	logger := zap.NewNop()
 	health := httphandler.NewHealthHandler(cfg)
-	handlers, err := router.NewHandlers(health, httphandler.NewUserHandler(nil))
+	handlers, err := router.NewHandlers(health)
 	require.NoError(t, err)
 
 	srv, err := NewHTTPServer(cfg, logger, handlers, nil, nil)
@@ -38,6 +38,8 @@ func TestNewHTTPServer_registersRoutes(t *testing.T) {
 	for _, route := range srv.Router().Routes() {
 		registered[route.Path] = true
 	}
-	require.True(t, registered[router.PathAdminV1Users+"/:id"])
-	require.True(t, registered[router.PathInternalV1Users+"/:id"])
+	require.True(t, registered[router.PathHealth])
+	require.True(t, registered[router.PathReadiness])
+	require.True(t, registered[router.PathLiveness])
+	require.True(t, registered[router.PathVersion])
 }

@@ -111,3 +111,39 @@ const (
 	// LogOutputBoth represents both stdout and file log output
 	LogOutputBoth = "both"
 )
+
+// Status constants for enable/disable fields.
+const (
+	StatusDisabled int8 = 0
+	StatusEnabled  int8 = 1
+)
+
+// Publish status for videos.
+const (
+	PublishStatusOffline int8 = 0
+	PublishStatusOnline  int8 = 1
+)
+
+// Serial status for videos.
+const (
+	SerialStatusOngoing  int8 = 1
+	SerialStatusFinished int8 = 2
+	SerialStatusUpcoming int8 = 3
+)
+
+// Auth / RBAC constants for phase 2.
+const (
+	// RoleSuperAdmin is the only preset role in phase 2.
+	RoleSuperAdmin = "super_admin"
+
+	// PermissionAll grants full admin access.
+	PermissionAll = "*"
+)
+
+// Play formats accepted by play_episodes.format.
+const (
+	PlayFormatHLS  = "hls"
+	PlayFormatMP4  = "mp4"
+	PlayFormatDASH = "dash"
+	PlayFormatFLV  = "flv"
+)

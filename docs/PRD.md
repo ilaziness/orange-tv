@@ -308,8 +308,11 @@ themes/
 
 ```go
 
+// 路径前缀约定（与代码 internal/router/paths.go 一致）：
+// 用户端 /api/client/v1，管理端 /api/admin/v1，内网 /api/internal/v1
+
 // 获取分类列表
-GET /api/v1/categories
+GET /api/client/v1/categories
 Response: {
   "code": 200,
   "data": [
@@ -326,7 +329,7 @@ Response: {
 }
 
 // 获取影视列表
-GET /api/v1/videos?category_id=1&page=1&page_size=20&year=2024&region=美国&language=英语
+GET /api/client/v1/videos?category_id=1&page=1&page_size=20&year=2024&region=美国&language=英语
 Response: {
   "code": 200,
   "data": {
@@ -340,7 +343,7 @@ Response: {
 }
 
 // 获取影视详情
-GET /api/v1/videos/{id}
+GET /api/client/v1/videos/{id}
 Response: {
   "code": 200,
   "data": {
@@ -373,7 +376,7 @@ Response: {
 }
 
 // 搜索影视
-GET /api/v1/search?keyword=关键词&page=1&page_size=20
+GET /api/client/v1/search?keyword=关键词&page=1&page_size=20
 Response: {
   "code": 200,
   "data": {
@@ -387,7 +390,7 @@ Response: {
 }
 
 // 获取直播频道列表
-GET /api/v1/live?category=新闻&page=1&page_size=20
+GET /api/client/v1/live?category=新闻&page=1&page_size=20
 Response: {
   "code": 200,
   "data": {
@@ -415,7 +418,7 @@ Response: {
 ```go
 
 // 获取当前主题配置（由管理后台配置，用户端不可切换主题）
-GET /api/v1/theme/current
+GET /api/client/v1/theme/current
 Response: {
   "code": 200,
   "data": {
@@ -808,9 +811,9 @@ const mainMenus = [
 ```go
 
 // 管理员登录与认证
-POST   /api/admin/auth/login       // 管理员登录
-POST   /api/admin/auth/logout      // 管理员退出
-GET    /api/admin/auth/profile     // 获取登录管理员信息
+POST   /api/admin/v1/auth/login       // 管理员登录
+POST   /api/admin/v1/auth/logout      // 管理员退出
+GET    /api/admin/v1/auth/profile     // 获取登录管理员信息
 
 ```
 
@@ -819,63 +822,63 @@ GET    /api/admin/auth/profile     // 获取登录管理员信息
 ```go
 
 // 分类管理
-POST   /api/admin/categories      // 创建分类
-PUT    /api/admin/categories/{id} // 更新分类
-DELETE /api/admin/categories/{id} // 删除分类
-GET    /api/admin/categories      // 获取分类列表
+POST   /api/admin/v1/categories      // 创建分类
+PUT    /api/admin/v1/categories/{id} // 更新分类
+DELETE /api/admin/v1/categories/{id} // 删除分类
+GET    /api/admin/v1/categories      // 获取分类列表
 
 // 影视管理
-POST   /api/admin/videos          // 创建影视
-PUT    /api/admin/videos/{id}     // 更新影视
-DELETE /api/admin/videos/{id}     // 删除影视
-GET    /api/admin/videos          // 获取影视列表
+POST   /api/admin/v1/videos          // 创建影视
+PUT    /api/admin/v1/videos/{id}     // 更新影视
+DELETE /api/admin/v1/videos/{id}     // 删除影视
+GET    /api/admin/v1/videos          // 获取影视列表
 
 // 播放源管理（全局播放源）
-POST   /api/admin/play-sources        // 添加播放源
-PUT    /api/admin/play-sources/{id}   // 更新播放源
-DELETE /api/admin/play-sources/{id}   // 删除播放源
-GET    /api/admin/play-sources        // 获取播放源列表
+POST   /api/admin/v1/play-sources        // 添加播放源
+PUT    /api/admin/v1/play-sources/{id}   // 更新播放源
+DELETE /api/admin/v1/play-sources/{id}   // 删除播放源
+GET    /api/admin/v1/play-sources        // 获取播放源列表
 
 // 播放集数管理
-POST   /api/admin/play-episodes        // 添加播放集数
-PUT    /api/admin/play-episodes/{id}   // 更新播放集数
-DELETE /api/admin/play-episodes/{id}   // 删除播放集数
-GET    /api/admin/play-episodes        // 获取播放集数列表（按source_id和video_id筛选）
+POST   /api/admin/v1/play-episodes        // 添加播放集数
+PUT    /api/admin/v1/play-episodes/{id}   // 更新播放集数
+DELETE /api/admin/v1/play-episodes/{id}   // 删除播放集数
+GET    /api/admin/v1/play-episodes        // 获取播放集数列表（按source_id和video_id筛选）
 
 // 导演管理
-GET    /api/admin/directors           // 获取导演列表（支持搜索）
-POST   /api/admin/directors           // 添加导演
-PUT    /api/admin/directors/{id}      // 更新导演
-DELETE /api/admin/directors/{id}      // 删除导演
+GET    /api/admin/v1/directors           // 获取导演列表（支持搜索）
+POST   /api/admin/v1/directors           // 添加导演
+PUT    /api/admin/v1/directors/{id}      // 更新导演
+DELETE /api/admin/v1/directors/{id}      // 删除导演
 
 // 演员管理
-GET    /api/admin/actors             // 获取演员列表（支持搜索）
-POST   /api/admin/actors             // 添加演员
-PUT    /api/admin/actors/{id}        // 更新演员
-DELETE /api/admin/actors/{id}        // 删除演员
+GET    /api/admin/v1/actors             // 获取演员列表（支持搜索）
+POST   /api/admin/v1/actors             // 添加演员
+PUT    /api/admin/v1/actors/{id}        // 更新演员
+DELETE /api/admin/v1/actors/{id}        // 删除演员
 
 // 标签管理
-GET    /api/admin/tags               // 获取标签列表（支持搜索）
-POST   /api/admin/tags               // 添加标签
-PUT    /api/admin/tags/{id}          // 更新标签
-DELETE /api/admin/tags/{id}          // 删除标签
+GET    /api/admin/v1/tags               // 获取标签列表（支持搜索）
+POST   /api/admin/v1/tags               // 添加标签
+PUT    /api/admin/v1/tags/{id}          // 更新标签
+DELETE /api/admin/v1/tags/{id}          // 删除标签
 
 // 直播管理
-POST   /api/admin/live            // 创建直播频道
-PUT    /api/admin/live/{id}       // 更新直播频道
-DELETE /api/admin/live/{id}       // 删除直播频道
-GET    /api/admin/live            // 获取直播频道列表
+POST   /api/admin/v1/live            // 创建直播频道
+PUT    /api/admin/v1/live/{id}       // 更新直播频道
+DELETE /api/admin/v1/live/{id}       // 删除直播频道
+GET    /api/admin/v1/live            // 获取直播频道列表
 
 // 数据采集
-POST   /api/admin/collect-sources              // 添加采集源
-PUT    /api/admin/collect-sources/{id}         // 更新采集源
-DELETE /api/admin/collect-sources/{id}         // 删除采集源
-GET    /api/admin/collect-sources              // 获取采集源列表
-POST   /api/admin/collect-sources/{id}/categories  // 配置采集源分类映射
-GET    /api/admin/collect-sources/{id}/categories  // 获取采集源分类映射
-POST   /api/admin/collect/{source_id}/start        // 开始采集
-POST   /api/admin/collect/{source_id}/stop         // 停止采集
-GET    /api/admin/collect/logs                     // 获取采集日志
+POST   /api/admin/v1/collect-sources              // 添加采集源
+PUT    /api/admin/v1/collect-sources/{id}         // 更新采集源
+DELETE /api/admin/v1/collect-sources/{id}         // 删除采集源
+GET    /api/admin/v1/collect-sources              // 获取采集源列表
+POST   /api/admin/v1/collect-sources/{id}/categories  // 配置采集源分类映射
+GET    /api/admin/v1/collect-sources/{id}/categories  // 获取采集源分类映射
+POST   /api/admin/v1/collect/{source_id}/start        // 开始采集
+POST   /api/admin/v1/collect/{source_id}/stop         // 停止采集
+GET    /api/admin/v1/collect/logs                     // 获取采集日志
 
 ```
 #### 3.4.3 用户管理接口
@@ -883,22 +886,22 @@ GET    /api/admin/collect/logs                     // 获取采集日志
 ```go
 
 // 管理员管理
-POST   /api/admin/admins          // 创建管理员
-PUT    /api/admin/admins/{id}     // 更新管理员
-DELETE /api/admin/admins/{id}     // 删除管理员
-GET    /api/admin/admins          // 获取管理员列表
+POST   /api/admin/v1/admins          // 创建管理员
+PUT    /api/admin/v1/admins/{id}     // 更新管理员
+DELETE /api/admin/v1/admins/{id}     // 删除管理员
+GET    /api/admin/v1/admins          // 获取管理员列表
 
 // 用户组/角色管理
-POST   /api/admin/groups          // 创建用户组
-PUT    /api/admin/groups/{id}     // 更新用户组
-DELETE /api/admin/groups/{id}     // 删除用户组
-GET    /api/admin/groups          // 获取用户组列表
+POST   /api/admin/v1/groups          // 创建用户组
+PUT    /api/admin/v1/groups/{id}     // 更新用户组
+DELETE /api/admin/v1/groups/{id}     // 删除用户组
+GET    /api/admin/v1/groups          // 获取用户组列表
 
 // 普通用户管理
-GET    /api/admin/users           // 获取用户列表
-PUT    /api/admin/users/{id}      // 更新用户状态
-DELETE /api/admin/users/{id}      // 删除用户
-GET    /api/admin/users/{id}/login-logs // 获取用户登录日志
+GET    /api/admin/v1/users           // 获取用户列表
+PUT    /api/admin/v1/users/{id}      // 更新用户状态
+DELETE /api/admin/v1/users/{id}      // 删除用户
+GET    /api/admin/v1/users/{id}/login-logs // 获取用户登录日志
 
 ```
 
@@ -907,15 +910,15 @@ GET    /api/admin/users/{id}/login-logs // 获取用户登录日志
 ```go
 
 // 系统设置
-GET    /api/admin/settings          // 获取系统设置
-PUT    /api/admin/settings          // 更新系统设置
+GET    /api/admin/v1/settings          // 获取系统设置
+PUT    /api/admin/v1/settings          // 更新系统设置
 
 // 主题管理
-GET    /api/admin/themes            // 获取主题列表
-POST   /api/admin/themes            // 上传主题
-PUT    /api/admin/themes/{id}       // 更新主题
-DELETE /api/admin/themes/{id}       // 删除主题
-POST   /api/admin/themes/{id}/activate // 激活主题
+GET    /api/admin/v1/themes            // 获取主题列表
+POST   /api/admin/v1/themes            // 上传主题
+PUT    /api/admin/v1/themes/{id}       // 更新主题
+DELETE /api/admin/v1/themes/{id}       // 删除主题
+POST   /api/admin/v1/themes/{id}/activate // 激活主题
 
 ```
 ### 3.5 管理端非功能需求
@@ -939,6 +942,18 @@ POST   /api/admin/themes/{id}/activate // 激活主题
 - 密码应加密存储
 
 ## 4. 数据库设计
+
+### 4.0 设计约定
+
+- **目标库**：MySQL 8.x/9.x（开发默认 MySQL；迁移脚本使用 MySQL DDL）。
+- **模型生成**：迁移执行后使用 CLI `orange-tv gen model` 从数据库表结构生成 Bun 模型，避免手写全量 model。
+- **软删除**：
+  - 业务主实体表增加字段 `deleted_at TIMESTAMP NULL DEFAULT NULL COMMENT '软删除时间'`。
+  - **不为 `deleted_at` 单独创建索引**（不添加 `idx_deleted_at` 等）。
+  - 列表/详情查询默认过滤 `deleted_at IS NULL`（业务层约定）。
+  - 关联表、日志表、系统配置键值表不做软删除。
+- **适用软删除的表**：`categories`、`videos`、`directors`、`actors`、`tags`、`play_sources`、`play_episodes`、`live_channels`、`collect_sources`、`themes`、`admins`、`users`、`user_groups`。
+- **不做软删除的表**：`video_directors`、`video_actors`、`video_tags`、`collect_source_categories`、`collect_logs`、`login_logs`、`system_logs`、`system_settings`。
 
 ### 4.1 实体泛关系
 
@@ -993,6 +1008,7 @@ CREATE TABLE categories (
     status TINYINT NOT NULL DEFAULT 1 COMMENT '状态：1启用 0禁用',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL COMMENT '软删除时间',
     INDEX idx_parent (parent_id)
 );
 
@@ -1016,6 +1032,7 @@ CREATE TABLE videos (
     release_date DATE NULL COMMENT '上映日期',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL COMMENT '软删除时间',
     INDEX idx_category (category_id),
     INDEX idx_year (year),
     FULLTEXT idx_search (title, subtitle, description)
@@ -1026,7 +1043,8 @@ CREATE TABLE directors (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL UNIQUE COMMENT '导演名称',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL COMMENT '软删除时间'
 );
 
 -- 影视导演关联表
@@ -1043,7 +1061,8 @@ CREATE TABLE actors (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(100) NOT NULL UNIQUE COMMENT '演员名称',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL COMMENT '软删除时间'
 );
 
 -- 影视演员关联表
@@ -1061,7 +1080,8 @@ CREATE TABLE tags (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(50) NOT NULL UNIQUE COMMENT '标签名称',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL COMMENT '软删除时间'
 );
 
 -- 影视标签关联表
@@ -1080,7 +1100,8 @@ CREATE TABLE play_sources (
     sort_order INT NOT NULL DEFAULT 0 COMMENT '排序',
     status TINYINT NOT NULL DEFAULT 1 COMMENT '状态：1启用 0禁用',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL COMMENT '软删除时间'
 );
 
 -- 播放集数表（每个播放源下有多部影视的多集播放链接）
@@ -1097,6 +1118,7 @@ CREATE TABLE play_episodes (
     status TINYINT NOT NULL DEFAULT 1 COMMENT '状态：1启用 0禁用',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL COMMENT '软删除时间',
     UNIQUE uk_source_video_episode (source_id, video_id, episode_number),
     INDEX idx_video (video_id)
 );
@@ -1114,7 +1136,8 @@ CREATE TABLE collect_sources (
     last_collect_at TIMESTAMP NULL COMMENT '最后采集时间',
     status TINYINT NOT NULL DEFAULT 1 COMMENT '状态：1启用 0禁用',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL COMMENT '软删除时间'
 );
 
 -- 采集源分类映射表（采集源返回的外部分类映射到系统内分类）
@@ -1154,7 +1177,8 @@ CREATE TABLE live_channels (
     sort_order INT NOT NULL DEFAULT 0 COMMENT '排序',
     status TINYINT NOT NULL DEFAULT 1 COMMENT '状态：1启用 0禁用',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL COMMENT '软删除时间'
 );
 
 ```
@@ -1177,7 +1201,8 @@ CREATE TABLE themes (
     is_default TINYINT NOT NULL DEFAULT 0 COMMENT '是否默认',
     is_active TINYINT NOT NULL DEFAULT 0 COMMENT '是否当前启用',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL COMMENT '软删除时间'
 );
 
 ```
@@ -1220,6 +1245,7 @@ CREATE TABLE admins (
     last_login_at TIMESTAMP NULL COMMENT '最后登录时间',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL COMMENT '软删除时间',
     INDEX idx_group (group_id)
 );
 
@@ -1230,7 +1256,8 @@ CREATE TABLE user_groups (
     permissions JSON COMMENT '权限列表',
     description VARCHAR(255) NOT NULL DEFAULT '' COMMENT '描述',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL COMMENT '软删除时间'
 );
 
 -- 普通用户表
@@ -1243,7 +1270,8 @@ CREATE TABLE users (
     status TINYINT NOT NULL DEFAULT 1 COMMENT '状态：1启用 0禁用',
     last_login_at TIMESTAMP NULL COMMENT '最后登录时间',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP NULL DEFAULT NULL COMMENT '软删除时间'
 );
 
 ```
@@ -1285,7 +1313,9 @@ CREATE TABLE system_logs (
 
 - **Web框架**：Gin (高性能HTTP框架)
 - **ORM**：Bun (高性能ORM)
-- **数据库**：MySQL 9.x / PostgreSQL 16.x + Redis 7.x
+- **数据库**：MySQL 8.x/9.x 为主开发与生产目标（本阶段默认 MySQL）；PostgreSQL 可选；Redis 7.x
+- **模型生成**：迁移后使用 CLI `orange-tv gen model` 从库表生成 Bun 模型
+- **API 路径约定**：用户端 `/api/client/v{1,2}`，管理端 `/api/admin/v{1,2}`，内网 `/api/internal/v1`
 - **配置管理**：Viper
 - **日志系统**：Zap + Lumberjack
 - **任务调度**：cron
@@ -1308,9 +1338,9 @@ CREATE TABLE system_logs (
 #### 第一阶段：基础架构搭建（2周）
 
 - [x] Go项目初始化和基础配置
-- [ ] 数据库设计和迁移
-- [ ] 基础API框架搭建
-- [ ] 前端项目初始化
+- [x] 数据库设计和迁移（MySQL DDL + `--bun:split`；主实体 `deleted_at` 软删除且不单独建索引；`gen model` 已生成 `internal/model`）
+- [x] 基础API框架搭建（路径 `/api/client/v1`、`/api/admin/v1`；模板 User 示例已清除；域路由骨架已注册）
+- [x] 前端项目初始化（web monorepo：client + admin + shared）
 
 #### 第二阶段：核心功能开发（4周）
 

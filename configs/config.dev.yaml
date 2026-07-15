@@ -11,10 +11,14 @@ log:
   format: console
   output: stdout
 
-# Database configuration (SQLite for development)
+# Database configuration (MySQL for development)
 database:
-  driver: sqlite
-  database: ./data/app_dev.db
+  driver: mysql
+  host: 127.0.0.1
+  port: 3306
+  user: root
+  password: root
+  database: orange_tv
   max_open_conns: 25
   max_idle_conns: 10
   conn_max_lifetime: 300

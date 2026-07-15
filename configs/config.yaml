@@ -30,10 +30,14 @@ log:
   max_age: 7
   compress: true
 
-# Database configuration (required, SQLite example)
+# Database configuration (MySQL default for development)
 database:
-  driver: sqlite
-  database: ./data/app.db
+  driver: mysql
+  host: 127.0.0.1
+  port: 3306
+  user: root
+  password: root
+  database: orange_tv
   max_open_conns: 25
   max_idle_conns: 10
   conn_max_lifetime: 300
@@ -62,6 +66,9 @@ jwt:
     - /liveness
     - /version
     - /swagger/*any
+    - /api/client/v1/*
+    - /api/client/v2/*
+    - /api/admin/v1/auth/login
 
 # Rate limiting configuration (disabled by default)
 rate_limit:

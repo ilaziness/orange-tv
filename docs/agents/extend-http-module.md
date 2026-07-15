@@ -157,7 +157,6 @@ func (h *OrderHandler) Create(c *gin.Context) {
 ```go
 type Handlers struct {
     Health *httphandler.HealthHandler
-    User   *httphandler.UserHandler
     Order  *httphandler.OrderHandler // 新增
 }
 ```
@@ -168,7 +167,6 @@ type Handlers struct {
 func registerClientRoutes(engine *gin.Engine, h *Handlers) {
     v1 := engine.Group(PathClientV1)
     v2 := engine.Group(PathClientV2)
-    registerClientUserRoutes(v1, v2, h.User)
     registerClientOrderRoutes(v1, v2, h.Order) // 新增调用
 }
 
@@ -178,20 +176,17 @@ func registerClientOrderRoutes(v1, v2 *gin.RouterGroup, order *httphandler.Order
 }
 ```
 
-API 路径前缀常量定义于 [`internal/router/paths.go`](internal/router/paths.go)。仅用户端暴露的模块不必修改 `admin.go` / `internal.go`。
+API 路径前缀常量定义于 [`internal/router/paths.go`](internal/router/paths.go)（用户端 `/api/client/v1`，管理端 `/api/admin/v1`，内网 `/api/internal/v1`）。仅用户端暴露的模块不必修改 `admin.go` / `internal.go`。
 
 ## 7. 在 app 包中组装依赖
 
-在 `internal/app/http.go` 的 `wireHTTP()` 中，于现有 user 组装之后追加：
+在 `internal/app/http.go` 的 `wireHTTP()` 中组装新模块并挂到 `Handlers`：
 
 ```go
 orderRepo := repository.NewOrderRepo(a.db)
 orderSvc := service.NewOrderService(orderRepo)
 
-handlers, err := router.NewHandlers(
-	healthHandler,
-	httphandler.NewUserHandler(userSvc),
-)
+handlers, err := router.NewHandlers(healthHandler)
 if err != nil {
 	return err
 }

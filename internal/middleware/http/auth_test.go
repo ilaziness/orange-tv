@@ -114,6 +114,44 @@ func TestJWTAuth_SkipPath(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 }
 
+func TestJWTAuth_SkipPathPrefix(t *testing.T) {
+	mgr := newAuthTestManager()
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(JWTAuth(mgr, "/api/client/*", "/api/admin/v1/auth/login"))
+	r.GET("/api/client/v1/categories", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"ok": true})
+	})
+	r.POST("/api/admin/v1/auth/login", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"ok": true})
+	})
+	r.GET("/api/admin/v1/videos", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"ok": true})
+	})
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/api/client/v1/categories", nil)
+	r.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodPost, "/api/admin/v1/auth/login", nil)
+	r.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	w = httptest.NewRecorder()
+	req, _ = http.NewRequest(http.MethodGet, "/api/admin/v1/videos", nil)
+	r.ServeHTTP(w, req)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestPathSkipped(t *testing.T) {
+	assert.True(t, pathSkipped("/api/client/v1/videos", "/api/client/v1/videos", []string{"/api/client/*"}))
+	assert.True(t, pathSkipped("/swagger/index.html", "/swagger/index.html", []string{"/swagger/*any"}))
+	assert.True(t, pathSkipped("/health", "/health", []string{"/health"}))
+	assert.False(t, pathSkipped("/api/admin/v1/videos", "/api/admin/v1/videos", []string{"/api/client/*"}))
+}
+
 func TestJWTMiddleware_ContextClaims(t *testing.T) {
 	mgr := newAuthTestManager()
 	token, err := mgr.GenerateAccessToken(123)

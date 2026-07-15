@@ -5,11 +5,44 @@ import (
 	"strings"
 )
 
-// ToCamelCase converts snake_case to CamelCase.
+// isSensitiveColumn reports columns that must not appear in JSON output.
+func isSensitiveColumn(name string) bool {
+	switch strings.ToLower(name) {
+	case "password", "passwd", "secret", "token", "access_token", "refresh_token", "api_key":
+		return true
+	default:
+		return false
+	}
+}
+
+// commonInitialisms maps lowercase SQL name segments to Go initialisms.
+var commonInitialisms = map[string]string{
+	"id":    "ID",
+	"url":   "URL",
+	"uri":   "URI",
+	"api":   "API",
+	"ip":    "IP",
+	"uid":   "UID",
+	"uuid":  "UUID",
+	"http":  "HTTP",
+	"https": "HTTPS",
+	"json":  "JSON",
+	"xml":   "XML",
+	"sql":   "SQL",
+	"pk":    "PK",
+	"fk":    "FK",
+}
+
+// ToCamelCase converts snake_case to CamelCase (with common initialisms).
 func ToCamelCase(s string) string {
 	parts := strings.Split(s, "_")
-	for i := range parts {
-		parts[i] = titleCaser.String(parts[i])
+	for i, part := range parts {
+		lower := strings.ToLower(part)
+		if repl, ok := commonInitialisms[lower]; ok {
+			parts[i] = repl
+			continue
+		}
+		parts[i] = titleCaser.String(part)
 	}
 	return strings.Join(parts, "")
 }
@@ -73,7 +106,6 @@ func GenerateModelCode(opts GenerateOptions, modelName, tableName string, column
 
 	sb.WriteString(fmt.Sprintf("package %s\n\n", opts.PackageName))
 
-	imports := []string{`"github.com/uptrace/bun"`}
 	hasTime := false
 	for _, col := range columns {
 		goType := MapSQLTypeToGo(col.Type, col.Nullable)
@@ -82,14 +114,12 @@ func GenerateModelCode(opts GenerateOptions, modelName, tableName string, column
 			break
 		}
 	}
-	if hasTime {
-		imports = append(imports, `"time"`)
-	}
 
 	sb.WriteString("import (\n")
-	for _, imp := range imports {
-		sb.WriteString(fmt.Sprintf("\t%s\n", imp))
+	if hasTime {
+		sb.WriteString("\t\"time\"\n\n")
 	}
+	sb.WriteString("\t\"github.com/uptrace/bun\"\n")
 	sb.WriteString(")\n\n")
 
 	sb.WriteString(fmt.Sprintf("// %s represents the %s table.\n", modelName, tableName))
@@ -109,29 +139,29 @@ func GenerateModelCode(opts GenerateOptions, modelName, tableName string, column
 		goType := MapSQLTypeToGo(col.Type, col.Nullable)
 		fieldName := ToCamelCase(col.Name)
 
-		sb.WriteString(fmt.Sprintf("\t%s %s", fieldName, goType))
-
 		for _, fk := range foreignKeys {
 			if fk.ColumnName == col.Name {
 				refModel := ToCamelCase(fk.ReferencedTableName)
 				refField := ToCamelCase(fk.ReferencedColumnName)
-				sb.WriteString(fmt.Sprintf("\n\t// FK: %s -> %s(%s)", col.Name, refModel, refField))
+				sb.WriteString(fmt.Sprintf("\t// FK: %s -> %s(%s)\n", col.Name, refModel, refField))
 				break
 			}
 		}
 
-		bunTag := fmt.Sprintf(` bun:"%s"`, col.Name)
-		sb.WriteString(bunTag)
-
+		tags := []string{fmt.Sprintf(`bun:"%s"`, col.Name)}
 		if opts.JSONTags {
-			sb.WriteString(fmt.Sprintf(` json:"%s"`, ToSnakeCase(fieldName)))
+			// Prefer DB column names (already snake_case); hide sensitive fields.
+			jsonName := col.Name
+			if isSensitiveColumn(col.Name) {
+				jsonName = "-"
+			}
+			tags = append(tags, fmt.Sprintf(`json:"%s"`, jsonName))
+		}
+		if opts.ValidatorTags && !col.Nullable && !isSensitiveColumn(col.Name) {
+			tags = append(tags, `validate:"required"`)
 		}
 
-		if opts.ValidatorTags && !col.Nullable {
-			sb.WriteString(` validate:"required"`)
-		}
-
-		sb.WriteString("\n")
+		sb.WriteString(fmt.Sprintf("\t%s %s `%s`\n", fieldName, goType, strings.Join(tags, " ")))
 	}
 
 	sb.WriteString("}\n")

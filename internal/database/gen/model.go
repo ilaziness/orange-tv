@@ -106,6 +106,10 @@ func GetTables(ctx context.Context, db *database.DB, driver string) ([]string, e
 		if err := rows.Scan(&tableName); err != nil {
 			return nil, err
 		}
+		// Skip Bun migration bookkeeping tables.
+		if tableName == "bun_migrations" || tableName == "bun_migration_locks" {
+			continue
+		}
 		tables = append(tables, tableName)
 	}
 

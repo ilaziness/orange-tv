@@ -19,9 +19,16 @@ services:
     environment:
       - TZ=Asia/Shanghai
       - DATABASE_ENABLED=${DATABASE_ENABLED:-true}
-      - DATABASE_DRIVER=${DATABASE_DRIVER:-sqlite}
-      - DATABASE_DATABASE=/app/data/app.db
+      - DATABASE_DRIVER=${DATABASE_DRIVER:-mysql}
+      - DATABASE_HOST=${DATABASE_HOST:-mysql}
+      - DATABASE_PORT=${DATABASE_PORT:-3306}
+      - DATABASE_USER=${DATABASE_USER:-orange}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-orange_password}
+      - DATABASE_DATABASE=${DATABASE_DATABASE:-orange_tv}
       - REDIS_ENABLED=${REDIS_ENABLED:-false}
+    depends_on:
+      mysql:
+        condition: service_healthy
     networks:
       - app-network
     healthcheck:
@@ -44,24 +51,23 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # MySQL 数据库（可选）
+  # MySQL 数据库（开发默认）
   mysql:
     image: mysql:8.0
     container_name: app-mysql
     restart: unless-stopped
     environment:
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-rootpassword}
-      - MYSQL_DATABASE=${MYSQL_DATABASE:-myapp}
-      - MYSQL_USER=${MYSQL_USER:-myapp}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-app_password}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-orange_tv}
+      - MYSQL_USER=${MYSQL_USER:-orange}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-orange_password}
     ports:
       - "${MYSQL_PORT:-3306}:3306"
     volumes:
       - mysql-data:/var/lib/mysql
-      - ./migrations:/docker-entrypoint-initdb.d:ro
     networks:
       - app-network
-    command: --default-authentication-plugin=mysql_native_password
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpassword}"]
       interval: 10s

@@ -13,20 +13,20 @@ import (
 
 func testHandlers(t *testing.T) *Handlers {
 	cfg := &config.Config{App: config.AppConfig{Name: "test", Version: "1.0"}}
-	h, err := NewHandlers(httphandler.NewHealthHandler(cfg), httphandler.NewUserHandler(nil))
+	h, err := NewHandlers(httphandler.NewHealthHandler(cfg))
 	require.NoError(t, err)
 	return h
 }
 
 func TestNewHandlers_requiresDependencies(t *testing.T) {
+	_, err := NewHandlers(nil)
+	require.Error(t, err)
+
 	cfg := &config.Config{App: config.AppConfig{Name: "test", Version: "1.0"}}
 	health := httphandler.NewHealthHandler(cfg)
-
-	_, err := NewHandlers(nil, httphandler.NewUserHandler(nil))
-	require.Error(t, err)
-
-	_, err = NewHandlers(health, nil)
-	require.Error(t, err)
+	h, err := NewHandlers(health)
+	require.NoError(t, err)
+	require.NotNil(t, h)
 }
 
 func TestRegisterRoutes_nilHandlers(t *testing.T) {
@@ -55,7 +55,7 @@ func TestRegisterRoutes_registersSystemHealthRoutes(t *testing.T) {
 	require.Equal(t, http.StatusNotFound, w.Code)
 }
 
-func TestRegisterRoutes_registersClientAdminInternalUserRoutes(t *testing.T) {
+func TestRegisterRoutes_registersSwaggerAndClientScaffolds(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	engine := gin.New()
@@ -68,23 +68,19 @@ func TestRegisterRoutes_registersClientAdminInternalUserRoutes(t *testing.T) {
 		}
 		registered[route.Path][route.Method] = true
 	}
+	require.True(t, registered[PathSwagger][http.MethodGet])
+	require.True(t, registered[PathClientV1Categories][http.MethodGet])
+	require.True(t, registered[PathClientV1Videos][http.MethodGet])
+	require.True(t, registered[PathClientV1ThemeCurrent][http.MethodGet])
+	require.True(t, registered[PathAdminV1Auth+"/login"][http.MethodPost])
+	require.True(t, registered[PathAdminV1Auth+"/logout"][http.MethodPost])
+	require.True(t, registered[PathAdminV1Auth+"/profile"][http.MethodGet])
+	require.True(t, registered[PathAdminV1Categories][http.MethodGet])
+}
 
-	expected := []struct {
-		method string
-		path   string
-	}{
-		{http.MethodGet, PathClientV1Users + "/:id"},
-		{http.MethodPost, PathClientV1Users},
-		{http.MethodGet, PathClientV1Users},
-		{http.MethodGet, PathClientV2Users + "/:id"},
-		{http.MethodGet, PathAdminV1Users + "/:id"},
-		{http.MethodPost, PathAdminV1Users},
-		{http.MethodGet, PathInternalV1Users + "/:id"},
-		{http.MethodGet, PathSwagger},
-	}
-	for _, route := range expected {
-		methods, ok := registered[route.path]
-		require.True(t, ok, "path %s should be registered", route.path)
-		require.True(t, methods[route.method], "method %s %s should be registered", route.method, route.path)
-	}
+func TestDefaultJWTSkipPaths_coversClientAndLogin(t *testing.T) {
+	paths := DefaultJWTSkipPaths()
+	require.Contains(t, paths, PathClientV1+"/*")
+	require.Contains(t, paths, PathAdminV1Auth+"/login")
+	require.Contains(t, paths, PathHealth)
 }

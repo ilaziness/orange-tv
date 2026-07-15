@@ -1,0 +1,52 @@
+:root {
+  color: #0f172a;
+  background: #f1f5f9;
+  font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+}
+
+body {
+  margin: 0;
+}
+
+.page {
+  padding: 32px;
+}
+
+.muted {
+  color: #64748b;
+}
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.brand {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar a {
+  color: #cbd5e1;
+  text-decoration: none;
+}
+
+.sidebar a:hover {
+  color: #fff;
+}

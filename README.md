@@ -111,12 +111,13 @@ Configuration can be provided via:
 Environment variables are only used for sensitive data:
 
 ```bash
-# Database configuration
-export DATABASE_ENABLED=true
-export DATABASE_DRIVER=sqlite
-export DATABASE_DATABASE=./data/app.db
-export DATABASE_USER=
-export DATABASE_PASSWORD=
+# Database configuration (MySQL default)
+export DATABASE_DRIVER=mysql
+export DATABASE_HOST=127.0.0.1
+export DATABASE_PORT=3306
+export DATABASE_USER=orange
+export DATABASE_PASSWORD=orange_password
+export DATABASE_DATABASE=orange_tv
 
 # Redis configuration
 export REDIS_ENABLED=false
@@ -129,13 +130,13 @@ See `.env.example` for all available environment variables.
 
 ## Database Integration
 
-This template includes database integration using Bun ORM with support for MySQL, PostgreSQL, and SQLite.
+This project uses Bun ORM with **MySQL as the default** for development and production. PostgreSQL and SQLite remain supported by the driver layer (SQLite is still used in unit tests).
 
 ### Supported Databases
 
-- **SQLite**: Default for development and testing
-- **MySQL**: For production environments
-- **PostgreSQL**: For production environments
+- **MySQL**: Default for development and production
+- **PostgreSQL**: Optional
+- **SQLite**: Optional / unit tests
 
 ### Database Configuration
 
@@ -143,17 +144,15 @@ Configure the database in your config files:
 
 ```yaml
 database:
-  enabled: true
-  driver: sqlite
-  host: ""
-  port: 0
-  database: ./data/app.db
-  user: ""
-  password: ""
-  ssl_mode: disable
+  driver: mysql
+  host: 127.0.0.1
+  port: 3306
+  database: orange_tv
+  user: orange
+  password: orange_password
   max_open_conns: 25
-  max_idle_conns: 5
-  conn_max_lifetime: 5m
+  max_idle_conns: 10
+  conn_max_lifetime: 300
 ```
 
 ### Running Migrations

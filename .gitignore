@@ -20,6 +20,11 @@ go.work
 # Build output
 build/
 dist/
+web/**/dist/
+web/**/node_modules/
+
+# Frontend monorepo
+web/node_modules/
 
 # IDE
 .idea/
@@ -48,3 +53,6 @@ temp/
 # Config files with secrets
 configs/config.local.yaml
 configs/.env.local
+
+node_modules
+skills-lock.json

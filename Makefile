@@ -69,12 +69,10 @@ benchmark:
 	@echo "Running benchmarks..."
 	$(GOTEST) -bench=. -benchmem ./...
 
-## mock: Generate mock files using mockgen
+## mock: Generate mock files using mockgen (add sources when services exist)
 mock:
 	$(call require_tool,mockgen,go install go.uber.org/mock/mockgen@latest)
-	@echo "Generating mock files..."
-	mockgen -source=internal/service/user.go -destination=internal/service/mock_user.go
-	mockgen -source=internal/repository/user.go -destination=internal/repository/mock_user.go
+	@echo "No mock sources configured (user example removed). Add mockgen lines when services exist."
 
 ## clean: Clean build artifacts
 clean:

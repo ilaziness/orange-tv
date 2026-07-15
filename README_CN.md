@@ -111,12 +111,13 @@ make build
 环境变量仅用于敏感数据：
 
 ```bash
-# 数据库配置
-export DATABASE_ENABLED=true
-export DATABASE_DRIVER=sqlite
-export DATABASE_DATABASE=./data/app.db
-export DATABASE_USER=
-export DATABASE_PASSWORD=
+# 数据库配置（默认 MySQL）
+export DATABASE_DRIVER=mysql
+export DATABASE_HOST=127.0.0.1
+export DATABASE_PORT=3306
+export DATABASE_USER=orange
+export DATABASE_PASSWORD=orange_password
+export DATABASE_DATABASE=orange_tv
 
 # Redis 配置
 export REDIS_ENABLED=false
@@ -129,13 +130,13 @@ export REDIS_PASSWORD=
 
 ## 数据库集成
 
-本模板包含使用 Bun ORM 的数据库集成，支持 MySQL、PostgreSQL 和 SQLite。
+使用 Bun ORM，**开发与生产默认 MySQL**。驱动层仍支持 PostgreSQL 与 SQLite（单元测试可用 SQLite）。
 
 ### 支持的数据库
 
-- **SQLite**：默认用于开发和测试
-- **MySQL**：用于生产环境
-- **PostgreSQL**：用于生产环境
+- **MySQL**：开发与生产默认
+- **PostgreSQL**：可选
+- **SQLite**：可选 / 单元测试
 
 ### 数据库配置
 
@@ -143,17 +144,15 @@ export REDIS_PASSWORD=
 
 ```yaml
 database:
-  enabled: true
-  driver: sqlite
-  host: ""
-  port: 0
-  database: ./data/app.db
-  user: ""
-  password: ""
-  ssl_mode: disable
+  driver: mysql
+  host: 127.0.0.1
+  port: 3306
+  database: orange_tv
+  user: orange
+  password: orange_password
   max_open_conns: 25
-  max_idle_conns: 5
-  conn_max_lifetime: 5m
+  max_idle_conns: 10
+  conn_max_lifetime: 300
 ```
 
 ### 执行迁移

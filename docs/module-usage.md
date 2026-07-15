@@ -97,9 +97,12 @@ http:
   port: 8080
 
 database:
-  enabled: true
-  driver: sqlite
-  database: ./data/app.db
+  driver: mysql
+  host: 127.0.0.1
+  port: 3306
+  database: orange_tv
+  user: orange
+  password: orange_password
 
 redis:
   enabled: false
