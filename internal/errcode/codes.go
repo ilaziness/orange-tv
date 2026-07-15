@@ -1,6 +1,6 @@
 // Package errcode provides error codes and error types following PRD specification.
 // Error code format: {3-digit module code}{4-digit business code}
-// Module codes: 100=General, 200=User, 300=Auth, 400=Order, 500=Payment, 900=System
+// Module codes: 100=General, 200=User, 300=Auth, 400=Content, 900=System
 // Business codes: 0001-0999=General, 1000-1999=Business Logic, 2000-2999=Permission, 5000-5999=System
 package errcode
 

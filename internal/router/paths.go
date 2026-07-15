@@ -12,31 +12,6 @@ const (
 	PathAdminV2    = "/api/admin/v2"
 	PathInternalV1 = "/api/internal/v1"
 
-	// Client domain paths (v1)
-	PathClientV1Categories   = PathClientV1 + "/categories"
-	PathClientV1Videos       = PathClientV1 + "/videos"
-	PathClientV1Search       = PathClientV1 + "/search"
-	PathClientV1Live         = PathClientV1 + "/live"
-	PathClientV1ThemeCurrent = PathClientV1 + "/theme/current"
-
-	// Admin domain path prefixes (v1)
-	PathAdminV1Auth           = PathAdminV1 + "/auth"
-	PathAdminV1Categories     = PathAdminV1 + "/categories"
-	PathAdminV1Videos         = PathAdminV1 + "/videos"
-	PathAdminV1PlaySources    = PathAdminV1 + "/play-sources"
-	PathAdminV1PlayEpisodes   = PathAdminV1 + "/play-episodes"
-	PathAdminV1Directors      = PathAdminV1 + "/directors"
-	PathAdminV1Actors         = PathAdminV1 + "/actors"
-	PathAdminV1Tags           = PathAdminV1 + "/tags"
-	PathAdminV1Live           = PathAdminV1 + "/live"
-	PathAdminV1CollectSources = PathAdminV1 + "/collect-sources"
-	PathAdminV1Collect        = PathAdminV1 + "/collect"
-	PathAdminV1Admins         = PathAdminV1 + "/admins"
-	PathAdminV1Groups         = PathAdminV1 + "/groups"
-	PathAdminV1Users          = PathAdminV1 + "/users"
-	PathAdminV1Settings       = PathAdminV1 + "/settings"
-	PathAdminV1Themes         = PathAdminV1 + "/themes"
-
 	PathSwagger = "/swagger/*any"
 )
 
@@ -53,7 +28,7 @@ func DefaultJWTSkipPaths() []string {
 		PathSwagger,
 		PathClientV1+"/*", // 用户端公开只读 API
 		PathClientV2+"/*",
-		PathAdminV1Auth+"/login",
+		PathAdminV1+"/auth/login",
 	)
 	return paths
 }

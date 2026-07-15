@@ -24,11 +24,13 @@ orange-tv/
 │   ├── constant/                    # 应用级常量
 │   ├── crypto/                      # 密码哈希等加密工具
 │   ├── database/                    # 数据库连接与 Bun ORM 初始化；gen model 生成器
-│   ├── dto/                         # 请求/响应数据传输对象
+│   ├── dto/                         # 请求/响应 DTO（共享 common + admin/client 子包）
 │   ├── errcode/                     # 业务错误码定义
 │   ├── event/                       # 发布/订阅事件总线
 │   ├── handler/                     # 协议层请求处理器
-│   │   └── http/                    # HTTP Handler（REST API）
+│   │   └── http/                    # HTTP Handler 公共工具 + health/stub
+│   │       ├── admin/               # 管理端 Handler
+│   │       └── client/              # 用户端 Handler
 │   ├── logger/                      # Zap 日志封装
 │   ├── metrics/                     # Prometheus 指标采集与暴露
 │   ├── middleware/                  # 协议层中间件
@@ -38,7 +40,8 @@ orange-tv/
 │   ├── response/                    # 统一 HTTP 响应结构
 │   ├── router/                      # Gin 路由注册：/api/client、/api/admin、/api/internal
 │   ├── server/                      # HTTP 服务器实现
-│   ├── service/                     # 业务逻辑层
+│   ├── service/                     # 业务逻辑层（admin/client 子包）
+│   ├── testutil/                    # 测试辅助（业务 handler 桩等）
 │   ├── tracing/                     # OpenTelemetry 链路追踪
 │   ├── utils/                       # 通用工具（协程池等）
 │   └── validator/                   # 请求参数校验器

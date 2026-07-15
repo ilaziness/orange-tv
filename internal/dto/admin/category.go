@@ -1,4 +1,4 @@
-package dto
+package admin
 
 // CreateCategoryRequest creates a category.
 type CreateCategoryRequest struct {
@@ -14,14 +14,4 @@ type UpdateCategoryRequest struct {
 	ParentID  *int64  `json:"parent_id" validate:"omitempty,min=0"`
 	SortOrder *int32  `json:"sort_order" validate:"omitempty,min=0"`
 	Status    *int8   `json:"status" validate:"omitempty,oneof=0 1"`
-}
-
-// CategoryResponse is a flat category representation.
-type CategoryResponse struct {
-	ID        int64              `json:"id"`
-	Name      string             `json:"name"`
-	ParentID  int64              `json:"parent_id"`
-	SortOrder int32              `json:"sort_order"`
-	Status    int8               `json:"status"`
-	Children  []CategoryResponse `json:"children,omitempty"`
 }

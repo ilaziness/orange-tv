@@ -24,9 +24,15 @@ type PlayRepository interface {
 	ListEpisodes(ctx context.Context, videoID, sourceID int64, offset, limit int) ([]model.PlayEpisodes, int, error)
 	ListEpisodesByVideo(ctx context.Context, videoID int64, onlyEnabled bool) ([]model.PlayEpisodes, error)
 	GetEpisode(ctx context.Context, id int64) (*model.PlayEpisodes, error)
+	// GetEpisodeByKey returns an episode including soft-deleted rows (for unique key reuse).
+	GetEpisodeByKey(ctx context.Context, videoID, sourceID int64, episodeNumber int32) (*model.PlayEpisodes, error)
 	ExistsEpisode(ctx context.Context, videoID, sourceID int64, episodeNumber int32, excludeID int64) (bool, error)
 	CreateEpisode(ctx context.Context, m *model.PlayEpisodes) error
 	UpdateEpisode(ctx context.Context, m *model.PlayEpisodes) error
+	// RestoreAndUpdateEpisode clears deleted_at and overwrites fields for a soft-deleted row.
+	RestoreAndUpdateEpisode(ctx context.Context, m *model.PlayEpisodes) error
+	// HardDeleteEpisodeByKey permanently removes soft-deleted rows for the unique key.
+	HardDeleteEpisodeByKey(ctx context.Context, videoID, sourceID int64, episodeNumber int32, excludeID int64) error
 	SoftDeleteEpisode(ctx context.Context, id int64) error
 }
 
@@ -166,12 +172,28 @@ func (r *playRepo) GetEpisode(ctx context.Context, id int64) (*model.PlayEpisode
 	return item, nil
 }
 
+func (r *playRepo) GetEpisodeByKey(ctx context.Context, videoID, sourceID int64, episodeNumber int32) (*model.PlayEpisodes, error) {
+	item := new(model.PlayEpisodes)
+	err := r.db.NewSelect().Model(item).
+		Where("video_id = ?", videoID).
+		Where("source_id = ?", sourceID).
+		Where("episode_number = ?", episodeNumber).
+		Scan(ctx)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("get play episode by key: %w", err)
+	}
+	return item, nil
+}
+
 func (r *playRepo) ExistsEpisode(ctx context.Context, videoID, sourceID int64, episodeNumber int32, excludeID int64) (bool, error) {
 	q := r.db.NewSelect().Model((*model.PlayEpisodes)(nil)).
 		Where("video_id = ?", videoID).
 		Where("source_id = ?", sourceID).
-		Where("episode_number = ?", episodeNumber)
-	// Unique index covers all rows including soft-deleted. Check both for conflict messaging.
+		Where("episode_number = ?", episodeNumber).
+		Where("deleted_at IS NULL")
 	if excludeID > 0 {
 		q = q.Where("id <> ?", excludeID)
 	}
@@ -196,6 +218,48 @@ func (r *playRepo) UpdateEpisode(ctx context.Context, m *model.PlayEpisodes) err
 	_, err := r.db.NewUpdate().Model(m).WherePK().Where("deleted_at IS NULL").Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("update play episode: %w", err)
+	}
+	return nil
+}
+
+func (r *playRepo) RestoreAndUpdateEpisode(ctx context.Context, m *model.PlayEpisodes) error {
+	now := time.Now()
+	m.UpdatedAt = &now
+	m.DeletedAt = nil
+	// Explicitly clear deleted_at (nil pointer can be omitted by ORM zero handling).
+	_, err := r.db.NewUpdate().Model(m).
+		Set("source_id = ?", m.SourceID).
+		Set("video_id = ?", m.VideoID).
+		Set("episode_number = ?", m.EpisodeNumber).
+		Set("title = ?", m.Title).
+		Set("play_url = ?", m.PlayURL).
+		Set("quality = ?", m.Quality).
+		Set("format = ?", m.Format).
+		Set("sort_order = ?", m.SortOrder).
+		Set("status = ?", m.Status).
+		Set("updated_at = ?", now).
+		Set("deleted_at = NULL").
+		WherePK().
+		Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("restore play episode: %w", err)
+	}
+	return nil
+}
+
+// HardDeleteEpisodeByKey permanently removes a (usually soft-deleted) episode row by unique key.
+// Used when reusing the key for another active episode update.
+func (r *playRepo) HardDeleteEpisodeByKey(ctx context.Context, videoID, sourceID int64, episodeNumber int32, excludeID int64) error {
+	q := r.db.NewDelete().Model((*model.PlayEpisodes)(nil)).
+		Where("video_id = ?", videoID).
+		Where("source_id = ?", sourceID).
+		Where("episode_number = ?", episodeNumber).
+		Where("deleted_at IS NOT NULL")
+	if excludeID > 0 {
+		q = q.Where("id <> ?", excludeID)
+	}
+	if _, err := q.Exec(ctx); err != nil {
+		return fmt.Errorf("hard delete play episode by key: %w", err)
 	}
 	return nil
 }

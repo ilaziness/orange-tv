@@ -1,11 +1,12 @@
-package service
+package admin
 
 import (
 	"context"
 	"strings"
 
 	"github.com/ilaziness/orange-tv/internal/constant"
-	"github.com/ilaziness/orange-tv/internal/dto"
+	shareddto "github.com/ilaziness/orange-tv/internal/dto"
+	dto "github.com/ilaziness/orange-tv/internal/dto/admin"
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
@@ -13,9 +14,9 @@ import (
 
 // CategoryService manages categories.
 type CategoryService interface {
-	ListTree(ctx context.Context, onlyEnabled bool) ([]dto.CategoryResponse, error)
-	Create(ctx context.Context, req *dto.CreateCategoryRequest) (*dto.CategoryResponse, error)
-	Update(ctx context.Context, id int64, req *dto.UpdateCategoryRequest) (*dto.CategoryResponse, error)
+	ListTree(ctx context.Context, onlyEnabled bool) ([]shareddto.CategoryResponse, error)
+	Create(ctx context.Context, req *dto.CreateCategoryRequest) (*shareddto.CategoryResponse, error)
+	Update(ctx context.Context, id int64, req *dto.UpdateCategoryRequest) (*shareddto.CategoryResponse, error)
 	Delete(ctx context.Context, id int64) error
 }
 
@@ -28,7 +29,7 @@ func NewCategoryService(repo repository.CategoryRepository) CategoryService {
 	return &categoryService{repo: repo}
 }
 
-func (s *categoryService) ListTree(ctx context.Context, onlyEnabled bool) ([]dto.CategoryResponse, error) {
+func (s *categoryService) ListTree(ctx context.Context, onlyEnabled bool) ([]shareddto.CategoryResponse, error) {
 	items, err := s.repo.List(ctx, onlyEnabled)
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
@@ -36,7 +37,7 @@ func (s *categoryService) ListTree(ctx context.Context, onlyEnabled bool) ([]dto
 	return buildCategoryTree(items), nil
 }
 
-func (s *categoryService) Create(ctx context.Context, req *dto.CreateCategoryRequest) (*dto.CategoryResponse, error) {
+func (s *categoryService) Create(ctx context.Context, req *dto.CreateCategoryRequest) (*shareddto.CategoryResponse, error) {
 	name := strings.TrimSpace(req.Name)
 	if name == "" {
 		return nil, errcode.WithMessage(errcode.ParamError, "分类名称不能为空")
@@ -74,7 +75,7 @@ func (s *categoryService) Create(ctx context.Context, req *dto.CreateCategoryReq
 	return toCategoryDTO(item), nil
 }
 
-func (s *categoryService) Update(ctx context.Context, id int64, req *dto.UpdateCategoryRequest) (*dto.CategoryResponse, error) {
+func (s *categoryService) Update(ctx context.Context, id int64, req *dto.UpdateCategoryRequest) (*shareddto.CategoryResponse, error) {
 	item, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
@@ -110,7 +111,7 @@ func (s *categoryService) Update(ctx context.Context, id int64, req *dto.UpdateC
 			if parent == nil {
 				return nil, errcode.CategoryNotFound
 			}
-			// prevent cycle: parent cannot be a descendant of id
+			// prevent cycle: new parent cannot be a descendant of current node
 			all, err := s.repo.List(ctx, false)
 			if err != nil {
 				return nil, errcode.Wrap(errcode.DatabaseError, err)
@@ -161,8 +162,8 @@ func (s *categoryService) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-func toCategoryDTO(item *model.Categories) *dto.CategoryResponse {
-	return &dto.CategoryResponse{
+func toCategoryDTO(item *model.Categories) *shareddto.CategoryResponse {
+	return &shareddto.CategoryResponse{
 		ID:        item.ID,
 		Name:      item.Name,
 		ParentID:  item.ParentID,
@@ -171,38 +172,41 @@ func toCategoryDTO(item *model.Categories) *dto.CategoryResponse {
 	}
 }
 
-func buildCategoryTree(items []model.Categories) []dto.CategoryResponse {
+func buildCategoryTree(items []model.Categories) []shareddto.CategoryResponse {
 	byParent := make(map[int64][]model.Categories, len(items))
 	for _, item := range items {
 		byParent[item.ParentID] = append(byParent[item.ParentID], item)
 	}
-	var build func(parentID int64) []dto.CategoryResponse
-	build = func(parentID int64) []dto.CategoryResponse {
+	var build func(parentID int64) []shareddto.CategoryResponse
+	build = func(parentID int64) []shareddto.CategoryResponse {
 		children := byParent[parentID]
-		out := make([]dto.CategoryResponse, 0, len(children))
+		out := make([]shareddto.CategoryResponse, 0, len(children))
 		for _, c := range children {
-			node := dto.CategoryResponse{
+			// ensure JSON always returns [] for empty children, not null
+			childNodes := build(c.ID)
+			if childNodes == nil {
+				childNodes = []shareddto.CategoryResponse{}
+			}
+			node := shareddto.CategoryResponse{
 				ID:        c.ID,
 				Name:      c.Name,
 				ParentID:  c.ParentID,
 				SortOrder: c.SortOrder,
 				Status:    c.Status,
-				Children:  build(c.ID),
+				Children:  childNodes,
 			}
 			out = append(out, node)
 		}
 		return out
 	}
-	return build(0)
+	roots := build(0)
+	if roots == nil {
+		return []shareddto.CategoryResponse{}
+	}
+	return roots
 }
 
 func isDescendant(all []model.Categories, ancestorID, nodeID int64) bool {
-	// walk from nodeID up via parent map
-	parentOf := make(map[int64]int64, len(all))
-	for _, c := range all {
-		parentOf[c.ID] = c.ParentID
-	}
-	// alternatively: collect descendants of ancestor
 	childrenOf := make(map[int64][]int64, len(all))
 	for _, c := range all {
 		childrenOf[c.ParentID] = append(childrenOf[c.ParentID], c.ID)

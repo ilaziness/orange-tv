@@ -7,82 +7,85 @@ import (
 )
 
 func registerAdminRoutes(engine *gin.Engine, h *Handlers) {
-	// 登录始终公开
-	publicAuth := engine.Group(PathAdminV1Auth)
-	publicAuth.POST("/login", h.Stub.NotImplemented)
+	// login is always public
+	publicAuth := engine.Group(PathAdminV1 + "/auth")
+	publicAuth.POST("/login", h.AdminAuth.Login)
 
 	v1 := engine.Group(PathAdminV1)
 	if h.RequireAdminAuth {
-		v1.Use(httpmiddleware.RequireAuth())
+		v1.Use(httpmiddleware.RequireSuperAdmin(func(c *gin.Context, adminID int64) error {
+			_, _, err := h.AuthService.EnsureSuperAdmin(c.Request.Context(), adminID)
+			return err
+		}))
 	}
-	registerAdminProtectedAuthRoutes(v1, h.Stub)
-	registerAdminContentRoutes(v1, h.Stub)
+
+	registerAdminProtectedAuthRoutes(v1, h)
+	registerAdminContentRoutes(v1, h)
 	registerAdminUserRoutes(v1, h.Stub)
 	registerAdminSystemRoutes(v1, h.Stub)
 }
 
-func registerAdminProtectedAuthRoutes(v1 *gin.RouterGroup, stub *httphandler.StubHandler) {
+func registerAdminProtectedAuthRoutes(v1 *gin.RouterGroup, h *Handlers) {
 	auth := v1.Group("/auth")
-	auth.POST("/logout", stub.NotImplemented)
-	auth.GET("/profile", stub.NotImplemented)
+	auth.POST("/logout", h.AdminAuth.Logout)
+	auth.GET("/profile", h.AdminAuth.Profile)
 }
 
-func registerAdminContentRoutes(v1 *gin.RouterGroup, stub *httphandler.StubHandler) {
+func registerAdminContentRoutes(v1 *gin.RouterGroup, h *Handlers) {
 	// categories
-	v1.GET("/categories", stub.EmptyArray)
-	v1.POST("/categories", stub.NotImplemented)
-	v1.PUT("/categories/:id", stub.NotImplemented)
-	v1.DELETE("/categories/:id", stub.NotImplemented)
+	v1.GET("/categories", h.AdminCategory.List)
+	v1.POST("/categories", h.AdminCategory.Create)
+	v1.PUT("/categories/:id", h.AdminCategory.Update)
+	v1.DELETE("/categories/:id", h.AdminCategory.Delete)
 
 	// videos
-	v1.GET("/videos", stub.EmptyList)
-	v1.POST("/videos", stub.NotImplemented)
-	v1.PUT("/videos/:id", stub.NotImplemented)
-	v1.DELETE("/videos/:id", stub.NotImplemented)
+	v1.GET("/videos", h.AdminVideo.List)
+	v1.GET("/videos/:id", h.AdminVideo.Get)
+	v1.POST("/videos", h.AdminVideo.Create)
+	v1.PUT("/videos/:id", h.AdminVideo.Update)
+	v1.DELETE("/videos/:id", h.AdminVideo.Delete)
 
 	// play sources / episodes
-	v1.GET("/play-sources", stub.EmptyList)
-	v1.POST("/play-sources", stub.NotImplemented)
-	v1.PUT("/play-sources/:id", stub.NotImplemented)
-	v1.DELETE("/play-sources/:id", stub.NotImplemented)
-
-	v1.GET("/play-episodes", stub.EmptyList)
-	v1.POST("/play-episodes", stub.NotImplemented)
-	v1.PUT("/play-episodes/:id", stub.NotImplemented)
-	v1.DELETE("/play-episodes/:id", stub.NotImplemented)
+	v1.GET("/play-sources", h.AdminPlay.ListSources)
+	v1.POST("/play-sources", h.AdminPlay.CreateSource)
+	v1.PUT("/play-sources/:id", h.AdminPlay.UpdateSource)
+	v1.DELETE("/play-sources/:id", h.AdminPlay.DeleteSource)
+	v1.GET("/play-episodes", h.AdminPlay.ListEpisodes)
+	v1.POST("/play-episodes", h.AdminPlay.CreateEpisode)
+	v1.PUT("/play-episodes/:id", h.AdminPlay.UpdateEpisode)
+	v1.DELETE("/play-episodes/:id", h.AdminPlay.DeleteEpisode)
 
 	// directors / actors / tags
-	v1.GET("/directors", stub.EmptyList)
-	v1.POST("/directors", stub.NotImplemented)
-	v1.PUT("/directors/:id", stub.NotImplemented)
-	v1.DELETE("/directors/:id", stub.NotImplemented)
+	v1.GET("/directors", h.AdminMetadata.ListDirectors)
+	v1.POST("/directors", h.AdminMetadata.CreateDirector)
+	v1.PUT("/directors/:id", h.AdminMetadata.UpdateDirector)
+	v1.DELETE("/directors/:id", h.AdminMetadata.DeleteDirector)
 
-	v1.GET("/actors", stub.EmptyList)
-	v1.POST("/actors", stub.NotImplemented)
-	v1.PUT("/actors/:id", stub.NotImplemented)
-	v1.DELETE("/actors/:id", stub.NotImplemented)
+	v1.GET("/actors", h.AdminMetadata.ListActors)
+	v1.POST("/actors", h.AdminMetadata.CreateActor)
+	v1.PUT("/actors/:id", h.AdminMetadata.UpdateActor)
+	v1.DELETE("/actors/:id", h.AdminMetadata.DeleteActor)
 
-	v1.GET("/tags", stub.EmptyList)
-	v1.POST("/tags", stub.NotImplemented)
-	v1.PUT("/tags/:id", stub.NotImplemented)
-	v1.DELETE("/tags/:id", stub.NotImplemented)
+	v1.GET("/tags", h.AdminMetadata.ListTags)
+	v1.POST("/tags", h.AdminMetadata.CreateTag)
+	v1.PUT("/tags/:id", h.AdminMetadata.UpdateTag)
+	v1.DELETE("/tags/:id", h.AdminMetadata.DeleteTag)
 
-	// live
-	v1.GET("/live", stub.EmptyList)
-	v1.POST("/live", stub.NotImplemented)
-	v1.PUT("/live/:id", stub.NotImplemented)
-	v1.DELETE("/live/:id", stub.NotImplemented)
+	// live / collect remain stubs for later phases
+	v1.GET("/live", h.Stub.EmptyList)
+	v1.POST("/live", h.Stub.NotImplemented)
+	v1.PUT("/live/:id", h.Stub.NotImplemented)
+	v1.DELETE("/live/:id", h.Stub.NotImplemented)
 
-	// collect
-	v1.GET("/collect-sources", stub.EmptyList)
-	v1.POST("/collect-sources", stub.NotImplemented)
-	v1.PUT("/collect-sources/:id", stub.NotImplemented)
-	v1.DELETE("/collect-sources/:id", stub.NotImplemented)
-	v1.GET("/collect-sources/:id/categories", stub.EmptyArray)
-	v1.POST("/collect-sources/:id/categories", stub.NotImplemented)
-	v1.POST("/collect/:source_id/start", stub.NotImplemented)
-	v1.POST("/collect/:source_id/stop", stub.NotImplemented)
-	v1.GET("/collect/logs", stub.EmptyList)
+	v1.GET("/collect-sources", h.Stub.EmptyList)
+	v1.POST("/collect-sources", h.Stub.NotImplemented)
+	v1.PUT("/collect-sources/:id", h.Stub.NotImplemented)
+	v1.DELETE("/collect-sources/:id", h.Stub.NotImplemented)
+	v1.GET("/collect-sources/:id/categories", h.Stub.EmptyArray)
+	v1.POST("/collect-sources/:id/categories", h.Stub.NotImplemented)
+	v1.POST("/collect/:source_id/start", h.Stub.NotImplemented)
+	v1.POST("/collect/:source_id/stop", h.Stub.NotImplemented)
+	v1.GET("/collect/logs", h.Stub.EmptyList)
 }
 
 func registerAdminUserRoutes(v1 *gin.RouterGroup, stub *httphandler.StubHandler) {

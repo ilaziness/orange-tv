@@ -11,13 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func testHandlers(t *testing.T) *Handlers {
-	cfg := &config.Config{App: config.AppConfig{Name: "test", Version: "1.0"}}
-	h, err := NewHandlers(httphandler.NewHealthHandler(cfg))
-	require.NoError(t, err)
-	return h
-}
-
 func TestNewHandlers_requiresDependencies(t *testing.T) {
 	_, err := NewHandlers(nil)
 	require.Error(t, err)
@@ -34,6 +27,18 @@ func TestRegisterRoutes_nilHandlers(t *testing.T) {
 	engine := gin.New()
 	err := RegisterRoutes(engine, nil)
 	require.Error(t, err)
+}
+
+func TestRegisterRoutes_requiresBusinessHandlers(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	cfg := &config.Config{App: config.AppConfig{Name: "test", Version: "1.0"}}
+	h, err := NewHandlers(httphandler.NewHealthHandler(cfg))
+	require.NoError(t, err)
+
+	engine := gin.New()
+	err = RegisterRoutes(engine, h)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "admin auth handler is required")
 }
 
 func TestRegisterRoutes_registersSystemHealthRoutes(t *testing.T) {
@@ -69,18 +74,18 @@ func TestRegisterRoutes_registersSwaggerAndClientScaffolds(t *testing.T) {
 		registered[route.Path][route.Method] = true
 	}
 	require.True(t, registered[PathSwagger][http.MethodGet])
-	require.True(t, registered[PathClientV1Categories][http.MethodGet])
-	require.True(t, registered[PathClientV1Videos][http.MethodGet])
-	require.True(t, registered[PathClientV1ThemeCurrent][http.MethodGet])
-	require.True(t, registered[PathAdminV1Auth+"/login"][http.MethodPost])
-	require.True(t, registered[PathAdminV1Auth+"/logout"][http.MethodPost])
-	require.True(t, registered[PathAdminV1Auth+"/profile"][http.MethodGet])
-	require.True(t, registered[PathAdminV1Categories][http.MethodGet])
+	require.True(t, registered[PathClientV1+"/categories"][http.MethodGet])
+	require.True(t, registered[PathClientV1+"/videos"][http.MethodGet])
+	require.True(t, registered[PathClientV1+"/theme/current"][http.MethodGet])
+	require.True(t, registered[PathAdminV1+"/auth/login"][http.MethodPost])
+	require.True(t, registered[PathAdminV1+"/auth/logout"][http.MethodPost])
+	require.True(t, registered[PathAdminV1+"/auth/profile"][http.MethodGet])
+	require.True(t, registered[PathAdminV1+"/categories"][http.MethodGet])
 }
 
 func TestDefaultJWTSkipPaths_coversClientAndLogin(t *testing.T) {
 	paths := DefaultJWTSkipPaths()
 	require.Contains(t, paths, PathClientV1+"/*")
-	require.Contains(t, paths, PathAdminV1Auth+"/login")
+	require.Contains(t, paths, PathAdminV1+"/auth/login")
 	require.Contains(t, paths, PathHealth)
 }

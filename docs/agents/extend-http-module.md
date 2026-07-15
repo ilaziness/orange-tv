@@ -24,10 +24,10 @@ type Order struct {
 
 ## 2. 创建 DTO（可选）
 
-在 `internal/dto/` 下新建 DTO 文件：
+DTO 按 API 面分子包：`internal/dto/admin`、`internal/dto/client`；共享类型放 `internal/dto`。
 
 ```go
-package dto
+package admin
 
 type CreateOrderRequest struct {
     UserID int64   `json:"user_id" validate:"required"`
@@ -83,20 +83,20 @@ func (r *orderRepo) GetByID(ctx context.Context, id int64) (*model.Order, error)
 
 ## 4. 创建 Service
 
-在 `internal/service/` 下新建服务文件：
+Service 按 API 面分子包：`internal/service/admin`、`internal/service/client`。
 
 ```go
-package service
+package admin
 
 import (
     "context"
 
-    "github.com/ilaziness/orange-tv/internal/dto"
+    admindto "github.com/ilaziness/orange-tv/internal/dto/admin"
     "github.com/ilaziness/orange-tv/internal/repository"
 )
 
 type OrderService interface {
-    CreateOrder(ctx context.Context, req *dto.CreateOrderRequest) (*dto.OrderResponse, error)
+    CreateOrder(ctx context.Context, req *admindto.CreateOrderRequest) (*admindto.OrderResponse, error)
 }
 
 type orderService struct {
@@ -106,44 +106,39 @@ type orderService struct {
 func NewOrderService(orderRepo repository.OrderRepository) OrderService {
     return &orderService{orderRepo: orderRepo}
 }
-
-func (s *orderService) CreateOrder(ctx context.Context, req *dto.CreateOrderRequest) (*dto.OrderResponse, error) {
-    // 业务逻辑实现
-    return nil, nil
-}
 ```
 
 ## 5. 创建 Handler
 
-在 `internal/handler/http/` 下新建 Handler 文件：
+Handler 同样分子包：`internal/handler/http/admin`、`internal/handler/http/client`。公共绑定工具在 `internal/handler/http`。
 
 ```go
-package http
+package admin
 
 import (
-    "github.com/ilaziness/orange-tv/internal/dto"
-    "github.com/ilaziness/orange-tv/internal/response"
-    "github.com/ilaziness/orange-tv/internal/service"
     "github.com/gin-gonic/gin"
+    admindto "github.com/ilaziness/orange-tv/internal/dto/admin"
+    httphandler "github.com/ilaziness/orange-tv/internal/handler/http"
+    "github.com/ilaziness/orange-tv/internal/response"
+    adminsvc "github.com/ilaziness/orange-tv/internal/service/admin"
 )
 
 type OrderHandler struct {
-    orderService service.OrderService
+    orderService adminsvc.OrderService
 }
 
-func NewOrderHandler(orderService service.OrderService) *OrderHandler {
+func NewOrderHandler(orderService adminsvc.OrderService) *OrderHandler {
     return &OrderHandler{orderService: orderService}
 }
 
 func (h *OrderHandler) Create(c *gin.Context) {
-    var req dto.CreateOrderRequest
-    if !BindAndValidate(c, &req) {
+    var req admindto.CreateOrderRequest
+    if !httphandler.BindAndValidate(c, &req) {
         return
     }
-
     resp, err := h.orderService.CreateOrder(c.Request.Context(), &req)
     if err != nil {
-        HandleServiceError(c, err)
+        response.Error(c, err)
         return
     }
     response.Success(c, resp)
@@ -152,45 +147,30 @@ func (h *OrderHandler) Create(c *gin.Context) {
 
 ## 6. 注册路由
 
-1. 在 [`internal/router/handlers.go`](internal/router/handlers.go) 的 `Handlers` 中追加 handler 字段：
+1. 在 [`internal/router/handlers.go`](internal/router/handlers.go) 的 `Handlers` 中追加 handler 字段（例如 `AdminOrder` / `ClientOrder`）。
+2. 在对应 API 面路由文件中**直接注册**字符串路径，不要做 `if handler != nil` 回退：
 
 ```go
-type Handlers struct {
-    Health *httphandler.HealthHandler
-    Order  *httphandler.OrderHandler // 新增
+func registerAdminContentRoutes(v1 *gin.RouterGroup, h *Handlers) {
+    v1.POST("/orders", h.AdminOrder.Create)
 }
 ```
 
-2. 在对应 API 面的路由文件（如 [`internal/router/client.go`](internal/router/client.go)）中追加领域注册函数，并在 `registerClientRoutes` 中调用：
-
-```go
-func registerClientRoutes(engine *gin.Engine, h *Handlers) {
-    v1 := engine.Group(PathClientV1)
-    v2 := engine.Group(PathClientV2)
-    registerClientOrderRoutes(v1, v2, h.Order) // 新增调用
-}
-
-func registerClientOrderRoutes(v1, v2 *gin.RouterGroup, order *httphandler.OrderHandler) {
-    orders := v1.Group("/orders")
-    orders.POST("", order.Create)
-}
-```
-
-API 路径前缀常量定义于 [`internal/router/paths.go`](internal/router/paths.go)（用户端 `/api/client/v1`，管理端 `/api/admin/v1`，内网 `/api/internal/v1`）。仅用户端暴露的模块不必修改 `admin.go` / `internal.go`。
+API 版本前缀常量定义于 [`internal/router/paths.go`](internal/router/paths.go)（仅系统路径与 `/api/{client|admin|internal}/v{1,2}`）。业务路径在注册时直接写字符串。
 
 ## 7. 在 app 包中组装依赖
 
-在 `internal/app/http.go` 的 `wireHTTP()` 中组装新模块并挂到 `Handlers`：
+在 `internal/app/http.go` 的 `wireHTTP()` 中组装并赋值到 `Handlers`：
 
 ```go
 orderRepo := repository.NewOrderRepo(a.db)
-orderSvc := service.NewOrderService(orderRepo)
+orderSvc := adminsvc.NewOrderService(orderRepo)
 
 handlers, err := router.NewHandlers(healthHandler)
 if err != nil {
 	return err
 }
-handlers.Order = httphandler.NewOrderHandler(orderSvc) // 新增字段时在此赋值
+handlers.AdminOrder = adminhandler.NewOrderHandler(orderSvc)
 
 httpServer, err := server.NewHTTPServer(a.cfg, a.log, handlers, a.metrics, a.jwtMgr)
 if err != nil {

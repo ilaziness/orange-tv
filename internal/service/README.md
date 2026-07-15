@@ -1,24 +1,26 @@
 # Service Layer
 
-This directory contains business logic layer implementations.
+业务逻辑层：协调 repository、执行规则校验与事务。
 
-## Purpose
+## 结构
 
-The service layer implements business logic and coordinates between handlers and repositories.
-
-## Phase 2 Implementation
-
-This directory is a placeholder for Phase 2 database integration. Example structure:
-
-```
+```text
 service/
-├── user.go          # User service
-└── order.go         # Order service
+├── admin/               # 管理端业务
+│   ├── auth.go
+│   ├── category.go
+│   ├── video.go
+│   ├── metadata.go
+│   └── play.go
+└── client/              # 用户端业务（只读浏览/搜索）
+    ├── category.go
+    └── video.go
 ```
 
-## Guidelines
+## 约定
 
-- Services should contain business logic only
-- Use dependency injection (Fx) to inject repositories
-- Services should be stateless where possible
-- Return domain-specific errors using the internal/errors package
+- 构造函数注入 repository / JWT 等依赖；在 `internal/app` 组装
+- 不依赖 Gin；不直接写 HTTP 响应
+- 错误使用 `internal/errcode`，数据库错误向上包装
+- 列表/详情默认过滤软删除；删除冲突策略见 PRD 4.0
+- 管理端与用户端能力分离，避免在同一 service 混入两侧入口

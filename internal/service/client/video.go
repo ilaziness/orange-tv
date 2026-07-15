@@ -1,0 +1,189 @@
+package client
+
+import (
+	"context"
+	"strings"
+
+	"github.com/ilaziness/orange-tv/internal/constant"
+	shareddto "github.com/ilaziness/orange-tv/internal/dto"
+	clientdto "github.com/ilaziness/orange-tv/internal/dto/client"
+	errcode "github.com/ilaziness/orange-tv/internal/errcode"
+	"github.com/ilaziness/orange-tv/internal/model"
+	"github.com/ilaziness/orange-tv/internal/repository"
+)
+
+// VideoService provides client video queries.
+type VideoService interface {
+	List(ctx context.Context, req *clientdto.VideoListRequest) ([]shareddto.VideoListItem, int, error)
+	Search(ctx context.Context, req *clientdto.SearchRequest) ([]shareddto.VideoListItem, int, error)
+	Get(ctx context.Context, id int64) (*shareddto.VideoDetailResponse, error)
+}
+
+type videoService struct {
+	videoRepo repository.VideoRepository
+	metaRepo  repository.MetadataRepository
+	playRepo  repository.PlayRepository
+}
+
+// NewVideoService creates a client VideoService.
+func NewVideoService(
+	videoRepo repository.VideoRepository,
+	metaRepo repository.MetadataRepository,
+	playRepo repository.PlayRepository,
+) VideoService {
+	return &videoService{videoRepo: videoRepo, metaRepo: metaRepo, playRepo: playRepo}
+}
+
+func (s *videoService) List(ctx context.Context, req *clientdto.VideoListRequest) ([]shareddto.VideoListItem, int, error) {
+	items, total, err := s.videoRepo.List(ctx, repository.VideoListFilter{
+		CategoryID: req.CategoryID,
+		Year:       req.Year,
+		Region:     strings.TrimSpace(req.Region),
+		Language:   strings.TrimSpace(req.Language),
+		Sort:       req.Sort,
+		OnlyOnline: true,
+		Offset:     req.GetOffset(),
+		Limit:      req.GetLimit(),
+	})
+	if err != nil {
+		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	return mapVideoList(items), total, nil
+}
+
+func (s *videoService) Search(ctx context.Context, req *clientdto.SearchRequest) ([]shareddto.VideoListItem, int, error) {
+	items, total, err := s.videoRepo.List(ctx, repository.VideoListFilter{
+		Keyword:    strings.TrimSpace(req.Keyword),
+		OnlyOnline: true,
+		Offset:     req.GetOffset(),
+		Limit:      req.GetLimit(),
+	})
+	if err != nil {
+		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	return mapVideoList(items), total, nil
+}
+
+func (s *videoService) Get(ctx context.Context, id int64) (*shareddto.VideoDetailResponse, error) {
+	video, err := s.videoRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	if video == nil || video.PublishStatus != constant.PublishStatusOnline {
+		return nil, errcode.VideoNotFound
+	}
+
+	directorIDs, err := s.videoRepo.ListDirectorIDs(ctx, id)
+	if err != nil {
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	directors, err := s.metaRepo.GetDirectorsByIDs(ctx, directorIDs)
+	if err != nil {
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	actorRels, err := s.videoRepo.ListActorRels(ctx, id)
+	if err != nil {
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	actorIDs := make([]int64, 0, len(actorRels))
+	for _, rel := range actorRels {
+		actorIDs = append(actorIDs, rel.ActorID)
+	}
+	actors, err := s.metaRepo.GetActorsByIDs(ctx, actorIDs)
+	if err != nil {
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	actorName := map[int64]string{}
+	for _, a := range actors {
+		actorName[a.ID] = a.Name
+	}
+	tagIDs, err := s.videoRepo.ListTagIDs(ctx, id)
+	if err != nil {
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	tags, err := s.metaRepo.GetTagsByIDs(ctx, tagIDs)
+	if err != nil {
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	episodes, err := s.playRepo.ListEpisodesByVideo(ctx, id, true)
+	if err != nil {
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	sources, err := s.playRepo.ListSources(ctx)
+	if err != nil {
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	sourceMap := map[int64]model.PlaySources{}
+	for _, src := range sources {
+		if src.Status != constant.StatusEnabled {
+			continue
+		}
+		sourceMap[src.ID] = src
+	}
+
+	groups := map[int64]*shareddto.VideoSourceGroup{}
+	order := make([]int64, 0)
+	for _, ep := range episodes {
+		src, ok := sourceMap[ep.SourceID]
+		if !ok {
+			continue
+		}
+		g, ok := groups[ep.SourceID]
+		if !ok {
+			g = &shareddto.VideoSourceGroup{ID: src.ID, Name: src.Name, Episodes: []shareddto.VideoSourceEpisode{}}
+			groups[ep.SourceID] = g
+			order = append(order, ep.SourceID)
+		}
+		g.Episodes = append(g.Episodes, shareddto.VideoSourceEpisode{
+			Episode: ep.EpisodeNumber,
+			Title:   ep.Title,
+			URL:     ep.PlayURL,
+			Quality: ep.Quality,
+			Format:  ep.Format,
+		})
+	}
+	sourceGroups := make([]shareddto.VideoSourceGroup, 0, len(order))
+	for _, sid := range order {
+		sourceGroups = append(sourceGroups, *groups[sid])
+	}
+
+	dirItems := make([]shareddto.NamedItem, 0, len(directors))
+	for _, d := range directors {
+		dirItems = append(dirItems, shareddto.NamedItem{ID: d.ID, Name: d.Name})
+	}
+	actorItems := make([]shareddto.ActorItem, 0, len(actorRels))
+	for _, rel := range actorRels {
+		actorItems = append(actorItems, shareddto.ActorItem{ID: rel.ActorID, Name: actorName[rel.ActorID], Role: rel.Role})
+	}
+	tagItems := make([]shareddto.NamedItem, 0, len(tags))
+	for _, tg := range tags {
+		tagItems = append(tagItems, shareddto.NamedItem{ID: tg.ID, Name: tg.Name})
+	}
+	desc := ""
+	if video.Description != nil {
+		desc = *video.Description
+	}
+	release := ""
+	if video.ReleaseDate != nil {
+		release = video.ReleaseDate.Format("2006-01-02")
+	}
+	return &shareddto.VideoDetailResponse{
+		ID: video.ID, Title: video.Title, Subtitle: video.Subtitle, Description: desc,
+		CategoryID: video.CategoryID, SerialStatus: video.SerialStatus, Cover: video.CoverImage, Poster: video.PosterImage,
+		Year: video.Year, Region: video.Region, Language: video.Language, Duration: video.Duration,
+		ReleaseDate: release, Rating: video.Rating, ViewCount: video.ViewCount,
+		Directors: dirItems, Actors: actorItems, Tags: tagItems, Sources: sourceGroups,
+	}, nil
+}
+
+func mapVideoList(items []model.Videos) []shareddto.VideoListItem {
+	out := make([]shareddto.VideoListItem, 0, len(items))
+	for _, v := range items {
+		out = append(out, shareddto.VideoListItem{
+			ID: v.ID, Title: v.Title, Subtitle: v.Subtitle, Cover: v.CoverImage, Poster: v.PosterImage,
+			Year: v.Year, Region: v.Region, Language: v.Language, Rating: v.Rating, CategoryID: v.CategoryID,
+			SerialStatus: v.SerialStatus, Duration: v.Duration, ViewCount: v.ViewCount,
+		})
+	}
+	return out
+}

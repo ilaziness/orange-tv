@@ -1,28 +1,32 @@
 # DTO Layer
 
-This directory contains Data Transfer Objects for API requests and responses.
+请求/响应数据传输对象。与 `internal/model` 分离，不直接暴露数据库模型。
 
-## Purpose
+## 结构
 
-DTOs define the structure of API input and output data, separating them from domain models.
-
-## Structure
-
-```
+```text
 dto/
-└── user.go              # User DTOs (request and response in one file)
+├── common.go            # 共享类型（分页、IDURI、分类/影视公共响应等）
+├── admin/               # 管理端 DTO
+│   ├── auth.go
+│   ├── category.go
+│   ├── video.go
+│   ├── metadata.go
+│   └── play.go
+└── client/              # 用户端 DTO
+    └── video.go
 ```
 
-**Naming Convention**:
-- One file per entity: `{entity}.go`
-- Each file contains both request and response DTOs for that entity
-- Example: `user.go` contains `UserRequest` and `UserResponse` structs
+## 约定
 
-## Phase 2 Implementation
+- **按 API 面分包**：管理端写操作在 `dto/admin`，用户端只读查询在 `dto/client`
+- **共享类型**放 `dto` 根包（如分页、通用列表/详情卡片）
+- 入参用 `validate` 标签，由 handler 的 `BindAndValidate` 校验
+- 不在 DTO 中返回密码等敏感字段
 
-This directory is a placeholder for Phase 2 implementation. Use DTOs to:
+## 响应
 
-- Validate incoming request data
-- Format outgoing response data
-- Hide sensitive model fields
-- Provide version-stable API contracts
+HTTP 统一外壳见 `internal/response`：
+
+- 成功：`code = 0`
+- 分页：`data.list` / `data.total` / `data.page` / `data.page_size` / `data.total_pages`

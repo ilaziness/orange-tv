@@ -54,9 +54,9 @@ func BindURI(c *gin.Context, obj any) bool {
 
 // HandleServiceError 处理service层错误
 func HandleServiceError(c *gin.Context, err error) {
-	if codeErr, ok := errcode.As(err); ok && codeErr.Code == errcode.UserNotFound.Code {
-		response.Error(c, errcode.UserNotFound)
-	} else {
-		response.Error(c, errcode.Wrap(errcode.InternalError, err))
+	if _, ok := errcode.As(err); ok {
+		response.Error(c, err)
+		return
 	}
+	response.Error(c, errcode.Wrap(errcode.InternalError, err))
 }

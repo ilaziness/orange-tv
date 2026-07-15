@@ -1,4 +1,6 @@
-package dto
+package admin
+
+import "github.com/ilaziness/orange-tv/internal/dto"
 
 // CreatePlaySourceRequest creates a global play source.
 type CreatePlaySourceRequest struct {
@@ -16,7 +18,7 @@ type UpdatePlaySourceRequest struct {
 
 // PlaySourceResponse is a play source payload.
 type PlaySourceResponse struct {
-	ID        int64 `json:"id"`
+	ID        int64  `json:"id"`
 	Name      string `json:"name"`
 	SortOrder int32  `json:"sort_order"`
 	Status    int8   `json:"status"`
@@ -24,7 +26,7 @@ type PlaySourceResponse struct {
 
 // PlayEpisodeListRequest filters episode list.
 type PlayEpisodeListRequest struct {
-	PaginationRequest
+	dto.PaginationRequest
 	VideoID  int64 `form:"video_id" validate:"required,min=1"`
 	SourceID int64 `form:"source_id" validate:"required,min=1"`
 }

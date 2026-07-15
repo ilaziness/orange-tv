@@ -301,56 +301,88 @@ themes/
 | FR-U-027 | 按钮加载态 | 表单提交、采集触发等异步操作按钮展示加载状态，防止重复提交 | P1 |
 | FR-U-028 | 图片懒加载 | 影视封面、海报等图片采用懒加载，加载期间展示占位图 | P2 |
 
-```
 ### 2.4 用户端API接口
+
+#### 2.4.0 响应约定
+
+统一响应结构（与 `internal/response` 一致）：
+
+```json
+{
+  "code": 0,
+  "message": "success",
+  "data": {}
+}
+```
+
+- **成功**：业务码 `code = 0`，HTTP 状态通常为 200。
+- **失败**：`code` 为业务错误码（见 `internal/errcode`），`message` 为错误说明；HTTP 状态与错误类型对应（如 400/401/403/404/409/422/500）。
+- **分页**：列表接口 `data` 直接包含：
+
+```json
+{
+  "list": [],
+  "total": 100,
+  "page": 1,
+  "page_size": 20,
+  "total_pages": 5
+}
+```
+
+分页查询参数兼容 `page` + `page_size`（或 `limit`），默认 `page=1`、`page_size=20`，`page_size` 最大 100。
 
 #### 2.4.1 基础接口
 
 ```go
-
 // 路径前缀约定（与代码 internal/router/paths.go 一致）：
-// 用户端 /api/client/v1，管理端 /api/admin/v1，内网 /api/internal/v1
+// 仅定义版本前缀：用户端 /api/client/v1，管理端 /api/admin/v1，内网 /api/internal/v1
+// 业务路径在路由注册时直接写字符串，不在 paths.go 再定义常量
 
-// 获取分类列表
+// 获取分类列表（仅启用、未软删除；树形，叶子 children 为空数组）
 GET /api/client/v1/categories
 Response: {
-  "code": 200,
+  "code": 0,
+  "message": "success",
   "data": [
     {
       "id": 1,
       "name": "电影",
       "parent_id": 0,
+      "sort_order": 0,
+      "status": 1,
       "children": [
-        {"id": 11, "name": "动作片"},
-        {"id": 12, "name": "喜剧片"}
+        {"id": 11, "name": "动作片", "parent_id": 1, "sort_order": 0, "status": 1, "children": []},
+        {"id": 12, "name": "喜剧片", "parent_id": 1, "sort_order": 0, "status": 1, "children": []}
       ]
     }
   ]
 }
 
-// 获取影视列表
-GET /api/client/v1/videos?category_id=1&page=1&page_size=20&year=2024&region=美国&language=英语
+// 获取影视列表（仅上架、未软删除）
+GET /api/client/v1/videos?category_id=1&page=1&page_size=20&year=2024&region=美国&language=英语&sort=created_at_desc
 Response: {
-  "code": 200,
+  "code": 0,
+  "message": "success",
   "data": {
     "list": [...],
-    "pagination": {
-      "page": 1,
-      "page_size": 20,
-      "total": 100
-    }
+    "total": 100,
+    "page": 1,
+    "page_size": 20,
+    "total_pages": 5
   }
 }
 
-// 获取影视详情
+// 获取影视详情（仅上架；聚合导演/演员/标签及启用播放源与剧集）
 GET /api/client/v1/videos/{id}
 Response: {
-  "code": 200,
+  "code": 0,
+  "message": "success",
   "data": {
     "id": 123,
     "title": "电影标题",
     "subtitle": "副标题",
     "description": "简介",
+    "category_id": 1,
     "cover": "封面地址",
     "poster": "海报地址",
     "year": 2024,
@@ -360,6 +392,7 @@ Response: {
     "release_date": "2024-01-01",
     "rating": 8.5,
     "serial_status": 2,
+    "view_count": 0,
     "directors": [{"id": 1, "name": "导演名"}],
     "actors": [{"id": 1, "name": "演员1", "role": "主角"}],
     "tags": [{"id": 1, "name": "动作"}],
@@ -375,24 +408,25 @@ Response: {
   }
 }
 
-// 搜索影视
+// 搜索影视（关键词匹配标题/副标题/简介；仅上架）
 GET /api/client/v1/search?keyword=关键词&page=1&page_size=20
 Response: {
-  "code": 200,
+  "code": 0,
+  "message": "success",
   "data": {
     "list": [...],
-    "pagination": {
-      "page": 1,
-      "page_size": 20,
-      "total": 50
-    }
+    "total": 50,
+    "page": 1,
+    "page_size": 20,
+    "total_pages": 3
   }
 }
 
-// 获取直播频道列表
+// 获取直播频道列表（第三阶段实现）
 GET /api/client/v1/live?category=新闻&page=1&page_size=20
 Response: {
-  "code": 200,
+  "code": 0,
+  "message": "success",
   "data": {
     "list": [
       {
@@ -404,23 +438,22 @@ Response: {
         "description": "频道简介"
       }
     ],
-    "pagination": {
-      "page": 1,
-      "page_size": 20,
-      "total": 30
-    }
+    "total": 30,
+    "page": 1,
+    "page_size": 20,
+    "total_pages": 2
   }
 }
-
 ```
+
 #### 2.4.2 站点配置接口
 
 ```go
-
-// 获取当前主题配置（由管理后台配置，用户端不可切换主题）
+// 获取当前主题配置（由管理后台配置，用户端不可切换主题；第三阶段完整实现）
 GET /api/client/v1/theme/current
 Response: {
-  "code": 200,
+  "code": 0,
+  "message": "success",
   "data": {
     "name": "默认主题",
     "identifier": "default",
@@ -444,7 +477,6 @@ Response: {
     "custom_js": ""
   }
 }
-
 ```
 ### 2.5 用户端非功能需求
 
@@ -809,55 +841,57 @@ const mainMenus = [
 #### 3.4.1 认证接口
 
 ```go
-
-// 管理员登录与认证
+// 管理员登录与认证（第二阶段）
+// 登录成功返回 access_token；受保护接口使用 Authorization: Bearer <token>
+// 第二阶段仅允许 super_admin；每个受保护请求实时查询管理员/用户组，不信任 JWT 内角色
+// 初始管理员通过 CLI 创建，不提供默认密码：
+//   orange-tv admin create --username <name> --password <pass>
 POST   /api/admin/v1/auth/login       // 管理员登录
-POST   /api/admin/v1/auth/logout      // 管理员退出
+POST   /api/admin/v1/auth/logout      // 管理员退出（无状态，客户端清除 token）
 GET    /api/admin/v1/auth/profile     // 获取登录管理员信息
-
 ```
 
 #### 3.4.2 内容管理接口
 
 ```go
-
 // 分类管理
 POST   /api/admin/v1/categories      // 创建分类
 PUT    /api/admin/v1/categories/{id} // 更新分类
-DELETE /api/admin/v1/categories/{id} // 删除分类
-GET    /api/admin/v1/categories      // 获取分类列表
+DELETE /api/admin/v1/categories/{id} // 删除分类（有有效子分类或影视时拒绝）
+GET    /api/admin/v1/categories      // 获取分类列表（树形）
 
 // 影视管理
-POST   /api/admin/v1/videos          // 创建影视
+POST   /api/admin/v1/videos          // 创建影视（可同时维护导演/演员/标签关联）
 PUT    /api/admin/v1/videos/{id}     // 更新影视
-DELETE /api/admin/v1/videos/{id}     // 删除影视
-GET    /api/admin/v1/videos          // 获取影视列表
+DELETE /api/admin/v1/videos/{id}     // 删除影视（软删除，并清理关联）
+GET    /api/admin/v1/videos          // 获取影视列表（搜索/筛选/分页）
+GET    /api/admin/v1/videos/{id}     // 获取影视详情（编辑回填用）
 
 // 播放源管理（全局播放源）
 POST   /api/admin/v1/play-sources        // 添加播放源
 PUT    /api/admin/v1/play-sources/{id}   // 更新播放源
-DELETE /api/admin/v1/play-sources/{id}   // 删除播放源
+DELETE /api/admin/v1/play-sources/{id}   // 删除播放源（仍有有效剧集时拒绝）
 GET    /api/admin/v1/play-sources        // 获取播放源列表
 
 // 播放集数管理
 POST   /api/admin/v1/play-episodes        // 添加播放集数
 PUT    /api/admin/v1/play-episodes/{id}   // 更新播放集数
 DELETE /api/admin/v1/play-episodes/{id}   // 删除播放集数
-GET    /api/admin/v1/play-episodes        // 获取播放集数列表（按source_id和video_id筛选）
+GET    /api/admin/v1/play-episodes        // 获取播放集数列表（必填 video_id + source_id 筛选）
 
-// 导演管理
+// 导演管理（名称全局唯一，含软删除占用；仍被未删除影视引用时拒绝删除）
 GET    /api/admin/v1/directors           // 获取导演列表（支持搜索）
 POST   /api/admin/v1/directors           // 添加导演
 PUT    /api/admin/v1/directors/{id}      // 更新导演
 DELETE /api/admin/v1/directors/{id}      // 删除导演
 
-// 演员管理
+// 演员管理（规则同导演）
 GET    /api/admin/v1/actors             // 获取演员列表（支持搜索）
 POST   /api/admin/v1/actors             // 添加演员
 PUT    /api/admin/v1/actors/{id}        // 更新演员
 DELETE /api/admin/v1/actors/{id}        // 删除演员
 
-// 标签管理
+// 标签管理（规则同导演）
 GET    /api/admin/v1/tags               // 获取标签列表（支持搜索）
 POST   /api/admin/v1/tags               // 添加标签
 PUT    /api/admin/v1/tags/{id}          // 更新标签
@@ -925,9 +959,12 @@ POST   /api/admin/v1/themes/{id}/activate // 激活主题
 
 #### 3.5.1 权限需求
 
-- 管理后台应支持登录认证
+- 管理后台应支持登录认证（JWT Bearer）
 - 支持角色和权限控制
-- 应记录管理员操作日志
+  - **第二阶段**：仅预置角色 `super_admin`（用户组名），拥有全部后台权限；不提供用户组 CRUD
+  - 授权策略：JWT 仅携带管理员 ID；每个受保护请求实时查库校验启用状态与角色
+  - 后续阶段再扩展可配置用户组/细粒度权限
+- 应记录管理员操作日志（系统日志完整能力在第四阶段完善）
 
 #### 3.5.2 性能需求
 
@@ -954,8 +991,18 @@ POST   /api/admin/v1/themes/{id}/activate // 激活主题
   - 关联表、日志表、系统配置键值表不做软删除。
 - **适用软删除的表**：`categories`、`videos`、`directors`、`actors`、`tags`、`play_sources`、`play_episodes`、`live_channels`、`collect_sources`、`themes`、`admins`、`users`、`user_groups`。
 - **不做软删除的表**：`video_directors`、`video_actors`、`video_tags`、`collect_source_categories`、`collect_logs`、`login_logs`、`system_logs`、`system_settings`。
+- **名称唯一策略**：
+  - `directors.name` / `actors.name` / `tags.name`：数据库全局唯一索引（含软删除记录占用名称）。
+  - `categories.name` / `play_sources.name`：**不建**数据库唯一索引；业务层仅对未软删除记录做同名冲突校验（软删除后允许复用名称）。
+  - `play_episodes (source_id, video_id, episode_number)`：数据库唯一索引；创建/更新时若键被软删除记录占用，允许恢复或回收该键。
+- **删除冲突策略**（第二阶段业务规则）：
+  - 分类：存在未删除子分类或未删除影视时拒绝删除。
+  - 导演/演员/标签：仍被未删除影视引用时拒绝删除。
+  - 播放源：仍有未删除剧集时拒绝删除。
+  - 删除影视时：软删除影视，并清理导演/演员/标签关联，避免元数据被“幽灵引用”占用。
+- **管理员初始化**：不向迁移写入默认账号密码；使用 CLI `orange-tv admin create` 创建并绑定 `super_admin` 用户组（迁移预置该用户组）。
 
-### 4.1 实体泛关系
+### 4.1 实体关系
 
 ```text
 ┌─────────────┐       ┌─────────────┐       ┌─────────────┐
@@ -1323,13 +1370,14 @@ CREATE TABLE system_logs (
 
 ### 5.2 前端技术栈
 
-- **框架**：React 19 + TypeScript 7
-- **UI组件库**：shadcn/ui
+- **框架**：React 19 + TypeScript 5.x
+- **UI组件库**：逐步引入 shadcn/ui（第二阶段可用原生/轻量组件完成管理页与用户页）
 - **状态管理**：Zustand 5
-- **路由**：React Router 8
-- **样式方案**：Tailwind CSS 4
-- **构建工具**：Vite 8
-- **视频播放器**：Video.js 8
+- **路由**：React Router 7
+- **样式方案**：可使用 Tailwind CSS / 组件级 CSS（以 monorepo 实际工程为准）
+- **构建工具**：Vite 6.x
+- **视频播放器**：Video.js 8（第三阶段集成）
+- **工程结构**：`web/` monorepo，`apps/client`、`apps/admin`、`packages/shared`
 
 ## 6. 开发计划
 
@@ -1344,23 +1392,24 @@ CREATE TABLE system_logs (
 
 #### 第二阶段：核心功能开发（4周）
 
-- [ ] 用户认证和权限系统
-- [ ] 影视内容管理模块
-- [ ] 分类管理功能
-- [ ] 基础的前端页面
+- [x] 用户认证和权限系统（管理员登录 + 仅 `super_admin`；JWT 仅存 ID，请求时查库授权；CLI `admin create`）
+- [x] 影视内容管理模块（影视/导演/演员/标签/播放源/剧集）
+- [x] 分类管理功能
+- [x] 基础的前端页面（管理端内容管理页 + 用户端首页/分类/详情）
+- [x] 用户端基础检索（`/api/client/v1/search` 关键词分页；推荐算法不在本阶段）
 
 #### 第三阶段：高级功能开发（3周）
 
 - [ ] 数据采集系统
 - [ ] 主题系统
 - [ ] 播放器集成
-- [ ] 搜索和推荐功能
+- [ ] 推荐与高级搜索增强（相关推荐、更完善筛选/排序策略等）
 
 #### 第四阶段：系统完善（2周）
 
-- [ ] 系统配置和优化
+- [ ] 系统配置（站点设置、API 配置等）与优化
 - [ ] 性能优化
-- [ ] 安全加固
+- [ ] 安全加固（含更完整的操作审计/系统日志等）
 - [ ] 文档完善
 
 ### 6.2 部署方案
@@ -1368,19 +1417,23 @@ CREATE TABLE system_logs (
 #### 6.2.1 开发环境
 
 ```bash
-
-# 后端启动
-
-make dev
-
-# 前端启动
-
-cd web && npm run dev
-
 # 数据库
-
 docker-compose up -d mysql redis
 
+# 迁移与初始管理员（需配置 JWT_SECRET / jwt.secret）
+make build
+./build/orange-tv migrate up
+./build/orange-tv admin create --username admin --password 'your-password'
+
+# 后端启动
+make run-dev
+# 或
+./build/orange-tv serve
+
+# 前端启动（分别启动两端）
+cd web
+npm run dev:client   # 用户端，默认 5173
+npm run dev:admin    # 管理端，默认 5174
 ```
 #### 6.2.2 生产环境
 

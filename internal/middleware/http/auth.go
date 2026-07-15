@@ -129,6 +129,30 @@ func RequireAuth() gin.HandlerFunc {
 	}
 }
 
+// RequireSuperAdmin ensures JWT is present and the admin is an enabled super_admin.
+// check is called with gin.Context and admin ID from JWT claims.
+func RequireSuperAdmin(check func(c *gin.Context, adminID int64) error) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		claims := GetClaims(c)
+		if claims == nil {
+			response.Error(c, errcode.WithMessage(errcode.AuthFailed, "未认证"))
+			c.Abort()
+			return
+		}
+		if claims.TokenType != auth.TokenTypeAccess {
+			response.Error(c, errcode.InvalidToken)
+			c.Abort()
+			return
+		}
+		if err := check(c, claims.UserID); err != nil {
+			response.Error(c, err)
+			c.Abort()
+			return
+		}
+		c.Next()
+	}
+}
+
 const internalServiceKeyHeader = "X-Internal-Service-Key"
 
 // InternalServiceAuth protects internal service-to-service routes.

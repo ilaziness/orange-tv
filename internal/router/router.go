@@ -9,7 +9,7 @@ import (
 
 // RegisterRoutes registers all routes to the gin engine.
 func RegisterRoutes(engine *gin.Engine, h *Handlers) error {
-	if err := h.validate(); err != nil {
+	if err := h.validateForRoutes(); err != nil {
 		return err
 	}
 

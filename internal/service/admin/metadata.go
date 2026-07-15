@@ -1,10 +1,10 @@
-package service
+package admin
 
 import (
 	"context"
 	"strings"
 
-	"github.com/ilaziness/orange-tv/internal/dto"
+	dto "github.com/ilaziness/orange-tv/internal/dto/admin"
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"

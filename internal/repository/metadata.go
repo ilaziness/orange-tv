@@ -9,6 +9,7 @@ import (
 
 	"github.com/ilaziness/orange-tv/internal/database"
 	"github.com/ilaziness/orange-tv/internal/model"
+	"github.com/uptrace/bun"
 )
 
 // MetadataRepository manages directors, actors and tags.
@@ -87,7 +88,7 @@ func (r *metadataRepo) GetDirectorsByIDs(ctx context.Context, ids []int64) ([]mo
 	}
 	var items []model.Directors
 	err := r.db.NewSelect().Model(&items).
-		Where("id IN (?)", bunIn(ids)).
+		Where("id IN (?)", bun.In(ids)).
 		Where("deleted_at IS NULL").
 		Scan(ctx)
 	if err != nil {
@@ -138,8 +139,12 @@ func (r *metadataRepo) SoftDeleteDirector(ctx context.Context, id int64) error {
 }
 
 func (r *metadataRepo) CountDirectorRefs(ctx context.Context, id int64) (int, error) {
-	n, err := r.db.NewSelect().Model((*model.VideoDirectors)(nil)).
-		Where("director_id = ?", id).Count(ctx)
+	// Only count associations to non-soft-deleted videos.
+	n, err := r.db.NewSelect().
+		TableExpr("video_directors AS vd").
+		Join("JOIN videos AS v ON v.id = vd.video_id AND v.deleted_at IS NULL").
+		Where("vd.director_id = ?", id).
+		Count(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("count director refs: %w", err)
 	}
@@ -180,7 +185,7 @@ func (r *metadataRepo) GetActorsByIDs(ctx context.Context, ids []int64) ([]model
 	}
 	var items []model.Actors
 	err := r.db.NewSelect().Model(&items).
-		Where("id IN (?)", bunIn(ids)).
+		Where("id IN (?)", bun.In(ids)).
 		Where("deleted_at IS NULL").
 		Scan(ctx)
 	if err != nil {
@@ -231,8 +236,11 @@ func (r *metadataRepo) SoftDeleteActor(ctx context.Context, id int64) error {
 }
 
 func (r *metadataRepo) CountActorRefs(ctx context.Context, id int64) (int, error) {
-	n, err := r.db.NewSelect().Model((*model.VideoActors)(nil)).
-		Where("actor_id = ?", id).Count(ctx)
+	n, err := r.db.NewSelect().
+		TableExpr("video_actors AS va").
+		Join("JOIN videos AS v ON v.id = va.video_id AND v.deleted_at IS NULL").
+		Where("va.actor_id = ?", id).
+		Count(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("count actor refs: %w", err)
 	}
@@ -273,7 +281,7 @@ func (r *metadataRepo) GetTagsByIDs(ctx context.Context, ids []int64) ([]model.T
 	}
 	var items []model.Tags
 	err := r.db.NewSelect().Model(&items).
-		Where("id IN (?)", bunIn(ids)).
+		Where("id IN (?)", bun.In(ids)).
 		Where("deleted_at IS NULL").
 		Scan(ctx)
 	if err != nil {
@@ -324,8 +332,11 @@ func (r *metadataRepo) SoftDeleteTag(ctx context.Context, id int64) error {
 }
 
 func (r *metadataRepo) CountTagRefs(ctx context.Context, id int64) (int, error) {
-	n, err := r.db.NewSelect().Model((*model.VideoTags)(nil)).
-		Where("tag_id = ?", id).Count(ctx)
+	n, err := r.db.NewSelect().
+		TableExpr("video_tags AS vt").
+		Join("JOIN videos AS v ON v.id = vt.video_id AND v.deleted_at IS NULL").
+		Where("vt.tag_id = ?", id).
+		Count(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("count tag refs: %w", err)
 	}

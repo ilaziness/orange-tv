@@ -1,8 +1,10 @@
-package dto
+package admin
+
+import "github.com/ilaziness/orange-tv/internal/dto"
 
 // NameSearchRequest is shared by directors/actors/tags list endpoints.
 type NameSearchRequest struct {
-	PaginationRequest
+	dto.PaginationRequest
 	Keyword string `form:"keyword"`
 }
 

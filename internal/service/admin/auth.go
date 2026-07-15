@@ -1,4 +1,4 @@
-package service
+package admin
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"github.com/ilaziness/orange-tv/internal/config"
 	"github.com/ilaziness/orange-tv/internal/constant"
 	"github.com/ilaziness/orange-tv/internal/crypto"
-	"github.com/ilaziness/orange-tv/internal/dto"
+	dto "github.com/ilaziness/orange-tv/internal/dto/admin"
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
@@ -18,8 +18,8 @@ import (
 
 // AuthService handles admin authentication.
 type AuthService interface {
-	Login(ctx context.Context, req *dto.AdminLoginRequest) (*dto.AdminLoginResponse, error)
-	Profile(ctx context.Context, adminID int64) (*dto.AdminProfile, error)
+	Login(ctx context.Context, req *dto.LoginRequest) (*dto.LoginResponse, error)
+	Profile(ctx context.Context, adminID int64) (*dto.Profile, error)
 	// EnsureSuperAdmin loads admin+group and validates super_admin access for each request.
 	EnsureSuperAdmin(ctx context.Context, adminID int64) (*model.Admins, *model.UserGroups, error)
 }
@@ -39,7 +39,7 @@ func NewAuthService(adminRepo repository.AdminRepository, jwtMgr *auth.JWTManage
 	return &authService{adminRepo: adminRepo, jwtMgr: jwtMgr, accessTTL: ttl}
 }
 
-func (s *authService) Login(ctx context.Context, req *dto.AdminLoginRequest) (*dto.AdminLoginResponse, error) {
+func (s *authService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.LoginResponse, error) {
 	if s.jwtMgr == nil {
 		return nil, errcode.WithMessage(errcode.ServiceUnavailable, "JWT 未配置")
 	}
@@ -75,7 +75,7 @@ func (s *authService) Login(ctx context.Context, req *dto.AdminLoginRequest) (*d
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 
-	return &dto.AdminLoginResponse{
+	return &dto.LoginResponse{
 		AccessToken: token,
 		TokenType:   "Bearer",
 		ExpiresIn:   s.accessTTL,
@@ -83,7 +83,7 @@ func (s *authService) Login(ctx context.Context, req *dto.AdminLoginRequest) (*d
 	}, nil
 }
 
-func (s *authService) Profile(ctx context.Context, adminID int64) (*dto.AdminProfile, error) {
+func (s *authService) Profile(ctx context.Context, adminID int64) (*dto.Profile, error) {
 	admin, group, err := s.EnsureSuperAdmin(ctx, adminID)
 	if err != nil {
 		return nil, err
@@ -115,8 +115,8 @@ func (s *authService) EnsureSuperAdmin(ctx context.Context, adminID int64) (*mod
 	return admin, group, nil
 }
 
-func toAdminProfile(admin *model.Admins, role string) *dto.AdminProfile {
-	return &dto.AdminProfile{
+func toAdminProfile(admin *model.Admins, role string) *dto.Profile {
+	return &dto.Profile{
 		ID:       admin.ID,
 		Username: admin.Username,
 		Email:    admin.Email,
