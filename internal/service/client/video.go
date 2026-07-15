@@ -2,8 +2,11 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"strings"
+	"time"
 
+	"github.com/ilaziness/orange-tv/internal/cache"
 	"github.com/ilaziness/orange-tv/internal/constant"
 	shareddto "github.com/ilaziness/orange-tv/internal/dto"
 	clientdto "github.com/ilaziness/orange-tv/internal/dto/client"
@@ -24,6 +27,12 @@ type videoService struct {
 	videoRepo repository.VideoRepository
 	metaRepo  repository.MetadataRepository
 	playRepo  repository.PlayRepository
+	cache     cache.Cache
+}
+
+type videoListCacheEntry struct {
+	Items []shareddto.VideoListItem
+	Total int
 }
 
 // NewVideoService creates a client VideoService.
@@ -31,11 +40,27 @@ func NewVideoService(
 	videoRepo repository.VideoRepository,
 	metaRepo repository.MetadataRepository,
 	playRepo repository.PlayRepository,
+	c cache.Cache,
 ) VideoService {
-	return &videoService{videoRepo: videoRepo, metaRepo: metaRepo, playRepo: playRepo}
+	if c == nil {
+		c = cache.NewNopCache()
+	}
+	return &videoService{videoRepo: videoRepo, metaRepo: metaRepo, playRepo: playRepo, cache: c}
 }
 
 func (s *videoService) List(ctx context.Context, req *clientdto.VideoListRequest) ([]shareddto.VideoListItem, int, error) {
+	// Cache hot home/list queries without keyword search complexity.
+	cacheable := strings.TrimSpace(req.Region) == "" && strings.TrimSpace(req.Language) == "" && req.Year == 0
+	cacheKey := ""
+	if cacheable {
+		cacheKey = fmt.Sprintf("video:list:%d:%s:%d:%d", req.CategoryID, req.Sort, req.GetPage(), req.GetLimit())
+		if v, err := s.cache.Get(ctx, cacheKey); err == nil {
+			if e, ok := v.(*videoListCacheEntry); ok && e != nil {
+				return e.Items, e.Total, nil
+			}
+		}
+	}
+
 	items, total, err := s.videoRepo.List(ctx, repository.VideoListFilter{
 		CategoryID: req.CategoryID,
 		Year:       req.Year,
@@ -49,7 +74,11 @@ func (s *videoService) List(ctx context.Context, req *clientdto.VideoListRequest
 	if err != nil {
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	return mapVideoList(items), total, nil
+	out := mapVideoList(items)
+	if cacheKey != "" {
+		_ = s.cache.Set(ctx, cacheKey, &videoListCacheEntry{Items: out, Total: total}, 2*time.Minute)
+	}
+	return out, total, nil
 }
 
 func (s *videoService) Search(ctx context.Context, req *clientdto.SearchRequest) ([]shareddto.VideoListItem, int, error) {

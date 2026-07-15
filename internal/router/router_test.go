@@ -86,6 +86,7 @@ func TestRegisterRoutes_registersSwaggerAndClientScaffolds(t *testing.T) {
 func TestDefaultJWTSkipPaths_coversClientAndLogin(t *testing.T) {
 	paths := DefaultJWTSkipPaths()
 	require.Contains(t, paths, PathClientV1+"/*")
+	require.Contains(t, paths, PathOpenV1+"/*")
 	require.Contains(t, paths, PathAdminV1+"/auth/login")
 	require.Contains(t, paths, PathHealth)
 }

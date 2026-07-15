@@ -272,3 +272,56 @@ export type CollectLog = {
   duration_ms: number
   created_at?: string
 }
+
+export type SiteSettings = {
+  name: string
+  logo: string
+  copyright: string
+  icp: string
+  seo_keywords: string
+  description: string
+}
+
+export type APISettings = {
+  site_mode: string
+  api_output_format: string
+  enable_third_party_collect: boolean
+  resource_api_key_set: boolean
+  resource_api_key_masked?: string
+}
+
+export type SystemSettings = {
+  site: SiteSettings
+  api: APISettings
+}
+
+export type PublicSiteInfo = {
+  name: string
+  logo: string
+  copyright: string
+  icp: string
+  seo_keywords: string
+  description: string
+}
+
+export type SystemLogItem = {
+  id: number
+  level: number
+  module: string
+  action: string
+  admin_id: number
+  content: string
+  ip_address: string
+  created_at: string
+}
+
+export type LoginLogItem = {
+  id: number
+  user_type: number
+  user_id: number
+  username: string
+  ip_address: string
+  user_agent: string
+  status: number
+  created_at: string
+}

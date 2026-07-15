@@ -6,6 +6,7 @@ import (
 	httphandler "github.com/ilaziness/orange-tv/internal/handler/http"
 	adminhandler "github.com/ilaziness/orange-tv/internal/handler/http/admin"
 	clienthandler "github.com/ilaziness/orange-tv/internal/handler/http/client"
+	openhandler "github.com/ilaziness/orange-tv/internal/handler/http/open"
 	adminsvc "github.com/ilaziness/orange-tv/internal/service/admin"
 )
 
@@ -23,6 +24,8 @@ type Handlers struct {
 	AdminLive     *adminhandler.LiveHandler
 	AdminCollect  *adminhandler.CollectHandler
 	AdminTheme    *adminhandler.ThemeHandler
+	AdminSettings *adminhandler.SettingsHandler
+	AdminLog      *adminhandler.LogHandler
 	AuthService   adminsvc.AuthService
 
 	// Client surface
@@ -30,6 +33,10 @@ type Handlers struct {
 	ClientVideo    *clienthandler.VideoHandler
 	ClientLive     *clienthandler.LiveHandler
 	ClientTheme    *clienthandler.ThemeHandler
+	ClientSite     *clienthandler.SiteHandler
+
+	// Open resource station
+	OpenResource *openhandler.ResourceHandler
 
 	InternalServiceKey string
 	// RequireAdminAuth enables auth middleware on admin business routes.
@@ -79,10 +86,14 @@ func (h *Handlers) validateForRoutes() error {
 		{"admin live handler", h.AdminLive != nil},
 		{"admin collect handler", h.AdminCollect != nil},
 		{"admin theme handler", h.AdminTheme != nil},
+		{"admin settings handler", h.AdminSettings != nil},
+		{"admin log handler", h.AdminLog != nil},
 		{"client category handler", h.ClientCategory != nil},
 		{"client video handler", h.ClientVideo != nil},
 		{"client live handler", h.ClientLive != nil},
 		{"client theme handler", h.ClientTheme != nil},
+		{"client site handler", h.ClientSite != nil},
+		{"open resource handler", h.OpenResource != nil},
 	}
 	for _, item := range required {
 		if !item.ok {

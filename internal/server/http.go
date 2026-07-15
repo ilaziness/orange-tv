@@ -10,8 +10,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/ilaziness/orange-tv/internal/auth"
 	"github.com/ilaziness/orange-tv/internal/config"
+	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/metrics"
 	httpmiddleware "github.com/ilaziness/orange-tv/internal/middleware/http"
+	"github.com/ilaziness/orange-tv/internal/response"
 	"github.com/ilaziness/orange-tv/internal/router"
 	"github.com/ilaziness/orange-tv/internal/tracing"
 	"go.uber.org/zap"
@@ -40,6 +42,7 @@ func NewHTTPServer(cfg *config.Config, logger *zap.Logger, h *router.Handlers, m
 
 	// Apply core middlewares
 	ginRouter.Use(httpmiddleware.RequestID())
+	ginRouter.Use(httpmiddleware.SecurityHeaders())
 	ginRouter.Use(httpmiddleware.Logger(logger, router.SystemPaths...))
 	ginRouter.Use(httpmiddleware.Recovery(logger))
 	ginRouter.Use(httpmiddleware.CORS())
@@ -93,6 +96,20 @@ func NewHTTPServer(cfg *config.Config, logger *zap.Logger, h *router.Handlers, m
 		}
 		ginRouter.Use(httpmiddleware.RateLimit(rateCfg, logger))
 	}
+
+	// Always-on login rate limit (IP-based, independent of global rate_limit config).
+	loginStore := httpmiddleware.NewMemoryRateLimitStore(10000)
+	ginRouter.Use(func(c *gin.Context) {
+		if c.Request.Method == "POST" && c.Request.URL.Path == router.PathAdminV1+"/auth/login" {
+			ok, _, _, err := loginStore.Allow(c.Request.Context(), "login:"+c.ClientIP(), 5)
+			if err == nil && !ok {
+				response.Error(c, errcode.TooManyRequests)
+				c.Abort()
+				return
+			}
+		}
+		c.Next()
+	})
 
 	// Register routes
 	if err := router.RegisterRoutes(ginRouter, h); err != nil {

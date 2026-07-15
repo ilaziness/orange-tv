@@ -77,6 +77,10 @@ func (c *MemoryCache) Set(ctx context.Context, key string, value any, ttl time.D
 		// 对于复杂类型，使用字符串长度的粗略估算
 		cost = int64(len(fmt.Sprintf("%v", value)))
 	}
+	// Ristretto rejects entries with cost < 1.
+	if cost < 1 {
+		cost = 1
+	}
 
 	c.mu.RLock()
 	defer c.mu.RUnlock()

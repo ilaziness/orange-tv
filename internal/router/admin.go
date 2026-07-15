@@ -106,8 +106,11 @@ func registerAdminUserRoutes(v1 *gin.RouterGroup, stub *httphandler.StubHandler)
 }
 
 func registerAdminSystemRoutes(v1 *gin.RouterGroup, h *Handlers) {
-	v1.GET("/settings", h.Stub.NotImplemented)
-	v1.PUT("/settings", h.Stub.NotImplemented)
+	v1.GET("/settings", h.AdminSettings.Get)
+	v1.PUT("/settings", h.AdminSettings.Update)
+
+	v1.GET("/system-logs", h.AdminLog.ListSystemLogs)
+	v1.GET("/login-logs", h.AdminLog.ListLoginLogs)
 
 	v1.GET("/themes", h.AdminTheme.List)
 	v1.POST("/themes", h.Stub.NotImplemented) // theme upload later

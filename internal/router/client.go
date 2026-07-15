@@ -21,4 +21,5 @@ func registerClientContentRoutes(v1 *gin.RouterGroup, h *Handlers) {
 
 	v1.GET("/live", h.ClientLive.List)
 	v1.GET("/theme/current", h.ClientTheme.Current)
+	v1.GET("/site", h.ClientSite.Public)
 }

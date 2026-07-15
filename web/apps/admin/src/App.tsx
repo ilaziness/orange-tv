@@ -94,7 +94,10 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
     }
     if (location.pathname.startsWith('/system')) {
       return [
+        { to: '/system/site', label: '站点设置' },
+        { to: '/system/api', label: 'API配置' },
         { to: '/system/theme', label: '主题管理' },
+        { to: '/system/log', label: '系统日志' },
       ]
     }
     return []
@@ -107,7 +110,7 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
         <nav className="topnav">
           <Link className={location.pathname === '/' ? 'active' : ''} to="/">首页</Link>
           <Link className={location.pathname.startsWith('/content') ? 'active' : ''} to="/content/categories">内容管理</Link>
-          <Link className={location.pathname.startsWith('/system') ? 'active' : ''} to="/system/theme">系统设置</Link>
+          <Link className={location.pathname.startsWith('/system') ? 'active' : ''} to="/system/site">系统设置</Link>
         </nav>
         <div className="userbox">
           <span>{profile?.username} ({profile?.role})</span>
@@ -138,10 +141,12 @@ function DashboardPage() {
       <div className="page-header">
         <h1>概况</h1>
       </div>
-      <p className="muted">第二阶段已接入认证、分类与影视内容管理。请从顶部「内容管理」进入业务页面。</p>
+      <p className="muted">第四阶段已接入系统设置、操作审计、资源站 API 与读缓存。可从顶部「内容管理 / 系统设置」进入。</p>
       <div className="toolbar">
         <Link to="/content/videos"><button className="primary">影视管理</button></Link>
         <Link to="/content/categories"><button>分类管理</button></Link>
+        <Link to="/system/site"><button>站点设置</button></Link>
+        <Link to="/system/log"><button>系统日志</button></Link>
       </div>
     </div>
   )
@@ -1131,6 +1136,232 @@ function ThemesPage() {
   )
 }
 
+function SiteSettingsPage() {
+  const [form, setForm] = useState({
+    name: '', logo: '', copyright: '', icp: '', seo_keywords: '', description: '',
+  })
+  const [error, setError] = useState('')
+  const [msg, setMsg] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  async function load() {
+    setLoading(true)
+    setError('')
+    try {
+      const res = await adminApi.getSettings()
+      const site = res.data.site
+      setForm({
+        name: site.name || '',
+        logo: site.logo || '',
+        copyright: site.copyright || '',
+        icp: site.icp || '',
+        seo_keywords: site.seo_keywords || '',
+        description: site.description || '',
+      })
+    } catch (err) {
+      setError(errorMessage(err))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { void load() }, [])
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault()
+    setError('')
+    setMsg('')
+    try {
+      await adminApi.updateSettings({ site: form })
+      setMsg('已保存')
+      await load()
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+  }
+
+  return (
+    <div className="page-card stack">
+      <div className="page-header"><h1>站点设置</h1></div>
+      {error ? <p className="error">{error}</p> : null}
+      {msg ? <p className="muted">{msg}</p> : null}
+      {loading ? <p className="muted">加载中...</p> : (
+        <form className="stack" onSubmit={(e) => void save(e)}>
+          <label>站点名称<input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
+          <label>Logo URL<input value={form.logo} onChange={(e) => setForm({ ...form, logo: e.target.value })} /></label>
+          <label>版权信息<input value={form.copyright} onChange={(e) => setForm({ ...form, copyright: e.target.value })} /></label>
+          <label>备案号<input value={form.icp} onChange={(e) => setForm({ ...form, icp: e.target.value })} /></label>
+          <label>SEO 关键词<input value={form.seo_keywords} onChange={(e) => setForm({ ...form, seo_keywords: e.target.value })} /></label>
+          <label>站点描述<textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} style={{ width: '100%' }} /></label>
+          <button className="primary" type="submit">保存</button>
+        </form>
+      )}
+    </div>
+  )
+}
+
+function APISettingsPage() {
+  const [form, setForm] = useState({
+    site_mode: 'video_site',
+    api_output_format: 'default',
+    enable_third_party_collect: true,
+    resource_api_key: '',
+  })
+  const [keySet, setKeySet] = useState(false)
+  const [error, setError] = useState('')
+  const [msg, setMsg] = useState('')
+
+  async function load() {
+    setError('')
+    try {
+      const res = await adminApi.getSettings()
+      const api = res.data.api
+      setForm({
+        site_mode: api.site_mode || 'video_site',
+        api_output_format: api.api_output_format || 'default',
+        enable_third_party_collect: !!api.enable_third_party_collect,
+        resource_api_key: '',
+      })
+      setKeySet(!!api.resource_api_key_set)
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+  }
+
+  useEffect(() => { void load() }, [])
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault()
+    setError('')
+    setMsg('')
+    try {
+      await adminApi.updateSettings({
+        api: {
+          site_mode: form.site_mode,
+          api_output_format: form.api_output_format,
+          enable_third_party_collect: form.enable_third_party_collect,
+          ...(form.resource_api_key.trim() ? { resource_api_key: form.resource_api_key.trim() } : {}),
+        },
+      })
+      setMsg('已保存')
+      setForm((f) => ({ ...f, resource_api_key: '' }))
+      await load()
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+  }
+
+  return (
+    <div className="page-card stack">
+      <div className="page-header"><h1>API 配置</h1></div>
+      <p className="muted">资源站开放接口：`/api/open/v1/*`。密钥通过 Header X-API-Key 或 query key 传递；密钥输入框留空表示不修改。</p>
+      {error ? <p className="error">{error}</p> : null}
+      {msg ? <p className="muted">{msg}</p> : null}
+      <form className="stack" onSubmit={(e) => void save(e)}>
+        <label>站点模式
+          <select value={form.site_mode} onChange={(e) => setForm({ ...form, site_mode: e.target.value })}>
+            <option value="video_site">影视站</option>
+            <option value="resource_site">资源站</option>
+          </select>
+        </label>
+        <label>API 输出格式
+          <select value={form.api_output_format} onChange={(e) => setForm({ ...form, api_output_format: e.target.value })}>
+            <option value="default">系统默认格式</option>
+            <option value="apple_cms">苹果 CMS</option>
+          </select>
+        </label>
+        <label className="row">
+          <input type="checkbox" checked={form.enable_third_party_collect} onChange={(e) => setForm({ ...form, enable_third_party_collect: e.target.checked })} />
+          允许第三方采集
+        </label>
+        <label>资源站 API 密钥 {keySet ? <span className="muted">（已配置）</span> : <span className="muted">（未配置）</span>}
+          <input type="password" placeholder={keySet ? '****** 留空不修改' : '设置密钥'} value={form.resource_api_key} onChange={(e) => setForm({ ...form, resource_api_key: e.target.value })} />
+        </label>
+        <button className="primary" type="submit">保存</button>
+      </form>
+    </div>
+  )
+}
+
+function SystemLogPage() {
+  const [tab, setTab] = useState<'system' | 'login'>('system')
+  const [systemLogs, setSystemLogs] = useState<import('@orange-tv/shared').SystemLogItem[]>([])
+  const [loginLogs, setLoginLogs] = useState<import('@orange-tv/shared').LoginLogItem[]>([])
+  const [module, setModule] = useState('')
+  const [username, setUsername] = useState('')
+  const [error, setError] = useState('')
+  const [total, setTotal] = useState(0)
+
+  async function load() {
+    setError('')
+    try {
+      if (tab === 'system') {
+        const res = await adminApi.listSystemLogs({ page: 1, page_size: 50, module: module || undefined })
+        setSystemLogs(res.data.list || [])
+        setTotal(res.data.total)
+      } else {
+        const res = await adminApi.listLoginLogs({ page: 1, page_size: 50, username: username || undefined })
+        setLoginLogs(res.data.list || [])
+        setTotal(res.data.total)
+      }
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+  }
+
+  useEffect(() => { void load() }, [tab])
+
+  return (
+    <div className="page-card stack">
+      <div className="page-header"><h1>系统日志</h1></div>
+      <div className="toolbar">
+        <button className={tab === 'system' ? 'primary' : ''} onClick={() => setTab('system')}>操作日志</button>
+        <button className={tab === 'login' ? 'primary' : ''} onClick={() => setTab('login')}>登录日志</button>
+      </div>
+      {error ? <p className="error">{error}</p> : null}
+      {tab === 'system' ? (
+        <>
+          <div className="toolbar">
+            <input placeholder="模块筛选" value={module} onChange={(e) => setModule(e.target.value)} />
+            <button onClick={() => void load()}>查询</button>
+          </div>
+          <p className="muted">共 {total} 条</p>
+          <div className="tree">
+            {systemLogs.map((l) => (
+              <div key={l.id} className="tree-item">
+                <div>
+                  <strong>[{l.level}] {l.module}/{l.action}</strong>
+                  <div className="muted">admin={l.admin_id} · {l.ip_address} · {l.created_at}</div>
+                  <div>{l.content}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="toolbar">
+            <input placeholder="用户名" value={username} onChange={(e) => setUsername(e.target.value)} />
+            <button onClick={() => void load()}>查询</button>
+          </div>
+          <p className="muted">共 {total} 条</p>
+          <div className="tree">
+            {loginLogs.map((l) => (
+              <div key={l.id} className="tree-item">
+                <div>
+                  <strong>{l.username}</strong>
+                  <div className="muted">{l.status === 1 ? '成功' : '失败'} · {l.ip_address} · {l.created_at}</div>
+                  <div className="muted">{l.user_agent}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -1157,7 +1388,10 @@ export default function App() {
                 <Route path="/content/play-sources" element={<PlaySourcesPage />} />
                 <Route path="/content/live" element={<LivePage />} />
                 <Route path="/content/collect" element={<CollectPage />} />
+                <Route path="/system/site" element={<SiteSettingsPage />} />
+                <Route path="/system/api" element={<APISettingsPage />} />
                 <Route path="/system/theme" element={<ThemesPage />} />
+                <Route path="/system/log" element={<SystemLogPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </AdminLayout>

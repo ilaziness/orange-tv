@@ -165,3 +165,56 @@ const (
 
 // Theme identifier for the built-in default theme.
 const ThemeIdentifierDefault = "default"
+
+// System setting keys.
+const (
+	SettingSiteMode                = "site_mode"
+	SettingAPIOutputFormat         = "api_output_format"
+	SettingEnableThirdPartyCollect = "enable_third_party_collect"
+	SettingActiveThemeID           = "active_theme_id"
+	SettingSiteName                = "site_name"
+	SettingSiteLogo                = "site_logo"
+	SettingSiteCopyright           = "site_copyright"
+	SettingSiteICP                 = "site_icp"
+	SettingSiteSEOKeywords         = "site_seo_keywords"
+	SettingSiteDescription         = "site_description"
+	SettingResourceAPIKey          = "resource_api_key"
+)
+
+// Site mode values.
+const (
+	SiteModeVideoSite    = "video_site"
+	SiteModeResourceSite = "resource_site"
+)
+
+// API output format values for resource open API.
+// Default is the system native format; apple_cms is the only optional alternative.
+const (
+	APIOutputDefault  = "default"   // 系统默认/自有 JSON 格式
+	APIOutputAppleCMS = "apple_cms" // 苹果 CMS 兼容
+)
+
+// Login log user types / status.
+const (
+	LoginUserTypeAdmin int8 = 1
+	LoginUserTypeUser  int8 = 2
+
+	LoginStatusSuccess int8 = 1
+	LoginStatusFailed  int8 = 2
+)
+
+// System log levels.
+const (
+	SystemLogLevelInfo     int8 = 1
+	SystemLogLevelWarning  int8 = 2
+	SystemLogLevelError    int8 = 3
+	SystemLogLevelCritical int8 = 4
+)
+
+// Setting type values (system_settings.setting_type).
+const (
+	SettingTypeString  int8 = 1
+	SettingTypeNumber  int8 = 2
+	SettingTypeBoolean int8 = 3
+	SettingTypeJSON    int8 = 4
+)

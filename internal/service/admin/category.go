@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/ilaziness/orange-tv/internal/cache"
 	"github.com/ilaziness/orange-tv/internal/constant"
 	shareddto "github.com/ilaziness/orange-tv/internal/dto"
 	dto "github.com/ilaziness/orange-tv/internal/dto/admin"
@@ -21,12 +22,16 @@ type CategoryService interface {
 }
 
 type categoryService struct {
-	repo repository.CategoryRepository
+	repo  repository.CategoryRepository
+	cache cache.Cache
 }
 
 // NewCategoryService creates a CategoryService.
-func NewCategoryService(repo repository.CategoryRepository) CategoryService {
-	return &categoryService{repo: repo}
+func NewCategoryService(repo repository.CategoryRepository, c cache.Cache) CategoryService {
+	if c == nil {
+		c = cache.NewNopCache()
+	}
+	return &categoryService{repo: repo, cache: c}
 }
 
 func (s *categoryService) ListTree(ctx context.Context, onlyEnabled bool) ([]shareddto.CategoryResponse, error) {
@@ -72,6 +77,7 @@ func (s *categoryService) Create(ctx context.Context, req *dto.CreateCategoryReq
 	if err := s.repo.Create(ctx, item); err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
+	s.invalidateCaches(ctx)
 	return toCategoryDTO(item), nil
 }
 
@@ -131,6 +137,7 @@ func (s *categoryService) Update(ctx context.Context, id int64, req *dto.UpdateC
 	if err := s.repo.Update(ctx, item); err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
+	s.invalidateCaches(ctx)
 	return toCategoryDTO(item), nil
 }
 
@@ -159,7 +166,13 @@ func (s *categoryService) Delete(ctx context.Context, id int64) error {
 	if err := s.repo.SoftDelete(ctx, id); err != nil {
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
+	s.invalidateCaches(ctx)
 	return nil
+}
+
+func (s *categoryService) invalidateCaches(ctx context.Context) {
+	_ = s.cache.Delete(ctx, "category:tree:client")
+	_ = s.cache.Delete(ctx, "open:categories")
 }
 
 func toCategoryDTO(item *model.Categories) *shareddto.CategoryResponse {

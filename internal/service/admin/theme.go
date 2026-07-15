@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/ilaziness/orange-tv/internal/cache"
 	"github.com/ilaziness/orange-tv/internal/constant"
 	shareddto "github.com/ilaziness/orange-tv/internal/dto"
 	admindto "github.com/ilaziness/orange-tv/internal/dto/admin"
@@ -22,12 +23,16 @@ type ThemeService interface {
 }
 
 type themeService struct {
-	repo repository.ThemeRepository
+	repo  repository.ThemeRepository
+	cache cache.Cache
 }
 
 // NewThemeService creates a ThemeService.
-func NewThemeService(repo repository.ThemeRepository) ThemeService {
-	return &themeService{repo: repo}
+func NewThemeService(repo repository.ThemeRepository, c cache.Cache) ThemeService {
+	if c == nil {
+		c = cache.NewNopCache()
+	}
+	return &themeService{repo: repo, cache: c}
 }
 
 func (s *themeService) List(ctx context.Context) ([]shareddto.ThemeListItem, error) {
@@ -79,6 +84,7 @@ func (s *themeService) Update(ctx context.Context, id int64, req *admindto.Updat
 	if err := s.repo.Update(ctx, item); err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
+	_ = s.cache.Delete(ctx, "theme:current")
 	out := toThemeListItem(item)
 	return &out, nil
 }
@@ -94,6 +100,7 @@ func (s *themeService) Activate(ctx context.Context, id int64) error {
 	if err := s.repo.Activate(ctx, id); err != nil {
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
+	_ = s.cache.Delete(ctx, "theme:current")
 	return nil
 }
 

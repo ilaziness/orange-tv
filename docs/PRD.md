@@ -1271,7 +1271,7 @@ CREATE TABLE system_settings (
 -- 站点模式配置
 INSERT INTO system_settings (setting_key, setting_value, setting_type, description) VALUES
 ('site_mode', 'video_site', 1, '站点模式：video_site(影视站) resource_site(资源站)'),
-('api_output_format', 'custom', 1, 'API输出格式：custom(自定义) apple_cms(苹果CMS)'),
+('api_output_format', 'default', 1, 'API输出格式：default(系统默认) apple_cms(苹果CMS)'),
 ('enable_third_party_collect', '1', 3, '是否允许第三方采集'),
 ('active_theme_id', '1', 2, '当前激活主题ID（与themes.is_active互为冗余，以themes表为准）');
 
@@ -1408,10 +1408,12 @@ CREATE TABLE system_logs (
 
 #### 第四阶段：系统完善（2周）
 
-- [ ] 系统配置（站点设置、API 配置等）与优化
-- [ ] 性能优化
-- [ ] 安全加固（含更完整的操作审计/系统日志等）
-- [ ] 文档完善
+- [x] 系统配置（站点设置、API 配置等）与优化
+- [x] 性能优化（客户端高读路径 memory cache：主题/分类树/影视列表；settings 缓存）
+- [x] 安全加固（含登录日志、操作审计、系统/登录日志查询、安全响应头、登录限流）
+- [x] 资源站开放 API（`/api/open/v1`：系统默认格式 / apple_cms + API Key）
+- [x] 文档完善（`docs/resource-api.md` 等）
+- 延后：用户管理 CRUD、邮件/通知、主题上传包、前端懒加载/离线缓存
 
 ### 6.2 部署方案
 
@@ -1459,8 +1461,8 @@ docker-compose -f docker-compose.prod.yml up -d
 
 ```javascript
 
-// 自定义JSON格式
-const customFormat = {
+// 系统默认JSON格式
+const defaultFormat = {
   "code": 200,
   "message": "success",
   "data": {

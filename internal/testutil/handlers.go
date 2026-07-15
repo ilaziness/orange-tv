@@ -9,6 +9,7 @@ import (
 	clientdto "github.com/ilaziness/orange-tv/internal/dto/client"
 	adminhandler "github.com/ilaziness/orange-tv/internal/handler/http/admin"
 	clienthandler "github.com/ilaziness/orange-tv/internal/handler/http/client"
+	openhandler "github.com/ilaziness/orange-tv/internal/handler/http/open"
 	"github.com/ilaziness/orange-tv/internal/model"
 	adminsvc "github.com/ilaziness/orange-tv/internal/service/admin"
 )
@@ -24,15 +25,19 @@ type BusinessHandlers struct {
 	AdminLive      *adminhandler.LiveHandler
 	AdminCollect   *adminhandler.CollectHandler
 	AdminTheme     *adminhandler.ThemeHandler
+	AdminSettings  *adminhandler.SettingsHandler
+	AdminLog       *adminhandler.LogHandler
 	ClientCategory *clienthandler.CategoryHandler
 	ClientVideo    *clienthandler.VideoHandler
 	ClientLive     *clienthandler.LiveHandler
 	ClientTheme    *clienthandler.ThemeHandler
+	ClientSite     *clienthandler.SiteHandler
+	OpenResource   *openhandler.ResourceHandler
 }
 
 type authSvc struct{}
 
-func (s authSvc) Login(ctx context.Context, req *admindto.LoginRequest) (*admindto.LoginResponse, error) {
+func (s authSvc) Login(ctx context.Context, req *admindto.LoginRequest, meta *adminsvc.LoginMeta) (*admindto.LoginResponse, error) {
 	return &admindto.LoginResponse{}, nil
 }
 func (s authSvc) Profile(ctx context.Context, adminID int64) (*admindto.Profile, error) {
@@ -107,7 +112,7 @@ func (s adminMetadataSvc) DeleteTag(ctx context.Context, id int64) error { retur
 type adminPlaySvc struct{}
 
 func (s adminPlaySvc) ListSources(ctx context.Context) ([]admindto.PlaySourceResponse, error) {
-	return []admindto.PlaySourceResponse{}, nil
+	return nil, nil
 }
 func (s adminPlaySvc) CreateSource(ctx context.Context, req *admindto.CreatePlaySourceRequest) (*admindto.PlaySourceResponse, error) {
 	return &admindto.PlaySourceResponse{}, nil
@@ -127,31 +132,10 @@ func (s adminPlaySvc) UpdateEpisode(ctx context.Context, id int64, req *admindto
 }
 func (s adminPlaySvc) DeleteEpisode(ctx context.Context, id int64) error { return nil }
 
-type clientCategorySvc struct{}
-
-func (s clientCategorySvc) ListTree(ctx context.Context) ([]shareddto.CategoryResponse, error) {
-	return []shareddto.CategoryResponse{}, nil
-}
-
-type clientVideoSvc struct{}
-
-func (s clientVideoSvc) List(ctx context.Context, req *clientdto.VideoListRequest) ([]shareddto.VideoListItem, int, error) {
-	return []shareddto.VideoListItem{}, 0, nil
-}
-func (s clientVideoSvc) Search(ctx context.Context, req *clientdto.SearchRequest) ([]shareddto.VideoListItem, int, error) {
-	return []shareddto.VideoListItem{}, 0, nil
-}
-func (s clientVideoSvc) Get(ctx context.Context, id int64) (*shareddto.VideoDetailResponse, error) {
-	return &shareddto.VideoDetailResponse{ID: id}, nil
-}
-func (s clientVideoSvc) Related(ctx context.Context, id int64, limit int) ([]shareddto.VideoListItem, error) {
-	return []shareddto.VideoListItem{}, nil
-}
-
 type adminLiveSvc struct{}
 
 func (s adminLiveSvc) List(ctx context.Context, req *admindto.LiveListRequest) ([]shareddto.LiveChannelItem, int, error) {
-	return []shareddto.LiveChannelItem{}, 0, nil
+	return nil, 0, nil
 }
 func (s adminLiveSvc) Create(ctx context.Context, req *admindto.CreateLiveRequest) (*shareddto.LiveChannelItem, error) {
 	return &shareddto.LiveChannelItem{}, nil
@@ -160,12 +144,6 @@ func (s adminLiveSvc) Update(ctx context.Context, id int64, req *admindto.Update
 	return &shareddto.LiveChannelItem{ID: id}, nil
 }
 func (s adminLiveSvc) Delete(ctx context.Context, id int64) error { return nil }
-
-type clientLiveSvc struct{}
-
-func (s clientLiveSvc) List(ctx context.Context, req *clientdto.LiveListRequest) ([]shareddto.LiveChannelItem, int, error) {
-	return []shareddto.LiveChannelItem{}, 0, nil
-}
 
 type adminCollectSvc struct{}
 
@@ -203,10 +181,77 @@ func (s adminThemeSvc) Update(ctx context.Context, id int64, req *admindto.Updat
 func (s adminThemeSvc) Activate(ctx context.Context, id int64) error { return nil }
 func (s adminThemeSvc) EnsureDefaultTheme(ctx context.Context) error { return nil }
 
+type adminSettingsSvc struct{}
+
+func (s adminSettingsSvc) Get(ctx context.Context) (*admindto.SettingsResponse, error) {
+	return &admindto.SettingsResponse{}, nil
+}
+func (s adminSettingsSvc) Update(ctx context.Context, req *admindto.UpdateSettingsRequest) (*admindto.SettingsResponse, error) {
+	return &admindto.SettingsResponse{}, nil
+}
+func (s adminSettingsSvc) GetPublic(ctx context.Context) (*admindto.PublicSiteResponse, error) {
+	return &admindto.PublicSiteResponse{Name: "Orange TV"}, nil
+}
+func (s adminSettingsSvc) ResourceConfig(ctx context.Context) (*adminsvc.ResourceConfig, error) {
+	return &adminsvc.ResourceConfig{SiteMode: "video_site", APIOutputFormat: "default", EnableThirdPartyCollect: true}, nil
+}
+func (s adminSettingsSvc) InvalidateCache(ctx context.Context) {}
+
+type adminLogSvc struct{}
+
+func (s adminLogSvc) ListSystemLogs(ctx context.Context, req *admindto.SystemLogListRequest) ([]admindto.SystemLogItem, int, error) {
+	return nil, 0, nil
+}
+func (s adminLogSvc) ListLoginLogs(ctx context.Context, req *admindto.LoginLogListRequest) ([]admindto.LoginLogItem, int, error) {
+	return nil, 0, nil
+}
+
+type clientCategorySvc struct{}
+
+func (s clientCategorySvc) ListTree(ctx context.Context) ([]shareddto.CategoryResponse, error) {
+	return []shareddto.CategoryResponse{}, nil
+}
+
+type clientVideoSvc struct{}
+
+func (s clientVideoSvc) List(ctx context.Context, req *clientdto.VideoListRequest) ([]shareddto.VideoListItem, int, error) {
+	return nil, 0, nil
+}
+func (s clientVideoSvc) Search(ctx context.Context, req *clientdto.SearchRequest) ([]shareddto.VideoListItem, int, error) {
+	return nil, 0, nil
+}
+func (s clientVideoSvc) Get(ctx context.Context, id int64) (*shareddto.VideoDetailResponse, error) {
+	return &shareddto.VideoDetailResponse{ID: id}, nil
+}
+func (s clientVideoSvc) Related(ctx context.Context, id int64, limit int) ([]shareddto.VideoListItem, error) {
+	return nil, nil
+}
+
+type clientLiveSvc struct{}
+
+func (s clientLiveSvc) List(ctx context.Context, req *clientdto.LiveListRequest) ([]shareddto.LiveChannelItem, int, error) {
+	return nil, 0, nil
+}
+
 type clientThemeSvc struct{}
 
 func (s clientThemeSvc) Current(ctx context.Context) (*shareddto.ThemeCurrentResponse, error) {
 	return &shareddto.ThemeCurrentResponse{Name: "默认主题", Identifier: "default", Config: map[string]any{}}, nil
+}
+
+type openResourceSvc struct{}
+
+func (s openResourceSvc) Authorize(ctx context.Context, providedKey string) (*adminsvc.ResourceConfig, error) {
+	return &adminsvc.ResourceConfig{EnableThirdPartyCollect: true, APIOutputFormat: "default"}, nil
+}
+func (s openResourceSvc) ListVideos(ctx context.Context, page, pageSize int, format string) (any, error) {
+	return map[string]any{"code": 200}, nil
+}
+func (s openResourceSvc) GetVideo(ctx context.Context, id int64, format string) (any, error) {
+	return map[string]any{"code": 200}, nil
+}
+func (s openResourceSvc) ListCategories(ctx context.Context) ([]shareddto.CategoryResponse, error) {
+	return []shareddto.CategoryResponse{}, nil
 }
 
 // NewBusinessHandlers builds no-op business handlers for tests.
@@ -222,9 +267,13 @@ func NewBusinessHandlers() BusinessHandlers {
 		AdminLive:      adminhandler.NewLiveHandler(adminLiveSvc{}),
 		AdminCollect:   adminhandler.NewCollectHandler(adminCollectSvc{}),
 		AdminTheme:     adminhandler.NewThemeHandler(adminThemeSvc{}),
+		AdminSettings:  adminhandler.NewSettingsHandler(adminSettingsSvc{}, nil),
+		AdminLog:       adminhandler.NewLogHandler(adminLogSvc{}),
 		ClientCategory: clienthandler.NewCategoryHandler(clientCategorySvc{}),
 		ClientVideo:    clienthandler.NewVideoHandler(clientVideoSvc{}),
 		ClientLive:     clienthandler.NewLiveHandler(clientLiveSvc{}),
 		ClientTheme:    clienthandler.NewThemeHandler(clientThemeSvc{}),
+		ClientSite:     clienthandler.NewSiteHandler(adminSettingsSvc{}),
+		OpenResource:   openhandler.NewResourceHandler(openResourceSvc{}),
 	}
 }

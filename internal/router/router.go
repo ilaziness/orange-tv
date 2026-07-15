@@ -17,6 +17,7 @@ func RegisterRoutes(engine *gin.Engine, h *Handlers) error {
 	registerSystemRoutes(engine, h.Health)
 	registerClientRoutes(engine, h)
 	registerAdminRoutes(engine, h)
+	registerOpenRoutes(engine, h)
 	registerInternalRoutes(engine, h)
 	return nil
 }

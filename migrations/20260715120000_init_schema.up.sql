@@ -230,7 +230,7 @@ CREATE TABLE IF NOT EXISTS system_settings (
 
 INSERT INTO system_settings (setting_key, setting_value, setting_type, description) VALUES
 ('site_mode', 'video_site', 1, '站点模式：video_site(影视站) resource_site(资源站)'),
-('api_output_format', 'custom', 1, 'API输出格式：custom(自定义) apple_cms(苹果CMS)'),
+('api_output_format', 'default', 1, 'API输出格式：default(系统默认) apple_cms(苹果CMS)'),
 ('enable_third_party_collect', '1', 3, '是否允许第三方采集'),
 ('active_theme_id', '1', 2, '当前激活主题ID（与themes.is_active互为冗余，以themes表为准）');
 

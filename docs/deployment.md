@@ -19,6 +19,14 @@
 - **Redis**（可选，用于分布式限流和缓存）：
   - Redis 6.0+
 
+## 生产建议（第四阶段）
+
+- **JWT**：通过环境变量设置 `JWT_SECRET`（或配置 `jwt.secret`），勿使用开发默认。
+- **缓存**：建议 `cache.enabled: true`；单实例可用 `memory`，多实例用 `redis`/`multi`。
+- **限流**：建议生产开启 `rate_limit.enabled`；登录接口额外始终启用 IP 限流（5 rps）。
+- **资源站**：若对外提供采集，务必配置 `resource_api_key`，并按需关闭 `enable_third_party_collect`。
+- **设置种子**：执行迁移后会写入站点/API 相关 `system_settings` 键。
+
 ## 单实例部署
 
 ### 1. 编译应用

@@ -10,12 +10,15 @@ import {
   type CollectLog,
   type CollectSource,
   type LiveChannel,
+  type LoginLogItem,
   type LoginResult,
   type NamedItem,
   type PageData,
   type PlayEpisode,
   type PlaySource,
   type AdminProfile,
+  type SystemLogItem,
+  type SystemSettings,
   type ThemeItem,
   type VideoDetail,
   type VideoListItem,
@@ -142,6 +145,14 @@ export const adminApi = {
     withAuth((token) => apiPut<ThemeItem>(ADMIN_API_BASE, `/themes/${id}`, body, { token })),
   activateTheme: (id: number) =>
     withAuth((token) => apiPost(ADMIN_API_BASE, `/themes/${id}/activate`, null, { token })),
+
+  getSettings: () => withAuth((token) => apiGet<SystemSettings>(ADMIN_API_BASE, '/settings', { token })),
+  updateSettings: (body: unknown) =>
+    withAuth((token) => apiPut<SystemSettings>(ADMIN_API_BASE, '/settings', body, { token })),
+  listSystemLogs: (query?: Record<string, string | number | undefined>) =>
+    withAuth((token) => apiGet<PageData<SystemLogItem>>(ADMIN_API_BASE, '/system-logs', { token, query })),
+  listLoginLogs: (query?: Record<string, string | number | undefined>) =>
+    withAuth((token) => apiGet<PageData<LoginLogItem>>(ADMIN_API_BASE, '/login-logs', { token, query })),
 }
 
 export function errorMessage(err: unknown): string {

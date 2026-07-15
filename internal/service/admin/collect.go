@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ilaziness/orange-tv/internal/cache"
 	"github.com/ilaziness/orange-tv/internal/collect"
 	"github.com/ilaziness/orange-tv/internal/constant"
 	shareddto "github.com/ilaziness/orange-tv/internal/dto"
@@ -50,6 +51,7 @@ type collectService struct {
 	categoryRepo repository.CategoryRepository
 	engine       *collect.Engine
 	log          *zap.Logger
+	cache        cache.Cache
 
 	mu      sync.Mutex
 	running map[int64]*runningJob
@@ -64,13 +66,18 @@ func NewCollectService(
 	categoryRepo repository.CategoryRepository,
 	engine *collect.Engine,
 	log *zap.Logger,
+	c cache.Cache,
 ) CollectService {
+	if c == nil {
+		c = cache.NewNopCache()
+	}
 	return &collectService{
 		repo:         repo,
 		playRepo:     playRepo,
 		categoryRepo: categoryRepo,
 		engine:       engine,
 		log:          log,
+		cache:        c,
 		running:      map[int64]*runningJob{},
 		cronIDs:      map[int64]cron.EntryID{},
 	}
@@ -383,6 +390,10 @@ func (s *collectService) runJob(ctx context.Context, source *model.CollectSource
 			zap.Int("success", res.Success),
 			zap.Int("failed", res.Failed),
 		)
+	}
+	// Bulk import may touch many videos; clear read cache so client/open see new data.
+	if res.Success > 0 {
+		_ = s.cache.Clear(context.Background())
 	}
 }
 

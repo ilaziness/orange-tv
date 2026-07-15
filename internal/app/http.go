@@ -3,16 +3,19 @@ package app
 import (
 	"context"
 
+	"github.com/ilaziness/orange-tv/internal/audit"
 	"github.com/ilaziness/orange-tv/internal/collect"
 	httphandler "github.com/ilaziness/orange-tv/internal/handler/http"
 	adminhandler "github.com/ilaziness/orange-tv/internal/handler/http/admin"
 	clienthandler "github.com/ilaziness/orange-tv/internal/handler/http/client"
+	openhandler "github.com/ilaziness/orange-tv/internal/handler/http/open"
 	"github.com/ilaziness/orange-tv/internal/health"
 	"github.com/ilaziness/orange-tv/internal/repository"
 	"github.com/ilaziness/orange-tv/internal/router"
 	"github.com/ilaziness/orange-tv/internal/server"
 	adminsvc "github.com/ilaziness/orange-tv/internal/service/admin"
 	clientsvc "github.com/ilaziness/orange-tv/internal/service/client"
+	opensvc "github.com/ilaziness/orange-tv/internal/service/open"
 )
 
 func (a *App) wireHTTP() error {
@@ -40,21 +43,29 @@ func (a *App) wireHTTP() error {
 	liveRepo := repository.NewLiveRepo(a.db)
 	collectRepo := repository.NewCollectRepo(a.db)
 	themeRepo := repository.NewThemeRepo(a.db)
+	settingsRepo := repository.NewSettingsRepo(a.db)
+	logRepo := repository.NewLogRepo(a.db)
 
-	authSvc := adminsvc.NewAuthService(adminRepo, a.jwtMgr, a.cfg)
-	adminCategorySvc := adminsvc.NewCategoryService(categoryRepo)
+	recorder := audit.NewRecorder(logRepo, a.log)
+
+	authSvc := adminsvc.NewAuthService(adminRepo, a.jwtMgr, a.cfg, recorder)
+	adminCategorySvc := adminsvc.NewCategoryService(categoryRepo, a.cache)
 	adminMetaSvc := adminsvc.NewMetadataService(metaRepo)
 	adminPlaySvc := adminsvc.NewPlayService(playRepo, videoRepo)
-	adminVideoSvc := adminsvc.NewVideoService(videoRepo, categoryRepo, metaRepo, playRepo)
+	adminVideoSvc := adminsvc.NewVideoService(videoRepo, categoryRepo, metaRepo, playRepo, a.cache)
 	adminLiveSvc := adminsvc.NewLiveService(liveRepo)
 	collectEngine := collect.NewEngine(collectRepo, videoRepo, categoryRepo, metaRepo, playRepo, a.log)
-	adminCollectSvc := adminsvc.NewCollectService(collectRepo, playRepo, categoryRepo, collectEngine, a.log)
-	adminThemeSvc := adminsvc.NewThemeService(themeRepo)
+	adminCollectSvc := adminsvc.NewCollectService(collectRepo, playRepo, categoryRepo, collectEngine, a.log, a.cache)
+	adminThemeSvc := adminsvc.NewThemeService(themeRepo, a.cache)
+	adminSettingsSvc := adminsvc.NewSettingsService(settingsRepo, a.cache)
+	adminLogSvc := adminsvc.NewLogService(logRepo)
 
-	clientCategorySvc := clientsvc.NewCategoryService(categoryRepo)
-	clientVideoSvc := clientsvc.NewVideoService(videoRepo, metaRepo, playRepo)
+	clientCategorySvc := clientsvc.NewCategoryService(categoryRepo, a.cache)
+	clientVideoSvc := clientsvc.NewVideoService(videoRepo, metaRepo, playRepo, a.cache)
 	clientLiveSvc := clientsvc.NewLiveService(liveRepo)
-	clientThemeSvc := clientsvc.NewThemeService(themeRepo, adminThemeSvc)
+	clientThemeSvc := clientsvc.NewThemeService(themeRepo, adminThemeSvc, a.cache)
+
+	openResourceSvc := opensvc.NewResourceService(adminSettingsSvc, videoRepo, metaRepo, playRepo, categoryRepo, a.cache)
 
 	handlers.AuthService = authSvc
 	handlers.AdminAuth = adminhandler.NewAuthHandler(authSvc)
@@ -65,11 +76,15 @@ func (a *App) wireHTTP() error {
 	handlers.AdminLive = adminhandler.NewLiveHandler(adminLiveSvc)
 	handlers.AdminCollect = adminhandler.NewCollectHandler(adminCollectSvc)
 	handlers.AdminTheme = adminhandler.NewThemeHandler(adminThemeSvc)
+	handlers.AdminSettings = adminhandler.NewSettingsHandler(adminSettingsSvc, recorder)
+	handlers.AdminLog = adminhandler.NewLogHandler(adminLogSvc)
 
 	handlers.ClientCategory = clienthandler.NewCategoryHandler(clientCategorySvc)
 	handlers.ClientVideo = clienthandler.NewVideoHandler(clientVideoSvc)
 	handlers.ClientLive = clienthandler.NewLiveHandler(clientLiveSvc)
 	handlers.ClientTheme = clienthandler.NewThemeHandler(clientThemeSvc)
+	handlers.ClientSite = clienthandler.NewSiteHandler(adminSettingsSvc)
+	handlers.OpenResource = openhandler.NewResourceHandler(openResourceSvc)
 
 	// collect scheduler lifecycle
 	a.addHook(Hook{

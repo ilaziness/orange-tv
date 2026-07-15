@@ -34,9 +34,13 @@ func BindJSON(c *gin.Context, obj any) bool {
 	return true
 }
 
-// BindQuery 绑定查询参数
+// BindQuery 绑定查询参数，并执行 validate 标签校验。
 func BindQuery(c *gin.Context, obj any) bool {
 	if err := c.ShouldBindQuery(obj); err != nil {
+		response.Error(c, errcode.Wrap(errcode.ParamError, err))
+		return false
+	}
+	if err := validator.Validate(obj); err != nil {
 		response.Error(c, errcode.Wrap(errcode.ParamError, err))
 		return false
 	}

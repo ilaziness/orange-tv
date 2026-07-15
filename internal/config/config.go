@@ -398,7 +398,7 @@ func setDefaults(v *viper.Viper) {
 
 	v.SetDefault("jwt.access_token_ttl", 7200)    // 2 hours in seconds
 	v.SetDefault("jwt.refresh_token_ttl", 604800) // 7 days in seconds
-	v.SetDefault("jwt.skip_paths", []string{"/health", "/readiness", "/liveness", "/version", "/swagger/*any", "/api/client/v1/*", "/api/client/v2/*", "/api/admin/v1/auth/login"})
+	v.SetDefault("jwt.skip_paths", []string{"/health", "/readiness", "/liveness", "/version", "/swagger/*any", "/api/client/v1/*", "/api/client/v2/*", "/api/open/v1/*", "/api/admin/v1/auth/login"})
 
 	v.SetDefault("rate_limit.enabled", false)
 	v.SetDefault("rate_limit.store", "memory")

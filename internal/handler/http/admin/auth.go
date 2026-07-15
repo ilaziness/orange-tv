@@ -26,7 +26,11 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	if !httphandler.BindAndValidate(c, &req) {
 		return
 	}
-	resp, err := h.svc.Login(c.Request.Context(), &req)
+	meta := &adminsvc.LoginMeta{
+		IP:        c.ClientIP(),
+		UserAgent: c.GetHeader("User-Agent"),
+	}
+	resp, err := h.svc.Login(c.Request.Context(), &req, meta)
 	if err != nil {
 		response.Error(c, err)
 		return

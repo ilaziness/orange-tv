@@ -68,6 +68,7 @@ jwt:
     - /swagger/*any
     - /api/client/v1/*
     - /api/client/v2/*
+    - /api/open/v1/*
     - /api/admin/v1/auth/login
 
 # Rate limiting configuration (disabled by default)
@@ -78,9 +79,9 @@ rate_limit:
   ip_rps: 100
   user_rps: 50
 
-# Cache configuration (disabled by default)
+# Cache configuration (enable memory cache for hot client/open reads in phase 4)
 cache:
-  enabled: false
+  enabled: true
   driver: memory  # memory, redis, multi
   memory:
     num_counters: 1000000

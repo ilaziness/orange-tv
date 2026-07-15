@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ilaziness/orange-tv/internal/audit"
 	"github.com/ilaziness/orange-tv/internal/auth"
 	"github.com/ilaziness/orange-tv/internal/config"
 	"github.com/ilaziness/orange-tv/internal/constant"
@@ -16,9 +17,15 @@ import (
 	"github.com/ilaziness/orange-tv/internal/repository"
 )
 
+// LoginMeta carries request client info for login audit.
+type LoginMeta struct {
+	IP        string
+	UserAgent string
+}
+
 // AuthService handles admin authentication.
 type AuthService interface {
-	Login(ctx context.Context, req *dto.LoginRequest) (*dto.LoginResponse, error)
+	Login(ctx context.Context, req *dto.LoginRequest, meta *LoginMeta) (*dto.LoginResponse, error)
 	Profile(ctx context.Context, adminID int64) (*dto.Profile, error)
 	// EnsureSuperAdmin loads admin+group and validates super_admin access for each request.
 	EnsureSuperAdmin(ctx context.Context, adminID int64) (*model.Admins, *model.UserGroups, error)
@@ -28,18 +35,34 @@ type authService struct {
 	adminRepo repository.AdminRepository
 	jwtMgr    *auth.JWTManager
 	accessTTL int
+	audit     *audit.Recorder
 }
 
 // NewAuthService creates an AuthService.
-func NewAuthService(adminRepo repository.AdminRepository, jwtMgr *auth.JWTManager, cfg *config.Config) AuthService {
+func NewAuthService(adminRepo repository.AdminRepository, jwtMgr *auth.JWTManager, cfg *config.Config, recorder *audit.Recorder) AuthService {
 	ttl := 7200
 	if cfg != nil && cfg.JWT.AccessTokenTTL > 0 {
 		ttl = cfg.JWT.AccessTokenTTL
 	}
-	return &authService{adminRepo: adminRepo, jwtMgr: jwtMgr, accessTTL: ttl}
+	return &authService{adminRepo: adminRepo, jwtMgr: jwtMgr, accessTTL: ttl, audit: recorder}
 }
 
-func (s *authService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.LoginResponse, error) {
+func (s *authService) Login(ctx context.Context, req *dto.LoginRequest, meta *LoginMeta) (*dto.LoginResponse, error) {
+	ip, ua := "", ""
+	if meta != nil {
+		ip, ua = meta.IP, meta.UserAgent
+	}
+	recordFail := func(userID int64, username string) {
+		if s.audit != nil {
+			s.audit.Login(ctx, constant.LoginUserTypeAdmin, userID, username, ip, ua, false)
+		}
+	}
+	recordOK := func(userID int64, username string) {
+		if s.audit != nil {
+			s.audit.Login(ctx, constant.LoginUserTypeAdmin, userID, username, ip, ua, true)
+		}
+	}
+
 	if s.jwtMgr == nil {
 		return nil, errcode.WithMessage(errcode.ServiceUnavailable, "JWT 未配置")
 	}
@@ -49,12 +72,15 @@ func (s *authService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Lo
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if admin == nil {
+		recordFail(0, username)
 		return nil, errcode.InvalidCredentials
 	}
 	if admin.Status != constant.StatusEnabled {
+		recordFail(admin.ID, username)
 		return nil, errcode.AdminDisabled
 	}
 	if err := crypto.CheckPassword(req.Password, admin.Password); err != nil {
+		recordFail(admin.ID, username)
 		return nil, errcode.InvalidCredentials
 	}
 
@@ -63,6 +89,7 @@ func (s *authService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Lo
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if group == nil || group.Name != constant.RoleSuperAdmin {
+		recordFail(admin.ID, username)
 		return nil, errcode.InsufficientPermission
 	}
 
@@ -74,6 +101,7 @@ func (s *authService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Lo
 	if err := s.adminRepo.UpdateLastLogin(ctx, admin.ID, now); err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
+	recordOK(admin.ID, username)
 
 	return &dto.LoginResponse{
 		AccessToken: token,
