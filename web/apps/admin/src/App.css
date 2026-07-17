@@ -204,6 +204,11 @@ button:disabled { opacity: 0.6; cursor: not-allowed; }
   border: 1px solid #d1d5db;
   border-radius: 6px;
 }
+.loading {
+  padding: 2rem;
+  text-align: center;
+  color: #6b7280;
+}
 
 @media (max-width: 900px) {
   .body { grid-template-columns: 1fr; }

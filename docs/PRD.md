@@ -1370,12 +1370,12 @@ CREATE TABLE system_logs (
 
 ### 5.2 前端技术栈
 
-- **框架**：React 19 + TypeScript 5.x
-- **UI组件库**：逐步引入 shadcn/ui（第二阶段可用原生/轻量组件完成管理页与用户页）
+- **框架**：React 19 + TypeScript 7.x
+- **UI组件库**：shadcn/ui
 - **状态管理**：Zustand 5
-- **路由**：React Router 7
-- **样式方案**：可使用 Tailwind CSS / 组件级 CSS（以 monorepo 实际工程为准）
-- **构建工具**：Vite 6.x
+- **路由**：React Router 8
+- **样式方案**：组件级 CSS（以 monorepo 实际工程为准）
+- **构建工具**：Vite 8
 - **视频播放器**：Video.js 8（第三阶段集成）
 - **工程结构**：`web/` monorepo，`apps/client`、`apps/admin`、`packages/shared`
 
