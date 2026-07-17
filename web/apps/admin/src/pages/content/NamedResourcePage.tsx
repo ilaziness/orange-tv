@@ -1,7 +1,26 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { errorMessage } from '../../lib/api'
-import { ErrorAlert, PageCard, PageHeader } from '../../components/ui'
+import { errorMessage } from '@/lib/api'
+import { PageContainer, ConfirmDialog } from '@/components/shared'
 import type { NamedItem } from '@orange-tv/shared'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Search, Plus, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 export function NamedResourcePage({
   title,
@@ -18,6 +37,7 @@ export function NamedResourcePage({
   const [keyword, setKeyword] = useState('')
   const [name, setName] = useState('')
   const [error, setError] = useState('')
+  const [deleteId, setDeleteId] = useState<number | null>(null)
   const keywordRef = useRef(keyword)
   const listRef = useRef(list)
 
@@ -36,46 +56,103 @@ export function NamedResourcePage({
 
   useEffect(() => { void load('') }, [load])
 
+  async function handleCreate() {
+    if (!name.trim()) return
+    try {
+      await create(name)
+      setName('')
+      toast.success('创建成功')
+      await load()
+    } catch (err) {
+      toast.error(errorMessage(err))
+    }
+  }
+
+  async function confirmDelete() {
+    if (deleteId === null) return
+    try {
+      await remove(deleteId)
+      toast.success('删除成功')
+      await load()
+    } catch (err) {
+      toast.error(errorMessage(err))
+    } finally {
+      setDeleteId(null)
+    }
+  }
+
   return (
-    <PageCard className="stack">
-      <PageHeader title={title} />
-      <ErrorAlert>{error}</ErrorAlert>
-      <div className="toolbar">
-        <input placeholder="搜索" value={keyword} onChange={(e) => setKeyword(e.target.value)} />
-        <button onClick={() => void load()}>查询</button>
-        <input placeholder="新名称" value={name} onChange={(e) => setName(e.target.value)} />
-        <button className="primary" onClick={async () => {
-          try {
-            await create(name)
-            setName('')
-            await load()
-          } catch (err) {
-            setError(errorMessage(err))
-          }
-        }}>新增</button>
-      </div>
-      <table className="table">
-        <thead><tr><th>ID</th><th>名称</th><th>操作</th></tr></thead>
-        <tbody>
-          {items.map((item) => (
-            <tr key={item.id}>
-              <td>{item.id}</td>
-              <td>{item.name}</td>
-              <td>
-                <button className="danger" onClick={async () => {
-                  if (!confirm('确认删除？')) return
-                  try {
-                    await remove(item.id)
-                    await load()
-                  } catch (err) {
-                    setError(errorMessage(err))
-                  }
-                }}>删除</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </PageCard>
+    <PageContainer>
+      <Card>
+        <CardHeader>
+          <CardTitle>{title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          <div className="mb-4 flex flex-wrap gap-2">
+            <Input
+              placeholder="搜索"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              className="max-w-xs"
+              onKeyDown={(e) => { if (e.key === 'Enter') void load() }}
+            />
+            <Button variant="outline" size="sm" onClick={() => void load()}>
+              <Search data-icon="inline-start" />
+              查询
+            </Button>
+            <Input
+              placeholder="新名称"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="max-w-xs"
+              onKeyDown={(e) => { if (e.key === 'Enter') void handleCreate() }}
+            />
+            <Button size="sm" onClick={handleCreate}>
+              <Plus data-icon="inline-start" />
+              新增
+            </Button>
+          </div>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-16">ID</TableHead>
+                  <TableHead>名称</TableHead>
+                  <TableHead className="w-24">操作</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell>{item.id}</TableCell>
+                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell>
+                      <Button size="sm" variant="ghost" onClick={() => setDeleteId(item.id)}>
+                        <Trash2 data-icon="inline-start" />
+                        删除
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <ConfirmDialog
+        open={deleteId !== null}
+        onOpenChange={(open) => { if (!open) setDeleteId(null) }}
+        title="删除确认"
+        description="确认删除该项？此操作不可撤销。"
+        destructive
+        onConfirm={confirmDelete}
+      />
+    </PageContainer>
   )
 }

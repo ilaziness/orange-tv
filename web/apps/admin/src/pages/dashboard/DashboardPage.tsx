@@ -1,12 +1,23 @@
 import { useEffect, useState } from 'react'
-import { adminApi, errorMessage } from '../../lib/api'
-import { ErrorAlert, PageCard, PageHeader } from '../../components/ui'
+import { adminApi, errorMessage } from '@/lib/api'
+import { PageContainer } from '@/components/shared'
 import { Link } from 'react-router'
 import type { DashboardData } from '@orange-tv/shared'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Film, FolderTree, Settings, ScrollText, ShieldCheck, Users, Image } from 'lucide-react'
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     void (async () => {
@@ -15,6 +26,8 @@ export default function DashboardPage() {
         setData(res.data || null)
       } catch (err) {
         setError(errorMessage(err))
+      } finally {
+        setLoading(false)
       }
     })()
   }, [])
@@ -32,27 +45,52 @@ export default function DashboardPage() {
     { label: '今日UV', value: data?.today_uv },
   ]
 
+  const quickLinks = [
+    { to: '/content/videos', label: '影视管理', icon: Film },
+    { to: '/content/categories', label: '分类管理', icon: FolderTree },
+    { to: '/system/site', label: '站点设置', icon: Settings },
+    { to: '/system/log', label: '系统日志', icon: ScrollText },
+    { to: '/system/admins', label: '管理员', icon: ShieldCheck },
+    { to: '/system/users', label: '用户', icon: Users },
+    { to: '/system/banners', label: 'Banner', icon: Image },
+  ]
+
   return (
-    <PageCard>
-      <PageHeader title="概况" />
-      <ErrorAlert>{error}</ErrorAlert>
-      <div className="dashboard-grid">
-        {stats.map((s) => (
-          <div key={s.label} className="stat-card">
-            <div className="stat-value">{s.value ?? '-'}</div>
-            <div className="stat-label">{s.label}</div>
+    <PageContainer>
+      <Card>
+        <CardHeader>
+          <CardTitle>概况</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+            {stats.map((s) => (
+              <Card key={s.label}>
+                <CardContent className="p-4">
+                  {loading ? (
+                    <Skeleton className="h-8 w-16" />
+                  ) : (
+                    <div className="text-2xl font-bold">{s.value ?? '-'}</div>
+                  )}
+                  <div className="mt-1 text-sm text-muted-foreground">{s.label}</div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        ))}
-      </div>
-      <div className="toolbar" style={{ marginTop: 16 }}>
-        <Link to="/content/videos"><button className="primary">影视管理</button></Link>
-        <Link to="/content/categories"><button>分类管理</button></Link>
-        <Link to="/system/site"><button>站点设置</button></Link>
-        <Link to="/system/log"><button>系统日志</button></Link>
-        <Link to="/system/admins"><button>管理员</button></Link>
-        <Link to="/system/users"><button>用户</button></Link>
-        <Link to="/system/banners"><button>Banner</button></Link>
-      </div>
-    </PageCard>
+          <div className="mt-6 flex flex-wrap gap-2">
+            {quickLinks.map((link) => (
+              <Button key={link.to} variant="outline" size="sm" render={<Link to={link.to} />}>
+                <link.icon data-icon="inline-start" />
+                {link.label}
+              </Button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </PageContainer>
   )
 }

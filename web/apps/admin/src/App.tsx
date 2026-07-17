@@ -1,11 +1,18 @@
 import { BrowserRouter } from 'react-router'
-import { AppRoutes } from './routes.tsx'
-import './App.css'
+import { ThemeProvider } from 'next-themes'
+import { Toaster } from '@/components/ui/sonner'
+import { TooltipProvider } from '@/components/ui/tooltip'
+import { AppRoutes } from '@/routes'
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <AppRoutes />
-    </BrowserRouter>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+      <BrowserRouter>
+        <TooltipProvider>
+          <AppRoutes />
+          <Toaster richColors />
+        </TooltipProvider>
+      </BrowserRouter>
+    </ThemeProvider>
   )
 }

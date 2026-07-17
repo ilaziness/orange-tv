@@ -1,7 +1,20 @@
 import { useEffect, useState } from 'react'
-import { adminApi, errorMessage } from '../../lib/api'
-import { ErrorAlert, PageCard, PageHeader } from '../../components/ui'
+import { adminApi, errorMessage } from '@/lib/api'
+import { PageContainer } from '@/components/shared'
 import type { ThemeItem } from '@orange-tv/shared'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Textarea } from '@/components/ui/textarea'
+import { Field, FieldLabel } from '@/components/ui/field'
+import { Pencil, Check } from 'lucide-react'
+import { toast } from 'sonner'
 
 export default function ThemesPage() {
   const [list, setList] = useState<ThemeItem[]>([])
@@ -35,50 +48,94 @@ export default function ThemesPage() {
     try {
       const config = JSON.parse(configText || '{}')
       await adminApi.updateTheme(selected.id, { config, custom_css: customCss, custom_js: customJs })
+      toast.success('主题配置已保存')
       await load()
     } catch (err) {
-      setError(errorMessage(err))
+      toast.error(errorMessage(err))
     }
   }
 
   async function activate(id: number) {
     try {
       await adminApi.activateTheme(id)
+      toast.success('主题已激活')
       await load()
     } catch (err) {
-      setError(errorMessage(err))
+      toast.error(errorMessage(err))
     }
   }
 
   return (
-    <PageCard className="stack">
-      <PageHeader title="主题管理" />
-      <p className="muted">最小可用：切换激活主题、覆盖 config / custom_css / custom_js。上传第三方主题包不在本阶段。</p>
-      <ErrorAlert>{error}</ErrorAlert>
-      <div className="tree">
-        {list.map((item) => (
-          <div key={item.id} className="tree-item">
-            <div>
-              <strong>{item.name}</strong>
-              <div className="muted">{item.identifier} · v{item.version}</div>
-            </div>
-            <div className="actions">
-              <span className={`badge ${item.is_active ? 'ok' : 'off'}`}>{item.is_active ? '使用中' : '未激活'}</span>
-              <button onClick={() => pick(item)}>编辑</button>
-              {!item.is_active ? <button className="primary" onClick={() => void activate(item.id)}>激活</button> : null}
-            </div>
+    <PageContainer>
+      <Card>
+        <CardHeader>
+          <CardTitle>主题管理</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="mb-4 text-sm text-muted-foreground">
+            最小可用：切换激活主题、覆盖 config / custom_css / custom_js。上传第三方主题包不在本阶段。
+          </p>
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          <div className="flex flex-col gap-3">
+            {list.map((item) => (
+              <div key={item.id} className="flex items-center justify-between rounded-lg border p-4">
+                <div>
+                  <div className="font-medium">{item.name}</div>
+                  <div className="text-sm text-muted-foreground">{item.identifier} · v{item.version}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={item.is_active ? 'default' : 'secondary'}>
+                    {item.is_active ? '使用中' : '未激活'}
+                  </Badge>
+                  <Button size="sm" variant="outline" onClick={() => pick(item)}>
+                    <Pencil data-icon="inline-start" />
+                    编辑
+                  </Button>
+                  {!item.is_active && (
+                    <Button size="sm" onClick={() => void activate(item.id)}>
+                      <Check data-icon="inline-start" />
+                      激活
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-      {selected ? (
-        <div className="stack">
-          <h3>编辑：{selected.name}</h3>
-          <label>Config JSON<textarea rows={8} value={configText} onChange={(e) => setConfigText(e.target.value)} style={{ width: '100%' }} /></label>
-          <label>Custom CSS<textarea rows={4} value={customCss} onChange={(e) => setCustomCss(e.target.value)} style={{ width: '100%' }} /></label>
-          <label>Custom JS<textarea rows={3} value={customJs} onChange={(e) => setCustomJs(e.target.value)} style={{ width: '100%' }} /></label>
-          <button className="primary" onClick={() => void save()}>保存配置</button>
-        </div>
-      ) : null}
-    </PageCard>
+        </CardContent>
+      </Card>
+
+      {selected && (
+        <Card>
+          <CardHeader>
+            <CardTitle>编辑：{selected.name}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col gap-4">
+              <Field>
+                <FieldLabel>Config JSON</FieldLabel>
+                <Textarea rows={8} value={configText} onChange={(e) => setConfigText(e.target.value)} className="font-mono" />
+              </Field>
+              <Field>
+                <FieldLabel>Custom CSS</FieldLabel>
+                <Textarea rows={4} value={customCss} onChange={(e) => setCustomCss(e.target.value)} className="font-mono" />
+              </Field>
+              <Field>
+                <FieldLabel>Custom JS</FieldLabel>
+                <Textarea rows={3} value={customJs} onChange={(e) => setCustomJs(e.target.value)} className="font-mono" />
+              </Field>
+              <div className="flex justify-end">
+                <Button onClick={() => void save()}>
+                  保存配置
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </PageContainer>
   )
 }

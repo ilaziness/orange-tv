@@ -1,32 +1,40 @@
 import { lazy, Suspense } from 'react'
 import type { ReactNode } from 'react'
 import { Navigate, Route, Routes } from 'react-router'
-import { RequireAuth } from './components/auth/RequireAuth.tsx'
-import { AdminLayout } from './components/layout/AdminLayout.tsx'
-import { Loading } from './components/ui/Loading.tsx'
+import { RequireAuth } from '@/components/auth/RequireAuth'
+import { AdminLayout } from '@/components/layout/AdminLayout'
+import { Skeleton } from '@/components/ui/skeleton'
 
-const LoginPage = lazy(() => import('./pages/login/LoginPage.tsx'))
-const DashboardPage = lazy(() => import('./pages/dashboard/DashboardPage.tsx'))
-const CategoriesPage = lazy(() => import('./pages/content/CategoriesPage.tsx'))
-const DirectorsPage = lazy(() => import('./pages/content/DirectorsPage.tsx'))
-const ActorsPage = lazy(() => import('./pages/content/ActorsPage.tsx'))
-const TagsPage = lazy(() => import('./pages/content/TagsPage.tsx'))
-const PlaySourcesPage = lazy(() => import('./pages/content/PlaySourcesPage.tsx'))
-const VideosPage = lazy(() => import('./pages/content/VideosPage.tsx'))
-const VideoEditPage = lazy(() => import('./pages/content/VideoEditPage.tsx'))
-const LivePage = lazy(() => import('./pages/content/LivePage.tsx'))
-const CollectPage = lazy(() => import('./pages/content/CollectPage.tsx'))
-const ThemesPage = lazy(() => import('./pages/system/ThemesPage.tsx'))
-const SiteSettingsPage = lazy(() => import('./pages/system/SiteSettingsPage.tsx'))
-const APISettingsPage = lazy(() => import('./pages/system/APISettingsPage.tsx'))
-const SystemLogPage = lazy(() => import('./pages/system/SystemLogPage.tsx'))
-const AdminsPage = lazy(() => import('./pages/system/AdminsPage.tsx'))
-const UserGroupsPage = lazy(() => import('./pages/system/UserGroupsPage.tsx'))
-const UsersPage = lazy(() => import('./pages/system/UsersPage.tsx'))
-const BannersPage = lazy(() => import('./pages/system/BannersPage.tsx'))
+const LoginPage = lazy(() => import('@/pages/login/LoginPage'))
+const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage'))
+const CategoriesPage = lazy(() => import('@/pages/content/CategoriesPage'))
+const DirectorsPage = lazy(() => import('@/pages/content/DirectorsPage'))
+const ActorsPage = lazy(() => import('@/pages/content/ActorsPage'))
+const TagsPage = lazy(() => import('@/pages/content/TagsPage'))
+const PlaySourcesPage = lazy(() => import('@/pages/content/PlaySourcesPage'))
+const VideosPage = lazy(() => import('@/pages/content/VideosPage'))
+const VideoEditPage = lazy(() => import('@/pages/content/VideoEditPage'))
+const LivePage = lazy(() => import('@/pages/content/LivePage'))
+const CollectPage = lazy(() => import('@/pages/content/CollectPage'))
+const ThemesPage = lazy(() => import('@/pages/system/ThemesPage'))
+const SiteSettingsPage = lazy(() => import('@/pages/system/SiteSettingsPage'))
+const APISettingsPage = lazy(() => import('@/pages/system/APISettingsPage'))
+const SystemLogPage = lazy(() => import('@/pages/system/SystemLogPage'))
+const AdminsPage = lazy(() => import('@/pages/system/AdminsPage'))
+const UserGroupsPage = lazy(() => import('@/pages/system/UserGroupsPage'))
+const UsersPage = lazy(() => import('@/pages/system/UsersPage'))
+const BannersPage = lazy(() => import('@/pages/system/BannersPage'))
 
 function Lazy({ children }: { children: ReactNode }) {
-  return <Suspense fallback={<Loading />}>{children}</Suspense>
+  return (
+    <Suspense fallback={
+      <div className="flex h-full items-center justify-center p-8">
+        <Skeleton className="h-8 w-48" />
+      </div>
+    }>
+      {children}
+    </Suspense>
+  )
 }
 
 export function AppRoutes() {

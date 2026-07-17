@@ -1,12 +1,32 @@
 import { useEffect, useState } from 'react'
-import { adminApi, errorMessage } from '../../lib/api'
-import { ErrorAlert, PageCard, PageHeader, StatusBadge } from '../../components/ui'
+import { adminApi, errorMessage } from '@/lib/api'
+import { PageContainer, StatusBadge, ConfirmDialog } from '@/components/shared'
 import type { PlaySource } from '@orange-tv/shared'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { Plus, Trash2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 export default function PlaySourcesPage() {
   const [items, setItems] = useState<PlaySource[]>([])
   const [name, setName] = useState('')
   const [error, setError] = useState('')
+  const [deleteId, setDeleteId] = useState<number | null>(null)
 
   async function load() {
     try {
@@ -18,53 +38,109 @@ export default function PlaySourcesPage() {
   }
   useEffect(() => { void load() }, [])
 
+  async function handleCreate() {
+    if (!name.trim()) return
+    try {
+      await adminApi.createPlaySource({ name, status: 1 })
+      setName('')
+      toast.success('播放源已创建')
+      await load()
+    } catch (err) {
+      toast.error(errorMessage(err))
+    }
+  }
+
+  async function toggleStatus(item: PlaySource) {
+    try {
+      await adminApi.updatePlaySource(item.id, { status: item.status === 1 ? 0 : 1 })
+      toast.success(item.status === 1 ? '已禁用' : '已启用')
+      await load()
+    } catch (err) {
+      toast.error(errorMessage(err))
+    }
+  }
+
+  async function confirmDelete() {
+    if (deleteId === null) return
+    try {
+      await adminApi.deletePlaySource(deleteId)
+      toast.success('播放源已删除')
+      await load()
+    } catch (err) {
+      toast.error(errorMessage(err))
+    } finally {
+      setDeleteId(null)
+    }
+  }
+
   return (
-    <PageCard className="stack">
-      <PageHeader title="播放源管理" />
-      <ErrorAlert>{error}</ErrorAlert>
-      <div className="toolbar">
-        <input placeholder="播放源名称" value={name} onChange={(e) => setName(e.target.value)} />
-        <button className="primary" onClick={async () => {
-          try {
-            await adminApi.createPlaySource({ name, status: 1 })
-            setName('')
-            await load()
-          } catch (err) {
-            setError(errorMessage(err))
-          }
-        }}>新增</button>
-      </div>
-      <table className="table">
-        <thead><tr><th>ID</th><th>名称</th><th>状态</th><th>操作</th></tr></thead>
-        <tbody>
-          {items.map((item) => (
-            <tr key={item.id}>
-              <td>{item.id}</td>
-              <td>{item.name}</td>
-              <td><StatusBadge status={item.status} /></td>
-              <td className="actions">
-                <button onClick={async () => {
-                  try {
-                    await adminApi.updatePlaySource(item.id, { status: item.status === 1 ? 0 : 1 })
-                    await load()
-                  } catch (err) {
-                    setError(errorMessage(err))
-                  }
-                }}>{item.status === 1 ? '禁用' : '启用'}</button>
-                <button className="danger" onClick={async () => {
-                  if (!confirm('确认删除播放源？')) return
-                  try {
-                    await adminApi.deletePlaySource(item.id)
-                    await load()
-                  } catch (err) {
-                    setError(errorMessage(err))
-                  }
-                }}>删除</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </PageCard>
+    <PageContainer>
+      <Card>
+        <CardHeader>
+          <CardTitle>播放源管理</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          <div className="mb-4 flex gap-2">
+            <Input
+              placeholder="播放源名称"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="max-w-xs"
+              onKeyDown={(e) => { if (e.key === 'Enter') void handleCreate() }}
+            />
+            <Button size="sm" onClick={handleCreate}>
+              <Plus data-icon="inline-start" />
+              新增
+            </Button>
+          </div>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-16">ID</TableHead>
+                  <TableHead>名称</TableHead>
+                  <TableHead className="w-20">状态</TableHead>
+                  <TableHead className="w-32">操作</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell>{item.id}</TableCell>
+                    <TableCell className="font-medium">{item.name}</TableCell>
+                    <TableCell><StatusBadge status={item.status} /></TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="ghost" onClick={() => void toggleStatus(item)}>
+                          {item.status === 1 ? '禁用' : '启用'}
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => setDeleteId(item.id)}>
+                          <Trash2 data-icon="inline-start" />
+                          删除
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <ConfirmDialog
+        open={deleteId !== null}
+        onOpenChange={(open) => { if (!open) setDeleteId(null) }}
+        title="删除播放源"
+        description="确认删除该播放源？此操作不可撤销。"
+        destructive
+        onConfirm={confirmDelete}
+      />
+    </PageContainer>
   )
 }

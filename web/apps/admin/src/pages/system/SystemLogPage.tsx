@@ -1,7 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { adminApi, errorMessage } from '../../lib/api'
-import { ErrorAlert, PageCard, PageHeader } from '../../components/ui'
+import { adminApi, errorMessage } from '@/lib/api'
+import { PageContainer } from '@/components/shared'
 import type { LoginLogItem, SystemLogItem } from '@orange-tv/shared'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Search } from 'lucide-react'
 
 export default function SystemLogPage() {
   const [tab, setTab] = useState<'system' | 'login'>('system')
@@ -39,52 +51,91 @@ export default function SystemLogPage() {
   useEffect(() => { void load() }, [tab, load])
 
   return (
-    <PageCard className="stack">
-      <PageHeader title="系统日志" />
-      <div className="toolbar">
-        <button className={tab === 'system' ? 'primary' : ''} onClick={() => setTab('system')}>操作日志</button>
-        <button className={tab === 'login' ? 'primary' : ''} onClick={() => setTab('login')}>登录日志</button>
-      </div>
-      <ErrorAlert>{error}</ErrorAlert>
-      {tab === 'system' ? (
-        <>
-          <div className="toolbar">
-            <input placeholder="模块筛选" value={module} onChange={(e) => setModule(e.target.value)} />
-            <button onClick={() => void load()}>查询</button>
-          </div>
-          <p className="muted">共 {total} 条</p>
-          <div className="tree">
-            {systemLogs.map((l) => (
-              <div key={l.id} className="tree-item">
-                <div>
-                  <strong>[{l.level}] {l.module}/{l.action}</strong>
-                  <div className="muted">admin={l.admin_id} · {l.ip_address} · {l.created_at}</div>
-                  <div>{l.content}</div>
-                </div>
+    <PageContainer>
+      <Card>
+        <CardHeader>
+          <CardTitle>系统日志</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          <Tabs value={tab} onValueChange={(v) => setTab(v as 'system' | 'login')}>
+            <TabsList className="mb-4">
+              <TabsTrigger value="system">操作日志</TabsTrigger>
+              <TabsTrigger value="login">登录日志</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          {tab === 'system' ? (
+            <>
+              <div className="mb-4 flex gap-2">
+                <Input
+                  placeholder="模块筛选"
+                  value={module}
+                  onChange={(e) => setModule(e.target.value)}
+                  className="max-w-xs"
+                  onKeyDown={(e) => { if (e.key === 'Enter') void load() }}
+                />
+                <Button variant="outline" size="sm" onClick={() => void load()}>
+                  <Search data-icon="inline-start" />
+                  查询
+                </Button>
               </div>
-            ))}
-          </div>
-        </>
-      ) : (
-        <>
-          <div className="toolbar">
-            <input placeholder="用户名" value={username} onChange={(e) => setUsername(e.target.value)} />
-            <button onClick={() => void load()}>查询</button>
-          </div>
-          <p className="muted">共 {total} 条</p>
-          <div className="tree">
-            {loginLogs.map((l) => (
-              <div key={l.id} className="tree-item">
-                <div>
-                  <strong>{l.username}</strong>
-                  <div className="muted">{l.status === 1 ? '成功' : '失败'} · {l.ip_address} · {l.created_at}</div>
-                  <div className="muted">{l.user_agent}</div>
-                </div>
+              <p className="mb-2 text-sm text-muted-foreground">共 {total} 条</p>
+              <div className="flex flex-col gap-3">
+                {systemLogs.map((l) => (
+                  <div key={l.id} className="rounded-lg border p-4">
+                    <div className="flex items-center gap-2">
+                      <Badge variant={String(l.level) === 'error' ? 'destructive' : 'secondary'}>[{l.level}]</Badge>
+                      <span className="font-medium">{l.module}/{l.action}</span>
+                    </div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      admin={l.admin_id} · {l.ip_address} · {l.created_at}
+                    </div>
+                    <div className="mt-1 text-sm">{l.content}</div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </>
-      )}
-    </PageCard>
+            </>
+          ) : (
+            <>
+              <div className="mb-4 flex gap-2">
+                <Input
+                  placeholder="用户名"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="max-w-xs"
+                  onKeyDown={(e) => { if (e.key === 'Enter') void load() }}
+                />
+                <Button variant="outline" size="sm" onClick={() => void load()}>
+                  <Search data-icon="inline-start" />
+                  查询
+                </Button>
+              </div>
+              <p className="mb-2 text-sm text-muted-foreground">共 {total} 条</p>
+              <div className="flex flex-col gap-3">
+                {loginLogs.map((l) => (
+                  <div key={l.id} className="rounded-lg border p-4">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{l.username}</span>
+                      <Badge variant={l.status === 1 ? 'default' : 'destructive'}>
+                        {l.status === 1 ? '成功' : '失败'}
+                      </Badge>
+                    </div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      {l.ip_address} · {l.created_at}
+                    </div>
+                    <div className="mt-1 text-xs text-muted-foreground">{l.user_agent}</div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    </PageContainer>
   )
 }

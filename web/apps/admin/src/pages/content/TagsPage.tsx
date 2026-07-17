@@ -1,4 +1,4 @@
-import { adminApi } from '../../lib/api'
+import { adminApi } from '@/lib/api'
 import { NamedResourcePage } from './NamedResourcePage'
 
 export default function TagsPage() {
