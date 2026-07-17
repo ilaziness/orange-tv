@@ -43,6 +43,16 @@ type VideoRepository interface {
 	ListTagIDs(ctx context.Context, videoID int64) ([]int64, error)
 	RunInTx(ctx context.Context, fn func(ctx context.Context, tx bun.Tx) error) error
 	WithTx(tx bun.Tx) VideoRepository
+
+	// Batch operations (A2)
+	BatchUpdatePublishStatus(ctx context.Context, ids []int64, status int8) (int, error)
+	BatchSoftDelete(ctx context.Context, ids []int64) (int, error)
+
+	// Stats (A1)
+	CountVideos(ctx context.Context) (int, error)
+	CountVideosToday(ctx context.Context, since time.Time) (int, error)
+	CountVideosByStatus(ctx context.Context, status int8) (int, error)
+	CountCategories(ctx context.Context) (int, error)
 }
 
 type videoRepo struct {
@@ -253,4 +263,86 @@ func (r *videoRepo) ListTagIDs(ctx context.Context, videoID int64) ([]int64, err
 		ids = append(ids, row.TagID)
 	}
 	return ids, nil
+}
+
+// ===== Batch operations (A2) =====
+
+func (r *videoRepo) BatchUpdatePublishStatus(ctx context.Context, ids []int64, status int8) (int, error) {
+	if len(ids) == 0 {
+		return 0, nil
+	}
+	now := time.Now()
+	res, err := r.db.NewUpdate().Model((*model.Videos)(nil)).
+		Set("publish_status = ?", status).
+		Set("updated_at = ?", now).
+		Where("id IN (?)", bun.In(ids)).
+		Where("deleted_at IS NULL").
+		Exec(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("batch update publish status: %w", err)
+	}
+	n, _ := res.RowsAffected()
+	return int(n), nil
+}
+
+func (r *videoRepo) BatchSoftDelete(ctx context.Context, ids []int64) (int, error) {
+	if len(ids) == 0 {
+		return 0, nil
+	}
+	now := time.Now()
+	res, err := r.db.NewUpdate().Model((*model.Videos)(nil)).
+		Set("deleted_at = ?", now).
+		Set("updated_at = ?", now).
+		Where("id IN (?)", bun.In(ids)).
+		Where("deleted_at IS NULL").
+		Exec(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("batch delete videos: %w", err)
+	}
+	n, _ := res.RowsAffected()
+	return int(n), nil
+}
+
+// ===== Stats (A1) =====
+
+func (r *videoRepo) CountVideos(ctx context.Context) (int, error) {
+	count, err := r.db.NewSelect().Model((*model.Videos)(nil)).
+		Where("deleted_at IS NULL").
+		Count(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("count videos: %w", err)
+	}
+	return count, nil
+}
+
+func (r *videoRepo) CountVideosToday(ctx context.Context, since time.Time) (int, error) {
+	count, err := r.db.NewSelect().Model((*model.Videos)(nil)).
+		Where("deleted_at IS NULL").
+		Where("created_at >= ?", since).
+		Count(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("count videos today: %w", err)
+	}
+	return count, nil
+}
+
+func (r *videoRepo) CountVideosByStatus(ctx context.Context, status int8) (int, error) {
+	count, err := r.db.NewSelect().Model((*model.Videos)(nil)).
+		Where("deleted_at IS NULL").
+		Where("publish_status = ?", status).
+		Count(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("count videos by status: %w", err)
+	}
+	return count, nil
+}
+
+func (r *videoRepo) CountCategories(ctx context.Context) (int, error) {
+	count, err := r.db.NewSelect().Model((*model.Categories)(nil)).
+		Where("deleted_at IS NULL").
+		Count(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("count categories: %w", err)
+	}
+	return count, nil
 }

@@ -23,11 +23,11 @@ var SystemPaths = []string{PathHealth, PathReadiness, PathLiveness, PathVersion}
 // Includes public client API prefix, open resource API, and admin login; admin business routes still
 // require JWT via RequireAuth (after a successful token parse).
 func DefaultJWTSkipPaths() []string {
-	paths := make([]string, 0, len(SystemPaths)+5)
+	paths := make([]string, 0, len(SystemPaths)+7)
 	paths = append(paths, SystemPaths...)
 	paths = append(paths,
 		PathSwagger,
-		PathClientV1+"/*", // 用户端公开只读 API
+		PathClientV1+"/*", // 用户端公开只读 API（JWT 仍解析但不强制）
 		PathClientV2+"/*",
 		PathOpenV1+"/*", // 资源站开放 API（密钥自校验）
 		PathAdminV1+"/auth/login",

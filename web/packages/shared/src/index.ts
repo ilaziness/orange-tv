@@ -325,3 +325,114 @@ export type LoginLogItem = {
   status: number
   created_at: string
 }
+
+// ===== Phase 5 types =====
+
+export type DashboardData = {
+  total_videos: number
+  today_videos: number
+  online_videos: number
+  offline_videos: number
+  total_categories: number
+  total_admins: number
+  total_users: number
+  online_count: number
+  today_pv: number
+  today_uv: number
+  collect_running: number
+}
+
+export type AdminItem = {
+  id: number
+  username: string
+  email: string
+  avatar: string
+  group_id: number
+  group_name: string
+  status: number
+  last_login_at: string | null
+  created_at: string | null
+}
+
+export type UserGroupItem = {
+  id: number
+  name: string
+  permissions: string | null
+  description: string
+  created_at: string | null
+}
+
+export type UserItem = {
+  id: number
+  username: string
+  email: string
+  avatar: string
+  status: number
+  last_login_at: string | null
+  created_at: string | null
+}
+
+export type BannerItem = {
+  id: number
+  title: string
+  cover: string
+  link: string
+  video_id: number
+  sort: number
+  status: number
+}
+
+export type ClientBanner = {
+  id: number
+  title: string
+  cover: string
+  link: string
+  video_id: number
+}
+
+export type UserProfile = {
+  id: number
+  username: string
+  email: string
+  avatar: string
+  status: number
+}
+
+export type UserLoginResult = {
+  access_token: string
+  token_type: string
+  expires_in: number
+  user: UserProfile
+}
+
+export type FavoriteItem = {
+  video_id: number
+  title: string
+  cover: string
+  year: number
+  rating: number
+  created_at: string
+}
+
+export type HistoryItem = {
+  video_id: number
+  title: string
+  cover: string
+  play_source_id: number
+  episode_id: number
+  progress: number
+  duration: number
+  last_played_at: string
+}
+
+export type CommentItem = {
+  id: number
+  video_id: number
+  user_id: number
+  username: string
+  avatar: string
+  parent_id: number
+  content: string
+  like_count: number
+  created_at: string
+}

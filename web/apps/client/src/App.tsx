@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { BrowserRouter, Link, Route, Routes, useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import type { Category, LiveChannel, VideoDetail, VideoListItem } from '@orange-tv/shared'
-import { clientApi, errorMessage } from './lib/api'
+import type { Category, ClientBanner, CommentItem, FavoriteItem, HistoryItem, LiveChannel, UserProfile, VideoDetail, VideoListItem } from '@orange-tv/shared'
+import { clientApi, errorMessage, getToken, setToken } from './lib/api'
 import { VideoPlayer } from './components/Player'
 import './App.css'
 
@@ -30,10 +30,14 @@ function applyThemeVars(config: Record<string, unknown>, customCss?: string) {
 function Layout({ children }: { children: React.ReactNode }) {
   const [keyword, setKeyword] = useState('')
   const navigate = useNavigate()
+  const [user, setUser] = useState<UserProfile | null>(null)
   useEffect(() => {
     void clientApi.themeCurrent().then((res) => {
       applyThemeVars(res.data?.config || {}, res.data?.custom_css)
     }).catch(() => undefined)
+    if (getToken()) {
+      void clientApi.profile().then((res) => setUser(res.data || null)).catch(() => { setToken(null); setUser(null) })
+    }
   }, [])
   return (
     <div className="shell">
@@ -50,6 +54,19 @@ function Layout({ children }: { children: React.ReactNode }) {
             <input placeholder="搜索影视" value={keyword} onChange={(e) => setKeyword(e.target.value)} />
             <button className="primary" type="submit">搜索</button>
           </form>
+          {user ? (
+            <>
+              <Link to="/favorites">收藏</Link>
+              <Link to="/history">历史</Link>
+              <span className="nav-user">{user.username}</span>
+              <button onClick={() => { setToken(null); setUser(null); navigate('/') }}>退出</button>
+            </>
+          ) : (
+            <>
+              <Link to="/login">登录</Link>
+              <Link to="/register">注册</Link>
+            </>
+          )}
         </div>
       </header>
       <div className="container">{children}</div>
@@ -75,6 +92,8 @@ function HomePage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [videos, setVideos] = useState<VideoListItem[]>([])
   const [hot, setHot] = useState<VideoListItem[]>([])
+  const [banners, setBanners] = useState<ClientBanner[]>([])
+  const [bannerIdx, setBannerIdx] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -82,14 +101,16 @@ function HomePage() {
     void (async () => {
       setLoading(true)
       try {
-        const [cats, list, hotList] = await Promise.all([
+        const [cats, list, hotList, bannerRes] = await Promise.all([
           clientApi.categories(),
           clientApi.videos({ page: 1, page_size: 24, sort: 'created_at_desc' }),
           clientApi.videos({ page: 1, page_size: 6, sort: 'rating_desc' }),
+          clientApi.banners().catch(() => ({ data: [] as ClientBanner[] })),
         ])
         setCategories(cats.data || [])
         setVideos(list.data.list || [])
         setHot(hotList.data.list || [])
+        setBanners(bannerRes.data || [])
       } catch (err) {
         setError(errorMessage(err))
       } finally {
@@ -98,28 +119,54 @@ function HomePage() {
     })()
   }, [])
 
+  // Banner auto-rotate
+  useEffect(() => {
+    if (banners.length <= 1) return
+    const t = setInterval(() => setBannerIdx((i) => (i + 1) % banners.length), 5000)
+    return () => clearInterval(t)
+  }, [banners.length])
+
   const roots = categories.filter((c) => !c.parent_id || c.parent_id === 0)
   const banner = hot[0]
+  const activeBanner = banners[bannerIdx]
 
   return (
     <>
-      <section className="hero banner">
-        {banner ? (
-          <>
-            <div className="banner-cover" style={{ backgroundImage: (banner.poster || banner.cover) ? `url(${banner.poster || banner.cover})` : undefined }} />
-            <div className="banner-body">
-              <h1>{banner.title}</h1>
-              <p className="muted">{banner.subtitle || '高分推荐'}</p>
-              <Link to={`/play/${banner.id}`}><button className="primary">立即播放</button></Link>
+      {activeBanner ? (
+        <section className="hero banner carousel">
+          <div className="banner-cover" style={{ backgroundImage: activeBanner.cover ? `url(${activeBanner.cover})` : undefined }} />
+          <div className="banner-body">
+            <h1>{activeBanner.title}</h1>
+            {activeBanner.link ? <a href={activeBanner.link}><button className="primary">查看详情</button></a> : null}
+            {activeBanner.video_id ? <Link to={`/video/${activeBanner.video_id}`}><button className="primary">立即播放</button></Link> : null}
+          </div>
+          {banners.length > 1 ? (
+            <div className="carousel-dots">
+              {banners.map((_, i) => (
+                <span key={i} className={i === bannerIdx ? 'dot active' : 'dot'} onClick={() => setBannerIdx(i)} />
+              ))}
             </div>
-          </>
-        ) : (
-          <>
-            <h1>发现精彩影视内容</h1>
-            <p className="muted">支持分类浏览、筛选、详情播放与相关推荐。</p>
-          </>
-        )}
-      </section>
+          ) : null}
+        </section>
+      ) : (
+        <section className="hero banner">
+          {banner ? (
+            <>
+              <div className="banner-cover" style={{ backgroundImage: (banner.poster || banner.cover) ? `url(${banner.poster || banner.cover})` : undefined }} />
+              <div className="banner-body">
+                <h1>{banner.title}</h1>
+                <p className="muted">{banner.subtitle || '高分推荐'}</p>
+                <Link to={`/play/${banner.id}`}><button className="primary">立即播放</button></Link>
+              </div>
+            </>
+          ) : (
+            <>
+              <h1>发现精彩影视内容</h1>
+              <p className="muted">支持分类浏览、筛选、详情播放与相关推荐。</p>
+            </>
+          )}
+        </section>
+      )}
       {error ? <p className="error">{error}</p> : null}
       <div className="section-title"><h2>分类入口</h2></div>
       <div className="chips">
@@ -254,6 +301,17 @@ function DetailPage() {
   const [related, setRelated] = useState<VideoListItem[]>([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(true)
+  const [favLoading, setFavLoading] = useState(false)
+  const [comments, setComments] = useState<CommentItem[]>([])
+  const [commentText, setCommentText] = useState('')
+  const [commentError, setCommentError] = useState('')
+
+  async function loadComments(vid: number) {
+    try {
+      const res = await clientApi.listComments(vid)
+      setComments(res.data.list || [])
+    } catch { /* ignore */ }
+  }
 
   useEffect(() => {
     void (async () => {
@@ -266,6 +324,7 @@ function DetailPage() {
         ])
         setDetail(res.data)
         setRelated(rel.data || [])
+        void loadComments(vid)
       } catch (err) {
         setError(errorMessage(err))
       } finally {
@@ -273,6 +332,38 @@ function DetailPage() {
       }
     })()
   }, [id])
+
+  async function toggleFav() {
+    if (!detail) return
+    setFavLoading(true)
+    try {
+      await clientApi.addFavorite(detail.id)
+      alert('已收藏')
+    } catch (err) {
+      // If already favorited, try to remove
+      try {
+        await clientApi.removeFavorite(detail.id)
+        alert('已取消收藏')
+      } catch (err2) {
+        alert(errorMessage(err2))
+      }
+    } finally {
+      setFavLoading(false)
+    }
+  }
+
+  async function postComment(e: React.FormEvent) {
+    e.preventDefault()
+    if (!detail || !commentText.trim()) return
+    setCommentError('')
+    try {
+      const res = await clientApi.createComment(detail.id, commentText.trim())
+      setComments((prev) => [res.data!, ...prev])
+      setCommentText('')
+    } catch (err) {
+      setCommentError(errorMessage(err))
+    }
+  }
 
   if (loading) return <div className="skeleton" />
   if (error) return <p className="error">{error}</p>
@@ -302,6 +393,7 @@ function DetailPage() {
             <Link to={`/play/${detail.id}?source=${detail.sources[0].id}&ep=${first.episode}`}>
               <button className="primary">立即播放</button>
             </Link>
+            <button disabled={favLoading} onClick={toggleFav}>{favLoading ? '处理中...' : '收藏'}</button>
           </div>
         ) : null}
         <div className="sources">
@@ -324,6 +416,30 @@ function DetailPage() {
             </div>
           ))}
         </div>
+
+        {/* Comments section (C6) */}
+        <div className="comments-section" style={{ marginTop: '1.5rem' }}>
+          <h3>评论</h3>
+          <form className="comment-form" onSubmit={postComment}>
+            <textarea placeholder="写下你的评论..." value={commentText} onChange={(e) => setCommentText(e.target.value)} maxLength={500} />
+            <button type="submit" className="primary" disabled={!commentText.trim()}>发表</button>
+          </form>
+          {commentError ? <p className="error">{commentError}</p> : null}
+          {!comments.length ? <p className="muted">暂无评论，快来抢沙发吧</p> : null}
+          <div className="comment-list">
+            {comments.map((c) => (
+              <div key={c.id} className="comment-item">
+                <div className="comment-avatar">{c.avatar ? <img src={c.avatar} alt="" /> : <span>{c.username[0]}</span>}</div>
+                <div className="comment-body">
+                  <strong>{c.username}</strong>
+                  <span className="muted"> · {new Date(c.created_at).toLocaleString()}</span>
+                  <p>{c.content}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {related.length ? (
           <>
             <div className="section-title" style={{ marginTop: '1.5rem' }}><h2>相关推荐</h2></div>
@@ -357,6 +473,18 @@ function PlayPage() {
       }
     }).catch((err) => setError(errorMessage(err)))
   }, [id])
+
+  // Report play history when source/episode changes
+  useEffect(() => {
+    if (!detail || !sourceId || !epNo) return
+    void clientApi.upsertHistory({
+      video_id: Number(id),
+      play_source_id: sourceId,
+      episode_id: epNo,
+      progress: 0,
+      duration: 0,
+    }).catch(() => undefined)
+  }, [id, sourceId, epNo, detail])
 
   if (error) return <p className="error">{error}</p>
   if (!detail) return <div className="skeleton" />
@@ -459,6 +587,197 @@ function LivePage() {
   )
 }
 
+// ===== Phase 5: User auth / favorites / history / comments =====
+
+function LoginPage() {
+  const navigate = useNavigate()
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    try {
+      const res = await clientApi.login(username, password)
+      setToken(res.data?.access_token || null)
+      navigate('/', { replace: true })
+    } catch (err) {
+      setError(errorMessage(err))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="auth-page">
+      <form className="auth-card" onSubmit={onSubmit}>
+        <h2>用户登录</h2>
+        {error ? <p className="error">{error}</p> : null}
+        <label>用户名<input value={username} onChange={(e) => setUsername(e.target.value)} required minLength={3} /></label>
+        <label>密码<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} /></label>
+        <button className="primary" disabled={loading}>{loading ? '登录中...' : '登录'}</button>
+        <p className="muted"><Link to="/register">没有账号？去注册</Link></p>
+      </form>
+    </div>
+  )
+}
+
+function RegisterPage() {
+  const navigate = useNavigate()
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setError('')
+    setLoading(true)
+    try {
+      await clientApi.register(username, password, email || undefined)
+      // Auto login after register
+      const res = await clientApi.login(username, password)
+      setToken(res.data?.access_token || null)
+      navigate('/', { replace: true })
+    } catch (err) {
+      setError(errorMessage(err))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="auth-page">
+      <form className="auth-card" onSubmit={onSubmit}>
+        <h2>用户注册</h2>
+        {error ? <p className="error">{error}</p> : null}
+        <label>用户名<input value={username} onChange={(e) => setUsername(e.target.value)} required minLength={3} /></label>
+        <label>密码<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} /></label>
+        <label>邮箱（选填）<input value={email} onChange={(e) => setEmail(e.target.value)} /></label>
+        <button className="primary" disabled={loading}>{loading ? '注册中...' : '注册'}</button>
+        <p className="muted"><Link to="/login">已有账号？去登录</Link></p>
+      </form>
+    </div>
+  )
+}
+
+function FavoritesPage() {
+  const [list, setList] = useState<FavoriteItem[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
+
+  async function load(p = page) {
+    setLoading(true)
+    setError('')
+    try {
+      const res = await clientApi.listFavorites(p)
+      setList(res.data.list || [])
+      setTotal(res.data.total || 0)
+      setPage(res.data.page || p)
+    } catch (err) {
+      setError(errorMessage(err))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { void load(1) }, [])
+
+  return (
+    <>
+      <div className="section-title"><h2>我的收藏</h2></div>
+      {error ? <p className="error">{error}</p> : null}
+      {loading ? <div className="skeleton" /> : null}
+      {!loading && !list.length ? <div className="empty">暂无收藏</div> : null}
+      <div className="grid">
+        {list.map((f) => (
+          <Link key={f.video_id} className="card" to={`/video/${f.video_id}`}>
+            <div className="cover" style={{ backgroundImage: f.cover ? `url(${f.cover})` : undefined }}>
+              {f.rating ? <span>{f.rating.toFixed(1)}</span> : null}
+            </div>
+            <div className="card-body">
+              <h3 title={f.title}>{f.title}</h3>
+              <p className="muted">{f.year || ''}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
+      {total > 20 ? (
+        <div className="pager">
+          <button disabled={page <= 1} onClick={() => void load(page - 1)}>上一页</button>
+          <span className="muted">第 {page} 页</span>
+          <button disabled={list.length < 20} onClick={() => void load(page + 1)}>下一页</button>
+        </div>
+      ) : null}
+    </>
+  )
+}
+
+function HistoryPage() {
+  const [list, setList] = useState<HistoryItem[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
+
+  async function load(p = page) {
+    setLoading(true)
+    setError('')
+    try {
+      const res = await clientApi.listHistory(p)
+      setList(res.data.list || [])
+      setTotal(res.data.total || 0)
+      setPage(res.data.page || p)
+    } catch (err) {
+      setError(errorMessage(err))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { void load(1) }, [])
+
+  return (
+    <>
+      <div className="section-title">
+        <h2>播放历史</h2>
+        {list.length ? <button onClick={async () => { if (confirm('清空全部历史？')) { await clientApi.clearHistory(); void load(1) } }}>清空</button> : null}
+      </div>
+      {error ? <p className="error">{error}</p> : null}
+      {loading ? <div className="skeleton" /> : null}
+      {!loading && !list.length ? <div className="empty">暂无播放历史</div> : null}
+      <div className="grid">
+        {list.map((h) => (
+          <Link key={h.video_id} className="card" to={`/play/${h.video_id}`}>
+            <div className="cover" style={{ backgroundImage: h.cover ? `url(${h.cover})` : undefined }}>
+              {h.progress > 0 && h.duration > 0 ? (
+                <span className="progress-bar"><span style={{ width: `${(h.progress / h.duration) * 100}%` }} /></span>
+              ) : null}
+            </div>
+            <div className="card-body">
+              <h3 title={h.title}>{h.title}</h3>
+              <p className="muted">{new Date(h.last_played_at).toLocaleDateString()}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
+      {total > 20 ? (
+        <div className="pager">
+          <button disabled={page <= 1} onClick={() => void load(page - 1)}>上一页</button>
+          <span className="muted">第 {page} 页</span>
+          <button disabled={list.length < 20} onClick={() => void load(page + 1)}>下一页</button>
+        </div>
+      ) : null}
+    </>
+  )
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -469,6 +788,10 @@ export default function App() {
           <Route path="/video/:id" element={<DetailPage />} />
           <Route path="/play/:id" element={<PlayPage />} />
           <Route path="/live" element={<LivePage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/favorites" element={<FavoritesPage />} />
+          <Route path="/history" element={<HistoryPage />} />
         </Routes>
       </Layout>
     </BrowserRouter>

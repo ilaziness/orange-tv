@@ -45,6 +45,7 @@ func (a *App) wireHTTP() error {
 	themeRepo := repository.NewThemeRepo(a.db)
 	settingsRepo := repository.NewSettingsRepo(a.db)
 	logRepo := repository.NewLogRepo(a.db)
+	userFeatureRepo := repository.NewUserFeatureRepo(a.db)
 
 	recorder := audit.NewRecorder(logRepo, a.log)
 
@@ -59,11 +60,14 @@ func (a *App) wireHTTP() error {
 	adminThemeSvc := adminsvc.NewThemeService(themeRepo, a.cache)
 	adminSettingsSvc := adminsvc.NewSettingsService(settingsRepo, a.cache)
 	adminLogSvc := adminsvc.NewLogService(logRepo)
+	adminMgmtSvc := adminsvc.NewManagementService(adminRepo, videoRepo, userFeatureRepo, recorder)
 
 	clientCategorySvc := clientsvc.NewCategoryService(categoryRepo, a.cache)
 	clientVideoSvc := clientsvc.NewVideoService(videoRepo, metaRepo, playRepo, a.cache)
 	clientLiveSvc := clientsvc.NewLiveService(liveRepo)
 	clientThemeSvc := clientsvc.NewThemeService(themeRepo, adminThemeSvc, a.cache)
+	clientUserSvc := clientsvc.NewUserService(adminRepo, userFeatureRepo, videoRepo, a.jwtMgr, a.cfg.JWT.AccessTokenTTL)
+	clientBannerSvc := clientsvc.NewBannerService(userFeatureRepo)
 
 	openResourceSvc := opensvc.NewResourceService(adminSettingsSvc, videoRepo, metaRepo, playRepo, categoryRepo, a.cache)
 
@@ -78,12 +82,15 @@ func (a *App) wireHTTP() error {
 	handlers.AdminTheme = adminhandler.NewThemeHandler(adminThemeSvc)
 	handlers.AdminSettings = adminhandler.NewSettingsHandler(adminSettingsSvc, recorder)
 	handlers.AdminLog = adminhandler.NewLogHandler(adminLogSvc)
+	handlers.AdminMgmt = adminhandler.NewManagementHandler(adminMgmtSvc)
 
 	handlers.ClientCategory = clienthandler.NewCategoryHandler(clientCategorySvc)
 	handlers.ClientVideo = clienthandler.NewVideoHandler(clientVideoSvc)
 	handlers.ClientLive = clienthandler.NewLiveHandler(clientLiveSvc)
 	handlers.ClientTheme = clienthandler.NewThemeHandler(clientThemeSvc)
 	handlers.ClientSite = clienthandler.NewSiteHandler(adminSettingsSvc)
+	handlers.ClientUser = clienthandler.NewUserHandler(clientUserSvc)
+	handlers.ClientBanner = clienthandler.NewBannerHandler(clientBannerSvc)
 	handlers.OpenResource = openhandler.NewResourceHandler(openResourceSvc)
 
 	// collect scheduler lifecycle

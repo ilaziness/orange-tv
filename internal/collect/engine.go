@@ -405,4 +405,3 @@ func parseReleaseDate(s string) *time.Time {
 	}
 	return nil
 }
-

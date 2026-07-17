@@ -196,7 +196,6 @@ func (s *resourceService) ListCategories(ctx context.Context) ([]shareddto.Categ
 	return tree, nil
 }
 
-
 type detailBundle struct {
 	Video     *model.Videos
 	Directors []model.Directors

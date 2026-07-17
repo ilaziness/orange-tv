@@ -26,6 +26,7 @@ type Handlers struct {
 	AdminTheme    *adminhandler.ThemeHandler
 	AdminSettings *adminhandler.SettingsHandler
 	AdminLog      *adminhandler.LogHandler
+	AdminMgmt     *adminhandler.ManagementHandler
 	AuthService   adminsvc.AuthService
 
 	// Client surface
@@ -34,6 +35,8 @@ type Handlers struct {
 	ClientLive     *clienthandler.LiveHandler
 	ClientTheme    *clienthandler.ThemeHandler
 	ClientSite     *clienthandler.SiteHandler
+	ClientUser     *clienthandler.UserHandler
+	ClientBanner   *clienthandler.BannerHandler
 
 	// Open resource station
 	OpenResource *openhandler.ResourceHandler
@@ -88,11 +91,14 @@ func (h *Handlers) validateForRoutes() error {
 		{"admin theme handler", h.AdminTheme != nil},
 		{"admin settings handler", h.AdminSettings != nil},
 		{"admin log handler", h.AdminLog != nil},
+		{"admin management handler", h.AdminMgmt != nil},
 		{"client category handler", h.ClientCategory != nil},
 		{"client video handler", h.ClientVideo != nil},
 		{"client live handler", h.ClientLive != nil},
 		{"client theme handler", h.ClientTheme != nil},
 		{"client site handler", h.ClientSite != nil},
+		{"client user handler", h.ClientUser != nil},
+		{"client banner handler", h.ClientBanner != nil},
 		{"open resource handler", h.OpenResource != nil},
 	}
 	for _, item := range required {

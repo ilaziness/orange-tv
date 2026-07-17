@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { BrowserRouter, Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
-import type { Category, NamedItem, PlaySource, VideoDetail, VideoListItem } from '@orange-tv/shared'
+import type { Category, NamedItem, PlaySource, VideoDetail, VideoListItem, DashboardData, AdminItem, UserGroupItem, UserItem, BannerItem } from '@orange-tv/shared'
 import { adminApi, errorMessage } from './lib/api'
 import { useAuthStore } from './store/auth'
 import './App.css'
@@ -97,6 +97,10 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
         { to: '/system/site', label: '站点设置' },
         { to: '/system/api', label: 'API配置' },
         { to: '/system/theme', label: '主题管理' },
+        { to: '/system/admins', label: '管理员' },
+        { to: '/system/groups', label: '用户组' },
+        { to: '/system/users', label: '用户' },
+        { to: '/system/banners', label: 'Banner' },
         { to: '/system/log', label: '系统日志' },
       ]
     }
@@ -136,17 +140,55 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
 }
 
 function DashboardPage() {
+  const [data, setData] = useState<DashboardData | null>(null)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const res = await adminApi.dashboard()
+        setData(res.data || null)
+      } catch (err) {
+        setError(errorMessage(err))
+      }
+    })()
+  }, [])
+
+  const stats: Array<{ label: string; value: number | undefined }> = [
+    { label: '影视总数', value: data?.total_videos },
+    { label: '今日新增', value: data?.today_videos },
+    { label: '上线中', value: data?.online_videos },
+    { label: '已下线', value: data?.offline_videos },
+    { label: '分类数', value: data?.total_categories },
+    { label: '管理员', value: data?.total_admins },
+    { label: '注册用户', value: data?.total_users },
+    { label: '在线用户', value: data?.online_count },
+    { label: '今日PV', value: data?.today_pv },
+    { label: '今日UV', value: data?.today_uv },
+  ]
+
   return (
     <div className="page-card">
       <div className="page-header">
         <h1>概况</h1>
       </div>
-      <p className="muted">第四阶段已接入系统设置、操作审计、资源站 API 与读缓存。可从顶部「内容管理 / 系统设置」进入。</p>
-      <div className="toolbar">
+      {error ? <p className="error">{error}</p> : null}
+      <div className="dashboard-grid">
+        {stats.map((s) => (
+          <div key={s.label} className="stat-card">
+            <div className="stat-value">{s.value ?? '-'}</div>
+            <div className="stat-label">{s.label}</div>
+          </div>
+        ))}
+      </div>
+      <div className="toolbar" style={{ marginTop: 16 }}>
         <Link to="/content/videos"><button className="primary">影视管理</button></Link>
         <Link to="/content/categories"><button>分类管理</button></Link>
         <Link to="/system/site"><button>站点设置</button></Link>
         <Link to="/system/log"><button>系统日志</button></Link>
+        <Link to="/system/admins"><button>管理员</button></Link>
+        <Link to="/system/users"><button>用户</button></Link>
+        <Link to="/system/banners"><button>Banner</button></Link>
       </div>
     </div>
   )
@@ -395,6 +437,7 @@ function VideosPage() {
   const [error, setError] = useState('')
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
+  const [selected, setSelected] = useState<Set<number>>(new Set())
 
   async function load(p = page) {
     setError('')
@@ -403,12 +446,51 @@ function VideosPage() {
       setItems(res.data.list || [])
       setTotal(res.data.total || 0)
       setPage(res.data.page || p)
+      setSelected(new Set())
     } catch (err) {
       setError(errorMessage(err))
     }
   }
 
   useEffect(() => { void load(1) }, [])
+
+  function toggleSelect(id: number) {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function toggleSelectAll() {
+    setSelected((prev) => {
+      if (prev.size === items.length) return new Set()
+      return new Set(items.map((i) => i.id))
+    })
+  }
+
+  async function batchPublish(status: number) {
+    if (selected.size === 0) return
+    if (!confirm(`确认批量${status === 1 ? '上架' : '下架'} ${selected.size} 条影视？`)) return
+    try {
+      await adminApi.batchUpdatePublishStatus(Array.from(selected), status)
+      await load(page)
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+  }
+
+  async function batchDelete() {
+    if (selected.size === 0) return
+    if (!confirm(`确认批量删除 ${selected.size} 条影视？`)) return
+    try {
+      await adminApi.batchDeleteVideos(Array.from(selected))
+      await load(page)
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+  }
 
   return (
     <div className="page-card stack">
@@ -421,15 +503,25 @@ function VideosPage() {
         <input placeholder="关键词" value={keyword} onChange={(e) => setKeyword(e.target.value)} />
         <button onClick={() => void load(1)}>搜索</button>
       </div>
+      {selected.size > 0 ? (
+        <div className="toolbar">
+          <span className="muted">已选 {selected.size} 项</span>
+          <button onClick={() => batchPublish(1)}>批量上架</button>
+          <button onClick={() => batchPublish(0)}>批量下架</button>
+          <button className="danger" onClick={batchDelete}>批量删除</button>
+        </div>
+      ) : null}
       <table className="table">
         <thead>
           <tr>
+            <th><input type="checkbox" checked={selected.size === items.length && items.length > 0} onChange={toggleSelectAll} /></th>
             <th>ID</th><th>标题</th><th>年份</th><th>评分</th><th>状态</th><th>操作</th>
           </tr>
         </thead>
         <tbody>
           {items.map((item) => (
             <tr key={item.id}>
+              <td><input type="checkbox" checked={selected.has(item.id)} onChange={() => toggleSelect(item.id)} /></td>
               <td>{item.id}</td>
               <td>{item.title}</td>
               <td>{item.year || '-'}</td>
@@ -1362,6 +1454,338 @@ function SystemLogPage() {
   )
 }
 
+// ===== Phase 5: Admins / User Groups / Users / Banners =====
+
+function AdminsPage() {
+  const [list, setList] = useState<AdminItem[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [keyword, setKeyword] = useState('')
+  const [error, setError] = useState('')
+  const [showCreate, setShowCreate] = useState(false)
+  const [form, setForm] = useState({ username: '', password: '', email: '', group_id: 1, status: 1 })
+  const [groups, setGroups] = useState<UserGroupItem[]>([])
+
+  async function load() {
+    setError('')
+    try {
+      const [res, gRes] = await Promise.all([
+        adminApi.listAdmins({ page, page_size: 20, keyword: keyword || undefined }),
+        adminApi.listGroups({ page_size: 100 }),
+      ])
+      setList(res.data.list || [])
+      setTotal(res.data.total)
+      setGroups(gRes.data.list || [])
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+  }
+
+  useEffect(() => { void load() }, [page])
+
+  async function onCreate(e: React.FormEvent) {
+    e.preventDefault()
+    setError('')
+    try {
+      await adminApi.createAdmin(form)
+      setShowCreate(false)
+      setForm({ username: '', password: '', email: '', group_id: 1, status: 1 })
+      await load()
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+  }
+
+  async function onResetPwd(id: number) {
+    const pwd = window.prompt('输入新密码（≥6位）')
+    if (!pwd || pwd.length < 6) return
+    try {
+      await adminApi.resetAdminPassword(id, pwd)
+      alert('密码已重置')
+    } catch (err) {
+      alert(errorMessage(err))
+    }
+  }
+
+  return (
+    <div className="page-card stack">
+      <div className="page-header">
+        <h1>管理员管理</h1>
+        <button className="primary" onClick={() => setShowCreate(!showCreate)}>新增管理员</button>
+      </div>
+      {error ? <p className="error">{error}</p> : null}
+      {showCreate ? (
+        <form className="inline-form" onSubmit={onCreate}>
+          <input placeholder="用户名" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} required minLength={3} />
+          <input type="password" placeholder="密码" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required minLength={6} />
+          <input placeholder="邮箱" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          <select value={form.group_id} onChange={(e) => setForm({ ...form, group_id: Number(e.target.value) })}>
+            {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+          </select>
+          <select value={form.status} onChange={(e) => setForm({ ...form, status: Number(e.target.value) })}>
+            <option value={1}>启用</option>
+            <option value={0}>禁用</option>
+          </select>
+          <button type="submit" className="primary">保存</button>
+        </form>
+      ) : null}
+      <div className="toolbar">
+        <input placeholder="用户名/邮箱" value={keyword} onChange={(e) => setKeyword(e.target.value)} />
+        <button onClick={() => { setPage(1); void load() }}>查询</button>
+      </div>
+      <p className="muted">共 {total} 条</p>
+      <table className="data-table">
+        <thead><tr><th>ID</th><th>用户名</th><th>邮箱</th><th>用户组</th><th>状态</th><th>最后登录</th><th>操作</th></tr></thead>
+        <tbody>
+          {list.map((a) => (
+            <tr key={a.id}>
+              <td>{a.id}</td>
+              <td>{a.username}</td>
+              <td>{a.email || '-'}</td>
+              <td>{a.group_name}</td>
+              <td>{a.status === 1 ? '启用' : '禁用'}</td>
+              <td>{a.last_login_at || '-'}</td>
+              <td>
+                <button onClick={() => onResetPwd(a.id)}>重置密码</button>
+                <button onClick={async () => { if (confirm('删除该管理员？')) { try { await adminApi.deleteAdmin(a.id); await load() } catch (err) { alert(errorMessage(err)) } } }}>删除</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function UserGroupsPage() {
+  const [list, setList] = useState<UserGroupItem[]>([])
+  const [total, setTotal] = useState(0)
+  const [error, setError] = useState('')
+  const [showCreate, setShowCreate] = useState(false)
+  const [form, setForm] = useState({ name: '', permissions: '', description: '' })
+
+  async function load() {
+    setError('')
+    try {
+      const res = await adminApi.listGroups({ page_size: 100 })
+      setList(res.data.list || [])
+      setTotal(res.data.total)
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+  }
+
+  useEffect(() => { void load() }, [])
+
+  async function onCreate(e: React.FormEvent) {
+    e.preventDefault()
+    setError('')
+    try {
+      await adminApi.createGroup(form)
+      setShowCreate(false)
+      setForm({ name: '', permissions: '', description: '' })
+      await load()
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+  }
+
+  return (
+    <div className="page-card stack">
+      <div className="page-header">
+        <h1>用户组管理</h1>
+        <button className="primary" onClick={() => setShowCreate(!showCreate)}>新增用户组</button>
+      </div>
+      {error ? <p className="error">{error}</p> : null}
+      {showCreate ? (
+        <form className="inline-form" onSubmit={onCreate}>
+          <input placeholder="名称" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+          <input placeholder="权限（JSON）" value={form.permissions} onChange={(e) => setForm({ ...form, permissions: e.target.value })} />
+          <input placeholder="描述" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          <button type="submit" className="primary">保存</button>
+        </form>
+      ) : null}
+      <p className="muted">共 {total} 条</p>
+      <table className="data-table">
+        <thead><tr><th>ID</th><th>名称</th><th>描述</th><th>操作</th></tr></thead>
+        <tbody>
+          {list.map((g) => (
+            <tr key={g.id}>
+              <td>{g.id}</td>
+              <td>{g.name}</td>
+              <td>{g.description || '-'}</td>
+              <td>
+                {g.name !== 'super_admin' ? (
+                  <button onClick={async () => { if (confirm('删除该用户组？')) { try { await adminApi.deleteGroup(g.id); await load() } catch (err) { alert(errorMessage(err)) } } }}>删除</button>
+                ) : <span className="muted">系统组</span>}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function UsersPage() {
+  const [list, setList] = useState<UserItem[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [keyword, setKeyword] = useState('')
+  const [error, setError] = useState('')
+
+  async function load() {
+    setError('')
+    try {
+      const res = await adminApi.listUsers({ page, page_size: 20, keyword: keyword || undefined })
+      setList(res.data.list || [])
+      setTotal(res.data.total)
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+  }
+
+  useEffect(() => { void load() }, [page])
+
+  async function onToggleStatus(u: UserItem) {
+    try {
+      await adminApi.updateUser(u.id, { status: u.status === 1 ? 0 : 1 })
+      await load()
+    } catch (err) {
+      alert(errorMessage(err))
+    }
+  }
+
+  async function onResetPwd(id: number) {
+    const pwd = window.prompt('输入新密码（≥6位）')
+    if (!pwd || pwd.length < 6) return
+    try {
+      await adminApi.resetUserPassword(id, pwd)
+      alert('密码已重置')
+    } catch (err) {
+      alert(errorMessage(err))
+    }
+  }
+
+  return (
+    <div className="page-card stack">
+      <div className="page-header"><h1>用户管理</h1></div>
+      {error ? <p className="error">{error}</p> : null}
+      <div className="toolbar">
+        <input placeholder="用户名/邮箱" value={keyword} onChange={(e) => setKeyword(e.target.value)} />
+        <button onClick={() => { setPage(1); void load() }}>查询</button>
+      </div>
+      <p className="muted">共 {total} 条</p>
+      <table className="data-table">
+        <thead><tr><th>ID</th><th>用户名</th><th>邮箱</th><th>状态</th><th>最后登录</th><th>注册时间</th><th>操作</th></tr></thead>
+        <tbody>
+          {list.map((u) => (
+            <tr key={u.id}>
+              <td>{u.id}</td>
+              <td>{u.username}</td>
+              <td>{u.email || '-'}</td>
+              <td>{u.status === 1 ? '启用' : '禁用'}</td>
+              <td>{u.last_login_at || '-'}</td>
+              <td>{u.created_at || '-'}</td>
+              <td>
+                <button onClick={() => onToggleStatus(u)}>{u.status === 1 ? '禁用' : '启用'}</button>
+                <button onClick={() => onResetPwd(u.id)}>重置密码</button>
+                <button onClick={async () => { if (confirm('删除该用户？')) { try { await adminApi.deleteUser(u.id); await load() } catch (err) { alert(errorMessage(err)) } } }}>删除</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function BannersPage() {
+  const [list, setList] = useState<BannerItem[]>([])
+  const [total, setTotal] = useState(0)
+  const [error, setError] = useState('')
+  const [showCreate, setShowCreate] = useState(false)
+  const [form, setForm] = useState({ title: '', cover: '', link: '', video_id: 0, sort: 0, status: 1 })
+
+  async function load() {
+    setError('')
+    try {
+      const res = await adminApi.listBanners({ page_size: 100 })
+      setList(res.data.list || [])
+      setTotal(res.data.total)
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+  }
+
+  useEffect(() => { void load() }, [])
+
+  async function onCreate(e: React.FormEvent) {
+    e.preventDefault()
+    setError('')
+    try {
+      await adminApi.createBanner(form)
+      setShowCreate(false)
+      setForm({ title: '', cover: '', link: '', video_id: 0, sort: 0, status: 1 })
+      await load()
+    } catch (err) {
+      setError(errorMessage(err))
+    }
+  }
+
+  async function onToggle(b: BannerItem) {
+    try {
+      await adminApi.updateBanner(b.id, { status: b.status === 1 ? 0 : 1 })
+      await load()
+    } catch (err) {
+      alert(errorMessage(err))
+    }
+  }
+
+  return (
+    <div className="page-card stack">
+      <div className="page-header">
+        <h1>Banner 管理</h1>
+        <button className="primary" onClick={() => setShowCreate(!showCreate)}>新增 Banner</button>
+      </div>
+      {error ? <p className="error">{error}</p> : null}
+      {showCreate ? (
+        <form className="inline-form" onSubmit={onCreate}>
+          <input placeholder="标题" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
+          <input placeholder="封面URL" value={form.cover} onChange={(e) => setForm({ ...form, cover: e.target.value })} />
+          <input placeholder="链接" value={form.link} onChange={(e) => setForm({ ...form, link: e.target.value })} />
+          <input type="number" placeholder="影视ID" value={form.video_id || ''} onChange={(e) => setForm({ ...form, video_id: Number(e.target.value) })} />
+          <input type="number" placeholder="排序" value={form.sort} onChange={(e) => setForm({ ...form, sort: Number(e.target.value) })} />
+          <select value={form.status} onChange={(e) => setForm({ ...form, status: Number(e.target.value) })}>
+            <option value={1}>启用</option>
+            <option value={0}>禁用</option>
+          </select>
+          <button type="submit" className="primary">保存</button>
+        </form>
+      ) : null}
+      <p className="muted">共 {total} 条</p>
+      <table className="data-table">
+        <thead><tr><th>ID</th><th>标题</th><th>封面</th><th>排序</th><th>状态</th><th>操作</th></tr></thead>
+        <tbody>
+          {list.map((b) => (
+            <tr key={b.id}>
+              <td>{b.id}</td>
+              <td>{b.title}</td>
+              <td>{b.cover ? <img src={b.cover} alt="" style={{ width: 60, height: 34, objectFit: 'cover' }} /> : '-'}</td>
+              <td>{b.sort}</td>
+              <td>{b.status === 1 ? '启用' : '禁用'}</td>
+              <td>
+                <button onClick={() => onToggle(b)}>{b.status === 1 ? '禁用' : '启用'}</button>
+                <button onClick={async () => { if (confirm('删除该Banner？')) { try { await adminApi.deleteBanner(b.id); await load() } catch (err) { alert(errorMessage(err)) } } }}>删除</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -1392,6 +1816,10 @@ export default function App() {
                 <Route path="/system/api" element={<APISettingsPage />} />
                 <Route path="/system/theme" element={<ThemesPage />} />
                 <Route path="/system/log" element={<SystemLogPage />} />
+                <Route path="/system/admins" element={<AdminsPage />} />
+                <Route path="/system/groups" element={<UserGroupsPage />} />
+                <Route path="/system/users" element={<UsersPage />} />
+                <Route path="/system/banners" element={<BannersPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </AdminLayout>

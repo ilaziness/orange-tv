@@ -158,6 +158,53 @@ button:disabled { opacity: 0.6; cursor: not-allowed; }
 }
 .panel h3 { margin: 0 0 0.6rem; font-size: 1rem; }
 
+/* Phase 5: dashboard & management pages */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+.stat-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 16px;
+  background: #fff;
+  text-align: center;
+}
+.stat-value { font-size: 1.8rem; font-weight: 700; color: #2563eb; }
+.stat-label { font-size: 0.85rem; color: #6b7280; margin-top: 4px; }
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.data-table th, .data-table td {
+  border: 1px solid #e5e7eb;
+  padding: 8px 10px;
+  text-align: left;
+}
+.data-table th { background: #f9fafb; font-weight: 600; }
+.data-table tbody tr:hover { background: #f9fafb; }
+
+.inline-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+.inline-form input, .inline-form select {
+  min-width: 120px;
+  padding: 6px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+}
+
 @media (max-width: 900px) {
   .body { grid-template-columns: 1fr; }
   .sidebar { border-right: 0; border-bottom: 1px solid #e5e7eb; }

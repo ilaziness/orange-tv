@@ -30,10 +30,13 @@ func applyBusinessHandlers(h *Handlers, b testutil.BusinessHandlers) {
 	h.AdminTheme = b.AdminTheme
 	h.AdminSettings = b.AdminSettings
 	h.AdminLog = b.AdminLog
+	h.AdminMgmt = b.AdminMgmt
 	h.ClientCategory = b.ClientCategory
 	h.ClientVideo = b.ClientVideo
 	h.ClientLive = b.ClientLive
 	h.ClientTheme = b.ClientTheme
 	h.ClientSite = b.ClientSite
+	h.ClientUser = b.ClientUser
+	h.ClientBanner = b.ClientBanner
 	h.OpenResource = b.OpenResource
 }

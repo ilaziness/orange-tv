@@ -2,7 +2,6 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
-	httphandler "github.com/ilaziness/orange-tv/internal/handler/http"
 	httpmiddleware "github.com/ilaziness/orange-tv/internal/middleware/http"
 )
 
@@ -21,8 +20,9 @@ func registerAdminRoutes(engine *gin.Engine, h *Handlers) {
 
 	registerAdminProtectedAuthRoutes(v1, h)
 	registerAdminContentRoutes(v1, h)
-	registerAdminUserRoutes(v1, h.Stub)
+	registerAdminUserRoutes(v1, h)
 	registerAdminSystemRoutes(v1, h)
+	registerAdminManagementRoutes(v1, h)
 }
 
 func registerAdminProtectedAuthRoutes(v1 *gin.RouterGroup, h *Handlers) {
@@ -88,21 +88,41 @@ func registerAdminContentRoutes(v1 *gin.RouterGroup, h *Handlers) {
 	v1.GET("/collect/logs", h.AdminCollect.ListLogs)
 }
 
-func registerAdminUserRoutes(v1 *gin.RouterGroup, stub *httphandler.StubHandler) {
-	v1.GET("/admins", stub.EmptyList)
-	v1.POST("/admins", stub.NotImplemented)
-	v1.PUT("/admins/:id", stub.NotImplemented)
-	v1.DELETE("/admins/:id", stub.NotImplemented)
+func registerAdminUserRoutes(v1 *gin.RouterGroup, h *Handlers) {
+	// Admins (A3)
+	v1.GET("/admins", h.AdminMgmt.ListAdmins)
+	v1.POST("/admins", h.AdminMgmt.CreateAdmin)
+	v1.PUT("/admins/:id", h.AdminMgmt.UpdateAdmin)
+	v1.DELETE("/admins/:id", h.AdminMgmt.DeleteAdmin)
+	v1.PUT("/admins/:id/password", h.AdminMgmt.ResetAdminPassword)
 
-	v1.GET("/groups", stub.EmptyList)
-	v1.POST("/groups", stub.NotImplemented)
-	v1.PUT("/groups/:id", stub.NotImplemented)
-	v1.DELETE("/groups/:id", stub.NotImplemented)
+	// User groups (A4)
+	v1.GET("/groups", h.AdminMgmt.ListGroups)
+	v1.POST("/groups", h.AdminMgmt.CreateGroup)
+	v1.PUT("/groups/:id", h.AdminMgmt.UpdateGroup)
+	v1.DELETE("/groups/:id", h.AdminMgmt.DeleteGroup)
 
-	v1.GET("/users", stub.EmptyList)
-	v1.PUT("/users/:id", stub.NotImplemented)
-	v1.DELETE("/users/:id", stub.NotImplemented)
-	v1.GET("/users/:id/login-logs", stub.EmptyList)
+	// Regular users (A5)
+	v1.GET("/users", h.AdminMgmt.ListUsers)
+	v1.PUT("/users/:id", h.AdminMgmt.UpdateUser)
+	v1.DELETE("/users/:id", h.AdminMgmt.DeleteUser)
+	v1.PUT("/users/:id/password", h.AdminMgmt.ResetUserPassword)
+	v1.GET("/users/:id/login-logs", h.AdminMgmt.ListUserLoginLogs)
+}
+
+func registerAdminManagementRoutes(v1 *gin.RouterGroup, h *Handlers) {
+	// Dashboard (A1)
+	v1.GET("/dashboard", h.AdminMgmt.Dashboard)
+
+	// Batch video ops (A2)
+	v1.POST("/videos/batch/publish-status", h.AdminMgmt.BatchUpdatePublishStatus)
+	v1.POST("/videos/batch/delete", h.AdminMgmt.BatchDeleteVideos)
+
+	// Banners (C1 admin)
+	v1.GET("/banners", h.AdminMgmt.ListBanners)
+	v1.POST("/banners", h.AdminMgmt.CreateBanner)
+	v1.PUT("/banners/:id", h.AdminMgmt.UpdateBanner)
+	v1.DELETE("/banners/:id", h.AdminMgmt.DeleteBanner)
 }
 
 func registerAdminSystemRoutes(v1 *gin.RouterGroup, h *Handlers) {

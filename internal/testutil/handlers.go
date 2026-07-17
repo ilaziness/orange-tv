@@ -27,11 +27,14 @@ type BusinessHandlers struct {
 	AdminTheme     *adminhandler.ThemeHandler
 	AdminSettings  *adminhandler.SettingsHandler
 	AdminLog       *adminhandler.LogHandler
+	AdminMgmt      *adminhandler.ManagementHandler
 	ClientCategory *clienthandler.CategoryHandler
 	ClientVideo    *clienthandler.VideoHandler
 	ClientLive     *clienthandler.LiveHandler
 	ClientTheme    *clienthandler.ThemeHandler
 	ClientSite     *clienthandler.SiteHandler
+	ClientUser     *clienthandler.UserHandler
+	ClientBanner   *clienthandler.BannerHandler
 	OpenResource   *openhandler.ResourceHandler
 }
 
@@ -254,9 +257,110 @@ func (s openResourceSvc) ListCategories(ctx context.Context) ([]shareddto.Catego
 	return []shareddto.CategoryResponse{}, nil
 }
 
+// ===== Phase 5 stubs =====
+
+type adminMgmtSvc struct{}
+
+func (s adminMgmtSvc) Dashboard(ctx context.Context) (*admindto.DashboardResponse, error) {
+	return &admindto.DashboardResponse{}, nil
+}
+func (s adminMgmtSvc) BatchUpdatePublishStatus(ctx context.Context, req *admindto.BatchVideoRequest) (*admindto.BatchVideoResponse, error) {
+	return &admindto.BatchVideoResponse{}, nil
+}
+func (s adminMgmtSvc) BatchDeleteVideos(ctx context.Context, req *admindto.BatchVideoRequest) (*admindto.BatchVideoResponse, error) {
+	return &admindto.BatchVideoResponse{}, nil
+}
+func (s adminMgmtSvc) ListAdmins(ctx context.Context, req *admindto.AdminListRequest) ([]admindto.AdminItem, int, error) {
+	return nil, 0, nil
+}
+func (s adminMgmtSvc) CreateAdmin(ctx context.Context, req *admindto.CreateAdminRequest) (*admindto.AdminItem, error) {
+	return &admindto.AdminItem{}, nil
+}
+func (s adminMgmtSvc) UpdateAdmin(ctx context.Context, id int64, req *admindto.UpdateAdminRequest) (*admindto.AdminItem, error) {
+	return &admindto.AdminItem{ID: id}, nil
+}
+func (s adminMgmtSvc) ResetAdminPassword(ctx context.Context, id int64, req *admindto.ResetAdminPasswordRequest) error {
+	return nil
+}
+func (s adminMgmtSvc) DeleteAdmin(ctx context.Context, id int64) error { return nil }
+func (s adminMgmtSvc) ListGroups(ctx context.Context, req *admindto.UserGroupListRequest) ([]admindto.UserGroupItem, int, error) {
+	return nil, 0, nil
+}
+func (s adminMgmtSvc) CreateGroup(ctx context.Context, req *admindto.CreateUserGroupRequest) (*admindto.UserGroupItem, error) {
+	return &admindto.UserGroupItem{}, nil
+}
+func (s adminMgmtSvc) UpdateGroup(ctx context.Context, id int64, req *admindto.UpdateUserGroupRequest) (*admindto.UserGroupItem, error) {
+	return &admindto.UserGroupItem{ID: id}, nil
+}
+func (s adminMgmtSvc) DeleteGroup(ctx context.Context, id int64) error { return nil }
+func (s adminMgmtSvc) ListUsers(ctx context.Context, req *admindto.UserListRequest) ([]admindto.UserItem, int, error) {
+	return nil, 0, nil
+}
+func (s adminMgmtSvc) UpdateUser(ctx context.Context, id int64, req *admindto.UpdateUserRequest) (*admindto.UserItem, error) {
+	return &admindto.UserItem{ID: id}, nil
+}
+func (s adminMgmtSvc) ResetUserPassword(ctx context.Context, id int64, req *admindto.ResetUserPasswordRequest) error {
+	return nil
+}
+func (s adminMgmtSvc) DeleteUser(ctx context.Context, id int64) error { return nil }
+func (s adminMgmtSvc) ListUserLoginLogs(ctx context.Context, userID int64, offset, limit int) ([]model.UserLoginLogs, int, error) {
+	return nil, 0, nil
+}
+func (s adminMgmtSvc) ListBanners(ctx context.Context, offset, limit int) ([]admindto.BannerItem, int, error) {
+	return nil, 0, nil
+}
+func (s adminMgmtSvc) CreateBanner(ctx context.Context, req *admindto.CreateBannerRequest) (*admindto.BannerItem, error) {
+	return &admindto.BannerItem{}, nil
+}
+func (s adminMgmtSvc) UpdateBanner(ctx context.Context, id int64, req *admindto.UpdateBannerRequest) (*admindto.BannerItem, error) {
+	return &admindto.BannerItem{ID: id}, nil
+}
+func (s adminMgmtSvc) DeleteBanner(ctx context.Context, id int64) error { return nil }
+
+type clientUserSvc struct{}
+
+func (s clientUserSvc) Register(ctx context.Context, req *clientdto.RegisterRequest) (*clientdto.Profile, error) {
+	return &clientdto.Profile{}, nil
+}
+func (s clientUserSvc) Login(ctx context.Context, req *clientdto.LoginRequest, ip, ua string) (*clientdto.LoginResponse, error) {
+	return &clientdto.LoginResponse{}, nil
+}
+func (s clientUserSvc) Profile(ctx context.Context, userID int64) (*clientdto.Profile, error) {
+	return &clientdto.Profile{ID: userID}, nil
+}
+func (s clientUserSvc) ListFavorites(ctx context.Context, userID int64, req *clientdto.FavoriteListRequest) ([]clientdto.FavoriteItem, int, error) {
+	return nil, 0, nil
+}
+func (s clientUserSvc) AddFavorite(ctx context.Context, userID, videoID int64) error    { return nil }
+func (s clientUserSvc) RemoveFavorite(ctx context.Context, userID, videoID int64) error { return nil }
+func (s clientUserSvc) ListHistory(ctx context.Context, userID int64, req *clientdto.HistoryListRequest) ([]clientdto.HistoryItem, int, error) {
+	return nil, 0, nil
+}
+func (s clientUserSvc) UpsertHistory(ctx context.Context, userID int64, req *clientdto.UpsertHistoryRequest) error {
+	return nil
+}
+func (s clientUserSvc) DeleteHistory(ctx context.Context, userID, videoID int64) error { return nil }
+func (s clientUserSvc) ClearHistory(ctx context.Context, userID int64) error           { return nil }
+func (s clientUserSvc) ListComments(ctx context.Context, videoID int64, req *clientdto.CommentListRequest) ([]clientdto.CommentItem, int, error) {
+	return nil, 0, nil
+}
+func (s clientUserSvc) CreateComment(ctx context.Context, userID int64, req *clientdto.CreateCommentRequest) (*clientdto.CommentItem, error) {
+	return &clientdto.CommentItem{}, nil
+}
+func (s clientUserSvc) DeleteComment(ctx context.Context, userID, commentID int64) error { return nil }
+
+type clientBannerSvc struct{}
+
+func (s clientBannerSvc) ListBanners(ctx context.Context) ([]clientdto.BannerItem, error) {
+	return nil, nil
+}
+
 // NewBusinessHandlers builds no-op business handlers for tests.
 func NewBusinessHandlers() BusinessHandlers {
 	auth := authSvc{}
+	mgmt := adminMgmtSvc{}
+	userSvc := clientUserSvc{}
+	bannerSvc := clientBannerSvc{}
 	return BusinessHandlers{
 		AuthService:    auth,
 		AdminAuth:      adminhandler.NewAuthHandler(auth),
@@ -269,11 +373,14 @@ func NewBusinessHandlers() BusinessHandlers {
 		AdminTheme:     adminhandler.NewThemeHandler(adminThemeSvc{}),
 		AdminSettings:  adminhandler.NewSettingsHandler(adminSettingsSvc{}, nil),
 		AdminLog:       adminhandler.NewLogHandler(adminLogSvc{}),
+		AdminMgmt:      adminhandler.NewManagementHandler(mgmt),
 		ClientCategory: clienthandler.NewCategoryHandler(clientCategorySvc{}),
 		ClientVideo:    clienthandler.NewVideoHandler(clientVideoSvc{}),
 		ClientLive:     clienthandler.NewLiveHandler(clientLiveSvc{}),
 		ClientTheme:    clienthandler.NewThemeHandler(clientThemeSvc{}),
 		ClientSite:     clienthandler.NewSiteHandler(adminSettingsSvc{}),
+		ClientUser:     clienthandler.NewUserHandler(userSvc),
+		ClientBanner:   clienthandler.NewBannerHandler(bannerSvc),
 		OpenResource:   openhandler.NewResourceHandler(openResourceSvc{}),
 	}
 }

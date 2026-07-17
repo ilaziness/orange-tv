@@ -23,13 +23,13 @@ type LoginLogFilter struct {
 
 // SystemLogFilter filters system_logs queries.
 type SystemLogFilter struct {
-	Level   *int8
-	Module  string
-	AdminID *int64
+	Level     *int8
+	Module    string
+	AdminID   *int64
 	StartTime *time.Time
 	EndTime   *time.Time
-	Offset  int
-	Limit   int
+	Offset    int
+	Limit     int
 }
 
 // LogRepository persists login and system logs.

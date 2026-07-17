@@ -1517,3 +1517,65 @@ const appleCmsCompatible = {
 资源站: 本地影视数据 -> API接口输出 -> 第三方站点采集
 
 ```
+
+---
+
+## 5. 第五阶段实现说明（运营管理 + 用户体系 + 限流）
+
+### 5.1 已实现功能
+
+#### 管理后台（A 系列）
+
+| 编号 | 功能 | API | 说明 |
+|------|------|-----|------|
+| A1 | 概况统计 | `GET /api/admin/v1/dashboard` | 影视/分类/管理员/用户总数、今日新增、在线数、PV/UV |
+| A2 | 批量影视操作 | `POST /api/admin/v1/videos/batch/publish-status`、`POST /api/admin/v1/videos/batch/delete` | 批量上下架、批量软删除 |
+| A3 | 管理员 CRUD | `/api/admin/v1/admins` | 列表/新增/编辑/删除/重置密码，绑定用户组 |
+| A4 | 用户组 CRUD | `/api/admin/v1/groups` | 列表/新增/编辑/删除，super_admin 组不可删 |
+| A5 | 普通用户 CRUD | `/api/admin/v1/users` | 列表/编辑/删除/重置密码/启用禁用/登录日志 |
+
+#### 用户端（C 系列）
+
+| 编号 | 功能 | API | 说明 |
+|------|------|-----|------|
+| C1 | Banner 轮播 | `GET /api/client/v1/banners`（公开）、`/api/admin/v1/banners`（管理） | 首页轮播图，5秒自动切换，管理端 CRUD |
+| C5 | 用户注册/登录 | `POST /api/client/v1/auth/register`、`POST /api/client/v1/auth/login` | JWT 鉴权，subject 区分 admin/user |
+| C6 | 收藏 | `GET/POST/DELETE /api/client/v1/favorites` | 登录后可收藏/取消收藏影视 |
+| C6 | 播放历史 | `GET/POST/DELETE /api/client/v1/history` | 播放时自动上报进度，支持清空 |
+| C6 | 评论 | `GET /api/client/v1/videos/:id/comments`（公开）、`POST/DELETE /api/client/v1/comments` | 列表公开，发表/删除需登录 |
+
+#### 技术改进（B 系列）
+
+| 编号 | 功能 | 说明 |
+|------|------|------|
+| B1 | Redis 限流接线 | `server/http.go` 在 `rate_limit.store=redis` 且 Redis 启用时，使用 `go-redis/redis_rate` 作为限流存储；未启用时回退内存 |
+| B5 | 前端模块拆分 | admin 新增管理员/用户组/用户/Banner 管理页；client 新增登录/注册/收藏/历史/评论/Banner 轮播 |
+
+### 5.2 新增数据表
+
+- `banners`：首页轮播 Banner（title/cover/link/video_id/sort/status）
+- `site_stats_daily`：每日访问统计（date/PV/UV）
+- `user_favorites`：用户收藏（user_id/video_id，联合唯一）
+- `user_play_history`：播放历史（user_id/video_id/play_source_id/episode_id/progress/duration/last_played_at）
+- `video_comments`：影视评论（video_id/user_id/parent_id/content/like_count/status）
+- `user_login_logs`：用户登录日志（user_id/username/ip/user_agent/status/message）
+
+### 5.3 JWT Subject 区分
+
+- 管理员 token subject = `admin`
+- 用户 token subject = `user`
+- 客户端用户端 handler 仅接受 subject 为 `user`（或空兼容）的 token
+
+### 5.4 前端新增页面
+
+**管理后台**：
+- 概况页：统计卡片展示
+- 影视管理：批量选择、批量上下架/删除
+- 管理员/用户组/用户/Banner 管理页
+
+**用户端**：
+- 首页 Banner 轮播
+- 登录/注册页
+- 收藏列表、播放历史
+- 详情页评论区、收藏按钮
+- 播放页自动上报历史

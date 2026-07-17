@@ -277,7 +277,6 @@ func (s *videoService) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-
 func (s *videoService) invalidateListCaches(ctx context.Context, videoID int64) {
 	// Best-effort: common homepage / default page keys + open list keys.
 	// Full prefix delete is not available on all cache drivers.

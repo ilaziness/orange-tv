@@ -5,10 +5,14 @@ import {
   apiGet,
   apiPost,
   apiPut,
+  type AdminProfile,
+  type AdminItem,
+  type BannerItem,
   type Category,
   type CollectCategoryMap,
   type CollectLog,
   type CollectSource,
+  type DashboardData,
   type LiveChannel,
   type LoginLogItem,
   type LoginResult,
@@ -16,10 +20,11 @@ import {
   type PageData,
   type PlayEpisode,
   type PlaySource,
-  type AdminProfile,
   type SystemLogItem,
   type SystemSettings,
   type ThemeItem,
+  type UserGroupItem,
+  type UserItem,
   type VideoDetail,
   type VideoListItem,
 } from '@orange-tv/shared'
@@ -153,6 +158,46 @@ export const adminApi = {
     withAuth((token) => apiGet<PageData<SystemLogItem>>(ADMIN_API_BASE, '/system-logs', { token, query })),
   listLoginLogs: (query?: Record<string, string | number | undefined>) =>
     withAuth((token) => apiGet<PageData<LoginLogItem>>(ADMIN_API_BASE, '/login-logs', { token, query })),
+
+  // Phase 5: Dashboard, batch, admin/user/group/banner management
+  dashboard: () => withAuth((token) => apiGet<DashboardData>(ADMIN_API_BASE, '/dashboard', { token })),
+  batchUpdatePublishStatus: (ids: number[], status: number) =>
+    withAuth((token) => apiPost(ADMIN_API_BASE, '/videos/batch/publish-status', { ids, status }, { token })),
+  batchDeleteVideos: (ids: number[]) =>
+    withAuth((token) => apiPost(ADMIN_API_BASE, '/videos/batch/delete', { ids }, { token })),
+
+  listAdmins: (query?: Record<string, string | number | undefined>) =>
+    withAuth((token) => apiGet<PageData<AdminItem>>(ADMIN_API_BASE, '/admins', { token, query })),
+  createAdmin: (body: unknown) => withAuth((token) => apiPost(ADMIN_API_BASE, '/admins', body, { token })),
+  updateAdmin: (id: number, body: unknown) =>
+    withAuth((token) => apiPut(ADMIN_API_BASE, `/admins/${id}`, body, { token })),
+  deleteAdmin: (id: number) => withAuth((token) => apiDelete(ADMIN_API_BASE, `/admins/${id}`, { token })),
+  resetAdminPassword: (id: number, password: string) =>
+    withAuth((token) => apiPut(ADMIN_API_BASE, `/admins/${id}/password`, { password }, { token })),
+
+  listGroups: (query?: Record<string, string | number | undefined>) =>
+    withAuth((token) => apiGet<PageData<UserGroupItem>>(ADMIN_API_BASE, '/groups', { token, query })),
+  createGroup: (body: unknown) => withAuth((token) => apiPost(ADMIN_API_BASE, '/groups', body, { token })),
+  updateGroup: (id: number, body: unknown) =>
+    withAuth((token) => apiPut(ADMIN_API_BASE, `/groups/${id}`, body, { token })),
+  deleteGroup: (id: number) => withAuth((token) => apiDelete(ADMIN_API_BASE, `/groups/${id}`, { token })),
+
+  listUsers: (query?: Record<string, string | number | undefined>) =>
+    withAuth((token) => apiGet<PageData<UserItem>>(ADMIN_API_BASE, '/users', { token, query })),
+  updateUser: (id: number, body: unknown) =>
+    withAuth((token) => apiPut(ADMIN_API_BASE, `/users/${id}`, body, { token })),
+  deleteUser: (id: number) => withAuth((token) => apiDelete(ADMIN_API_BASE, `/users/${id}`, { token })),
+  resetUserPassword: (id: number, password: string) =>
+    withAuth((token) => apiPut(ADMIN_API_BASE, `/users/${id}/password`, { password }, { token })),
+  listUserLoginLogs: (id: number, query?: Record<string, string | number | undefined>) =>
+    withAuth((token) => apiGet<PageData<LoginLogItem>>(ADMIN_API_BASE, `/users/${id}/login-logs`, { token, query })),
+
+  listBanners: (query?: Record<string, string | number | undefined>) =>
+    withAuth((token) => apiGet<PageData<BannerItem>>(ADMIN_API_BASE, '/banners', { token, query })),
+  createBanner: (body: unknown) => withAuth((token) => apiPost(ADMIN_API_BASE, '/banners', body, { token })),
+  updateBanner: (id: number, body: unknown) =>
+    withAuth((token) => apiPut(ADMIN_API_BASE, `/banners/${id}`, body, { token })),
+  deleteBanner: (id: number) => withAuth((token) => apiDelete(ADMIN_API_BASE, `/banners/${id}`, { token })),
 }
 
 export function errorMessage(err: unknown): string {

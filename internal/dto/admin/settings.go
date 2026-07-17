@@ -8,22 +8,22 @@ type SettingsResponse struct {
 
 // SiteSettings holds public site branding fields.
 type SiteSettings struct {
-	Name         string `json:"name"`
-	Logo         string `json:"logo"`
-	Copyright    string `json:"copyright"`
-	ICP          string `json:"icp"`
-	SEOKeywords  string `json:"seo_keywords"`
-	Description  string `json:"description"`
+	Name        string `json:"name"`
+	Logo        string `json:"logo"`
+	Copyright   string `json:"copyright"`
+	ICP         string `json:"icp"`
+	SEOKeywords string `json:"seo_keywords"`
+	Description string `json:"description"`
 }
 
 // APISettings holds resource-station / API mode settings.
 // ResourceAPIKey is never returned in plain text; ResourceAPIKeySet indicates whether configured.
 type APISettings struct {
-	SiteMode                 string `json:"site_mode"`
-	APIOutputFormat          string `json:"api_output_format"`
-	EnableThirdPartyCollect  bool   `json:"enable_third_party_collect"`
-	ResourceAPIKeySet        bool   `json:"resource_api_key_set"`
-	ResourceAPIKeyMasked     string `json:"resource_api_key_masked,omitempty"`
+	SiteMode                string `json:"site_mode"`
+	APIOutputFormat         string `json:"api_output_format"`
+	EnableThirdPartyCollect bool   `json:"enable_third_party_collect"`
+	ResourceAPIKeySet       bool   `json:"resource_api_key_set"`
+	ResourceAPIKeyMasked    string `json:"resource_api_key_masked,omitempty"`
 }
 
 // UpdateSettingsRequest updates site + API settings.

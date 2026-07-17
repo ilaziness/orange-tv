@@ -12,6 +12,7 @@ import (
 	dto "github.com/ilaziness/orange-tv/internal/dto/admin"
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
+	"github.com/ilaziness/orange-tv/internal/repository"
 	"github.com/stretchr/testify/require"
 )
 
@@ -78,6 +79,43 @@ func (f *fakeAdminRepo) ExistsUsername(ctx context.Context, username string) (bo
 			return true, nil
 		}
 	}
+	return false, nil
+}
+
+// Stub implementations for new AdminRepository methods (not used in auth tests)
+func (f *fakeAdminRepo) ListAdmins(ctx context.Context, fl repository.AdminListFilter) ([]model.Admins, int, error) {
+	return nil, 0, nil
+}
+func (f *fakeAdminRepo) UpdateAdmin(ctx context.Context, admin *model.Admins) error { return nil }
+func (f *fakeAdminRepo) SoftDeleteAdmin(ctx context.Context, id int64) error        { return nil }
+func (f *fakeAdminRepo) ExistsUsernameExcludeID(ctx context.Context, username string, excludeID int64) (bool, error) {
+	return false, nil
+}
+func (f *fakeAdminRepo) ListGroups(ctx context.Context, fl repository.UserGroupListFilter) ([]model.UserGroups, int, error) {
+	return nil, 0, nil
+}
+func (f *fakeAdminRepo) CreateGroup(ctx context.Context, g *model.UserGroups) error { return nil }
+func (f *fakeAdminRepo) UpdateGroup(ctx context.Context, g *model.UserGroups) error { return nil }
+func (f *fakeAdminRepo) SoftDeleteGroup(ctx context.Context, id int64) error        { return nil }
+func (f *fakeAdminRepo) ExistsGroupNameExcludeID(ctx context.Context, name string, excludeID int64) (bool, error) {
+	return false, nil
+}
+func (f *fakeAdminRepo) ListUsers(ctx context.Context, fl repository.UserListFilter) ([]model.Users, int, error) {
+	return nil, 0, nil
+}
+func (f *fakeAdminRepo) GetUserByID(ctx context.Context, id int64) (*model.Users, error) {
+	return nil, nil
+}
+func (f *fakeAdminRepo) GetUserByUsername(ctx context.Context, username string) (*model.Users, error) {
+	return nil, nil
+}
+func (f *fakeAdminRepo) CreateUser(ctx context.Context, u *model.Users) error { return nil }
+func (f *fakeAdminRepo) UpdateUser(ctx context.Context, u *model.Users) error { return nil }
+func (f *fakeAdminRepo) SoftDeleteUser(ctx context.Context, id int64) error   { return nil }
+func (f *fakeAdminRepo) ExistsUserUsername(ctx context.Context, username string) (bool, error) {
+	return false, nil
+}
+func (f *fakeAdminRepo) ExistsUserUsernameExcludeID(ctx context.Context, username string, excludeID int64) (bool, error) {
 	return false, nil
 }
 

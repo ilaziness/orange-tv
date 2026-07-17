@@ -160,6 +160,18 @@ func (v *videoRepoStub) RunInTx(ctx context.Context, fn func(ctx context.Context
 	return nil
 }
 func (v *videoRepoStub) WithTx(tx bun.Tx) repository.VideoRepository { return v }
+func (v *videoRepoStub) BatchUpdatePublishStatus(ctx context.Context, ids []int64, status int8) (int, error) {
+	return 0, nil
+}
+func (v *videoRepoStub) BatchSoftDelete(ctx context.Context, ids []int64) (int, error) { return 0, nil }
+func (v *videoRepoStub) CountVideos(ctx context.Context) (int, error)                  { return 0, nil }
+func (v *videoRepoStub) CountVideosToday(ctx context.Context, since time.Time) (int, error) {
+	return 0, nil
+}
+func (v *videoRepoStub) CountVideosByStatus(ctx context.Context, status int8) (int, error) {
+	return 0, nil
+}
+func (v *videoRepoStub) CountCategories(ctx context.Context) (int, error) { return 0, nil }
 
 func TestPlayService_CreateEpisodeRestoresSoftDeleted(t *testing.T) {
 	playRepo := newFakePlayRepo()

@@ -176,3 +176,32 @@ button.primary { background: #f97316; border-color: #f97316; color: #fff; }
 .episode.active, .live-card.active { outline: 2px solid #f97316; }
 a.episode { display: inline-block; }
 .stack { display: flex; flex-direction: column; gap: 1rem; }
+
+/* Phase 5: user features */
+.nav-user { color: #f97316; font-weight: 600; }
+.auth-page { max-width: 380px; margin: 60px auto; }
+.auth-card { display: grid; gap: 14px; background: #1f2937; padding: 28px; border-radius: 16px; }
+.auth-card label { display: grid; gap: 4px; font-size: 0.9rem; color: #d1d5db; }
+.auth-card input { padding: 10px 12px; border: 1px solid #374151; border-radius: 8px; background: #111827; color: #f9fafb; }
+.auth-card .primary { width: 100%; padding: 12px; font-size: 1rem; }
+.auth-card .muted { text-align: center; }
+
+.carousel { position: relative; }
+.carousel-dots { position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; }
+.carousel-dots .dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.4); cursor: pointer; }
+.carousel-dots .dot.active { background: #f97316; }
+
+.pager { display: flex; gap: 12px; align-items: center; justify-content: center; margin-top: 1.5rem; }
+.progress-bar { display: block; position: absolute; bottom: 0; left: 0; right: 0; height: 3px; background: rgba(0,0,0,0.5); }
+.progress-bar span { display: block; height: 100%; background: #f97316; }
+
+.comments-section { background: #1f2937; border-radius: 12px; padding: 16px; }
+.comment-form { display: flex; gap: 8px; margin-bottom: 16px; }
+.comment-form textarea { flex: 1; min-height: 60px; padding: 10px; border: 1px solid #374151; border-radius: 8px; background: #111827; color: #f9fafb; resize: vertical; }
+.comment-list { display: grid; gap: 12px; }
+.comment-item { display: flex; gap: 12px; }
+.comment-avatar { width: 36px; height: 36px; border-radius: 50%; background: #374151; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+.comment-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.comment-avatar span { color: #f9fafb; font-weight: 600; }
+.comment-body { flex: 1; }
+.comment-body p { margin: 4px 0 0; }

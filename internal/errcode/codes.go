@@ -16,10 +16,19 @@ var (
 	TooManyRequests  = &Code{1000006, "请求过于频繁", 429, nil}
 
 	// 用户模块 (200xxxx)
-	UserNotFound      = &Code{2000001, "用户不存在", 404, nil}
-	UserAlreadyExists = &Code{2000002, "用户已存在", 409, nil}
-	UserDisabled      = &Code{2000003, "用户账号已禁用", 403, nil}
-	InvalidUserStatus = &Code{2000004, "用户状态无效", 400, nil}
+	UserNotFound       = &Code{2000001, "用户不存在", 404, nil}
+	UserAlreadyExists  = &Code{2000002, "用户已存在", 409, nil}
+	UserDisabled       = &Code{2000003, "用户账号已禁用", 403, nil}
+	InvalidUserStatus  = &Code{2000004, "用户状态无效", 400, nil}
+	AdminNotFound      = &Code{2000010, "管理员不存在", 404, nil}
+	AdminAlreadyExists = &Code{2000011, "管理员已存在", 409, nil}
+	UserGroupNotFound  = &Code{2000020, "用户组不存在", 404, nil}
+	UserGroupNameDup   = &Code{2000021, "用户组名称已存在", 409, nil}
+	FavoriteExists     = &Code{2000030, "已收藏该影视", 409, nil}
+	FavoriteNotFound   = &Code{2000031, "未收藏该影视", 404, nil}
+	CommentNotFound    = &Code{2000040, "评论不存在", 404, nil}
+	CommentTooLong     = &Code{2000041, "评论内容过长", 400, nil}
+	BannerNotFound     = &Code{2000050, "Banner不存在", 404, nil}
 
 	// 认证模块 (300xxxx)
 	AuthFailed             = &Code{3000001, "认证失败", 401, nil}
