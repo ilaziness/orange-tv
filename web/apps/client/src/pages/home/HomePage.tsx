@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import type { Category, ClientBanner, VideoListItem } from '@orange-tv/shared'
-import { clientApi, errorMessage } from '../../lib/api'
-import { VideoCard } from '../../components/common/VideoCard'
-import { BannerCarousel } from '../../components/common/BannerCarousel'
-import { ErrorAlert } from '../../components/ui/ErrorAlert'
-import { Empty } from '../../components/ui/Empty'
+import { clientApi, errorMessage } from '@/lib/api'
+import { BannerCarousel, VideoGrid } from '@/components/common'
+import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
+import { AlertCircleIcon } from 'lucide-react'
 
 export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([])
@@ -38,53 +39,57 @@ export default function HomePage() {
   }, [])
 
   const roots = categories.filter((c) => !c.parent_id || c.parent_id === 0)
-  const banner = hot[0]
 
   return (
-    <>
+    <div className="flex flex-col gap-8">
       {banners.length ? (
         <BannerCarousel banners={banners} />
-      ) : (
-        <section className="hero banner">
-          {banner ? (
-            <>
-              <div className="banner-cover" style={{ backgroundImage: (banner.poster || banner.cover) ? `url(${banner.poster || banner.cover})` : undefined }} />
-              <div className="banner-body">
-                <h1>{banner.title}</h1>
-                <p className="muted">{banner.subtitle || '高分推荐'}</p>
-                <Link to={`/play/${banner.id}`}><button className="primary">立即播放</button></Link>
-              </div>
-            </>
-          ) : (
-            <>
-              <h1>发现精彩影视内容</h1>
-              <p className="muted">支持分类浏览、筛选、详情播放与相关推荐。</p>
-            </>
-          )}
-        </section>
-      )}
-      <ErrorAlert message={error} />
-      <div className="section-title"><h2>分类入口</h2></div>
-      <div className="chips">
-        {roots.map((c) => (
-          <Link key={c.id} className="chip" to={`/category?category_id=${c.id}`}>{c.name}</Link>
-        ))}
-        {!roots.length && !loading ? <span className="muted">暂无分类</span> : null}
-      </div>
-      {hot.length ? (
-        <>
-          <div className="section-title"><h2>高分推荐</h2></div>
-          <div className="grid">
-            {hot.map((item) => <VideoCard key={`hot-${item.id}`} item={item} />)}
-          </div>
-        </>
       ) : null}
-      <div className="section-title"><h2>最新上架</h2></div>
-      {loading ? <div className="skeleton" /> : null}
-      {!loading && !videos.length ? <Empty message="暂无上架影视" /> : null}
-      <div className="grid">
-        {videos.map((item) => <VideoCard key={item.id} item={item} />)}
-      </div>
-    </>
+
+      {error ? (
+        <Alert variant="destructive">
+          <AlertCircleIcon />
+          <AlertTitle>加载失败</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold">分类入口</h2>
+        <div className="flex flex-wrap gap-2">
+          {roots.map((c) => (
+            <Button key={c.id} variant="outline" size="sm" nativeButton={false} render={<Link to={`/category?category_id=${c.id}`} />}>
+              {c.name}
+            </Button>
+          ))}
+          {!roots.length && !loading ? (
+            <span className="text-sm text-muted-foreground">暂无分类</span>
+          ) : null}
+        </div>
+      </section>
+
+      {hot.length ? (
+        <section className="flex flex-col gap-4">
+          <h2 className="text-lg font-semibold">高分推荐</h2>
+          <VideoGrid items={hot} />
+        </section>
+      ) : null}
+
+      <section className="flex flex-col gap-4">
+        <h2 className="text-lg font-semibold">最新上架</h2>
+        {loading ? (
+          <VideoGrid items={[]} loading />
+        ) : !videos.length ? (
+          <Empty>
+            <EmptyHeader>
+              <EmptyTitle>暂无上架影视</EmptyTitle>
+              <EmptyDescription>暂无最新上架视频</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        ) : (
+          <VideoGrid items={videos} />
+        )}
+      </section>
+    </div>
   )
 }

@@ -1,10 +1,16 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate, Link } from 'react-router'
+import { useParams, useNavigate } from 'react-router'
 import type { CommentItem, VideoDetail, VideoListItem } from '@orange-tv/shared'
-import { clientApi, errorMessage, getToken } from '../../lib/api'
-import { VideoCard } from '../../components/common/VideoCard'
-import { ErrorAlert } from '../../components/ui/ErrorAlert'
-import { Empty } from '../../components/ui/Empty'
+import { clientApi, errorMessage } from '@/lib/api'
+import { VideoGrid } from '@/components/common'
+import { CommentSection } from '@/components/CommentSection'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
+import { Skeleton } from '@/components/ui/skeleton'
+import { AlertCircleIcon, PlayIcon } from 'lucide-react'
 
 export default function VideoDetailPage() {
   const { id } = useParams()
@@ -14,7 +20,11 @@ export default function VideoDetailPage() {
   const [comments, setComments] = useState<CommentItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [commentText, setCommentText] = useState('')
+
+  const loadComments = () => {
+    if (!id) return
+    void clientApi.listComments(Number(id), 1).then((res) => setComments(res.data.list || []))
+  }
 
   useEffect(() => {
     if (!id) return
@@ -37,89 +47,111 @@ export default function VideoDetailPage() {
     })()
   }, [id])
 
-  const handleComment = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!commentText.trim() || !id) return
-    try {
-      await clientApi.createComment(Number(id), commentText)
-      setCommentText('')
-      const res = await clientApi.listComments(Number(id), 1)
-      setComments(res.data.list || [])
-    } catch (err) {
-      setError(errorMessage(err))
-    }
-  }
-
-  if (loading) return <div className="skeleton" />
-  if (!detail) return <Empty message="影视不存在" />
-  if (error) return <ErrorAlert message={error} />
-
-  return (
-    <>
-      <div className="video-detail">
-        <div className="detail-header">
-          <div className="poster" style={{ backgroundImage: detail.poster ? `url(${detail.poster})` : undefined }} />
-          <div className="detail-info">
-            <h1>{detail.title}</h1>
-            <p className="muted">{detail.subtitle || ''}</p>
-            <div className="meta">
-              <span>评分: {detail.rating?.toFixed(1) || 'N/A'}</span>
-              <span>年份: {detail.year || '未知'}</span>
-              <span>地区: {detail.region || '未知'}</span>
-              <span>语言: {detail.language || '未知'}</span>
-            </div>
-            <p className="description">{detail.description || '暂无简介'}</p>
-            <div className="tags">
-              {detail.tags && detail.tags.map((t) => <span key={t.id} className="tag">{t.name}</span>)}
-            </div>
-          </div>
-        </div>
-        <div className="play-section">
-          <h2>播放源</h2>
-          {detail.sources && detail.sources.length > 0 ? (
-            <div className="play-sources">
-              {detail.sources.map((source, idx) => (
-                <button key={idx} className="play-source" onClick={() => navigate(`/play/${id}/${idx}`)}>
-                  {source.name || `播放源 ${idx + 1}`}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <Empty message="暂无播放源" />
-          )}
-        </div>
-        <div className="comments-section">
-          <h2>评论 ({comments.length})</h2>
-          {getToken() ? (
-            <form className="comment-form" onSubmit={handleComment}>
-              <textarea placeholder="发表评论..." value={commentText} onChange={(e) => setCommentText(e.target.value)} />
-              <button className="primary" type="submit">发表</button>
-            </form>
-          ) : (
-            <p className="muted"><Link to="/login">登录</Link> 后发表评论</p>
-          )}
-          <div className="comments-list">
-            {comments.map((c) => (
-              <div key={c.id} className="comment-item">
-                <div className="comment-header">
-                  <span className="comment-user">{c.username}</span>
-                  <span className="comment-time">{new Date(c.created_at).toLocaleString()}</span>
-                </div>
-                <p className="comment-content">{c.content}</p>
-              </div>
-            ))}
-            {!comments.length ? <Empty message="暂无评论" /> : null}
+  if (loading) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div className="flex gap-6">
+          <Skeleton className="aspect-[2/3] w-48 shrink-0 rounded-xl" />
+          <div className="flex flex-1 flex-col gap-3">
+            <Skeleton className="h-8 w-2/3" />
+            <Skeleton className="h-4 w-1/3" />
+            <Skeleton className="h-20 w-full" />
           </div>
         </div>
       </div>
-      {related.length ? (
-        <>
-          <div className="section-title"><h2>相关推荐</h2></div>
-          <div className="grid">
-            {related.map((item) => <VideoCard key={item.id} item={item} />)}
+    )
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircleIcon />
+        <AlertTitle>加载失败</AlertTitle>
+        <AlertDescription>{error}</AlertDescription>
+      </Alert>
+    )
+  }
+
+  if (!detail) {
+    return (
+      <Empty>
+        <EmptyHeader>
+          <EmptyTitle>影视不存在</EmptyTitle>
+          <EmptyDescription>该视频可能已下架</EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    )
+  }
+
+  return (
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-6 md:flex-row">
+        <div
+          className="aspect-[2/3] w-40 shrink-0 rounded-xl bg-cover bg-center shadow-lg md:w-56"
+          style={detail.poster ? { backgroundImage: `url(${detail.poster})` } : undefined}
+        />
+        <div className="flex flex-1 flex-col gap-3">
+          <h1 className="text-2xl font-bold tracking-tight">{detail.title}</h1>
+          {detail.subtitle ? (
+            <p className="text-muted-foreground">{detail.subtitle}</p>
+          ) : null}
+          <div className="flex flex-wrap gap-2">
+            <Badge variant="secondary">评分: {detail.rating?.toFixed(1) || 'N/A'}</Badge>
+            <Badge variant="secondary">{detail.year || '未知'}</Badge>
+            <Badge variant="secondary">{detail.region || '未知'}</Badge>
+            <Badge variant="secondary">{detail.language || '未知'}</Badge>
           </div>
-        </>
+          <p className="text-sm leading-relaxed">{detail.description || '暂无简介'}</p>
+          {detail.tags?.length ? (
+            <div className="flex flex-wrap gap-2">
+              {detail.tags.map((t) => (
+                <Badge key={t.id} variant="outline">{t.name}</Badge>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>播放源</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {detail.sources && detail.sources.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {detail.sources.map((source, idx) => (
+                <Button
+                  key={idx}
+                  variant="outline"
+                  onClick={() => navigate(`/play/${id}/${idx}`)}
+                >
+                  <PlayIcon data-icon="inline-start" />
+                  {source.name || `播放源 ${idx + 1}`}
+                </Button>
+              ))}
+            </div>
+          ) : (
+            <Empty>
+              <EmptyHeader>
+                <EmptyTitle>暂无播放源</EmptyTitle>
+              </EmptyHeader>
+            </Empty>
+          )}
+        </CardContent>
+      </Card>
+
+      <CommentSection
+        videoId={Number(id)}
+        comments={comments}
+        onRefresh={loadComments}
+      />
+
+      {related.length ? (
+        <section className="flex flex-col gap-4">
+          <h2 className="text-lg font-semibold">相关推荐</h2>
+          <VideoGrid items={related} />
+        </section>
       ) : null}
-    </>
+    </div>
   )
 }

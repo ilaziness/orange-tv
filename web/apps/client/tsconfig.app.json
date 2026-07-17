@@ -17,7 +17,8 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "@orange-tv/shared": ["../../packages/shared/src/index.ts"]
+      "@orange-tv/shared": ["../../packages/shared/src/index.ts"],
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src"]

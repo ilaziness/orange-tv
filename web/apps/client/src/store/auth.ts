@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import type { UserProfile } from '@orange-tv/shared'
-import { clientApi, getToken, setToken as setApiToken } from '../lib/api'
+import { clientApi, getToken, setToken as setApiToken } from '@/lib/api'
 
 interface AuthState {
   token: string | null
@@ -25,8 +25,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
     try {
       const res = await clientApi.profile()
-      set({ profile: (res.data as any)?.user || res.data || null })
-    } catch (err) {
+      set({ profile: res.data || null })
+    } catch {
       setApiToken(null)
       set({ token: null, profile: null })
     }

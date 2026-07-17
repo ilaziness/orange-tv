@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import type { Category, VideoListItem } from '@orange-tv/shared'
-import { clientApi, errorMessage } from '../../lib/api'
-import { VideoCard } from '../../components/common/VideoCard'
-import { ErrorAlert } from '../../components/ui/ErrorAlert'
-import { Empty } from '../../components/ui/Empty'
+import { clientApi, errorMessage } from '@/lib/api'
+import { VideoGrid } from '@/components/common'
+import { FilterBar } from '@/components/FilterBar'
+import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
+import { AlertCircleIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
 
 export default function CategoryPage() {
   const [params, setParams] = useSearchParams()
@@ -65,65 +68,101 @@ export default function CategoryPage() {
       if (v === null || v === '' || v === 0) newParams.delete(k)
       else newParams.set(k, String(v))
     })
-    if (newParams.get('page')) newParams.set('page', '1')
+    if (!('page' in updates)) newParams.set('page', '1')
     setParams(newParams)
   }
 
   return (
-    <>
-      <div className="section-title"><h2>分类浏览</h2></div>
-      <div className="chips">
-        <button className={!categoryId ? 'chip active' : 'chip'} onClick={() => updateParams({ category_id: null })}>全部</button>
+    <div className="flex flex-col gap-6">
+      <h2 className="text-lg font-semibold">分类浏览</h2>
+
+      <div className="flex flex-wrap gap-2">
+        <Button
+          variant={!categoryId ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => updateParams({ category_id: null })}
+        >
+          全部
+        </Button>
         {roots.map((c) => (
-          <button key={c.id} className={categoryId === c.id ? 'chip active' : 'chip'} onClick={() => updateParams({ category_id: c.id })}>{c.name}</button>
+          <Button
+            key={c.id}
+            variant={categoryId === c.id ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => updateParams({ category_id: c.id })}
+          >
+            {c.name}
+          </Button>
         ))}
       </div>
+
       {subCategories.length ? (
-        <div className="chips">
+        <div className="flex flex-wrap gap-2">
           {subCategories.map((c) => (
-            <button key={c.id} className={categoryId === c.id ? 'chip active' : 'chip'} onClick={() => updateParams({ category_id: c.id })}>{c.name}</button>
+            <Button
+              key={c.id}
+              variant={categoryId === c.id ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => updateParams({ category_id: c.id })}
+            >
+              {c.name}
+            </Button>
           ))}
         </div>
       ) : null}
-      <div className="section-title"><h2>筛选条件</h2></div>
-      <div className="filters">
-        <select value={year} onChange={(e) => updateParams({ year: Number(e.target.value) || null })}>
-          <option value="">全部年份</option>
-          {Array.from({ length: 50 }, (_, i) => new Date().getFullYear() - i).map((y) => (
-            <option key={y} value={y}>{y}</option>
-          ))}
-        </select>
-        <select value={region} onChange={(e) => updateParams({ region: e.target.value || null })}>
-          <option value="">全部地区</option>
-          {['中国大陆', '中国香港', '中国台湾', '美国', '日本', '韩国', '英国', '法国', '德国', '其他'].map((r) => (
-            <option key={r} value={r}>{r}</option>
-          ))}
-        </select>
-        <select value={language} onChange={(e) => updateParams({ language: e.target.value || null })}>
-          <option value="">全部语言</option>
-          {['普通话', '英语', '日语', '韩语', '粤语', '其他'].map((l) => (
-            <option key={l} value={l}>{l}</option>
-          ))}
-        </select>
-        <select value={sort} onChange={(e) => updateParams({ sort: e.target.value })}>
-          <option value="created_at_desc">最新上架</option>
-          <option value="rating_desc">评分最高</option>
-          <option value="view_count_desc">播放最多</option>
-        </select>
-      </div>
-      <ErrorAlert message={error} />
-      {loading ? <div className="skeleton" /> : null}
-      {!loading && !videos.length ? <Empty message="暂无符合条件的影视" /> : null}
-      <div className="grid">
-        {videos.map((item) => <VideoCard key={item.id} item={item} />)}
-      </div>
+
+      <FilterBar
+        year={year}
+        region={region}
+        language={language}
+        sort={sort}
+        onChange={updateParams}
+      />
+
+      {error ? (
+        <Alert variant="destructive">
+          <AlertCircleIcon />
+          <AlertTitle>加载失败</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
+
+      {loading ? (
+        <VideoGrid items={[]} loading />
+      ) : !videos.length ? (
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>暂无符合条件的影视</EmptyTitle>
+            <EmptyDescription>试试调整筛选条件</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      ) : (
+        <VideoGrid items={videos} />
+      )}
+
       {total > 24 ? (
-        <div className="pagination">
-          <button disabled={page === 1} onClick={() => updateParams({ page: page - 1 })}>上一页</button>
-          <span>第 {page} 页</span>
-          <button disabled={page * 24 >= total} onClick={() => updateParams({ page: page + 1 })}>下一页</button>
+        <div className="flex items-center justify-center gap-4">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page === 1}
+            onClick={() => updateParams({ page: page - 1 })}
+          >
+            <ChevronLeftIcon data-icon="inline-start" />
+            上一页
+          </Button>
+          <span className="text-sm text-muted-foreground">第 {page} 页</span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page * 24 >= total}
+            onClick={() => updateParams({ page: page + 1 })}
+          >
+            下一页
+            <ChevronRightIcon data-icon="inline-end" />
+          </Button>
         </div>
       ) : null}
-    </>
+    </div>
   )
 }

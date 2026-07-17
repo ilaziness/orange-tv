@@ -1,38 +1,87 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router'
-import { clientApi, errorMessage, setToken } from '../../lib/api'
-import { ErrorAlert } from '../../components/ui/ErrorAlert'
+import { clientApi, errorMessage, setToken } from '@/lib/api'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Spinner } from '@/components/ui/spinner'
+import { AlertCircleIcon } from 'lucide-react'
 
 export default function LoginPage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setSubmitting(true)
     try {
       const res = await clientApi.login(username, password)
       setToken(res.data.access_token)
       navigate('/')
     } catch (err) {
       setError(errorMessage(err))
+    } finally {
+      setSubmitting(false)
     }
   }
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <h1>登录</h1>
-        <ErrorAlert message={error} />
-        <form onSubmit={handleSubmit}>
-          <input placeholder="用户名" value={username} onChange={(e) => setUsername(e.target.value)} />
-          <input type="password" placeholder="密码" value={password} onChange={(e) => setPassword(e.target.value)} />
-          <button className="primary" type="submit">登录</button>
-        </form>
-        <p className="muted">还没有账号？ <Link to="/register">注册</Link></p>
-      </div>
+    <div className="flex min-h-[60vh] items-center justify-center">
+      <Card className="w-full max-w-sm">
+        <CardHeader>
+          <CardTitle>登录</CardTitle>
+          <CardDescription>登录后享受更多功能</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {error ? (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircleIcon />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          ) : null}
+          <form onSubmit={handleSubmit}>
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="username">用户名</FieldLabel>
+                <Input
+                  id="username"
+                  placeholder="请输入用户名"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                />
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="password">密码</FieldLabel>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="请输入密码"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </Field>
+              <Button type="submit" disabled={submitting} className="w-full">
+                {submitting ? <Spinner className="size-4" /> : null}
+                登录
+              </Button>
+            </FieldGroup>
+          </form>
+          <p className="mt-4 text-center text-sm text-muted-foreground">
+            还没有账号？{' '}
+            <Link to="/register" className="text-primary underline-offset-4 hover:underline">
+              注册
+            </Link>
+          </p>
+        </CardContent>
+      </Card>
     </div>
   )
 }

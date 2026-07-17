@@ -74,7 +74,11 @@ export function VideoPlayer({ src, format, poster, autoplay = true, storageKey }
   }, [src, format, poster, storageKey, autoplay])
 
   if (!src) {
-    return <div className="empty">无可播放地址</div>
+    return (
+      <div className="flex items-center justify-center rounded-xl border border-dashed border-border p-8 text-muted-foreground">
+        无可播放地址
+      </div>
+    )
   }
 
   return (

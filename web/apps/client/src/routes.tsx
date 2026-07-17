@@ -1,23 +1,33 @@
 import { lazy, Suspense } from 'react'
 import type { ReactNode } from 'react'
 import { Navigate, Route, Routes } from 'react-router'
-import { ClientLayout } from './components/layout/ClientLayout.tsx'
-import { RequireAuth } from './components/auth/RequireAuth.tsx'
-import { Loading } from './components/ui/Loading'
+import { ClientLayout } from '@/components/layout/ClientLayout'
+import { RequireAuth } from '@/components/auth/RequireAuth'
+import { Spinner } from '@/components/ui/spinner'
 
-const HomePage = lazy(() => import('./pages/home/HomePage.tsx'))
-const CategoryPage = lazy(() => import('./pages/category/CategoryPage.tsx'))
-const VideoDetailPage = lazy(() => import('./pages/video/VideoDetailPage.tsx'))
-const PlayPage = lazy(() => import('./pages/video/PlayPage.tsx'))
-const LivePage = lazy(() => import('./pages/live/LivePage.tsx'))
-const LivePlayPage = lazy(() => import('./pages/live/LivePlayPage.tsx'))
-const LoginPage = lazy(() => import('./pages/auth/LoginPage.tsx'))
-const RegisterPage = lazy(() => import('./pages/auth/RegisterPage.tsx'))
-const FavoritesPage = lazy(() => import('./pages/user/FavoritesPage.tsx'))
-const HistoryPage = lazy(() => import('./pages/user/HistoryPage.tsx'))
+const HomePage = lazy(() => import('@/pages/home/HomePage'))
+const CategoryPage = lazy(() => import('@/pages/category/CategoryPage'))
+const VideoDetailPage = lazy(() => import('@/pages/video/VideoDetailPage'))
+const PlayPage = lazy(() => import('@/pages/video/PlayPage'))
+const LivePage = lazy(() => import('@/pages/live/LivePage'))
+const LivePlayPage = lazy(() => import('@/pages/live/LivePlayPage'))
+const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
+const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'))
+const FavoritesPage = lazy(() => import('@/pages/user/FavoritesPage'))
+const HistoryPage = lazy(() => import('@/pages/user/HistoryPage'))
 
 function Lazy({ children }: { children: ReactNode }) {
-  return <Suspense fallback={<Loading />}>{children}</Suspense>
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center py-20">
+          <Spinner className="size-8" />
+        </div>
+      }
+    >
+      {children}
+    </Suspense>
+  )
 }
 
 export function AppRoutes() {
