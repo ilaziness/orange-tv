@@ -111,7 +111,7 @@ func NewDB(cfg *config.Config, log *zap.Logger) (*DB, error) {
 	// Verify connection is alive
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	if err := sqldb.PingContext(ctx); err != nil {
+	if err := db.PingContext(ctx); err != nil {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 

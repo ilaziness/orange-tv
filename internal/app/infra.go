@@ -41,6 +41,9 @@ func (a *App) wireInfra() error {
 	})
 
 	a.jwtMgr = auth.NewJWTManagerFromConfig(a.cfg)
+	if a.jwtMgr != nil && a.cfg.JWT.Secret == "" {
+		a.log.Warn("jwt.secret is not configured, using default development secret")
+	}
 
 	cacheFactory := cache.NewCacheFactory(a.cfg)
 	c, err := cacheFactory.Create()

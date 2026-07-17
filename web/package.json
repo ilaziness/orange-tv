@@ -11,6 +11,15 @@
     "dev:admin": "npm run dev -w @orange-tv/admin",
     "build": "npm run build -w @orange-tv/shared && npm run build -w @orange-tv/client && npm run build -w @orange-tv/admin",
     "build:client": "npm run build -w @orange-tv/client",
-    "build:admin": "npm run build -w @orange-tv/admin"
+    "build:admin": "npm run build -w @orange-tv/admin",
+    "lint": "npm run lint -w @orange-tv/client && npm run lint -w @orange-tv/admin",
+    "lint:client": "npm run lint -w @orange-tv/client",
+    "lint:admin": "npm run lint -w @orange-tv/admin",
+    "lint:fix": "npm run lint:fix -w @orange-tv/client && npm run lint:fix -w @orange-tv/admin",
+    "lint:fix:client": "npm run lint:fix -w @orange-tv/client",
+    "lint:fix:admin": "npm run lint:fix -w @orange-tv/admin",
+    "typecheck": "npm run typecheck -w @orange-tv/shared && npm run typecheck -w @orange-tv/client && npm run typecheck -w @orange-tv/admin",
+    "typecheck:client": "npm run typecheck -w @orange-tv/client",
+    "typecheck:admin": "npm run typecheck -w @orange-tv/admin"
   }
 }

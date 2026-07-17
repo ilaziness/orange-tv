@@ -7,7 +7,7 @@ app:
 # HTTP server configuration
 http:
   enabled: true
-  host: 0.0.0.0
+  host: 127.0.0.1
   port: 8080
   read_timeout: 30
   write_timeout: 30

@@ -7,6 +7,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/ilaziness/orange-tv/internal/config"
+	"github.com/ilaziness/orange-tv/internal/constant"
 )
 
 // TokenType represents the type of JWT token.
@@ -46,12 +47,17 @@ type JWTManager struct {
 }
 
 // NewJWTManagerFromConfig creates a JWTManager from configuration.
-// Returns nil if JWT secret is not configured.
+// Returns nil if JWT secret is not configured in non-development environments.
+// In development, a default secret is used with a warning.
 func NewJWTManagerFromConfig(cfg *config.Config) *JWTManager {
-	if cfg.JWT.Secret == "" {
-		return nil
+	secret := cfg.JWT.Secret
+	if secret == "" {
+		if cfg.App.Env != constant.EnvDev {
+			return nil
+		}
+		secret = "orange-tv-development-secret-change-in-production"
 	}
-	return NewJWTManager(cfg.JWT.Secret, cfg.JWT.AccessTokenTTL, cfg.JWT.RefreshTokenTTL)
+	return NewJWTManager(secret, cfg.JWT.AccessTokenTTL, cfg.JWT.RefreshTokenTTL)
 }
 
 // NewJWTManager creates a new JWTManager with HS256 algorithm.

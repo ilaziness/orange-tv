@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { BrowserRouter, Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { BrowserRouter, Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router'
 import type { Category, NamedItem, PlaySource, VideoDetail, VideoListItem, DashboardData, AdminItem, UserGroupItem, UserItem, BannerItem } from '@orange-tv/shared'
 import { adminApi, errorMessage } from './lib/api'
 import { useAuthStore } from './store/auth'

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { BrowserRouter, Link, Route, Routes, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { BrowserRouter, Link, Route, Routes, useNavigate, useParams, useSearchParams } from 'react-router'
 import type { Category, ClientBanner, CommentItem, FavoriteItem, HistoryItem, LiveChannel, UserProfile, VideoDetail, VideoListItem } from '@orange-tv/shared'
 import { clientApi, errorMessage, getToken, setToken } from './lib/api'
 import { VideoPlayer } from './components/Player'

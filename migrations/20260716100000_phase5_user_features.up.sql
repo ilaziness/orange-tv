@@ -107,9 +107,9 @@ CREATE TABLE IF NOT EXISTS online_sessions (
 
 -- 默认超级管理员用户组（若未存在）
 INSERT IGNORE INTO user_groups (id, name, permissions, description, created_at, updated_at)
-VALUES (1, 'super_admin', '*', '超级管理员', NOW(), NOW());
+VALUES (1, 'super_admin', '["*"]', '超级管理员', NOW(), NOW());
 --bun:split
 
 -- 默认普通用户组
 INSERT IGNORE INTO user_groups (id, name, permissions, description, created_at, updated_at)
-VALUES (2, 'member', '', '普通用户', NOW(), NOW());
+VALUES (2, 'member', '[]', '普通用户', NOW(), NOW());
