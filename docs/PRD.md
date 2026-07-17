@@ -1360,7 +1360,7 @@ CREATE TABLE system_logs (
 
 - **Web框架**：Gin (高性能HTTP框架)
 - **ORM**：Bun (高性能ORM)
-- **数据库**：MySQL 8.x/9.x 为主开发与生产目标（本阶段默认 MySQL）；PostgreSQL 可选；Redis 7.x
+- **数据库**：MySQL 8.x/9.x 为主开发与生产目标（本阶段默认 MySQL）；PostgreSQL 可选；Redis latest
 - **模型生成**：迁移后使用 CLI `orange-tv gen model` 从库表生成 Bun 模型
 - **API 路径约定**：用户端 `/api/client/v{1,2}`，管理端 `/api/admin/v{1,2}`，内网 `/api/internal/v1`
 - **配置管理**：Viper
@@ -1370,13 +1370,13 @@ CREATE TABLE system_logs (
 
 ### 5.2 前端技术栈
 
-- **框架**：React 19 + TypeScript 7.x
-- **UI组件库**：shadcn/ui
-- **状态管理**：Zustand 5
-- **路由**：React Router 8
-- **样式方案**：组件级 CSS（以 monorepo 实际工程为准）
-- **构建工具**：Vite 8
-- **视频播放器**：Video.js 8（第三阶段集成）
+- **框架**：React latest + TypeScript latest
+- **UI组件库**：shadcn/ui latest
+- **状态管理**：Zustand latest
+- **路由**：React Router latest
+- **样式方案**：Tailwind CSS latest
+- **构建工具**：Vite latest
+- **视频播放器**：Video.js latest
 - **工程结构**：`web/` monorepo，`apps/client`、`apps/admin`、`packages/shared`
 
 ## 6. 开发计划
