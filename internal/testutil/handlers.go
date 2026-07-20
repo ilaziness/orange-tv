@@ -24,14 +24,12 @@ type BusinessHandlers struct {
 	AdminPlay      *adminhandler.PlayHandler
 	AdminLive      *adminhandler.LiveHandler
 	AdminCollect   *adminhandler.CollectHandler
-	AdminTheme     *adminhandler.ThemeHandler
 	AdminSettings  *adminhandler.SettingsHandler
 	AdminLog       *adminhandler.LogHandler
 	AdminMgmt      *adminhandler.ManagementHandler
 	ClientCategory *clienthandler.CategoryHandler
 	ClientVideo    *clienthandler.VideoHandler
 	ClientLive     *clienthandler.LiveHandler
-	ClientTheme    *clienthandler.ThemeHandler
 	ClientSite     *clienthandler.SiteHandler
 	ClientUser     *clienthandler.UserHandler
 	ClientBanner   *clienthandler.BannerHandler
@@ -175,15 +173,6 @@ func (s adminCollectSvc) ReloadScheduler(ctx context.Context) error { return nil
 func (s adminCollectSvc) StartScheduler(ctx context.Context) error  { return nil }
 func (s adminCollectSvc) StopScheduler(ctx context.Context) error   { return nil }
 
-type adminThemeSvc struct{}
-
-func (s adminThemeSvc) List(ctx context.Context) ([]shareddto.ThemeListItem, error) { return nil, nil }
-func (s adminThemeSvc) Update(ctx context.Context, id int64, req *admindto.UpdateThemeRequest) (*shareddto.ThemeListItem, error) {
-	return &shareddto.ThemeListItem{ID: id}, nil
-}
-func (s adminThemeSvc) Activate(ctx context.Context, id int64) error { return nil }
-func (s adminThemeSvc) EnsureDefaultTheme(ctx context.Context) error { return nil }
-
 type adminSettingsSvc struct{}
 
 func (s adminSettingsSvc) Get(ctx context.Context) (*admindto.SettingsResponse, error) {
@@ -234,12 +223,6 @@ type clientLiveSvc struct{}
 
 func (s clientLiveSvc) List(ctx context.Context, req *clientdto.LiveListRequest) ([]shareddto.LiveChannelItem, int, error) {
 	return nil, 0, nil
-}
-
-type clientThemeSvc struct{}
-
-func (s clientThemeSvc) Current(ctx context.Context) (*shareddto.ThemeCurrentResponse, error) {
-	return &shareddto.ThemeCurrentResponse{Name: "默认主题", Identifier: "default", Config: map[string]any{}}, nil
 }
 
 type openResourceSvc struct{}
@@ -370,14 +353,12 @@ func NewBusinessHandlers() BusinessHandlers {
 		AdminPlay:      adminhandler.NewPlayHandler(adminPlaySvc{}),
 		AdminLive:      adminhandler.NewLiveHandler(adminLiveSvc{}),
 		AdminCollect:   adminhandler.NewCollectHandler(adminCollectSvc{}),
-		AdminTheme:     adminhandler.NewThemeHandler(adminThemeSvc{}),
 		AdminSettings:  adminhandler.NewSettingsHandler(adminSettingsSvc{}, nil),
 		AdminLog:       adminhandler.NewLogHandler(adminLogSvc{}),
 		AdminMgmt:      adminhandler.NewManagementHandler(mgmt),
 		ClientCategory: clienthandler.NewCategoryHandler(clientCategorySvc{}),
 		ClientVideo:    clienthandler.NewVideoHandler(clientVideoSvc{}),
 		ClientLive:     clienthandler.NewLiveHandler(clientLiveSvc{}),
-		ClientTheme:    clienthandler.NewThemeHandler(clientThemeSvc{}),
 		ClientSite:     clienthandler.NewSiteHandler(adminSettingsSvc{}),
 		ClientUser:     clienthandler.NewUserHandler(userSvc),
 		ClientBanner:   clienthandler.NewBannerHandler(bannerSvc),

@@ -23,7 +23,6 @@ type Handlers struct {
 	AdminPlay     *adminhandler.PlayHandler
 	AdminLive     *adminhandler.LiveHandler
 	AdminCollect  *adminhandler.CollectHandler
-	AdminTheme    *adminhandler.ThemeHandler
 	AdminSettings *adminhandler.SettingsHandler
 	AdminLog      *adminhandler.LogHandler
 	AdminMgmt     *adminhandler.ManagementHandler
@@ -33,7 +32,6 @@ type Handlers struct {
 	ClientCategory *clienthandler.CategoryHandler
 	ClientVideo    *clienthandler.VideoHandler
 	ClientLive     *clienthandler.LiveHandler
-	ClientTheme    *clienthandler.ThemeHandler
 	ClientSite     *clienthandler.SiteHandler
 	ClientUser     *clienthandler.UserHandler
 	ClientBanner   *clienthandler.BannerHandler
@@ -88,14 +86,12 @@ func (h *Handlers) validateForRoutes() error {
 		{"admin play handler", h.AdminPlay != nil},
 		{"admin live handler", h.AdminLive != nil},
 		{"admin collect handler", h.AdminCollect != nil},
-		{"admin theme handler", h.AdminTheme != nil},
 		{"admin settings handler", h.AdminSettings != nil},
 		{"admin log handler", h.AdminLog != nil},
 		{"admin management handler", h.AdminMgmt != nil},
 		{"client category handler", h.ClientCategory != nil},
 		{"client video handler", h.ClientVideo != nil},
 		{"client live handler", h.ClientLive != nil},
-		{"client theme handler", h.ClientTheme != nil},
 		{"client site handler", h.ClientSite != nil},
 		{"client user handler", h.ClientUser != nil},
 		{"client banner handler", h.ClientBanner != nil},

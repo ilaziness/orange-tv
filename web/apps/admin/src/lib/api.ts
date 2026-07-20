@@ -22,7 +22,6 @@ import {
   type PlaySource,
   type SystemLogItem,
   type SystemSettings,
-  type ThemeItem,
   type UserGroupItem,
   type UserItem,
   type VideoDetail,
@@ -144,12 +143,6 @@ export const adminApi = {
     withAuth((token) => apiPost(ADMIN_API_BASE, `/collect/${sourceId}/stop`, null, { token })),
   listCollectLogs: (query?: Record<string, string | number | undefined>) =>
     withAuth((token) => apiGet<PageData<CollectLog>>(ADMIN_API_BASE, '/collect/logs', { token, query })),
-
-  listThemes: () => withAuth((token) => apiGet<ThemeItem[]>(ADMIN_API_BASE, '/themes', { token })),
-  updateTheme: (id: number, body: unknown) =>
-    withAuth((token) => apiPut<ThemeItem>(ADMIN_API_BASE, `/themes/${id}`, body, { token })),
-  activateTheme: (id: number) =>
-    withAuth((token) => apiPost(ADMIN_API_BASE, `/themes/${id}/activate`, null, { token })),
 
   getSettings: () => withAuth((token) => apiGet<SystemSettings>(ADMIN_API_BASE, '/settings', { token })),
   updateSettings: (body: unknown) =>

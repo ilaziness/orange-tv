@@ -13,13 +13,11 @@ service/
 │   ├── metadata.go
 │   ├── play.go
 │   ├── live.go
-│   ├── collect.go       # 采集源/任务/日志 + cron 调度
-│   └── theme.go
+│   └── collect.go       # 采集源/任务/日志 + cron 调度
 └── client/              # 用户端业务（只读浏览/搜索/播放辅助）
     ├── category.go
     ├── video.go         # 含 related / 搜索增强
-    ├── live.go
-    └── theme.go
+    └── live.go
 ```
 
 ## 约定

@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { adminApi, errorMessage } from '@/lib/api'
 import { PageContainer } from '@/components/shared'
-import type { SystemLogItem } from '@orange-tv/shared'
+import type { LoginLogItem } from '@orange-tv/shared'
 import {
   Card,
   CardContent,
@@ -14,25 +14,26 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Search } from 'lucide-react'
 
-export default function SystemLogPage() {
-  const [systemLogs, setSystemLogs] = useState<SystemLogItem[]>([])
-  const [module, setModule] = useState('')
+export default function LoginLogsPage() {
+  const [loginLogs, setLoginLogs] = useState<LoginLogItem[]>([])
+  const [username, setUsername] = useState('')
   const [error, setError] = useState('')
   const [total, setTotal] = useState(0)
-  const moduleRef = useRef(module)
-
-  useEffect(() => { moduleRef.current = module }, [module])
 
   const load = useCallback(async () => {
     setError('')
     try {
-      const res = await adminApi.listSystemLogs({ page: 1, page_size: 50, module: moduleRef.current || undefined })
-      setSystemLogs(res.data.list || [])
+      const res = await adminApi.listLoginLogs({
+        page: 1,
+        page_size: 50,
+        username: username || undefined,
+      })
+      setLoginLogs(res.data.list || [])
       setTotal(res.data.total)
     } catch (err) {
       setError(errorMessage(err))
     }
-  }, [])
+  }, [username])
 
   useEffect(() => { void load() }, [load])
 
@@ -40,7 +41,7 @@ export default function SystemLogPage() {
     <PageContainer>
       <Card>
         <CardHeader>
-          <CardTitle>系统日志</CardTitle>
+          <CardTitle>登录日志</CardTitle>
         </CardHeader>
         <CardContent>
           {error && (
@@ -50,9 +51,9 @@ export default function SystemLogPage() {
           )}
           <div className="mb-4 flex gap-2">
             <Input
-              placeholder="模块筛选"
-              value={module}
-              onChange={(e) => setModule(e.target.value)}
+              placeholder="用户名"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="max-w-xs"
               onKeyDown={(e) => { if (e.key === 'Enter') void load() }}
             />
@@ -63,16 +64,18 @@ export default function SystemLogPage() {
           </div>
           <p className="mb-2 text-sm text-muted-foreground">共 {total} 条</p>
           <div className="flex flex-col gap-3">
-            {systemLogs.map((l) => (
+            {loginLogs.map((l) => (
               <div key={l.id} className="rounded-lg border p-4">
                 <div className="flex items-center gap-2">
-                  <Badge variant={String(l.level) === 'error' ? 'destructive' : 'secondary'}>[{l.level}]</Badge>
-                  <span className="font-medium">{l.module}/{l.action}</span>
+                  <span className="font-medium">{l.username}</span>
+                  <Badge variant={l.status === 1 ? 'default' : 'destructive'}>
+                    {l.status === 1 ? '成功' : '失败'}
+                  </Badge>
                 </div>
                 <div className="mt-1 text-xs text-muted-foreground">
-                  admin={l.admin_id} · {l.ip_address} · {l.created_at}
+                  {l.ip_address} · {l.created_at}
                 </div>
-                <div className="mt-1 text-sm">{l.content}</div>
+                <div className="mt-1 text-xs text-muted-foreground">{l.user_agent}</div>
               </div>
             ))}
           </div>

@@ -21,12 +21,12 @@ import {
   PlayCircle,
   Settings,
   Globe,
-  Palette,
   ShieldCheck,
   Users,
   Image,
   ScrollText,
   User2,
+  LogIn,
 } from 'lucide-react'
 
 const contentMenus = [
@@ -38,16 +38,19 @@ const contentMenus = [
   { to: '/content/actors', label: '演员管理', icon: Drama },
   { to: '/content/tags', label: '标签管理', icon: Tag },
   { to: '/content/play-sources', label: '播放源管理', icon: PlayCircle },
+  { to: '/content/banners', label: 'Banner', icon: Image },
+]
+
+const userMenus = [
+  { to: '/user/admins', label: '管理员', icon: ShieldCheck },
+  { to: '/user/groups', label: '用户组', icon: Users },
+  { to: '/user/users', label: '用户', icon: User2 },
+  { to: '/user/login-logs', label: '登录日志', icon: LogIn },
 ]
 
 const systemMenus = [
   { to: '/system/site', label: '站点设置', icon: Globe },
   { to: '/system/api', label: 'API配置', icon: Settings },
-  { to: '/system/theme', label: '主题管理', icon: Palette },
-  { to: '/system/admins', label: '管理员', icon: ShieldCheck },
-  { to: '/system/groups', label: '用户组', icon: Users },
-  { to: '/system/users', label: '用户', icon: User2 },
-  { to: '/system/banners', label: 'Banner', icon: Image },
   { to: '/system/log', label: '系统日志', icon: ScrollText },
 ]
 
@@ -89,6 +92,24 @@ export function AppSidebar() {
           <SidebarGroupLabel>内容管理</SidebarGroupLabel>
           <SidebarMenu>
             {contentMenus.map((item) => (
+              <SidebarMenuItem key={item.to}>
+                <SidebarMenuButton
+                  tooltip={item.label}
+                  isActive={location.pathname.startsWith(item.to)}
+                  render={<Link to={item.to} />}
+                >
+                  <item.icon />
+                  <span>{item.label}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>用户管理</SidebarGroupLabel>
+          <SidebarMenu>
+            {userMenus.map((item) => (
               <SidebarMenuItem key={item.to}>
                 <SidebarMenuButton
                   tooltip={item.label}

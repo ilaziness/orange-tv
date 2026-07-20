@@ -217,31 +217,6 @@ export type LiveChannel = {
   status?: number
 }
 
-export type ThemeCurrent = {
-  name: string
-  identifier: string
-  version: string
-  config: Record<string, unknown>
-  templates?: Record<string, unknown>
-  custom_css: string
-  custom_js: string
-}
-
-export type ThemeItem = {
-  id: number
-  name: string
-  identifier: string
-  version: string
-  author: string
-  description: string
-  preview_image: string
-  config: Record<string, unknown>
-  custom_css: string
-  custom_js: string
-  is_default: number
-  is_active: number
-}
-
 export type CollectSource = {
   id: number
   name: string

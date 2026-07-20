@@ -50,9 +50,9 @@ export default function DashboardPage() {
     { to: '/content/categories', label: '分类管理', icon: FolderTree },
     { to: '/system/site', label: '站点设置', icon: Settings },
     { to: '/system/log', label: '系统日志', icon: ScrollText },
-    { to: '/system/admins', label: '管理员', icon: ShieldCheck },
-    { to: '/system/users', label: '用户', icon: Users },
-    { to: '/system/banners', label: 'Banner', icon: Image },
+    { to: '/user/admins', label: '管理员', icon: ShieldCheck },
+    { to: '/user/users', label: '用户', icon: Users },
+    { to: '/content/banners', label: 'Banner', icon: Image },
   ]
 
   return (

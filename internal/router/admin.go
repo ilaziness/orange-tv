@@ -131,10 +131,4 @@ func registerAdminSystemRoutes(v1 *gin.RouterGroup, h *Handlers) {
 
 	v1.GET("/system-logs", h.AdminLog.ListSystemLogs)
 	v1.GET("/login-logs", h.AdminLog.ListLoginLogs)
-
-	v1.GET("/themes", h.AdminTheme.List)
-	v1.POST("/themes", h.Stub.NotImplemented) // theme upload later
-	v1.PUT("/themes/:id", h.AdminTheme.Update)
-	v1.DELETE("/themes/:id", h.Stub.NotImplemented)
-	v1.POST("/themes/:id/activate", h.AdminTheme.Activate)
 }

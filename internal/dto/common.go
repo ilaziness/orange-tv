@@ -124,33 +124,6 @@ type LiveChannelItem struct {
 	Status      int8   `json:"status,omitempty"`
 }
 
-// ThemeCurrentResponse is the merged active theme for the client.
-type ThemeCurrentResponse struct {
-	Name       string         `json:"name"`
-	Identifier string         `json:"identifier"`
-	Version    string         `json:"version"`
-	Config     map[string]any `json:"config"`
-	Templates  map[string]any `json:"templates,omitempty"`
-	CustomCSS  string         `json:"custom_css"`
-	CustomJS   string         `json:"custom_js"`
-}
-
-// ThemeListItem is an admin theme list entry.
-type ThemeListItem struct {
-	ID           int64          `json:"id"`
-	Name         string         `json:"name"`
-	Identifier   string         `json:"identifier"`
-	Version      string         `json:"version"`
-	Author       string         `json:"author"`
-	Description  string         `json:"description"`
-	PreviewImage string         `json:"preview_image"`
-	Config       map[string]any `json:"config"`
-	CustomCSS    string         `json:"custom_css"`
-	CustomJS     string         `json:"custom_js"`
-	IsDefault    int8           `json:"is_default"`
-	IsActive     int8           `json:"is_active"`
-}
-
 // CollectSourceItem is an admin collect source payload.
 // API key is never returned in list/detail responses.
 type CollectSourceItem struct {

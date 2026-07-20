@@ -42,7 +42,6 @@ func (a *App) wireHTTP() error {
 	playRepo := repository.NewPlayRepo(a.db)
 	liveRepo := repository.NewLiveRepo(a.db)
 	collectRepo := repository.NewCollectRepo(a.db)
-	themeRepo := repository.NewThemeRepo(a.db)
 	settingsRepo := repository.NewSettingsRepo(a.db)
 	logRepo := repository.NewLogRepo(a.db)
 	userFeatureRepo := repository.NewUserFeatureRepo(a.db)
@@ -57,7 +56,6 @@ func (a *App) wireHTTP() error {
 	adminLiveSvc := adminsvc.NewLiveService(liveRepo)
 	collectEngine := collect.NewEngine(collectRepo, videoRepo, categoryRepo, metaRepo, playRepo, a.log)
 	adminCollectSvc := adminsvc.NewCollectService(collectRepo, playRepo, categoryRepo, collectEngine, a.log, a.cache)
-	adminThemeSvc := adminsvc.NewThemeService(themeRepo, a.cache)
 	adminSettingsSvc := adminsvc.NewSettingsService(settingsRepo, a.cache)
 	adminLogSvc := adminsvc.NewLogService(logRepo)
 	adminMgmtSvc := adminsvc.NewManagementService(adminRepo, videoRepo, userFeatureRepo, recorder)
@@ -65,7 +63,6 @@ func (a *App) wireHTTP() error {
 	clientCategorySvc := clientsvc.NewCategoryService(categoryRepo, a.cache)
 	clientVideoSvc := clientsvc.NewVideoService(videoRepo, metaRepo, playRepo, a.cache)
 	clientLiveSvc := clientsvc.NewLiveService(liveRepo)
-	clientThemeSvc := clientsvc.NewThemeService(themeRepo, adminThemeSvc, a.cache)
 	clientUserSvc := clientsvc.NewUserService(adminRepo, userFeatureRepo, videoRepo, a.jwtMgr, a.cfg.JWT.AccessTokenTTL)
 	clientBannerSvc := clientsvc.NewBannerService(userFeatureRepo)
 
@@ -79,7 +76,6 @@ func (a *App) wireHTTP() error {
 	handlers.AdminPlay = adminhandler.NewPlayHandler(adminPlaySvc)
 	handlers.AdminLive = adminhandler.NewLiveHandler(adminLiveSvc)
 	handlers.AdminCollect = adminhandler.NewCollectHandler(adminCollectSvc)
-	handlers.AdminTheme = adminhandler.NewThemeHandler(adminThemeSvc)
 	handlers.AdminSettings = adminhandler.NewSettingsHandler(adminSettingsSvc, recorder)
 	handlers.AdminLog = adminhandler.NewLogHandler(adminLogSvc)
 	handlers.AdminMgmt = adminhandler.NewManagementHandler(adminMgmtSvc)
@@ -87,7 +83,6 @@ func (a *App) wireHTTP() error {
 	handlers.ClientCategory = clienthandler.NewCategoryHandler(clientCategorySvc)
 	handlers.ClientVideo = clienthandler.NewVideoHandler(clientVideoSvc)
 	handlers.ClientLive = clienthandler.NewLiveHandler(clientLiveSvc)
-	handlers.ClientTheme = clienthandler.NewThemeHandler(clientThemeSvc)
 	handlers.ClientSite = clienthandler.NewSiteHandler(adminSettingsSvc)
 	handlers.ClientUser = clienthandler.NewUserHandler(clientUserSvc)
 	handlers.ClientBanner = clienthandler.NewBannerHandler(clientBannerSvc)
@@ -103,14 +98,6 @@ func (a *App) wireHTTP() error {
 			return adminCollectSvc.StopScheduler(ctx)
 		},
 	})
-	// ensure default theme on boot
-	a.addHook(Hook{
-		Name: "default_theme",
-		OnStart: func(ctx context.Context) error {
-			return adminThemeSvc.EnsureDefaultTheme(ctx)
-		},
-	})
-
 	httpServer, err := server.NewHTTPServer(a.cfg, a.log, handlers, a.metrics, a.jwtMgr)
 	if err != nil {
 		return err

@@ -16,14 +16,14 @@ const VideosPage = lazy(() => import('@/pages/content/VideosPage'))
 const VideoEditPage = lazy(() => import('@/pages/content/VideoEditPage'))
 const LivePage = lazy(() => import('@/pages/content/LivePage'))
 const CollectPage = lazy(() => import('@/pages/content/CollectPage'))
-const ThemesPage = lazy(() => import('@/pages/system/ThemesPage'))
+const BannersPage = lazy(() => import('@/pages/content/BannersPage'))
+const AdminsPage = lazy(() => import('@/pages/user/AdminsPage'))
+const UserGroupsPage = lazy(() => import('@/pages/user/UserGroupsPage'))
+const UsersPage = lazy(() => import('@/pages/user/UsersPage'))
 const SiteSettingsPage = lazy(() => import('@/pages/system/SiteSettingsPage'))
 const APISettingsPage = lazy(() => import('@/pages/system/APISettingsPage'))
 const SystemLogPage = lazy(() => import('@/pages/system/SystemLogPage'))
-const AdminsPage = lazy(() => import('@/pages/system/AdminsPage'))
-const UserGroupsPage = lazy(() => import('@/pages/system/UserGroupsPage'))
-const UsersPage = lazy(() => import('@/pages/system/UsersPage'))
-const BannersPage = lazy(() => import('@/pages/system/BannersPage'))
+const LoginLogsPage = lazy(() => import('@/pages/user/LoginLogsPage'))
 
 function Lazy({ children }: { children: ReactNode }) {
   return (
@@ -54,14 +54,14 @@ export function AppRoutes() {
           <Route path="/content/play-sources" element={<Lazy><PlaySourcesPage /></Lazy>} />
           <Route path="/content/live" element={<Lazy><LivePage /></Lazy>} />
           <Route path="/content/collect" element={<Lazy><CollectPage /></Lazy>} />
+          <Route path="/content/banners" element={<Lazy><BannersPage /></Lazy>} />
+          <Route path="/user/admins" element={<Lazy><AdminsPage /></Lazy>} />
+          <Route path="/user/groups" element={<Lazy><UserGroupsPage /></Lazy>} />
+          <Route path="/user/users" element={<Lazy><UsersPage /></Lazy>} />
+          <Route path="/user/login-logs" element={<Lazy><LoginLogsPage /></Lazy>} />
           <Route path="/system/site" element={<Lazy><SiteSettingsPage /></Lazy>} />
           <Route path="/system/api" element={<Lazy><APISettingsPage /></Lazy>} />
-          <Route path="/system/theme" element={<Lazy><ThemesPage /></Lazy>} />
           <Route path="/system/log" element={<Lazy><SystemLogPage /></Lazy>} />
-          <Route path="/system/admins" element={<Lazy><AdminsPage /></Lazy>} />
-          <Route path="/system/groups" element={<Lazy><UserGroupsPage /></Lazy>} />
-          <Route path="/system/users" element={<Lazy><UsersPage /></Lazy>} />
-          <Route path="/system/banners" element={<Lazy><BannersPage /></Lazy>} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

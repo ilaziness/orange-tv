@@ -22,10 +22,6 @@ DROP TABLE IF EXISTS system_settings;
 
 --bun:split
 
-DROP TABLE IF EXISTS themes;
-
---bun:split
-
 DROP TABLE IF EXISTS live_channels;
 
 --bun:split

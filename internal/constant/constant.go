@@ -163,15 +163,11 @@ const (
 	CollectLogCancelled      int8 = 5
 )
 
-// Theme identifier for the built-in default theme.
-const ThemeIdentifierDefault = "default"
-
 // System setting keys.
 const (
 	SettingSiteMode                = "site_mode"
 	SettingAPIOutputFormat         = "api_output_format"
 	SettingEnableThirdPartyCollect = "enable_third_party_collect"
-	SettingActiveThemeID           = "active_theme_id"
 	SettingSiteName                = "site_name"
 	SettingSiteLogo                = "site_logo"
 	SettingSiteCopyright           = "site_copyright"

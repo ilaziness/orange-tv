@@ -196,26 +196,6 @@ CREATE TABLE IF NOT EXISTS live_channels (
 
 --bun:split
 
-CREATE TABLE IF NOT EXISTS themes (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(100) NOT NULL COMMENT '主题名称',
-    identifier VARCHAR(100) NOT NULL UNIQUE COMMENT '主题标识',
-    version VARCHAR(20) NOT NULL DEFAULT '1.0.0' COMMENT '版本',
-    author VARCHAR(100) NOT NULL DEFAULT '' COMMENT '作者',
-    description TEXT COMMENT '描述',
-    preview_image VARCHAR(500) NOT NULL DEFAULT '' COMMENT '预览图',
-    config JSON COMMENT '主题配置（管理员覆盖后的最终配置，合并自theme.json默认值）',
-    custom_css TEXT COMMENT '自定义CSS',
-    custom_js TEXT COMMENT '自定义JS',
-    is_default TINYINT NOT NULL DEFAULT 0 COMMENT '是否默认',
-    is_active TINYINT NOT NULL DEFAULT 0 COMMENT '是否当前启用',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL DEFAULT NULL COMMENT '软删除时间'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
---bun:split
-
 CREATE TABLE IF NOT EXISTS system_settings (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     setting_key VARCHAR(100) NOT NULL UNIQUE COMMENT '设置键',
@@ -231,8 +211,7 @@ CREATE TABLE IF NOT EXISTS system_settings (
 INSERT INTO system_settings (setting_key, setting_value, setting_type, description) VALUES
 ('site_mode', 'video_site', 1, '站点模式：video_site(影视站) resource_site(资源站)'),
 ('api_output_format', 'default', 1, 'API输出格式：default(系统默认) apple_cms(苹果CMS)'),
-('enable_third_party_collect', '1', 3, '是否允许第三方采集'),
-('active_theme_id', '1', 2, '当前激活主题ID（与themes.is_active互为冗余，以themes表为准）');
+('enable_third_party_collect', '1', 3, '是否允许第三方采集');
 
 --bun:split
 

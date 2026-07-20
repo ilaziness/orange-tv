@@ -74,12 +74,6 @@ var (
 	CollectParseFailed      = &Code{4000086, "采集数据解析失败", 422, nil}
 	CollectCategoryMapEmpty = &Code{4000087, "请先配置分类映射", 400, nil}
 
-	// 主题 (40009xx)
-	ThemeNotFound      = &Code{4000090, "主题不存在", 404, nil}
-	ThemeIdentifierDup = &Code{4000091, "主题标识已存在", 409, nil}
-	ThemeCannotDelete  = &Code{4000092, "当前激活或默认主题不可删除", 409, nil}
-	ThemeNoActive      = &Code{4000093, "未配置激活主题", 404, nil}
-
 	// 系统模块 (900xxxx)
 	InternalError         = &Code{9000001, "服务器内部错误", 500, nil}
 	DatabaseError         = &Code{9000002, "数据库错误", 500, nil}

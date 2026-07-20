@@ -19,7 +19,6 @@
 - **影视站模式**：面向普通用户的观影平台，提供完整的前端界面、播放器、推荐等功能
 - **资源站模式**：向其他站点提供数据源的模式，主要通过API接口输出影视数据
 - **苹果CMS格式**：国内影视网站广泛使用的JSON数据交换格式
-- **主题系统**：可提供给第三方开发的前端界面定制方案
 
 ### 1.4 系统模块划分
 
@@ -32,91 +31,31 @@
 
 ### 2.1 产品目标
 
-为用户提供一个功能完善、界面美观、播放流畅的影视观影平台。平台支持多主题展示（由管理后台配置当前使用主题）、多类型内容展示、多来源播放，并且方便主题开发者进行定制化。
+为用户提供一个功能完善、界面美观、播放流畅的影视观影平台。平台支持多类型内容展示、多来源播放和响应式界面。
 
 ### 2.2 用户画像
 
 主要使用人群：
 
 - 普通观影用户：追剧、观看影片、浏览影视信息
-- 潜在第三方主题开发者：希望快速开发和布置自定义主题
 
 ### 2.3 功能需求
 
-#### 2.3.1 多主题系统
+#### 2.3.1 前端界面
 
 ##### 2.3.1.1 功能描述
 
-用户端需支持多主题展示，当前展示主题由管理后台统一配置。用户端无需提供主题切换入口，按照管理后台配置的主题渲染页面。主题支持通过配置文件定义布局、样式、颜色等属性，并允许第三方开发主题。
-
-主题配置分两层：主题包内 `theme.json` 的 `config` 字段为主题默认配置；管理员可在后台覆盖配置项，覆盖后的配置存储在数据库 `themes.config` 字段中。用户端通过 API 获取的是合并后的最终配置。
+用户端作为独立前端项目维护固定的产品界面和设计规范，支持本地明暗模式切换，不依赖管理后台或数据库下发界面配置。
 
 ##### 2.3.1.2 需求详情
 
 | 序号 | 需求点 | 描述 | 优先级 |
 | ------ | -------- | ------ | -------- |
-| FR-U-001 | 主题渲染 | 用户端按照管理后台配置的主题渲染页面，用户无主题切换入口 | P1 |
-| FR-U-002 | 主题包存储结构 | 主题需以标准化文件夹结构存储，含配置文件、模板、样式、静态资源 | P1 |
-| FR-U-003 | 第三方开发支持 | 第三方开发者可以按照规范开发独立主题并导入系统 | P2 |
-| FR-U-004 | 主题自定义配置 | 主题可通过变量定义颜色、字体、布局参数等 | P2 |
+| FR-U-001 | 响应式界面 | 支持桌面、平板和手机屏幕 | P1 |
+| FR-U-002 | 明暗模式 | 用户可在当前前端项目内切换明暗模式 | P1 |
+| FR-U-003 | 设计一致性 | 页面遵循统一的颜色、字体、间距和组件规范 | P1 |
+| FR-U-004 | 可访问性 | 交互控件提供清晰状态和必要的辅助文本 | P2 |
 
-##### 2.3.1.3 主题包结构
-
-```text
-themes/
-├── default/                 # 默认主题
-│   ├── theme.json          # 主题定义配置
-│   ├── styles/             # 主题样式
-│   │   ├── variables.css   # CSS变量
-│   │   ├── components.css  # 组件样式
-│   │   └── layout.css      # 布局样式
-│   ├── templates/          # 页面模板
-│   │   ├── home.html       # 首页
-│   │   ├── category.html   # 分类页
-│   │   ├── detail.html     # 详情页
-│   │   └── player.html     # 播放页
-│   └── assets/             # 静态资源
-│       ├── images/
-│       ├── fonts/
-│       └── js/
-└── dark-blue/              # 第三方自定义主题示例
-    ├── theme.json
-    ├── styles/
-    ├── templates/
-    └── assets/
-
-```
-##### 2.3.1.4 主题配置文件示例
-
-```json
-
-{
-  "name": "默认主题",
-  "version": "1.0.0",
-  "author": "系统",
-  "description": "系统默认主题",
-  "preview": "/themes/default/preview.jpg",
-  "config": {
-    "primary_color": "#1890ff",
-    "secondary_color": "#52c41a",
-    "background_color": "#f0f2f5",
-    "text_color": "#262626",
-    "header_height": "64px",
-    "sidebar_width": "240px",
-    "enable_dark_mode": false,
-    "custom_fonts": []
-  },
-  "templates": {
-    "home": "home.html",
-    "category": "category.html",
-    "detail": "detail.html",
-    "player": "player.html"
-  },
-  "custom_css": "",
-  "custom_js": ""
-}
-
-```
 #### 2.3.2 首页分类展示
 
 ##### 2.3.2.1 功能描述
@@ -446,38 +385,6 @@ Response: {
 }
 ```
 
-#### 2.4.2 站点配置接口
-
-```go
-// 获取当前主题配置（由管理后台配置，用户端不可切换主题；第三阶段完整实现）
-GET /api/client/v1/theme/current
-Response: {
-  "code": 0,
-  "message": "success",
-  "data": {
-    "name": "默认主题",
-    "identifier": "default",
-    "config": {
-      "primary_color": "#1890ff",
-      "secondary_color": "#52c41a",
-      "background_color": "#f0f2f5",
-      "text_color": "#262626",
-      "header_height": "64px",
-      "sidebar_width": "240px",
-      "enable_dark_mode": false,
-      "custom_fonts": []
-    },
-    "templates": {
-      "home": "home.html",
-      "category": "category.html",
-      "detail": "detail.html",
-      "player": "player.html"
-    },
-    "custom_css": "",
-    "custom_js": ""
-  }
-}
-```
 ### 2.5 用户端非功能需求
 
 #### 2.5.1 性能需求
@@ -503,7 +410,7 @@ Response: {
 
 ### 3.1 产品目标
 
-为站点运营管理员提供一套完善的影视内容管理工具，支持影视采集、内容管理、主题配置、系统设置等功能，并且可将站点作为资源站供其他站点采集。
+为站点运营管理员提供一套完善的影视内容管理工具，支持影视采集、内容管理、用户管理和系统设置等功能，并且可将站点作为资源站供其他站点采集。
 
 ### 3.2 用户画像
 
@@ -726,46 +633,31 @@ const dataMapping = {
 | FR-A-026 | 普通用户管理 | 支持普通用户的列表、搜索、禁用、重置密码等操作 | P1 |
 | FR-A-027 | 登录日志 | 记录管理员和普通用户的登录日志 | P2 |
 
-#### 3.3.6 主题管理功能
+#### 3.3.6 系统设置功能
 
 ##### 3.3.6.1 功能描述
 
-管理后台需提供主题管理功能，管理员可配置和切换用户端展示的主题。主题切换权限仅保留在管理后台，用户端按照管理后台配置的当前主题自动渲染页面。
+管理后台需提供系统设置功能，支持站点名称、站点Logo、站点版权、API配置、系统日志等参数配置。
 
 ##### 3.3.6.2 需求详情
 
 | 序号 | 需求点 | 描述 | 优先级 |
 | ------ | -------- | ------ | -------- |
-| FR-A-028 | 主题选择与切换 | 管理员可在已上线主题中选择当前用户端展示的主题，切换后用户端实时生效 | P1 |
-| FR-A-029 | 主题上传 | 支持上传第三方主题包并导入系统 | P2 |
-| FR-A-030 | 主题预览 | 管理员可预览主题在用户端的展示效果 | P2 |
-| FR-A-031 | 主题参数配置 | 管理员可配置主题自定义参数（颜色、字体、布局等） | P2 |
+| FR-A-028 | 站点设置 | 支持站点名称、Logo、版权、备案号、SEO关键词、站点描述等基础信息配置 | P1 |
+| FR-A-029 | API配置 | 支持资源站模式API开关、第三方采集API开关和API密钥配置 | P2 |
+| FR-A-030 | 系统日志 | 支持查看系统运行日志、管理员操作日志和异常日志 | P2 |
+| FR-A-031 | 邮件/通知 | 支持系统通知渠道配置，如邮件、站内信等 | P2 |
 
-#### 3.3.7 系统设置功能
+#### 3.3.7 管理后台布局
 
-##### 3.3.7.1 功能描述
-
-管理后台需提供系统设置功能，支持站点名称、站点Logo、站点版权、API配置、系统日志等参数配置。主题选择已归入3.3.6主题管理功能。
-
-##### 3.3.7.2 需求详情
-
-| 序号 | 需求点 | 描述 | 优先级 |
-| ------ | -------- | ------ | -------- |
-| FR-A-032 | 站点设置 | 支持站点名称、Logo、版权、备案号、SEO关键词、站点描述等基础信息配置 | P1 |
-| FR-A-033 | API配置 | 支持资源站模式API开关、第三方采集API开关和API密钥配置 | P2 |
-| FR-A-034 | 系统日志 | 支持查看系统运行日志、管理员操作日志和异常日志 | P2 |
-| FR-A-035 | 邮件/通知 | 支持系统通知渠道配置，如邮件、站内信等 | P2 |
-
-#### 3.3.8 管理后台布局
-
-##### 3.3.8.1 布局需求
+##### 3.3.7.1 布局需求
 
 管理后台布局分为上下两部分：
 
 - 顶部：展示一级菜单，包括首页、内容管理、用户管理、系统设置；右侧展示当前登录管理员头像，点击后弹出下拉菜单（账号信息、退出等）。
 - 下部：页面主体。点击有二级菜单的一级菜单后，左侧展示二级菜单；右侧页面主体展示对应功能内容。无二级菜单的菜单（如首页）直接在下部主体展示概况内容。
 
-##### 3.3.8.2 一级菜单分类
+##### 3.3.7.2 一级菜单分类
 
 ```javascript
 
@@ -781,10 +673,15 @@ const mainMenus = [
     name: '内容管理',
     icon: 'video',
     children: [
-      { id: 'category', name: '分类管理', path: '/content/category' },
-      { id: 'video', name: '影视管理', path: '/content/video' },
+      { id: 'category', name: '分类管理', path: '/content/categories' },
+      { id: 'video', name: '影视管理', path: '/content/videos' },
       { id: 'live', name: '直播管理', path: '/content/live' },
-      { id: 'collect', name: '数据采集', path: '/content/collect' }
+      { id: 'collect', name: '数据采集', path: '/content/collect' },
+      { id: 'director', name: '导演管理', path: '/content/directors' },
+      { id: 'actor', name: '演员管理', path: '/content/actors' },
+      { id: 'tag', name: '标签管理', path: '/content/tags' },
+      { id: 'play-source', name: '播放源管理', path: '/content/play-sources' },
+      { id: 'banner', name: 'Banner', path: '/content/banners' }
     ]
   },
   {
@@ -792,9 +689,9 @@ const mainMenus = [
     name: '用户管理',
     icon: 'user',
     children: [
-      { id: 'admin', name: '管理员', path: '/user/admin' },
-      { id: 'group', name: '用户组管理', path: '/user/group' },
-      { id: 'regular', name: '普通用户管理', path: '/user/regular' }
+      { id: 'admin', name: '管理员', path: '/user/admins' },
+      { id: 'group', name: '用户组', path: '/user/groups' },
+      { id: 'regular', name: '用户', path: '/user/users' }
     ]
   },
   {
@@ -803,7 +700,6 @@ const mainMenus = [
     icon: 'setting',
     children: [
       { id: 'site-config', name: '站点设置', path: '/system/site' },
-      { id: 'theme-config', name: '主题管理', path: '/system/theme' },
       { id: 'api-config', name: 'API配置', path: '/system/api' },
       { id: 'system-log', name: '系统日志', path: '/system/log' }
     ]
@@ -811,7 +707,7 @@ const mainMenus = [
 ];
 
 ```
-##### 3.3.8.3 管理后台布局草图
+##### 3.3.7.3 管理后台布局草图
 
 ```text
 ┌───────────────────────────────────────────────────────────────────┐
@@ -947,13 +843,6 @@ GET    /api/admin/v1/users/{id}/login-logs // 获取用户登录日志
 GET    /api/admin/v1/settings          // 获取系统设置
 PUT    /api/admin/v1/settings          // 更新系统设置
 
-// 主题管理
-GET    /api/admin/v1/themes            // 获取主题列表
-POST   /api/admin/v1/themes            // 上传主题
-PUT    /api/admin/v1/themes/{id}       // 更新主题
-DELETE /api/admin/v1/themes/{id}       // 删除主题
-POST   /api/admin/v1/themes/{id}/activate // 激活主题
-
 ```
 ### 3.5 管理端非功能需求
 
@@ -989,7 +878,7 @@ POST   /api/admin/v1/themes/{id}/activate // 激活主题
   - **不为 `deleted_at` 单独创建索引**（不添加 `idx_deleted_at` 等）。
   - 列表/详情查询默认过滤 `deleted_at IS NULL`（业务层约定）。
   - 关联表、日志表、系统配置键值表不做软删除。
-- **适用软删除的表**：`categories`、`videos`、`directors`、`actors`、`tags`、`play_sources`、`play_episodes`、`live_channels`、`collect_sources`、`themes`、`admins`、`users`、`user_groups`。
+- **适用软删除的表**：`categories`、`videos`、`directors`、`actors`、`tags`、`play_sources`、`play_episodes`、`live_channels`、`collect_sources`、`admins`、`users`、`user_groups`。
 - **不做软删除的表**：`video_directors`、`video_actors`、`video_tags`、`collect_source_categories`、`collect_logs`、`login_logs`、`system_logs`、`system_settings`。
 - **名称唯一策略**：
   - `directors.name` / `actors.name` / `tags.name`：数据库全局唯一索引（含软删除记录占用名称）。
@@ -1026,10 +915,10 @@ POST   /api/admin/v1/themes/{id}/activate // 激活主题
 └─────────────┘       └─────────────┘       │(采集分类映射)│
                                             └─────────────┘
 
-┌─────────────┐       ┌─────────────┐       ┌─────────────┐
-│ CollectLogs │       │LiveChannels │       │    Themes   │
-│ (采集日志)  │       │ (直播频道)  │       │   (主题表)  │
-└─────────────┘       └─────────────┘       └─────────────┘
+┌─────────────┐       ┌─────────────┐
+│ CollectLogs │       │LiveChannels │
+│ (采集日志)  │       │ (直播频道)  │
+└─────────────┘       └─────────────┘
 
 ┌─────────────┐       ┌─────────────┐       ┌─────────────┐
 │SystemSettings│      │    Admins   │       │  UserGroups │
@@ -1229,31 +1118,7 @@ CREATE TABLE live_channels (
 );
 
 ```
-### 4.3 主题系统表
-
-```sql
-
--- 主题表
-CREATE TABLE themes (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(100) NOT NULL COMMENT '主题名称',
-    identifier VARCHAR(100) NOT NULL UNIQUE COMMENT '主题标识',
-    version VARCHAR(20) NOT NULL DEFAULT '1.0.0' COMMENT '版本',
-    author VARCHAR(100) NOT NULL DEFAULT '' COMMENT '作者',
-    description TEXT COMMENT '描述',
-    preview_image VARCHAR(500) NOT NULL DEFAULT '' COMMENT '预览图',
-    config JSON COMMENT '主题配置（管理员覆盖后的最终配置，合并自theme.json默认值）',
-    custom_css TEXT COMMENT '自定义CSS',
-    custom_js TEXT COMMENT '自定义JS',
-    is_default TINYINT NOT NULL DEFAULT 0 COMMENT '是否默认',
-    is_active TINYINT NOT NULL DEFAULT 0 COMMENT '是否当前启用',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL DEFAULT NULL COMMENT '软删除时间'
-);
-
-```
-### 4.4 系统配置表
+### 4.3 系统配置表
 
 ```sql
 
@@ -1272,11 +1137,10 @@ CREATE TABLE system_settings (
 INSERT INTO system_settings (setting_key, setting_value, setting_type, description) VALUES
 ('site_mode', 'video_site', 1, '站点模式：video_site(影视站) resource_site(资源站)'),
 ('api_output_format', 'default', 1, 'API输出格式：default(系统默认) apple_cms(苹果CMS)'),
-('enable_third_party_collect', '1', 3, '是否允许第三方采集'),
-('active_theme_id', '1', 2, '当前激活主题ID（与themes.is_active互为冗余，以themes表为准）');
+('enable_third_party_collect', '1', 3, '是否允许第三方采集');
 
 ```
-### 4.5 用户管理表
+### 4.4 用户管理表
 
 ```sql
 
@@ -1322,7 +1186,7 @@ CREATE TABLE users (
 );
 
 ```
-### 4.6 日志表
+### 4.5 日志表
 
 ```sql
 
@@ -1401,7 +1265,6 @@ CREATE TABLE system_logs (
 #### 第三阶段：高级功能开发（3周）
 
 - [x] 数据采集系统（默认 JSON + 苹果 CMS；分类映射；播放源绑定；手动/定时采集；日志）
-- [x] 主题系统（最小可用：默认主题 seed、激活、`/theme/current`、CSS 变量；上传延后）
 - [x] 播放器集成（Video.js 播放页 + 多源/选集 + 进度记忆）
 - [x] 推荐与高级搜索增强（related、搜索组合筛选、首页高分/最新）
 - [x] 直播管理（管理端 CRUD + 用户端列表/播放）
@@ -1409,11 +1272,11 @@ CREATE TABLE system_logs (
 #### 第四阶段：系统完善（2周）
 
 - [x] 系统配置（站点设置、API 配置等）与优化
-- [x] 性能优化（客户端高读路径 memory cache：主题/分类树/影视列表；settings 缓存）
+- [x] 性能优化（客户端高读路径 memory cache：分类树/影视列表；settings 缓存）
 - [x] 安全加固（含登录日志、操作审计、系统/登录日志查询、安全响应头、登录限流）
 - [x] 资源站开放 API（`/api/open/v1`：系统默认格式 / apple_cms + API Key）
 - [x] 文档完善（`docs/resource-api.md` 等）
-- 延后：用户管理 CRUD、邮件/通知、主题上传包、前端懒加载/离线缓存
+- 延后：用户管理 CRUD、邮件/通知、前端懒加载/离线缓存
 
 ### 6.2 部署方案
 
@@ -1512,7 +1375,7 @@ const appleCmsCompatible = {
 ```text
 用户前端: 首页 -> 分类页 -> 详情页 -> 播放页
 
-管理后台: 影视采集 -> 内容管理 -> 主题配置 -> 系统设置
+管理后台: 影视采集 -> 内容管理 -> 用户管理 -> 系统设置
 
 资源站: 本地影视数据 -> API接口输出 -> 第三方站点采集
 
