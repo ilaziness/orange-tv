@@ -1,9 +1,7 @@
 import { Link, useLocation } from 'react-router'
-import { useTheme } from 'next-themes'
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupLabel,
   SidebarHeader,
@@ -11,12 +9,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import {
   LayoutDashboard,
   FolderTree,
@@ -34,13 +26,8 @@ import {
   Users,
   Image,
   ScrollText,
-  Moon,
-  Sun,
-  ChevronUp,
   User2,
 } from 'lucide-react'
-import { useAuthStore } from '@/store/auth'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 
 const contentMenus = [
   { to: '/content/categories', label: '分类管理', icon: FolderTree },
@@ -66,15 +53,13 @@ const systemMenus = [
 
 export function AppSidebar() {
   const location = useLocation()
-  const { setTheme, theme } = useTheme()
-  const profile = useAuthStore((s) => s.profile)
 
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" render={<Link to="/" />}>
+            <SidebarMenuButton size="lg" tooltip="首页" render={<Link to="/" />}>
               <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <LayoutDashboard />
               </div>
@@ -92,7 +77,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>首页</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton isActive={location.pathname === '/'} render={<Link to="/" />}>
+              <SidebarMenuButton tooltip="仪表盘" isActive={location.pathname === '/'} render={<Link to="/" />}>
                 <LayoutDashboard />
                 <span>仪表盘</span>
               </SidebarMenuButton>
@@ -106,6 +91,7 @@ export function AppSidebar() {
             {contentMenus.map((item) => (
               <SidebarMenuItem key={item.to}>
                 <SidebarMenuButton
+                  tooltip={item.label}
                   isActive={location.pathname.startsWith(item.to)}
                   render={<Link to={item.to} />}
                 >
@@ -123,6 +109,7 @@ export function AppSidebar() {
             {systemMenus.map((item) => (
               <SidebarMenuItem key={item.to}>
                 <SidebarMenuButton
+                  tooltip={item.label}
                   isActive={location.pathname.startsWith(item.to)}
                   render={<Link to={item.to} />}
                 >
@@ -134,44 +121,6 @@ export function AppSidebar() {
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
-
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger
-                render={
-                  <SidebarMenuButton
-                    size="lg"
-                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-                  />
-                }
-              >
-                <Avatar className="size-8 rounded-lg">
-                  <AvatarFallback className="rounded-lg">
-                    {profile?.username?.[0]?.toUpperCase() ?? 'A'}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">{profile?.username}</span>
-                  <span className="truncate text-xs">{profile?.role}</span>
-                </div>
-                <ChevronUp className="ml-auto" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-                side="top"
-                align="end"
-              >
-                <DropdownMenuItem onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
-                  {theme === 'dark' ? <Sun /> : <Moon />}
-                  {theme === 'dark' ? '浅色模式' : '深色模式'}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
     </Sidebar>
   )
 }
