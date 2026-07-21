@@ -12,9 +12,9 @@ import (
 
 // LoginLogFilter filters login_logs queries.
 type LoginLogFilter struct {
-	UserType  *int8
+	UserType  *uint8
 	Username  string
-	Status    *int8
+	Status    *uint8
 	StartTime *time.Time
 	EndTime   *time.Time
 	Offset    int
@@ -23,9 +23,9 @@ type LoginLogFilter struct {
 
 // SystemLogFilter filters system_logs queries.
 type SystemLogFilter struct {
-	Level     *int8
+	Level     *uint8
 	Module    string
-	AdminID   *int64
+	AdminID   *uint64
 	StartTime *time.Time
 	EndTime   *time.Time
 	Offset    int

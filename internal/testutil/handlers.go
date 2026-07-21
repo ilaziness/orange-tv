@@ -42,10 +42,10 @@ func (s authSvc) Login(ctx context.Context, req *admindto.LoginRequest, meta *ad
 	return &admindto.LoginResponse{}, nil
 }
 func (s authSvc) Profile(ctx context.Context, adminID int64) (*admindto.Profile, error) {
-	return &admindto.Profile{ID: adminID}, nil
+	return &admindto.Profile{ID: uint64(adminID)}, nil
 }
 func (s authSvc) EnsureSuperAdmin(ctx context.Context, adminID int64) (*model.Admins, *model.UserGroups, error) {
-	return &model.Admins{ID: adminID}, &model.UserGroups{Name: "super_admin"}, nil
+	return &model.Admins{ID: uint64(adminID)}, &model.UserGroups{Name: "super_admin"}, nil
 }
 
 type adminCategorySvc struct{}
@@ -57,7 +57,7 @@ func (s adminCategorySvc) Create(ctx context.Context, req *admindto.CreateCatego
 	return &shareddto.CategoryResponse{}, nil
 }
 func (s adminCategorySvc) Update(ctx context.Context, id int64, req *admindto.UpdateCategoryRequest) (*shareddto.CategoryResponse, error) {
-	return &shareddto.CategoryResponse{ID: id}, nil
+	return &shareddto.CategoryResponse{ID: uint64(id)}, nil
 }
 func (s adminCategorySvc) Delete(ctx context.Context, id int64) error { return nil }
 
@@ -67,13 +67,13 @@ func (s adminVideoSvc) List(ctx context.Context, req *admindto.VideoListRequest)
 	return []shareddto.VideoListItem{}, 0, nil
 }
 func (s adminVideoSvc) Get(ctx context.Context, id int64) (*shareddto.VideoDetailResponse, error) {
-	return &shareddto.VideoDetailResponse{ID: id}, nil
+	return &shareddto.VideoDetailResponse{ID: uint64(id)}, nil
 }
 func (s adminVideoSvc) Create(ctx context.Context, req *admindto.CreateVideoRequest) (*shareddto.VideoDetailResponse, error) {
 	return &shareddto.VideoDetailResponse{}, nil
 }
 func (s adminVideoSvc) Update(ctx context.Context, id int64, req *admindto.UpdateVideoRequest) (*shareddto.VideoDetailResponse, error) {
-	return &shareddto.VideoDetailResponse{ID: id}, nil
+	return &shareddto.VideoDetailResponse{ID: uint64(id)}, nil
 }
 func (s adminVideoSvc) Delete(ctx context.Context, id int64) error { return nil }
 
@@ -86,7 +86,7 @@ func (s adminMetadataSvc) CreateDirector(ctx context.Context, req *admindto.Crea
 	return &admindto.NamedResponse{}, nil
 }
 func (s adminMetadataSvc) UpdateDirector(ctx context.Context, id int64, req *admindto.UpdateNamedRequest) (*admindto.NamedResponse, error) {
-	return &admindto.NamedResponse{ID: id}, nil
+	return &admindto.NamedResponse{ID: uint64(id)}, nil
 }
 func (s adminMetadataSvc) DeleteDirector(ctx context.Context, id int64) error { return nil }
 func (s adminMetadataSvc) ListActors(ctx context.Context, req *admindto.NameSearchRequest) ([]admindto.NamedResponse, int, error) {
@@ -96,7 +96,7 @@ func (s adminMetadataSvc) CreateActor(ctx context.Context, req *admindto.CreateN
 	return &admindto.NamedResponse{}, nil
 }
 func (s adminMetadataSvc) UpdateActor(ctx context.Context, id int64, req *admindto.UpdateNamedRequest) (*admindto.NamedResponse, error) {
-	return &admindto.NamedResponse{ID: id}, nil
+	return &admindto.NamedResponse{ID: uint64(id)}, nil
 }
 func (s adminMetadataSvc) DeleteActor(ctx context.Context, id int64) error { return nil }
 func (s adminMetadataSvc) ListTags(ctx context.Context, req *admindto.NameSearchRequest) ([]admindto.NamedResponse, int, error) {
@@ -106,7 +106,7 @@ func (s adminMetadataSvc) CreateTag(ctx context.Context, req *admindto.CreateNam
 	return &admindto.NamedResponse{}, nil
 }
 func (s adminMetadataSvc) UpdateTag(ctx context.Context, id int64, req *admindto.UpdateNamedRequest) (*admindto.NamedResponse, error) {
-	return &admindto.NamedResponse{ID: id}, nil
+	return &admindto.NamedResponse{ID: uint64(id)}, nil
 }
 func (s adminMetadataSvc) DeleteTag(ctx context.Context, id int64) error { return nil }
 
@@ -119,7 +119,7 @@ func (s adminPlaySvc) CreateSource(ctx context.Context, req *admindto.CreatePlay
 	return &admindto.PlaySourceResponse{}, nil
 }
 func (s adminPlaySvc) UpdateSource(ctx context.Context, id int64, req *admindto.UpdatePlaySourceRequest) (*admindto.PlaySourceResponse, error) {
-	return &admindto.PlaySourceResponse{ID: id}, nil
+	return &admindto.PlaySourceResponse{ID: uint64(id)}, nil
 }
 func (s adminPlaySvc) DeleteSource(ctx context.Context, id int64) error { return nil }
 func (s adminPlaySvc) ListEpisodes(ctx context.Context, req *admindto.PlayEpisodeListRequest) ([]admindto.PlayEpisodeResponse, int, error) {
@@ -129,7 +129,7 @@ func (s adminPlaySvc) CreateEpisode(ctx context.Context, req *admindto.CreatePla
 	return &admindto.PlayEpisodeResponse{}, nil
 }
 func (s adminPlaySvc) UpdateEpisode(ctx context.Context, id int64, req *admindto.UpdatePlayEpisodeRequest) (*admindto.PlayEpisodeResponse, error) {
-	return &admindto.PlayEpisodeResponse{ID: id}, nil
+	return &admindto.PlayEpisodeResponse{ID: uint64(id)}, nil
 }
 func (s adminPlaySvc) DeleteEpisode(ctx context.Context, id int64) error { return nil }
 
@@ -142,7 +142,7 @@ func (s adminLiveSvc) Create(ctx context.Context, req *admindto.CreateLiveReques
 	return &shareddto.LiveChannelItem{}, nil
 }
 func (s adminLiveSvc) Update(ctx context.Context, id int64, req *admindto.UpdateLiveRequest) (*shareddto.LiveChannelItem, error) {
-	return &shareddto.LiveChannelItem{ID: id}, nil
+	return &shareddto.LiveChannelItem{ID: uint64(id)}, nil
 }
 func (s adminLiveSvc) Delete(ctx context.Context, id int64) error { return nil }
 
@@ -155,7 +155,7 @@ func (s adminCollectSvc) CreateSource(ctx context.Context, req *admindto.CreateC
 	return &shareddto.CollectSourceItem{}, nil
 }
 func (s adminCollectSvc) UpdateSource(ctx context.Context, id int64, req *admindto.UpdateCollectSourceRequest) (*shareddto.CollectSourceItem, error) {
-	return &shareddto.CollectSourceItem{ID: id}, nil
+	return &shareddto.CollectSourceItem{ID: uint64(id)}, nil
 }
 func (s adminCollectSvc) DeleteSource(ctx context.Context, id int64) error { return nil }
 func (s adminCollectSvc) ListCategories(ctx context.Context, sourceID int64) ([]shareddto.CollectCategoryMapItem, error) {
@@ -213,7 +213,7 @@ func (s clientVideoSvc) Search(ctx context.Context, req *clientdto.SearchRequest
 	return nil, 0, nil
 }
 func (s clientVideoSvc) Get(ctx context.Context, id int64) (*shareddto.VideoDetailResponse, error) {
-	return &shareddto.VideoDetailResponse{ID: id}, nil
+	return &shareddto.VideoDetailResponse{ID: uint64(id)}, nil
 }
 func (s clientVideoSvc) Related(ctx context.Context, id int64, limit int) ([]shareddto.VideoListItem, error) {
 	return nil, nil
@@ -260,7 +260,7 @@ func (s adminMgmtSvc) CreateAdmin(ctx context.Context, req *admindto.CreateAdmin
 	return &admindto.AdminItem{}, nil
 }
 func (s adminMgmtSvc) UpdateAdmin(ctx context.Context, id int64, req *admindto.UpdateAdminRequest) (*admindto.AdminItem, error) {
-	return &admindto.AdminItem{ID: id}, nil
+	return &admindto.AdminItem{ID: uint64(id)}, nil
 }
 func (s adminMgmtSvc) ResetAdminPassword(ctx context.Context, id int64, req *admindto.ResetAdminPasswordRequest) error {
 	return nil
@@ -273,14 +273,14 @@ func (s adminMgmtSvc) CreateGroup(ctx context.Context, req *admindto.CreateUserG
 	return &admindto.UserGroupItem{}, nil
 }
 func (s adminMgmtSvc) UpdateGroup(ctx context.Context, id int64, req *admindto.UpdateUserGroupRequest) (*admindto.UserGroupItem, error) {
-	return &admindto.UserGroupItem{ID: id}, nil
+	return &admindto.UserGroupItem{ID: uint64(id)}, nil
 }
 func (s adminMgmtSvc) DeleteGroup(ctx context.Context, id int64) error { return nil }
 func (s adminMgmtSvc) ListUsers(ctx context.Context, req *admindto.UserListRequest) ([]admindto.UserItem, int, error) {
 	return nil, 0, nil
 }
 func (s adminMgmtSvc) UpdateUser(ctx context.Context, id int64, req *admindto.UpdateUserRequest) (*admindto.UserItem, error) {
-	return &admindto.UserItem{ID: id}, nil
+	return &admindto.UserItem{ID: uint64(id)}, nil
 }
 func (s adminMgmtSvc) ResetUserPassword(ctx context.Context, id int64, req *admindto.ResetUserPasswordRequest) error {
 	return nil
@@ -296,7 +296,7 @@ func (s adminMgmtSvc) CreateBanner(ctx context.Context, req *admindto.CreateBann
 	return &admindto.BannerItem{}, nil
 }
 func (s adminMgmtSvc) UpdateBanner(ctx context.Context, id int64, req *admindto.UpdateBannerRequest) (*admindto.BannerItem, error) {
-	return &admindto.BannerItem{ID: id}, nil
+	return &admindto.BannerItem{ID: uint64(id)}, nil
 }
 func (s adminMgmtSvc) DeleteBanner(ctx context.Context, id int64) error { return nil }
 
@@ -309,7 +309,7 @@ func (s clientUserSvc) Login(ctx context.Context, req *clientdto.LoginRequest, i
 	return &clientdto.LoginResponse{}, nil
 }
 func (s clientUserSvc) Profile(ctx context.Context, userID int64) (*clientdto.Profile, error) {
-	return &clientdto.Profile{ID: userID}, nil
+	return &clientdto.Profile{ID: uint64(userID)}, nil
 }
 func (s clientUserSvc) ListFavorites(ctx context.Context, userID int64, req *clientdto.FavoriteListRequest) ([]clientdto.FavoriteItem, int, error) {
 	return nil, 0, nil

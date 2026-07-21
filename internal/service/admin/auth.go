@@ -75,33 +75,33 @@ func (s *authService) Login(ctx context.Context, req *dto.LoginRequest, meta *Lo
 		recordFail(0, username)
 		return nil, errcode.InvalidCredentials
 	}
-	if admin.Status != constant.StatusEnabled {
-		recordFail(admin.ID, username)
+	if admin.Status != uint8(constant.StatusEnabled) {
+		recordFail(int64(admin.ID), username)
 		return nil, errcode.AdminDisabled
 	}
 	if err := crypto.CheckPassword(req.Password, admin.Password); err != nil {
-		recordFail(admin.ID, username)
+		recordFail(int64(admin.ID), username)
 		return nil, errcode.InvalidCredentials
 	}
 
-	group, err := s.adminRepo.GetGroupByID(ctx, admin.GroupID)
+	group, err := s.adminRepo.GetGroupByID(ctx, int64(admin.GroupID))
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if group == nil || group.Name != constant.RoleSuperAdmin {
-		recordFail(admin.ID, username)
+		recordFail(int64(admin.ID), username)
 		return nil, errcode.InsufficientPermission
 	}
 
-	token, err := s.jwtMgr.GenerateAccessToken(admin.ID)
+	token, err := s.jwtMgr.GenerateAccessToken(int64(admin.ID))
 	if err != nil {
 		return nil, errcode.Wrap(errcode.InternalError, err)
 	}
 	now := time.Now()
-	if err := s.adminRepo.UpdateLastLogin(ctx, admin.ID, now); err != nil {
+	if err := s.adminRepo.UpdateLastLogin(ctx, int64(admin.ID), now); err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	recordOK(admin.ID, username)
+	recordOK(int64(admin.ID), username)
 
 	return &dto.LoginResponse{
 		AccessToken: token,
@@ -130,10 +130,10 @@ func (s *authService) EnsureSuperAdmin(ctx context.Context, adminID int64) (*mod
 	if admin == nil {
 		return nil, nil, errcode.AuthFailed
 	}
-	if admin.Status != constant.StatusEnabled {
+	if admin.Status != uint8(constant.StatusEnabled) {
 		return nil, nil, errcode.AdminDisabled
 	}
-	group, err := s.adminRepo.GetGroupByID(ctx, admin.GroupID)
+	group, err := s.adminRepo.GetGroupByID(ctx, int64(admin.GroupID))
 	if err != nil {
 		return nil, nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
@@ -189,7 +189,7 @@ func CreateAdmin(ctx context.Context, adminRepo repository.AdminRepository, user
 		Password: hash,
 		Email:    strings.TrimSpace(email),
 		GroupID:  group.ID,
-		Status:   constant.StatusEnabled,
+		Status:   uint8(constant.StatusEnabled),
 	}
 	if err := adminRepo.Create(ctx, admin); err != nil {
 		return nil, err

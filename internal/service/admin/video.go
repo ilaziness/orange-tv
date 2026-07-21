@@ -76,7 +76,7 @@ func (s *videoService) Get(ctx context.Context, id int64) (*shareddto.VideoDetai
 }
 
 func (s *videoService) Create(ctx context.Context, req *dto.CreateVideoRequest) (*shareddto.VideoDetailResponse, error) {
-	if err := s.ensureCategory(ctx, req.CategoryID); err != nil {
+	if err := s.ensureCategory(ctx, int64(req.CategoryID)); err != nil {
 		return nil, err
 	}
 	if err := s.ensureDirectors(ctx, req.DirectorIDs); err != nil {
@@ -89,11 +89,11 @@ func (s *videoService) Create(ctx context.Context, req *dto.CreateVideoRequest) 
 		return nil, err
 	}
 
-	publish := constant.PublishStatusOffline
+	publish := uint8(constant.PublishStatusOffline)
 	if req.PublishStatus != nil {
 		publish = *req.PublishStatus
 	}
-	serial := constant.SerialStatusOngoing
+	serial := uint8(constant.SerialStatusOngoing)
 	if req.SerialStatus != nil {
 		serial = *req.SerialStatus
 	}
@@ -140,12 +140,12 @@ func (s *videoService) Create(ctx context.Context, req *dto.CreateVideoRequest) 
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	s.invalidateListCaches(ctx, video.ID)
-	return s.getDetail(ctx, video.ID, false)
+	s.invalidateListCaches(ctx, int64(video.ID))
+	return s.getDetail(ctx, int64(video.ID), false)
 }
 
 func (s *videoService) Update(ctx context.Context, id int64, req *dto.UpdateVideoRequest) (*shareddto.VideoDetailResponse, error) {
-	video, err := s.videoRepo.GetByID(ctx, id)
+	video, err := s.videoRepo.GetByID(ctx, uint64(id))
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
@@ -153,7 +153,7 @@ func (s *videoService) Update(ctx context.Context, id int64, req *dto.UpdateVide
 		return nil, errcode.VideoNotFound
 	}
 	if req.CategoryID != nil {
-		if err := s.ensureCategory(ctx, *req.CategoryID); err != nil {
+		if err := s.ensureCategory(ctx, int64(*req.CategoryID)); err != nil {
 			return nil, err
 		}
 		video.CategoryID = *req.CategoryID
@@ -225,17 +225,17 @@ func (s *videoService) Update(ctx context.Context, id int64, req *dto.UpdateVide
 			return err
 		}
 		if req.DirectorIDs != nil {
-			if err := txRepo.ReplaceDirectors(ctx, id, uniqueIDs(*req.DirectorIDs)); err != nil {
+			if err := txRepo.ReplaceDirectors(ctx, uint64(id), uniqueIDs(*req.DirectorIDs)); err != nil {
 				return err
 			}
 		}
 		if req.Actors != nil {
-			if err := txRepo.ReplaceActors(ctx, id, toActorRels(*req.Actors)); err != nil {
+			if err := txRepo.ReplaceActors(ctx, uint64(id), toActorRels(*req.Actors)); err != nil {
 				return err
 			}
 		}
 		if req.TagIDs != nil {
-			if err := txRepo.ReplaceTags(ctx, id, uniqueIDs(*req.TagIDs)); err != nil {
+			if err := txRepo.ReplaceTags(ctx, uint64(id), uniqueIDs(*req.TagIDs)); err != nil {
 				return err
 			}
 		}
@@ -249,7 +249,7 @@ func (s *videoService) Update(ctx context.Context, id int64, req *dto.UpdateVide
 }
 
 func (s *videoService) Delete(ctx context.Context, id int64) error {
-	video, err := s.videoRepo.GetByID(ctx, id)
+	video, err := s.videoRepo.GetByID(ctx, uint64(id))
 	if err != nil {
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
@@ -259,16 +259,16 @@ func (s *videoService) Delete(ctx context.Context, id int64) error {
 	// Clear association rows so directors/actors/tags are not blocked by soft-deleted videos.
 	err = s.videoRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
 		txRepo := s.videoRepo.WithTx(tx)
-		if err := txRepo.ReplaceDirectors(ctx, id, nil); err != nil {
+		if err := txRepo.ReplaceDirectors(ctx, uint64(id), nil); err != nil {
 			return err
 		}
-		if err := txRepo.ReplaceActors(ctx, id, nil); err != nil {
+		if err := txRepo.ReplaceActors(ctx, uint64(id), nil); err != nil {
 			return err
 		}
-		if err := txRepo.ReplaceTags(ctx, id, nil); err != nil {
+		if err := txRepo.ReplaceTags(ctx, uint64(id), nil); err != nil {
 			return err
 		}
-		return txRepo.SoftDelete(ctx, id)
+		return txRepo.SoftDelete(ctx, uint64(id))
 	})
 	if err != nil {
 		return errcode.Wrap(errcode.DatabaseError, err)
@@ -297,18 +297,18 @@ func (s *videoService) invalidateListCaches(ctx context.Context, videoID int64) 
 }
 
 func (s *videoService) getDetail(ctx context.Context, id int64, clientOnly bool) (*shareddto.VideoDetailResponse, error) {
-	video, err := s.videoRepo.GetByID(ctx, id)
+	video, err := s.videoRepo.GetByID(ctx, uint64(id))
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if video == nil {
 		return nil, errcode.VideoNotFound
 	}
-	if clientOnly && video.PublishStatus != constant.PublishStatusOnline {
+	if clientOnly && video.PublishStatus != uint8(constant.PublishStatusOnline) {
 		return nil, errcode.VideoNotFound
 	}
 
-	directorIDs, err := s.videoRepo.ListDirectorIDs(ctx, id)
+	directorIDs, err := s.videoRepo.ListDirectorIDs(ctx, uint64(id))
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
@@ -316,11 +316,11 @@ func (s *videoService) getDetail(ctx context.Context, id int64, clientOnly bool)
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	actorRels, err := s.videoRepo.ListActorRels(ctx, id)
+	actorRels, err := s.videoRepo.ListActorRels(ctx, uint64(id))
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	actorIDs := make([]int64, 0, len(actorRels))
+	actorIDs := make([]uint64, 0, len(actorRels))
 	for _, rel := range actorRels {
 		actorIDs = append(actorIDs, rel.ActorID)
 	}
@@ -328,11 +328,11 @@ func (s *videoService) getDetail(ctx context.Context, id int64, clientOnly bool)
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	actorName := map[int64]string{}
+	actorName := map[uint64]string{}
 	for _, a := range actors {
 		actorName[a.ID] = a.Name
 	}
-	tagIDs, err := s.videoRepo.ListTagIDs(ctx, id)
+	tagIDs, err := s.videoRepo.ListTagIDs(ctx, uint64(id))
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
@@ -341,7 +341,7 @@ func (s *videoService) getDetail(ctx context.Context, id int64, clientOnly bool)
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 
-	episodes, err := s.playRepo.ListEpisodesByVideo(ctx, id, clientOnly)
+	episodes, err := s.playRepo.ListEpisodesByVideo(ctx, int64(id), clientOnly)
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
@@ -349,16 +349,16 @@ func (s *videoService) getDetail(ctx context.Context, id int64, clientOnly bool)
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	sourceMap := map[int64]model.PlaySources{}
+	sourceMap := map[uint64]model.PlaySources{}
 	for _, src := range sources {
-		if clientOnly && src.Status != constant.StatusEnabled {
+		if clientOnly && src.Status != uint8(constant.StatusEnabled) {
 			continue
 		}
 		sourceMap[src.ID] = src
 	}
 
-	groups := map[int64]*shareddto.VideoSourceGroup{}
-	order := make([]int64, 0)
+	groups := map[uint64]*shareddto.VideoSourceGroup{}
+	order := make([]uint64, 0)
 	for _, ep := range episodes {
 		src, ok := sourceMap[ep.SourceID]
 		if !ok {
@@ -447,7 +447,7 @@ func (s *videoService) ensureCategory(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (s *videoService) ensureDirectors(ctx context.Context, ids []int64) error {
+func (s *videoService) ensureDirectors(ctx context.Context, ids []uint64) error {
 	ids = uniqueIDs(ids)
 	if len(ids) == 0 {
 		return nil
@@ -463,8 +463,8 @@ func (s *videoService) ensureDirectors(ctx context.Context, ids []int64) error {
 }
 
 func (s *videoService) ensureActors(ctx context.Context, actors []dto.VideoActorInput) error {
-	ids := make([]int64, 0, len(actors))
-	seen := map[int64]struct{}{}
+	ids := make([]uint64, 0, len(actors))
+	seen := map[uint64]struct{}{}
 	for _, a := range actors {
 		if _, ok := seen[a.ActorID]; ok {
 			continue
@@ -485,7 +485,7 @@ func (s *videoService) ensureActors(ctx context.Context, actors []dto.VideoActor
 	return nil
 }
 
-func (s *videoService) ensureTags(ctx context.Context, ids []int64) error {
+func (s *videoService) ensureTags(ctx context.Context, ids []uint64) error {
 	ids = uniqueIDs(ids)
 	if len(ids) == 0 {
 		return nil
@@ -523,11 +523,11 @@ func mapVideoList(items []model.Videos) []shareddto.VideoListItem {
 	return out
 }
 
-func uniqueIDs(ids []int64) []int64 {
-	seen := make(map[int64]struct{}, len(ids))
-	out := make([]int64, 0, len(ids))
+func uniqueIDs(ids []uint64) []uint64 {
+	seen := make(map[uint64]struct{}, len(ids))
+	out := make([]uint64, 0, len(ids))
 	for _, id := range ids {
-		if id <= 0 {
+		if id == 0 {
 			continue
 		}
 		if _, ok := seen[id]; ok {
@@ -540,10 +540,10 @@ func uniqueIDs(ids []int64) []int64 {
 }
 
 func toActorRels(inputs []dto.VideoActorInput) []model.VideoActors {
-	seen := map[int64]struct{}{}
+	seen := map[uint64]struct{}{}
 	out := make([]model.VideoActors, 0, len(inputs))
 	for _, in := range inputs {
-		if in.ActorID <= 0 {
+		if in.ActorID == 0 {
 			continue
 		}
 		if _, ok := seen[in.ActorID]; ok {

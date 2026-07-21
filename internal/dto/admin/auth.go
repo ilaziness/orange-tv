@@ -16,10 +16,10 @@ type LoginResponse struct {
 
 // Profile is the authenticated admin public profile.
 type Profile struct {
-	ID       int64  `json:"id"`
+	ID       uint64 `json:"id"`
 	Username string `json:"username"`
 	Email    string `json:"email"`
 	Avatar   string `json:"avatar"`
 	Role     string `json:"role"`
-	Status   int8   `json:"status"`
+	Status   uint8  `json:"status"`
 }

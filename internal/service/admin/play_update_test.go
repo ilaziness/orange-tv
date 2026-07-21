@@ -23,12 +23,12 @@ func TestPlayService_UpdateEpisodeReclaimsSoftDeletedKey(t *testing.T) {
 	playRepo.episodes[2] = &model.PlayEpisodes{
 		ID: 2, VideoID: 1, SourceID: 1, EpisodeNumber: 1, Title: "E1-old", PlayURL: "b", Format: "hls", DeletedAt: &now,
 	}
-	svc := NewPlayService(playRepo, &videoRepoStub{videos: map[int64]*model.Videos{1: {ID: 1, Title: "v"}}})
+	svc := NewPlayService(playRepo, &videoRepoStub{videos: map[uint64]*model.Videos{1: {ID: 1, Title: "v"}}})
 
-	epNum := int32(1)
+	epNum := uint32(1)
 	resp, err := svc.UpdateEpisode(context.Background(), 1, &dto.UpdatePlayEpisodeRequest{EpisodeNumber: &epNum})
 	require.NoError(t, err)
-	require.Equal(t, int32(1), resp.EpisodeNumber)
+	require.Equal(t, uint32(1), resp.EpisodeNumber)
 	// soft-deleted key owner should be hard-deleted
 	_, ok := playRepo.episodes[2]
 	require.False(t, ok)
@@ -43,9 +43,9 @@ func TestPlayService_UpdateEpisodeRejectsActiveKeyConflict(t *testing.T) {
 	playRepo.episodes[2] = &model.PlayEpisodes{
 		ID: 2, VideoID: 1, SourceID: 1, EpisodeNumber: 2, Title: "E2", PlayURL: "b", Format: "hls",
 	}
-	svc := NewPlayService(playRepo, &videoRepoStub{videos: map[int64]*model.Videos{1: {ID: 1, Title: "v"}}})
+	svc := NewPlayService(playRepo, &videoRepoStub{videos: map[uint64]*model.Videos{1: {ID: 1, Title: "v"}}})
 
-	epNum := int32(1)
+	epNum := uint32(1)
 	_, err := svc.UpdateEpisode(context.Background(), 2, &dto.UpdatePlayEpisodeRequest{EpisodeNumber: &epNum})
 	require.Error(t, err)
 	code, ok := errcode.As(err)

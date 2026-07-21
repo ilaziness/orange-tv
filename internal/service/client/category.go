@@ -56,12 +56,12 @@ func InvalidateCategoryCache(ctx context.Context, c cache.Cache) {
 }
 
 func buildCategoryTree(items []model.Categories) []shareddto.CategoryResponse {
-	byParent := make(map[int64][]model.Categories, len(items))
+	byParent := make(map[uint64][]model.Categories, len(items))
 	for _, item := range items {
 		byParent[item.ParentID] = append(byParent[item.ParentID], item)
 	}
-	var build func(parentID int64) []shareddto.CategoryResponse
-	build = func(parentID int64) []shareddto.CategoryResponse {
+	var build func(parentID uint64) []shareddto.CategoryResponse
+	build = func(parentID uint64) []shareddto.CategoryResponse {
 		children := byParent[parentID]
 		out := make([]shareddto.CategoryResponse, 0, len(children))
 		for _, c := range children {

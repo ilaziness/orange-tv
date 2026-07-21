@@ -94,13 +94,13 @@ func (s *managementService) Dashboard(ctx context.Context) (*dto.DashboardRespon
 	}
 	resp.TodayVideos = int64(todayVideos)
 
-	onlineVideos, err := s.videoRepo.CountVideosByStatus(ctx, constant.PublishStatusOnline)
+	onlineVideos, err := s.videoRepo.CountVideosByStatus(ctx, uint8(constant.PublishStatusOnline))
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	resp.OnlineVideos = int64(onlineVideos)
 
-	offlineVideos, err := s.videoRepo.CountVideosByStatus(ctx, constant.PublishStatusOffline)
+	offlineVideos, err := s.videoRepo.CountVideosByStatus(ctx, uint8(constant.PublishStatusOffline))
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
@@ -141,8 +141,8 @@ func (s *managementService) Dashboard(ctx context.Context) (*dto.DashboardRespon
 		resp.TodayPV = 0
 		resp.TodayUV = 0
 	} else if stats != nil {
-		resp.TodayPV = stats.PV
-		resp.TodayUV = stats.UV
+		resp.TodayPV = int64(stats.PV)
+		resp.TodayUV = int64(stats.UV)
 	}
 
 	return resp, nil
@@ -151,7 +151,7 @@ func (s *managementService) Dashboard(ctx context.Context) (*dto.DashboardRespon
 // ===== A2: Batch video ops =====
 
 func (s *managementService) BatchUpdatePublishStatus(ctx context.Context, req *dto.BatchVideoRequest) (*dto.BatchVideoResponse, error) {
-	status := constant.PublishStatusOffline
+	status := uint8(constant.PublishStatusOffline)
 	if req.Status != nil {
 		status = *req.Status
 	}
@@ -186,7 +186,7 @@ func (s *managementService) ListAdmins(ctx context.Context, req *dto.AdminListRe
 	out := make([]dto.AdminItem, 0, len(items))
 	for _, a := range items {
 		groupName := ""
-		if g, _ := s.adminRepo.GetGroupByID(ctx, a.GroupID); g != nil {
+		if g, _ := s.adminRepo.GetGroupByID(ctx, int64(a.GroupID)); g != nil {
 			groupName = g.Name
 		}
 		out = append(out, dto.AdminItem{
@@ -213,7 +213,7 @@ func (s *managementService) CreateAdmin(ctx context.Context, req *dto.CreateAdmi
 	if exists {
 		return nil, errcode.AdminAlreadyExists
 	}
-	group, err := s.adminRepo.GetGroupByID(ctx, req.GroupID)
+	group, err := s.adminRepo.GetGroupByID(ctx, int64(req.GroupID))
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
@@ -224,7 +224,7 @@ func (s *managementService) CreateAdmin(ctx context.Context, req *dto.CreateAdmi
 	if err != nil {
 		return nil, errcode.Wrap(errcode.InternalError, err)
 	}
-	status := constant.StatusEnabled
+	status := uint8(constant.StatusEnabled)
 	if req.Status != nil {
 		status = *req.Status
 	}
@@ -266,7 +266,7 @@ func (s *managementService) UpdateAdmin(ctx context.Context, id int64, req *dto.
 		admin.Avatar = strings.TrimSpace(req.Avatar)
 	}
 	if req.GroupID != nil {
-		group, err := s.adminRepo.GetGroupByID(ctx, *req.GroupID)
+		group, err := s.adminRepo.GetGroupByID(ctx, int64(*req.GroupID))
 		if err != nil {
 			return nil, errcode.Wrap(errcode.DatabaseError, err)
 		}
@@ -282,7 +282,7 @@ func (s *managementService) UpdateAdmin(ctx context.Context, id int64, req *dto.
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	groupName := ""
-	if g, _ := s.adminRepo.GetGroupByID(ctx, admin.GroupID); g != nil {
+	if g, _ := s.adminRepo.GetGroupByID(ctx, int64(admin.GroupID)); g != nil {
 		groupName = g.Name
 	}
 	return &dto.AdminItem{
@@ -539,7 +539,7 @@ func (s *managementService) ListBanners(ctx context.Context, offset, limit int) 
 }
 
 func (s *managementService) CreateBanner(ctx context.Context, req *dto.CreateBannerRequest) (*dto.BannerItem, error) {
-	status := constant.StatusEnabled
+	status := uint8(constant.StatusEnabled)
 	if req.Status != nil {
 		status = *req.Status
 	}

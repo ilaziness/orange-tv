@@ -8,14 +8,14 @@ import (
 
 // CollectSourceCategories represents the collect_source_categories table.
 type CollectSourceCategories struct {
-	bun.BaseModel `bun:"table:collect_source_categories,alias:c"`
+	bun.BaseModel `bun:"table:collect_source_categories,alias:csc"`
 
-	ID int64 `bun:"id" json:"id"`
+	ID uint64 `bun:"id,pk,autoincrement" json:"id"`
 	// 采集源ID
-	SourceID int64 `bun:"source_id" json:"source_id"`
+	SourceID uint64 `bun:"source_id,notnull,unique:uk_source_external" json:"source_id"`
 	// 外部分类名称（采集源返回的分类）
-	ExternalCategory string `bun:"external_category" json:"external_category"`
+	ExternalCategory string `bun:"external_category,notnull,unique:uk_source_external" json:"external_category"`
 	// 系统内分类ID
-	CategoryID int64      `bun:"category_id" json:"category_id"`
+	CategoryID uint64     `bun:"category_id,notnull" json:"category_id"`
 	CreatedAt  *time.Time `bun:"created_at" json:"created_at"`
 }

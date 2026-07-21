@@ -55,7 +55,7 @@ func (s *categoryService) Create(ctx context.Context, req *dto.CreateCategoryReq
 		return nil, errcode.CategoryNameExists
 	}
 	if req.ParentID > 0 {
-		parent, err := s.repo.GetByID(ctx, req.ParentID)
+		parent, err := s.repo.GetByID(ctx, int64(req.ParentID))
 		if err != nil {
 			return nil, errcode.Wrap(errcode.DatabaseError, err)
 		}
@@ -64,7 +64,7 @@ func (s *categoryService) Create(ctx context.Context, req *dto.CreateCategoryReq
 		}
 	}
 
-	status := constant.StatusEnabled
+	status := uint8(constant.StatusEnabled)
 	if req.Status != nil {
 		status = *req.Status
 	}
@@ -106,11 +106,11 @@ func (s *categoryService) Update(ctx context.Context, id int64, req *dto.UpdateC
 	}
 	if req.ParentID != nil {
 		parentID := *req.ParentID
-		if parentID == id {
+		if parentID == uint64(id) {
 			return nil, errcode.CategoryCycle
 		}
 		if parentID > 0 {
-			parent, err := s.repo.GetByID(ctx, parentID)
+			parent, err := s.repo.GetByID(ctx, int64(parentID))
 			if err != nil {
 				return nil, errcode.Wrap(errcode.DatabaseError, err)
 			}
@@ -122,7 +122,7 @@ func (s *categoryService) Update(ctx context.Context, id int64, req *dto.UpdateC
 			if err != nil {
 				return nil, errcode.Wrap(errcode.DatabaseError, err)
 			}
-			if isDescendant(all, id, parentID) {
+			if isDescendant(all, uint64(id), parentID) {
 				return nil, errcode.CategoryCycle
 			}
 		}
@@ -186,12 +186,12 @@ func toCategoryDTO(item *model.Categories) *shareddto.CategoryResponse {
 }
 
 func buildCategoryTree(items []model.Categories) []shareddto.CategoryResponse {
-	byParent := make(map[int64][]model.Categories, len(items))
+	byParent := make(map[uint64][]model.Categories, len(items))
 	for _, item := range items {
 		byParent[item.ParentID] = append(byParent[item.ParentID], item)
 	}
-	var build func(parentID int64) []shareddto.CategoryResponse
-	build = func(parentID int64) []shareddto.CategoryResponse {
+	var build func(parentID uint64) []shareddto.CategoryResponse
+	build = func(parentID uint64) []shareddto.CategoryResponse {
 		children := byParent[parentID]
 		out := make([]shareddto.CategoryResponse, 0, len(children))
 		for _, c := range children {
@@ -219,12 +219,12 @@ func buildCategoryTree(items []model.Categories) []shareddto.CategoryResponse {
 	return roots
 }
 
-func isDescendant(all []model.Categories, ancestorID, nodeID int64) bool {
-	childrenOf := make(map[int64][]int64, len(all))
+func isDescendant(all []model.Categories, ancestorID, nodeID uint64) bool {
+	childrenOf := make(map[uint64][]uint64, len(all))
 	for _, c := range all {
 		childrenOf[c.ParentID] = append(childrenOf[c.ParentID], c.ID)
 	}
-	stack := []int64{ancestorID}
+	stack := []uint64{ancestorID}
 	for len(stack) > 0 {
 		cur := stack[len(stack)-1]
 		stack = stack[:len(stack)-1]

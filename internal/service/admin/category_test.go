@@ -13,14 +13,14 @@ import (
 )
 
 type fakeCategoryRepo struct {
-	items   map[int64]*model.Categories
-	nextID  int64
+	items   map[uint64]*model.Categories
+	nextID  uint64
 	videos  map[int64]int
 	created []*model.Categories
 }
 
 func newFakeCategoryRepo() *fakeCategoryRepo {
-	return &fakeCategoryRepo{items: map[int64]*model.Categories{}, nextID: 1, videos: map[int64]int{}}
+	return &fakeCategoryRepo{items: map[uint64]*model.Categories{}, nextID: 1, videos: map[int64]int{}}
 }
 
 func (f *fakeCategoryRepo) List(ctx context.Context, onlyEnabled bool) ([]model.Categories, error) {
@@ -29,7 +29,7 @@ func (f *fakeCategoryRepo) List(ctx context.Context, onlyEnabled bool) ([]model.
 		if item.DeletedAt != nil {
 			continue
 		}
-		if onlyEnabled && item.Status != constant.StatusEnabled {
+		if onlyEnabled && item.Status != uint8(constant.StatusEnabled) {
 			continue
 		}
 		out = append(out, *item)
@@ -38,7 +38,7 @@ func (f *fakeCategoryRepo) List(ctx context.Context, onlyEnabled bool) ([]model.
 }
 
 func (f *fakeCategoryRepo) GetByID(ctx context.Context, id int64) (*model.Categories, error) {
-	item, ok := f.items[id]
+	item, ok := f.items[uint64(id)]
 	if !ok || item.DeletedAt != nil {
 		return nil, nil
 	}
@@ -48,7 +48,7 @@ func (f *fakeCategoryRepo) GetByID(ctx context.Context, id int64) (*model.Catego
 
 func (f *fakeCategoryRepo) ExistsName(ctx context.Context, name string, excludeID int64) (bool, error) {
 	for id, item := range f.items {
-		if item.DeletedAt != nil || id == excludeID {
+		if item.DeletedAt != nil || id == uint64(excludeID) {
 			continue
 		}
 		if item.Name == name {
@@ -74,7 +74,7 @@ func (f *fakeCategoryRepo) Update(ctx context.Context, c *model.Categories) erro
 }
 
 func (f *fakeCategoryRepo) SoftDelete(ctx context.Context, id int64) error {
-	if item, ok := f.items[id]; ok {
+	if item, ok := f.items[uint64(id)]; ok {
 		t := time.Now()
 		item.DeletedAt = &t
 	}
@@ -84,7 +84,7 @@ func (f *fakeCategoryRepo) SoftDelete(ctx context.Context, id int64) error {
 func (f *fakeCategoryRepo) CountChildren(ctx context.Context, parentID int64) (int, error) {
 	n := 0
 	for _, item := range f.items {
-		if item.DeletedAt == nil && item.ParentID == parentID {
+		if item.DeletedAt == nil && item.ParentID == uint64(parentID) {
 			n++
 		}
 	}
@@ -130,7 +130,7 @@ func TestCategoryService_UpdateRejectsCycle(t *testing.T) {
 	repo.items[2] = &model.Categories{ID: 2, Name: "动作", ParentID: 1, Status: 1}
 	svc := NewCategoryService(repo, nil)
 
-	parent := int64(2)
+	parent := uint64(2)
 	_, err := svc.Update(context.Background(), 1, &dto.UpdateCategoryRequest{ParentID: &parent})
 	require.Error(t, err)
 	code, ok := errcode.As(err)

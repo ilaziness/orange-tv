@@ -42,7 +42,9 @@ func TestToSnakeCase(t *testing.T) {
 }
 
 func TestMapSQLTypeToGo(t *testing.T) {
-	assert.Equal(t, "int64", MapSQLTypeToGo("bigint", false))
-	assert.Equal(t, "*string", MapSQLTypeToGo("text", true))
-	assert.Equal(t, "string", MapSQLTypeToGo("unknown_type", false))
+	assert.Equal(t, "int64", MapSQLTypeToGo("bigint", false, false))
+	assert.Equal(t, "*string", MapSQLTypeToGo("text", true, false))
+	assert.Equal(t, "string", MapSQLTypeToGo("unknown_type", false, false))
+	assert.Equal(t, "uint32", MapSQLTypeToGo("int", false, true))
+	assert.Equal(t, "*uint32", MapSQLTypeToGo("int", true, true))
 }

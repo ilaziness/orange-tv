@@ -58,7 +58,7 @@ func (s *playService) CreateSource(ctx context.Context, req *dto.CreatePlaySourc
 	if exists {
 		return nil, errcode.PlaySourceNameExists
 	}
-	status := constant.StatusEnabled
+	status := uint8(constant.StatusEnabled)
 	if req.Status != nil {
 		status = *req.Status
 	}
@@ -127,7 +127,7 @@ func (s *playService) DeleteSource(ctx context.Context, id int64) error {
 }
 
 func (s *playService) ListEpisodes(ctx context.Context, req *dto.PlayEpisodeListRequest) ([]dto.PlayEpisodeResponse, int, error) {
-	items, total, err := s.playRepo.ListEpisodes(ctx, req.VideoID, req.SourceID, req.GetOffset(), req.GetLimit())
+	items, total, err := s.playRepo.ListEpisodes(ctx, int64(req.VideoID), int64(req.SourceID), req.GetOffset(), req.GetLimit())
 	if err != nil {
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
@@ -139,16 +139,16 @@ func (s *playService) ListEpisodes(ctx context.Context, req *dto.PlayEpisodeList
 }
 
 func (s *playService) CreateEpisode(ctx context.Context, req *dto.CreatePlayEpisodeRequest) (*dto.PlayEpisodeResponse, error) {
-	if err := s.validateEpisodeRefs(ctx, req.VideoID, req.SourceID); err != nil {
+	if err := s.validateEpisodeRefs(ctx, int64(req.VideoID), int64(req.SourceID)); err != nil {
 		return nil, err
 	}
-	status := constant.StatusEnabled
+	status := uint8(constant.StatusEnabled)
 	if req.Status != nil {
 		status = *req.Status
 	}
 	title := strings.TrimSpace(req.Title)
 	if title == "" {
-		title = formatEpisodeTitle(req.EpisodeNumber)
+		title = formatEpisodeTitle(int32(req.EpisodeNumber))
 	}
 	m := &model.PlayEpisodes{
 		SourceID:      req.SourceID,
@@ -163,7 +163,7 @@ func (s *playService) CreateEpisode(ctx context.Context, req *dto.CreatePlayEpis
 	}
 
 	// Unique index covers soft-deleted rows. Reuse a soft-deleted slot when present.
-	existing, err := s.playRepo.GetEpisodeByKey(ctx, req.VideoID, req.SourceID, req.EpisodeNumber)
+	existing, err := s.playRepo.GetEpisodeByKey(ctx, int64(req.VideoID), int64(req.SourceID), int32(req.EpisodeNumber))
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
@@ -210,20 +210,20 @@ func (s *playService) UpdateEpisode(ctx context.Context, id int64, req *dto.Upda
 	if req.EpisodeNumber != nil {
 		episodeNumber = *req.EpisodeNumber
 	}
-	if err := s.validateEpisodeRefs(ctx, videoID, sourceID); err != nil {
+	if err := s.validateEpisodeRefs(ctx, int64(videoID), int64(sourceID)); err != nil {
 		return nil, err
 	}
 	if videoID != m.VideoID || sourceID != m.SourceID || episodeNumber != m.EpisodeNumber {
-		existing, err := s.playRepo.GetEpisodeByKey(ctx, videoID, sourceID, episodeNumber)
+		existing, err := s.playRepo.GetEpisodeByKey(ctx, int64(videoID), int64(sourceID), int32(episodeNumber))
 		if err != nil {
 			return nil, errcode.Wrap(errcode.DatabaseError, err)
 		}
-		if existing != nil && existing.ID != id {
+		if existing != nil && existing.ID != uint64(id) {
 			if existing.DeletedAt == nil {
 				return nil, errcode.PlayEpisodeDuplicate
 			}
 			// Free soft-deleted unique key before reassigning.
-			if err := s.playRepo.HardDeleteEpisodeByKey(ctx, videoID, sourceID, episodeNumber, id); err != nil {
+			if err := s.playRepo.HardDeleteEpisodeByKey(ctx, int64(videoID), int64(sourceID), int32(episodeNumber), id); err != nil {
 				return nil, errcode.Wrap(errcode.DatabaseError, err)
 			}
 		}
@@ -274,7 +274,7 @@ func (s *playService) DeleteEpisode(ctx context.Context, id int64) error {
 }
 
 func (s *playService) validateEpisodeRefs(ctx context.Context, videoID, sourceID int64) error {
-	video, err := s.videoRepo.GetByID(ctx, videoID)
+	video, err := s.videoRepo.GetByID(ctx, uint64(videoID))
 	if err != nil {
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}

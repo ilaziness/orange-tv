@@ -205,14 +205,14 @@ type detailBundle struct {
 }
 
 func (s *resourceService) loadDetail(ctx context.Context, id int64) (*detailBundle, error) {
-	video, err := s.videoRepo.GetByID(ctx, id)
+	video, err := s.videoRepo.GetByID(ctx, uint64(id))
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	if video == nil || video.PublishStatus != constant.PublishStatusOnline {
+	if video == nil || video.PublishStatus != uint8(constant.PublishStatusOnline) {
 		return nil, errcode.VideoNotFound
 	}
-	directorIDs, err := s.videoRepo.ListDirectorIDs(ctx, id)
+	directorIDs, err := s.videoRepo.ListDirectorIDs(ctx, uint64(id))
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
@@ -220,11 +220,11 @@ func (s *resourceService) loadDetail(ctx context.Context, id int64) (*detailBund
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	actorRels, err := s.videoRepo.ListActorRels(ctx, id)
+	actorRels, err := s.videoRepo.ListActorRels(ctx, uint64(id))
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	actorIDs := make([]int64, 0, len(actorRels))
+	actorIDs := make([]uint64, 0, len(actorRels))
 	for _, rel := range actorRels {
 		actorIDs = append(actorIDs, rel.ActorID)
 	}
@@ -232,7 +232,7 @@ func (s *resourceService) loadDetail(ctx context.Context, id int64) (*detailBund
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	actorName := map[int64]string{}
+	actorName := map[uint64]string{}
 	for _, a := range actors {
 		actorName[a.ID] = a.Name
 	}
@@ -240,7 +240,7 @@ func (s *resourceService) loadDetail(ctx context.Context, id int64) (*detailBund
 	for _, rel := range actorRels {
 		actorItems = append(actorItems, shareddto.ActorItem{ID: rel.ActorID, Name: actorName[rel.ActorID], Role: rel.Role})
 	}
-	tagIDs, err := s.videoRepo.ListTagIDs(ctx, id)
+	tagIDs, err := s.videoRepo.ListTagIDs(ctx, uint64(id))
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
@@ -248,7 +248,7 @@ func (s *resourceService) loadDetail(ctx context.Context, id int64) (*detailBund
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	episodes, err := s.playRepo.ListEpisodesByVideo(ctx, id, true)
+	episodes, err := s.playRepo.ListEpisodesByVideo(ctx, int64(id), true)
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
@@ -256,15 +256,15 @@ func (s *resourceService) loadDetail(ctx context.Context, id int64) (*detailBund
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	sourceMap := map[int64]model.PlaySources{}
+	sourceMap := map[uint64]model.PlaySources{}
 	for _, src := range sources {
-		if src.Status != constant.StatusEnabled {
+		if src.Status != uint8(constant.StatusEnabled) {
 			continue
 		}
 		sourceMap[src.ID] = src
 	}
-	groups := map[int64]*shareddto.VideoSourceGroup{}
-	order := make([]int64, 0)
+	groups := map[uint64]*shareddto.VideoSourceGroup{}
+	order := make([]uint64, 0)
 	for _, ep := range episodes {
 		src, ok := sourceMap[ep.SourceID]
 		if !ok {
@@ -305,7 +305,7 @@ func normalizeFormat(format string) (string, error) {
 
 func mapDefaultListItem(v *model.Videos) map[string]any {
 	return map[string]any{
-		"id":          strconv.FormatInt(v.ID, 10),
+		"id":          strconv.FormatUint(v.ID, 10),
 		"title":       v.Title,
 		"cover":       v.CoverImage,
 		"category_id": v.CategoryID,
@@ -338,7 +338,7 @@ func mapDefaultDetail(d *detailBundle) map[string]any {
 		acts = append(acts, a.Name)
 	}
 	return map[string]any{
-		"id":          strconv.FormatInt(v.ID, 10),
+		"id":          strconv.FormatUint(v.ID, 10),
 		"title":       v.Title,
 		"subtitle":    v.Subtitle,
 		"cover":       v.CoverImage,
@@ -356,8 +356,8 @@ func mapDefaultDetail(d *detailBundle) map[string]any {
 
 func mapAppleListItem(v *model.Videos) map[string]any {
 	return map[string]any{
-		"vod_id":       strconv.FormatInt(v.ID, 10),
-		"type_id":      strconv.FormatInt(v.CategoryID, 10),
+		"vod_id":       strconv.FormatUint(v.ID, 10),
+		"type_id":      strconv.FormatUint(v.CategoryID, 10),
 		"vod_name":     v.Title,
 		"vod_sub":      v.Subtitle,
 		"vod_pic":      v.CoverImage,
@@ -399,8 +399,8 @@ func mapAppleDetail(d *detailBundle) map[string]any {
 		acts = append(acts, a.Name)
 	}
 	return map[string]any{
-		"vod_id":        strconv.FormatInt(v.ID, 10),
-		"type_id":       strconv.FormatInt(v.CategoryID, 10),
+		"vod_id":        strconv.FormatUint(v.ID, 10),
+		"type_id":       strconv.FormatUint(v.CategoryID, 10),
 		"vod_name":      v.Title,
 		"vod_sub":       v.Subtitle,
 		"vod_pic":       v.CoverImage,
@@ -417,12 +417,12 @@ func mapAppleDetail(d *detailBundle) map[string]any {
 }
 
 func buildCategoryTree(items []model.Categories) []shareddto.CategoryResponse {
-	byParent := make(map[int64][]model.Categories, len(items))
+	byParent := make(map[uint64][]model.Categories, len(items))
 	for _, item := range items {
 		byParent[item.ParentID] = append(byParent[item.ParentID], item)
 	}
-	var build func(parentID int64) []shareddto.CategoryResponse
-	build = func(parentID int64) []shareddto.CategoryResponse {
+	var build func(parentID uint64) []shareddto.CategoryResponse
+	build = func(parentID uint64) []shareddto.CategoryResponse {
 		children := byParent[parentID]
 		out := make([]shareddto.CategoryResponse, 0, len(children))
 		for _, c := range children {

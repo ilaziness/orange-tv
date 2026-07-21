@@ -8,15 +8,16 @@ import (
 
 // Banners represents the banners table.
 type Banners struct {
-	bun.BaseModel `bun:"table:banners,alias:b"`
+	bun.BaseModel `bun:"table:banners,alias:ba"`
 
-	ID        int64     `bun:"id" json:"id"`
-	Title     string    `bun:"title" json:"title"`
-	Cover     string    `bun:"cover" json:"cover"`
-	Link      string    `bun:"link" json:"link"`
-	VideoID   int64     `bun:"video_id" json:"video_id"`
-	Sort      int32     `bun:"sort" json:"sort"`
-	Status    int8      `bun:"status" json:"status"`
-	CreatedAt time.Time `bun:"created_at" json:"created_at"`
-	UpdatedAt time.Time `bun:"updated_at" json:"updated_at"`
+	ID      uint64 `bun:"id,pk,autoincrement" json:"id"`
+	Title   string `bun:"title,notnull" json:"title"`
+	Cover   string `bun:"cover,notnull" json:"cover"`
+	Link    string `bun:"link,notnull" json:"link"`
+	VideoID uint64 `bun:"video_id,notnull" json:"video_id"`
+	Sort    uint32 `bun:"sort,notnull" json:"sort"`
+	// 1启用 0禁用
+	Status    uint8     `bun:"status,notnull" json:"status"`
+	CreatedAt time.Time `bun:"created_at,notnull" json:"created_at"`
+	UpdatedAt time.Time `bun:"updated_at,notnull" json:"updated_at"`
 }

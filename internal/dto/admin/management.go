@@ -23,8 +23,8 @@ type DashboardResponse struct {
 
 // BatchVideoRequest is the batch video operation payload.
 type BatchVideoRequest struct {
-	IDs    []int64 `json:"ids" validate:"required,min=1,max=500"`
-	Status *int8   `json:"status" validate:"omitempty,oneof=0 1"`
+	IDs    []uint64 `json:"ids" validate:"required,min=1,max=500"`
+	Status *uint8   `json:"status" validate:"omitempty,oneof=0 1"`
 }
 
 // BatchVideoResponse is the batch operation result.
@@ -37,20 +37,20 @@ type BatchVideoResponse struct {
 // AdminListRequest filters admin list.
 type AdminListRequest struct {
 	dto.PaginationRequest
-	Keyword string `form:"keyword"`
-	Status  *int8  `form:"status"`
-	GroupID *int64 `form:"group_id"`
+	Keyword string  `form:"keyword"`
+	Status  *uint8  `form:"status"`
+	GroupID *uint64 `form:"group_id"`
 }
 
 // AdminItem is the admin list item.
 type AdminItem struct {
-	ID          int64   `json:"id"`
+	ID          uint64  `json:"id"`
 	Username    string  `json:"username"`
 	Email       string  `json:"email"`
 	Avatar      string  `json:"avatar"`
-	GroupID     int64   `json:"group_id"`
+	GroupID     uint64  `json:"group_id"`
 	GroupName   string  `json:"group_name"`
-	Status      int8    `json:"status"`
+	Status      uint8   `json:"status"`
 	LastLoginAt *string `json:"last_login_at"`
 	CreatedAt   *string `json:"created_at"`
 }
@@ -61,16 +61,16 @@ type CreateAdminRequest struct {
 	Password string `json:"password" validate:"required,min=6,max=72"`
 	Email    string `json:"email" validate:"omitempty,email,max=128"`
 	Avatar   string `json:"avatar" validate:"omitempty,max=500"`
-	GroupID  int64  `json:"group_id" validate:"required,min=1"`
-	Status   *int8  `json:"status" validate:"omitempty,oneof=0 1"`
+	GroupID  uint64 `json:"group_id" validate:"required,min=1"`
+	Status   *uint8 `json:"status" validate:"omitempty,oneof=0 1"`
 }
 
 // UpdateAdminRequest updates an admin.
 type UpdateAdminRequest struct {
-	Email   string `json:"email" validate:"omitempty,email,max=128"`
-	Avatar  string `json:"avatar" validate:"omitempty,max=500"`
-	GroupID *int64 `json:"group_id" validate:"omitempty,min=1"`
-	Status  *int8  `json:"status" validate:"omitempty,oneof=0 1"`
+	Email   string  `json:"email" validate:"omitempty,email,max=128"`
+	Avatar  string  `json:"avatar" validate:"omitempty,max=500"`
+	GroupID *uint64 `json:"group_id" validate:"omitempty,min=1"`
+	Status  *uint8  `json:"status" validate:"omitempty,oneof=0 1"`
 }
 
 // ResetAdminPasswordRequest resets admin password.
@@ -88,7 +88,7 @@ type UserGroupListRequest struct {
 
 // UserGroupItem is the user group list item.
 type UserGroupItem struct {
-	ID          int64   `json:"id"`
+	ID          uint64  `json:"id"`
 	Name        string  `json:"name"`
 	Permissions *string `json:"permissions"`
 	Description string  `json:"description"`
@@ -115,25 +115,25 @@ type UpdateUserGroupRequest struct {
 type UserListRequest struct {
 	dto.PaginationRequest
 	Keyword string `form:"keyword"`
-	Status  *int8  `form:"status"`
+	Status  *uint8 `form:"status"`
 }
 
 // UserItem is the user list item.
 type UserItem struct {
-	ID          int64   `json:"id"`
+	ID          uint64  `json:"id"`
 	Username    string  `json:"username"`
 	Email       string  `json:"email"`
 	Avatar      string  `json:"avatar"`
-	Status      int8    `json:"status"`
+	Status      uint8   `json:"status"`
 	LastLoginAt *string `json:"last_login_at"`
 	CreatedAt   *string `json:"created_at"`
 }
 
 // UpdateUserRequest updates a regular user.
 type UpdateUserRequest struct {
-	Email  string `json:"email" validate:"omitempty,email,max=128"`
-	Avatar string `json:"avatar" validate:"omitempty,max=500"`
-	Status *int8  `json:"status" validate:"omitempty,oneof=0 1"`
+	Email  string `json:"email" validate:"omitempty,email,max:128"`
+	Avatar string `json:"avatar" validate:"omitempty,max:500"`
+	Status *uint8 `json:"status" validate:"omitempty,oneof=0 1"`
 }
 
 // ResetUserPasswordRequest resets user password.
@@ -145,13 +145,13 @@ type ResetUserPasswordRequest struct {
 
 // BannerItem is the banner list item.
 type BannerItem struct {
-	ID      int64  `json:"id"`
+	ID      uint64 `json:"id"`
 	Title   string `json:"title"`
 	Cover   string `json:"cover"`
 	Link    string `json:"link"`
-	VideoID int64  `json:"video_id"`
-	Sort    int32  `json:"sort"`
-	Status  int8   `json:"status"`
+	VideoID uint64 `json:"video_id"`
+	Sort    uint32 `json:"sort"`
+	Status  uint8  `json:"status"`
 }
 
 // CreateBannerRequest creates a banner.
@@ -159,17 +159,17 @@ type CreateBannerRequest struct {
 	Title   string `json:"title" validate:"required,min=1,max=128"`
 	Cover   string `json:"cover" validate:"required,max=500"`
 	Link    string `json:"link" validate:"omitempty,max=500"`
-	VideoID int64  `json:"video_id" validate:"omitempty,min=1"`
-	Sort    int32  `json:"sort" validate:"omitempty,min=0"`
-	Status  *int8  `json:"status" validate:"omitempty,oneof=0 1"`
+	VideoID uint64 `json:"video_id" validate:"omitempty,min=1"`
+	Sort    uint32 `json:"sort" validate:"omitempty,min=0"`
+	Status  *uint8 `json:"status" validate:"omitempty,oneof=0 1"`
 }
 
 // UpdateBannerRequest updates a banner.
 type UpdateBannerRequest struct {
-	Title   string `json:"title" validate:"omitempty,min=1,max=128"`
-	Cover   string `json:"cover" validate:"omitempty,max=500"`
-	Link    string `json:"link" validate:"omitempty,max=500"`
-	VideoID *int64 `json:"video_id" validate:"omitempty,min=1"`
-	Sort    *int32 `json:"sort" validate:"omitempty,min=0"`
-	Status  *int8  `json:"status" validate:"omitempty,oneof=0 1"`
+	Title   string  `json:"title" validate:"omitempty,min=1,max=128"`
+	Cover   string  `json:"cover" validate:"omitempty,max=500"`
+	Link    string  `json:"link" validate:"omitempty,max:500"`
+	VideoID *uint64 `json:"video_id" validate:"omitempty,min=1"`
+	Sort    *uint32 `json:"sort" validate:"omitempty,min=0"`
+	Status  *uint8  `json:"status" validate:"omitempty,oneof=0 1"`
 }

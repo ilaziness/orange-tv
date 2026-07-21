@@ -5,8 +5,8 @@ import "github.com/ilaziness/orange-tv/internal/dto"
 // VideoListRequest filters public video list.
 type VideoListRequest struct {
 	dto.PaginationRequest
-	CategoryID int64  `form:"category_id"`
-	Year       int32  `form:"year"`
+	CategoryID uint64 `form:"category_id"`
+	Year       uint32 `form:"year"`
 	Region     string `form:"region"`
 	Language   string `form:"language"`
 	Sort       string `form:"sort"`
@@ -16,8 +16,8 @@ type VideoListRequest struct {
 type SearchRequest struct {
 	dto.PaginationRequest
 	Keyword    string `form:"keyword" validate:"required,min=1,max=100"`
-	CategoryID int64  `form:"category_id"`
-	Year       int32  `form:"year"`
+	CategoryID uint64 `form:"category_id"`
+	Year       uint32 `form:"year"`
 	Region     string `form:"region"`
 	Language   string `form:"language"`
 	Sort       string `form:"sort"`

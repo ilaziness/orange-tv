@@ -34,12 +34,12 @@ func (r *Recorder) Login(ctx context.Context, userType int8, userID int64, usern
 	}
 	now := time.Now()
 	m := &model.LoginLogs{
-		UserType:  userType,
-		UserID:    userID,
+		UserType:  uint8(userType),
+		UserID:    uint64(userID),
 		Username:  strings.TrimSpace(username),
 		IPAddress: trimIP(ip),
 		UserAgent: trimUA(ua),
-		Status:    status,
+		Status:    uint8(status),
 		CreatedAt: &now,
 	}
 	if err := r.repo.CreateLoginLog(ctx, m); err != nil && r.logger != nil {
@@ -55,10 +55,10 @@ func (r *Recorder) AdminAction(ctx context.Context, adminID int64, module, actio
 	now := time.Now()
 	c := content
 	m := &model.SystemLogs{
-		Level:     constant.SystemLogLevelInfo,
+		Level:     uint8(constant.SystemLogLevelInfo),
 		Module:    strings.TrimSpace(module),
 		Action:    strings.TrimSpace(action),
-		AdminID:   adminID,
+		AdminID:   uint64(adminID),
 		Content:   &c,
 		IPAddress: trimIP(ip),
 		CreatedAt: &now,
@@ -76,7 +76,7 @@ func (r *Recorder) Warning(ctx context.Context, module, action, content, ip stri
 	now := time.Now()
 	c := content
 	m := &model.SystemLogs{
-		Level:     constant.SystemLogLevelWarning,
+		Level:     uint8(constant.SystemLogLevelWarning),
 		Module:    strings.TrimSpace(module),
 		Action:    strings.TrimSpace(action),
 		AdminID:   0,

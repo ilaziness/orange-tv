@@ -342,8 +342,8 @@ func (r *userFeatureRepo) IncrDailyStats(ctx context.Context, date time.Time, pv
 	d := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, date.Location())
 	_, err := r.db.NewInsert().Model(&model.SiteStatsDaily{
 		StatDate: d,
-		PV:       int64(pv),
-		UV:       int64(uv),
+		PV:       uint64(pv),
+		UV:       uint64(uv),
 	}).
 		On("DUPLICATE KEY UPDATE").
 		Set("pv = pv + VALUES(pv)").

@@ -17,8 +17,8 @@ import (
 )
 
 type fakeAdminRepo struct {
-	admins map[int64]*model.Admins
-	groups map[int64]*model.UserGroups
+	admins map[uint64]*model.Admins
+	groups map[uint64]*model.UserGroups
 }
 
 func (f *fakeAdminRepo) GetByUsername(ctx context.Context, username string) (*model.Admins, error) {
@@ -32,7 +32,7 @@ func (f *fakeAdminRepo) GetByUsername(ctx context.Context, username string) (*mo
 }
 
 func (f *fakeAdminRepo) GetByID(ctx context.Context, id int64) (*model.Admins, error) {
-	a, ok := f.admins[id]
+	a, ok := f.admins[uint64(id)]
 	if !ok || a.DeletedAt != nil {
 		return nil, nil
 	}
@@ -41,7 +41,7 @@ func (f *fakeAdminRepo) GetByID(ctx context.Context, id int64) (*model.Admins, e
 }
 
 func (f *fakeAdminRepo) GetGroupByID(ctx context.Context, id int64) (*model.UserGroups, error) {
-	g, ok := f.groups[id]
+	g, ok := f.groups[uint64(id)]
 	if !ok || g.DeletedAt != nil {
 		return nil, nil
 	}
@@ -60,14 +60,14 @@ func (f *fakeAdminRepo) GetGroupByName(ctx context.Context, name string) (*model
 }
 
 func (f *fakeAdminRepo) Create(ctx context.Context, admin *model.Admins) error {
-	admin.ID = int64(len(f.admins) + 1)
+	admin.ID = uint64(len(f.admins) + 1)
 	cp := *admin
 	f.admins[admin.ID] = &cp
 	return nil
 }
 
 func (f *fakeAdminRepo) UpdateLastLogin(ctx context.Context, id int64, at time.Time) error {
-	if a, ok := f.admins[id]; ok {
+	if a, ok := f.admins[uint64(id)]; ok {
 		a.LastLoginAt = &at
 	}
 	return nil
@@ -123,10 +123,10 @@ func TestAuthService_LoginSuccess(t *testing.T) {
 	hash, err := crypto.HashPassword("secret12")
 	require.NoError(t, err)
 	repo := &fakeAdminRepo{
-		admins: map[int64]*model.Admins{
-			1: {ID: 1, Username: "admin", Password: hash, GroupID: 1, Status: constant.StatusEnabled},
+		admins: map[uint64]*model.Admins{
+			1: {ID: 1, Username: "admin", Password: hash, GroupID: 1, Status: uint8(constant.StatusEnabled)},
 		},
-		groups: map[int64]*model.UserGroups{
+		groups: map[uint64]*model.UserGroups{
 			1: {ID: 1, Name: constant.RoleSuperAdmin},
 		},
 	}
@@ -143,10 +143,10 @@ func TestAuthService_LoginRejectsWrongPassword(t *testing.T) {
 	hash, err := crypto.HashPassword("secret12")
 	require.NoError(t, err)
 	repo := &fakeAdminRepo{
-		admins: map[int64]*model.Admins{
-			1: {ID: 1, Username: "admin", Password: hash, GroupID: 1, Status: constant.StatusEnabled},
+		admins: map[uint64]*model.Admins{
+			1: {ID: 1, Username: "admin", Password: hash, GroupID: 1, Status: uint8(constant.StatusEnabled)},
 		},
-		groups: map[int64]*model.UserGroups{
+		groups: map[uint64]*model.UserGroups{
 			1: {ID: 1, Name: constant.RoleSuperAdmin},
 		},
 	}
@@ -162,10 +162,10 @@ func TestAuthService_LoginRejectsWrongPassword(t *testing.T) {
 
 func TestAuthService_EnsureSuperAdminRejectsDisabled(t *testing.T) {
 	repo := &fakeAdminRepo{
-		admins: map[int64]*model.Admins{
-			1: {ID: 1, Username: "admin", GroupID: 1, Status: constant.StatusDisabled},
+		admins: map[uint64]*model.Admins{
+			1: {ID: 1, Username: "admin", GroupID: 1, Status: uint8(constant.StatusDisabled)},
 		},
-		groups: map[int64]*model.UserGroups{
+		groups: map[uint64]*model.UserGroups{
 			1: {ID: 1, Name: constant.RoleSuperAdmin},
 		},
 	}

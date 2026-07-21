@@ -8,17 +8,17 @@ import (
 
 // Categories represents the categories table.
 type Categories struct {
-	bun.BaseModel `bun:"table:categories,alias:c"`
+	bun.BaseModel `bun:"table:categories,alias:ca"`
 
-	ID int64 `bun:"id" json:"id"`
+	ID uint64 `bun:"id,pk,autoincrement" json:"id"`
 	// 分类名称
-	Name string `bun:"name" json:"name"`
+	Name string `bun:"name,notnull" json:"name"`
 	// 父分类ID
-	ParentID int64 `bun:"parent_id" json:"parent_id"`
+	ParentID uint64 `bun:"parent_id,notnull" json:"parent_id"`
 	// 排序
-	SortOrder int32 `bun:"sort_order" json:"sort_order"`
+	SortOrder uint32 `bun:"sort_order,notnull" json:"sort_order"`
 	// 状态：1启用 0禁用
-	Status    int8       `bun:"status" json:"status"`
+	Status    uint8      `bun:"status,notnull" json:"status"`
 	CreatedAt *time.Time `bun:"created_at" json:"created_at"`
 	UpdatedAt *time.Time `bun:"updated_at" json:"updated_at"`
 	// 软删除时间

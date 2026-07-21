@@ -56,14 +56,14 @@ type Result struct {
 func (e *Engine) Run(ctx context.Context, source *model.CollectSources) Result {
 	start := time.Now()
 	res := Result{}
-	maps, err := e.collectRepo.ListCategories(ctx, source.ID)
+	maps, err := e.collectRepo.ListCategories(ctx, int64(source.ID))
 	if err != nil {
 		res.Message = err.Error()
 		return res
 	}
 	catMap := map[string]int64{}
 	for _, m := range maps {
-		catMap[strings.TrimSpace(m.ExternalCategory)] = m.CategoryID
+		catMap[strings.TrimSpace(m.ExternalCategory)] = int64(m.CategoryID)
 	}
 	if len(catMap) == 0 {
 		res.Message = "请先配置分类映射"
@@ -73,13 +73,13 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources) Result {
 		res.Message = "采集源未绑定播放源"
 		return res
 	}
-	playSrc, err := e.playRepo.GetSource(ctx, source.PlaySourceID)
+	playSrc, err := e.playRepo.GetSource(ctx, int64(source.PlaySourceID))
 	if err != nil || playSrc == nil {
 		res.Message = "绑定的播放源不存在"
 		return res
 	}
 
-	isApple := source.Type == constant.CollectTypeAppleCMS
+	isApple := source.Type == uint8(constant.CollectTypeAppleCMS)
 	pageNo := 1
 	maxPages := 50 // safety cap per run
 	cancelled := false
@@ -119,7 +119,7 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources) Result {
 				res.Failed++
 				if e.log != nil {
 					e.log.Warn("collect item failed",
-						zap.Int64("source_id", source.ID),
+						zap.Int64("source_id", int64(source.ID)),
 						zap.String("title", item.Title),
 						zap.Error(err),
 					)
@@ -172,7 +172,7 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 	return e.videoRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
 		vRepo := e.videoRepo.WithTx(tx)
 		pRepo := e.playRepo.WithTx(tx)
-		var videoID int64
+		var videoID uint64
 		if existing != nil {
 			videoID = existing.ID
 			existing.Subtitle = item.Subtitle
@@ -186,7 +186,7 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 				existing.PosterImage = item.Poster
 			}
 			if item.Year > 0 {
-				existing.Year = item.Year
+				existing.Year = uint32(item.Year)
 			}
 			if item.Region != "" {
 				existing.Region = item.Region
@@ -195,7 +195,7 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 				existing.Language = item.Language
 			}
 			if item.Duration > 0 {
-				existing.Duration = item.Duration
+				existing.Duration = uint32(item.Duration)
 			}
 			if item.Rating > 0 {
 				existing.Rating = item.Rating
@@ -203,9 +203,9 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 			if rd := parseReleaseDate(item.ReleaseDate); rd != nil {
 				existing.ReleaseDate = rd
 			}
-			existing.CategoryID = categoryID
+			existing.CategoryID = uint64(categoryID)
 			if existing.PublishStatus == 0 {
-				existing.PublishStatus = constant.PublishStatusOnline
+				existing.PublishStatus = uint8(constant.PublishStatusOnline)
 			}
 			if err := vRepo.Update(ctx, existing); err != nil {
 				return err
@@ -220,15 +220,15 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 				Title:         item.Title,
 				Subtitle:      item.Subtitle,
 				Description:   descPtr,
-				CategoryID:    categoryID,
-				PublishStatus: constant.PublishStatusOnline,
-				SerialStatus:  constant.SerialStatusFinished,
+				CategoryID:    uint64(categoryID),
+				PublishStatus: uint8(constant.PublishStatusOnline),
+				SerialStatus:  uint8(constant.SerialStatusFinished),
 				CoverImage:    item.Cover,
 				PosterImage:   firstNonEmpty(item.Poster, item.Cover),
-				Year:          item.Year,
+				Year:          uint32(item.Year),
 				Region:        item.Region,
 				Language:      item.Language,
-				Duration:      item.Duration,
+				Duration:      uint32(item.Duration),
 				Rating:        item.Rating,
 				ReleaseDate:   parseReleaseDate(item.ReleaseDate),
 			}
@@ -265,7 +265,7 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 			if format == "" {
 				format = constant.PlayFormatHLS
 			}
-			existingEp, err := pRepo.GetEpisodeByKey(ctx, videoID, source.PlaySourceID, num)
+			existingEp, err := pRepo.GetEpisodeByKey(ctx, int64(videoID), int64(source.PlaySourceID), num)
 			if err != nil {
 				return err
 			}
@@ -274,7 +274,7 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 				existingEp.PlayURL = ep.URL
 				existingEp.Quality = ep.Quality
 				existingEp.Format = format
-				existingEp.Status = constant.StatusEnabled
+				existingEp.Status = uint8(constant.StatusEnabled)
 				if existingEp.DeletedAt != nil {
 					if err := pRepo.RestoreAndUpdateEpisode(ctx, existingEp); err != nil {
 						return err
@@ -287,14 +287,14 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 				continue
 			}
 			m := &model.PlayEpisodes{
-				SourceID:      source.PlaySourceID,
+				SourceID:      uint64(source.PlaySourceID),
 				VideoID:       videoID,
-				EpisodeNumber: num,
+				EpisodeNumber: uint32(num),
 				Title:         ep.Title,
 				PlayURL:       ep.URL,
 				Quality:       ep.Quality,
 				Format:        format,
-				Status:        constant.StatusEnabled,
+				Status:        uint8(constant.StatusEnabled),
 			}
 			if err := pRepo.CreateEpisode(ctx, m); err != nil {
 				return err
@@ -304,8 +304,8 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 	})
 }
 
-func (e *Engine) ensureDirectors(ctx context.Context, names []string) ([]int64, error) {
-	ids := make([]int64, 0, len(names))
+func (e *Engine) ensureDirectors(ctx context.Context, names []string) ([]uint64, error) {
+	ids := make([]uint64, 0, len(names))
 	for _, name := range names {
 		name = strings.TrimSpace(name)
 		if name == "" {
@@ -335,8 +335,8 @@ func (e *Engine) ensureDirectors(ctx context.Context, names []string) ([]int64, 
 	return ids, nil
 }
 
-func (e *Engine) ensureActors(ctx context.Context, names []string) ([]int64, error) {
-	ids := make([]int64, 0, len(names))
+func (e *Engine) ensureActors(ctx context.Context, names []string) ([]uint64, error) {
+	ids := make([]uint64, 0, len(names))
 	for _, name := range names {
 		name = strings.TrimSpace(name)
 		if name == "" {
@@ -364,8 +364,8 @@ func (e *Engine) ensureActors(ctx context.Context, names []string) ([]int64, err
 	return ids, nil
 }
 
-func (e *Engine) ensureTags(ctx context.Context, names []string) ([]int64, error) {
-	ids := make([]int64, 0, len(names))
+func (e *Engine) ensureTags(ctx context.Context, names []string) ([]uint64, error) {
+	ids := make([]uint64, 0, len(names))
 	for _, name := range names {
 		name = strings.TrimSpace(name)
 		if name == "" {

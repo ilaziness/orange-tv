@@ -99,7 +99,7 @@ func (s *collectService) CreateSource(ctx context.Context, req *admindto.CreateC
 	if err := s.validateSourceInput(ctx, req.Type, req.CollectURL, req.CronExpr, req.PlaySourceID); err != nil {
 		return nil, err
 	}
-	status := constant.StatusEnabled
+	status := uint8(constant.StatusEnabled)
 	if req.Status != nil {
 		status = *req.Status
 	}
@@ -237,7 +237,7 @@ func (s *collectService) SetCategories(ctx context.Context, sourceID int64, req 
 			continue
 		}
 		seen[ext] = true
-		cat, err := s.categoryRepo.GetByID(ctx, in.CategoryID)
+		cat, err := s.categoryRepo.GetByID(ctx, int64(in.CategoryID))
 		if err != nil {
 			return nil, errcode.Wrap(errcode.DatabaseError, err)
 		}
@@ -260,7 +260,7 @@ func (s *collectService) Start(ctx context.Context, sourceID int64) error {
 	if err != nil {
 		return err
 	}
-	if source.Status != constant.StatusEnabled {
+	if source.Status != uint8(constant.StatusEnabled) {
 		return errcode.CollectSourceDisabled
 	}
 	maps, err := s.repo.ListCategories(ctx, sourceID)
@@ -334,46 +334,46 @@ func (s *collectService) ListLogs(ctx context.Context, req *admindto.CollectLogL
 func (s *collectService) runJob(ctx context.Context, source *model.CollectSources) {
 	defer func() {
 		s.mu.Lock()
-		delete(s.running, source.ID)
+		delete(s.running, int64(source.ID))
 		s.mu.Unlock()
 	}()
 
 	start := time.Now()
 	logRow := &model.CollectLogs{
 		SourceID: source.ID,
-		Status:   constant.CollectLogRunning,
+		Status:   uint8(constant.CollectLogRunning),
 	}
 	if err := s.repo.CreateLog(context.Background(), logRow); err != nil && s.log != nil {
 		s.log.Error("create collect log failed", zap.Error(err))
 	}
 
 	res := s.engine.Run(ctx, source)
-	status := constant.CollectLogSuccess
+	status := uint8(constant.CollectLogSuccess)
 	switch {
 	case ctx.Err() != nil:
 		if res.Success > 0 && res.Failed > 0 {
-			status = constant.CollectLogPartialSuccess
+			status = uint8(constant.CollectLogPartialSuccess)
 		} else if res.Success > 0 {
-			status = constant.CollectLogSuccess
+			status = uint8(constant.CollectLogSuccess)
 		} else {
-			status = constant.CollectLogCancelled
+			status = uint8(constant.CollectLogCancelled)
 		}
 		if res.Message == "" {
 			res.Message = "采集已取消"
 		}
 	case res.Message != "" && res.Success == 0 && res.Failed == 0:
-		status = constant.CollectLogFailed
+		status = uint8(constant.CollectLogFailed)
 	case res.Success == 0 && res.Failed > 0:
-		status = constant.CollectLogFailed
+		status = uint8(constant.CollectLogFailed)
 	case res.Failed > 0:
-		status = constant.CollectLogPartialSuccess
+		status = uint8(constant.CollectLogPartialSuccess)
 	}
 
-	dur := int32(time.Since(start).Milliseconds())
+	dur := uint32(time.Since(start).Milliseconds())
 	logRow.Status = status
-	logRow.TotalCount = int32(res.Total)
-	logRow.SuccessCount = int32(res.Success)
-	logRow.FailedCount = int32(res.Failed)
+	logRow.TotalCount = uint32(res.Total)
+	logRow.SuccessCount = uint32(res.Success)
+	logRow.FailedCount = uint32(res.Failed)
 	logRow.DurationMs = dur
 	if res.Message != "" {
 		msg := res.Message
@@ -382,11 +382,11 @@ func (s *collectService) runJob(ctx context.Context, source *model.CollectSource
 	if logRow.ID > 0 {
 		_ = s.repo.UpdateLog(context.Background(), logRow)
 	}
-	_ = s.repo.TouchLastCollect(context.Background(), source.ID, time.Now())
+	_ = s.repo.TouchLastCollect(context.Background(), int64(source.ID), time.Now())
 	if s.log != nil {
 		s.log.Info("collect finished",
-			zap.Int64("source_id", source.ID),
-			zap.Int8("status", status),
+			zap.Int64("source_id", int64(source.ID)),
+			zap.Uint8("status", status),
 			zap.Int("success", res.Success),
 			zap.Int("failed", res.Failed),
 		)
@@ -454,30 +454,30 @@ func (s *collectService) ReloadScheduler(ctx context.Context) error {
 		}
 		if _, err := parser.Parse(expr); err != nil {
 			if s.log != nil {
-				s.log.Warn("skip invalid cron", zap.Int64("source_id", src.ID), zap.Error(err))
+				s.log.Warn("skip invalid cron", zap.Int64("source_id", int64(src.ID)), zap.Error(err))
 			}
 			continue
 		}
 		sourceID := src.ID
 		s.mu.Lock()
 		entryID, err := s.cron.AddFunc(expr, func() {
-			_ = s.Start(context.Background(), sourceID)
+			_ = s.Start(context.Background(), int64(sourceID))
 		})
 		if err != nil {
 			s.mu.Unlock()
 			if s.log != nil {
-				s.log.Warn("add cron failed", zap.Int64("source_id", sourceID), zap.Error(err))
+				s.log.Warn("add cron failed", zap.Int64("source_id", int64(sourceID)), zap.Error(err))
 			}
 			continue
 		}
-		s.cronIDs[sourceID] = entryID
+		s.cronIDs[int64(sourceID)] = entryID
 		s.mu.Unlock()
 	}
 	return nil
 }
 
-func (s *collectService) validateSourceInput(ctx context.Context, typ int8, collectURL, cronExpr string, playSourceID int64) error {
-	if typ != constant.CollectTypeDefault && typ != constant.CollectTypeAppleCMS {
+func (s *collectService) validateSourceInput(ctx context.Context, typ uint8, collectURL, cronExpr string, playSourceID uint64) error {
+	if typ != uint8(constant.CollectTypeDefault) && typ != uint8(constant.CollectTypeAppleCMS) {
 		return errcode.WithMessage(errcode.ParamError, "采集源类型无效")
 	}
 	u := strings.TrimSpace(collectURL)
@@ -493,7 +493,7 @@ func (s *collectService) validateSourceInput(ctx context.Context, typ int8, coll
 			return errcode.CollectInvalidCron
 		}
 	}
-	src, err := s.playRepo.GetSource(ctx, playSourceID)
+	src, err := s.playRepo.GetSource(ctx, int64(playSourceID))
 	if err != nil {
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}

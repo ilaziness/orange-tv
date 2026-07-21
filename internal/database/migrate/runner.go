@@ -89,8 +89,8 @@ func Up(ctx context.Context, db *database.DB, dir string, dryRun bool) (*UpResul
 		return nil, fmt.Errorf("run migrations: %w", err)
 	}
 
-	result.AppliedCount = len(pending)
 	if group != nil {
+		result.AppliedCount = len(group.Migrations)
 		result.Group = group.String()
 	}
 
@@ -135,6 +135,8 @@ func Down(ctx context.Context, db *database.DB, dir string, dryRun bool) (*DownR
 	}
 
 	if group != nil {
+		result.RollbackCount = len(group.Migrations)
+		result.RollbackNames = migrationNames(group.Migrations)
 		result.Group = group.String()
 	}
 
@@ -173,7 +175,7 @@ func Create(dir, name string) (upFile, downFile string, err error) {
 		return "", "", err
 	}
 
-	timestamp := time.Now().Format("20060102150405")
+	timestamp := time.Now().UTC().Format("20060102150405")
 	baseName := fmt.Sprintf("%s_%s", timestamp, name)
 
 	upFile = filepath.Join(dir, baseName+".up.sql")

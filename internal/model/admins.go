@@ -8,21 +8,21 @@ import (
 
 // Admins represents the admins table.
 type Admins struct {
-	bun.BaseModel `bun:"table:admins,alias:a"`
+	bun.BaseModel `bun:"table:admins,alias:ad"`
 
-	ID int64 `bun:"id" json:"id"`
+	ID uint64 `bun:"id,pk,autoincrement" json:"id"`
 	// 用户名
-	Username string `bun:"username" json:"username"`
+	Username string `bun:"username,notnull,unique" json:"username"`
 	// 密码（加密存储）
-	Password string `bun:"password" json:"-"`
+	Password string `bun:"password,notnull" json:"-"`
 	// 邮箱
-	Email string `bun:"email" json:"email"`
+	Email string `bun:"email,notnull" json:"email"`
 	// 头像
-	Avatar string `bun:"avatar" json:"avatar"`
+	Avatar string `bun:"avatar,notnull" json:"avatar"`
 	// 用户组ID
-	GroupID int64 `bun:"group_id" json:"group_id"`
+	GroupID uint64 `bun:"group_id,notnull" json:"group_id"`
 	// 状态：1启用 0禁用
-	Status int8 `bun:"status" json:"status"`
+	Status uint8 `bun:"status,notnull" json:"status"`
 	// 最后登录时间
 	LastLoginAt *time.Time `bun:"last_login_at" json:"last_login_at"`
 	CreatedAt   *time.Time `bun:"created_at" json:"created_at"`

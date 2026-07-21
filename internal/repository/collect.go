@@ -14,14 +14,14 @@ import (
 
 // CollectSourceListFilter filters collect source queries.
 type CollectSourceListFilter struct {
-	Status *int8
+	Status *uint8
 	Offset int
 	Limit  int
 }
 
 // CollectLogListFilter filters collect log queries.
 type CollectLogListFilter struct {
-	SourceID int64
+	SourceID uint64
 	Offset   int
 	Limit    int
 }
@@ -177,7 +177,7 @@ func (r *collectRepo) ReplaceCategories(ctx context.Context, sourceID int64, ite
 			return nil
 		}
 		for i := range items {
-			items[i].SourceID = sourceID
+			items[i].SourceID = uint64(sourceID)
 			items[i].ID = 0
 		}
 		if _, err := tx.NewInsert().Model(&items).Exec(ctx); err != nil {

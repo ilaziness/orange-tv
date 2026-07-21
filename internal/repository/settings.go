@@ -97,7 +97,7 @@ func (r *settingsRepo) UpsertMany(ctx context.Context, items []SettingUpsert) er
 				row := &model.SystemSettings{
 					SettingKey:   it.Key,
 					SettingValue: &val,
-					SettingType:  it.SettingType,
+					SettingType:  uint8(it.SettingType),
 					Description:  it.Description,
 					CreatedAt:    &now,
 					UpdatedAt:    &now,
@@ -113,7 +113,7 @@ func (r *settingsRepo) UpsertMany(ctx context.Context, items []SettingUpsert) er
 			val := it.Value
 			existing.SettingValue = &val
 			if it.SettingType > 0 {
-				existing.SettingType = it.SettingType
+				existing.SettingType = uint8(it.SettingType)
 			}
 			if it.Description != "" {
 				existing.Description = it.Description

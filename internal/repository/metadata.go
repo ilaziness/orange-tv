@@ -18,7 +18,7 @@ type MetadataRepository interface {
 	ListDirectors(ctx context.Context, keyword string, offset, limit int) ([]model.Directors, int, error)
 	GetDirector(ctx context.Context, id int64) (*model.Directors, error)
 	GetDirectorByName(ctx context.Context, name string) (*model.Directors, error)
-	GetDirectorsByIDs(ctx context.Context, ids []int64) ([]model.Directors, error)
+	GetDirectorsByIDs(ctx context.Context, ids []uint64) ([]model.Directors, error)
 	ExistsDirectorName(ctx context.Context, name string, excludeID int64) (bool, error)
 	CreateDirector(ctx context.Context, m *model.Directors) error
 	UpdateDirector(ctx context.Context, m *model.Directors) error
@@ -29,7 +29,7 @@ type MetadataRepository interface {
 	ListActors(ctx context.Context, keyword string, offset, limit int) ([]model.Actors, int, error)
 	GetActor(ctx context.Context, id int64) (*model.Actors, error)
 	GetActorByName(ctx context.Context, name string) (*model.Actors, error)
-	GetActorsByIDs(ctx context.Context, ids []int64) ([]model.Actors, error)
+	GetActorsByIDs(ctx context.Context, ids []uint64) ([]model.Actors, error)
 	ExistsActorName(ctx context.Context, name string, excludeID int64) (bool, error)
 	CreateActor(ctx context.Context, m *model.Actors) error
 	UpdateActor(ctx context.Context, m *model.Actors) error
@@ -40,7 +40,7 @@ type MetadataRepository interface {
 	ListTags(ctx context.Context, keyword string, offset, limit int) ([]model.Tags, int, error)
 	GetTag(ctx context.Context, id int64) (*model.Tags, error)
 	GetTagByName(ctx context.Context, name string) (*model.Tags, error)
-	GetTagsByIDs(ctx context.Context, ids []int64) ([]model.Tags, error)
+	GetTagsByIDs(ctx context.Context, ids []uint64) ([]model.Tags, error)
 	ExistsTagName(ctx context.Context, name string, excludeID int64) (bool, error)
 	CreateTag(ctx context.Context, m *model.Tags) error
 	UpdateTag(ctx context.Context, m *model.Tags) error
@@ -97,7 +97,7 @@ func (r *metadataRepo) GetDirectorByName(ctx context.Context, name string) (*mod
 	return item, nil
 }
 
-func (r *metadataRepo) GetDirectorsByIDs(ctx context.Context, ids []int64) ([]model.Directors, error) {
+func (r *metadataRepo) GetDirectorsByIDs(ctx context.Context, ids []uint64) ([]model.Directors, error) {
 	if len(ids) == 0 {
 		return nil, nil
 	}
@@ -206,7 +206,7 @@ func (r *metadataRepo) GetActorByName(ctx context.Context, name string) (*model.
 	return item, nil
 }
 
-func (r *metadataRepo) GetActorsByIDs(ctx context.Context, ids []int64) ([]model.Actors, error) {
+func (r *metadataRepo) GetActorsByIDs(ctx context.Context, ids []uint64) ([]model.Actors, error) {
 	if len(ids) == 0 {
 		return nil, nil
 	}
@@ -314,7 +314,7 @@ func (r *metadataRepo) GetTagByName(ctx context.Context, name string) (*model.Ta
 	return item, nil
 }
 
-func (r *metadataRepo) GetTagsByIDs(ctx context.Context, ids []int64) ([]model.Tags, error) {
+func (r *metadataRepo) GetTagsByIDs(ctx context.Context, ids []uint64) ([]model.Tags, error) {
 	if len(ids) == 0 {
 		return nil, nil
 	}

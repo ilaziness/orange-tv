@@ -49,8 +49,8 @@ type AdminRepository interface {
 // AdminListFilter filters admin list queries.
 type AdminListFilter struct {
 	Keyword string
-	Status  *int8
-	GroupID *int64
+	Status  *uint8
+	GroupID *uint64
 	Offset  int
 	Limit   int
 }
@@ -65,7 +65,7 @@ type UserGroupListFilter struct {
 // UserListFilter filters regular user list queries.
 type UserListFilter struct {
 	Keyword string
-	Status  *int8
+	Status  *uint8
 	Offset  int
 	Limit   int
 }

@@ -52,7 +52,7 @@ func (s *liveService) Create(ctx context.Context, req *admindto.CreateLiveReques
 	if streamURL == "" {
 		return nil, errcode.WithMessage(errcode.ParamError, "直播流地址不能为空")
 	}
-	status := constant.StatusEnabled
+	status := uint8(constant.StatusEnabled)
 	if req.Status != nil {
 		status = *req.Status
 	}

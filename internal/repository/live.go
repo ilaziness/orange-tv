@@ -15,7 +15,7 @@ import (
 type LiveListFilter struct {
 	Category   string
 	Keyword    string
-	Status     *int8
+	Status     *uint8
 	OnlyOnline bool
 	Offset     int
 	Limit      int

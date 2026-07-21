@@ -106,16 +106,16 @@ func (s *videoService) Related(ctx context.Context, id int64, limit int) ([]shar
 	if limit > 50 {
 		limit = 50
 	}
-	video, err := s.videoRepo.GetByID(ctx, id)
+	video, err := s.videoRepo.GetByID(ctx, uint64(id))
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	if video == nil || video.PublishStatus != constant.PublishStatusOnline {
+	if video == nil || video.PublishStatus != uint8(constant.PublishStatusOnline) {
 		return nil, errcode.VideoNotFound
 	}
 	// practical related: same category first (skip if category unset), then same region fill
 	out := make([]model.Videos, 0, limit)
-	seen := map[int64]bool{id: true}
+	seen := map[uint64]bool{uint64(id): true}
 	if video.CategoryID > 0 {
 		candidates, _, err := s.videoRepo.List(ctx, repository.VideoListFilter{
 			CategoryID: video.CategoryID,
@@ -164,15 +164,15 @@ func (s *videoService) Related(ctx context.Context, id int64, limit int) ([]shar
 }
 
 func (s *videoService) Get(ctx context.Context, id int64) (*shareddto.VideoDetailResponse, error) {
-	video, err := s.videoRepo.GetByID(ctx, id)
+	video, err := s.videoRepo.GetByID(ctx, uint64(id))
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	if video == nil || video.PublishStatus != constant.PublishStatusOnline {
+	if video == nil || video.PublishStatus != uint8(constant.PublishStatusOnline) {
 		return nil, errcode.VideoNotFound
 	}
 
-	directorIDs, err := s.videoRepo.ListDirectorIDs(ctx, id)
+	directorIDs, err := s.videoRepo.ListDirectorIDs(ctx, uint64(id))
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
@@ -180,11 +180,11 @@ func (s *videoService) Get(ctx context.Context, id int64) (*shareddto.VideoDetai
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	actorRels, err := s.videoRepo.ListActorRels(ctx, id)
+	actorRels, err := s.videoRepo.ListActorRels(ctx, uint64(id))
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	actorIDs := make([]int64, 0, len(actorRels))
+	actorIDs := make([]uint64, 0, len(actorRels))
 	for _, rel := range actorRels {
 		actorIDs = append(actorIDs, rel.ActorID)
 	}
@@ -192,11 +192,11 @@ func (s *videoService) Get(ctx context.Context, id int64) (*shareddto.VideoDetai
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	actorName := map[int64]string{}
+	actorName := map[uint64]string{}
 	for _, a := range actors {
 		actorName[a.ID] = a.Name
 	}
-	tagIDs, err := s.videoRepo.ListTagIDs(ctx, id)
+	tagIDs, err := s.videoRepo.ListTagIDs(ctx, uint64(id))
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
@@ -204,7 +204,7 @@ func (s *videoService) Get(ctx context.Context, id int64) (*shareddto.VideoDetai
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	episodes, err := s.playRepo.ListEpisodesByVideo(ctx, id, true)
+	episodes, err := s.playRepo.ListEpisodesByVideo(ctx, int64(id), true)
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
@@ -212,16 +212,16 @@ func (s *videoService) Get(ctx context.Context, id int64) (*shareddto.VideoDetai
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	sourceMap := map[int64]model.PlaySources{}
+	sourceMap := map[uint64]model.PlaySources{}
 	for _, src := range sources {
-		if src.Status != constant.StatusEnabled {
+		if src.Status != uint8(constant.StatusEnabled) {
 			continue
 		}
 		sourceMap[src.ID] = src
 	}
 
-	groups := map[int64]*shareddto.VideoSourceGroup{}
-	order := make([]int64, 0)
+	groups := map[uint64]*shareddto.VideoSourceGroup{}
+	order := make([]uint64, 0)
 	for _, ep := range episodes {
 		src, ok := sourceMap[ep.SourceID]
 		if !ok {

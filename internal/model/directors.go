@@ -8,11 +8,11 @@ import (
 
 // Directors represents the directors table.
 type Directors struct {
-	bun.BaseModel `bun:"table:directors,alias:d"`
+	bun.BaseModel `bun:"table:directors,alias:di"`
 
-	ID int64 `bun:"id" json:"id"`
+	ID uint64 `bun:"id,pk,autoincrement" json:"id"`
 	// 导演名称
-	Name      string     `bun:"name" json:"name"`
+	Name      string     `bun:"name,notnull,unique" json:"name"`
 	CreatedAt *time.Time `bun:"created_at" json:"created_at"`
 	UpdatedAt *time.Time `bun:"updated_at" json:"updated_at"`
 	// 软删除时间

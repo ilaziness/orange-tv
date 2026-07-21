@@ -31,6 +31,36 @@ var commonInitialisms = map[string]string{
 	"sql":   "SQL",
 	"pk":    "PK",
 	"fk":    "FK",
+	"pv":    "PV",
+	"uv":    "UV",
+}
+
+// ToAlias generates a short alias from a snake_case table name. For tables
+// with a single segment, the first two letters are used (e.g. actors -> ac,
+// admins -> ad) to avoid collisions between tables that share the first letter.
+// Multi-segment names use the first letter of each segment (e.g. site_stats_daily -> ssd).
+func ToAlias(tableName string) string {
+	parts := strings.Split(tableName, "_")
+	if len(parts) == 0 {
+		return "t"
+	}
+	if len(parts) == 1 {
+		if len(tableName) >= 2 {
+			return tableName[:2]
+		}
+		return tableName
+	}
+	var alias strings.Builder
+	for _, p := range parts {
+		if p == "" {
+			continue
+		}
+		alias.WriteRune(rune(p[0]))
+	}
+	if alias.Len() == 0 {
+		return "t"
+	}
+	return alias.String()
 }
 
 // ToCamelCase converts snake_case to CamelCase (with common initialisms).
@@ -65,7 +95,7 @@ func ToSnakeCase(s string) string {
 }
 
 // MapSQLTypeToGo maps a SQL type name to a Go type.
-func MapSQLTypeToGo(sqlType string, nullable bool) string {
+func MapSQLTypeToGo(sqlType string, nullable, unsigned bool) string {
 	typeMap := map[string]string{
 		"tinyint":   "int8",
 		"smallint":  "int16",
@@ -93,6 +123,19 @@ func MapSQLTypeToGo(sqlType string, nullable bool) string {
 		goType = "string"
 	}
 
+	if unsigned {
+		switch goType {
+		case "int8":
+			goType = "uint8"
+		case "int16":
+			goType = "uint16"
+		case "int32":
+			goType = "uint32"
+		case "int64":
+			goType = "uint64"
+		}
+	}
+
 	if nullable {
 		goType = "*" + goType
 	}
@@ -108,7 +151,7 @@ func GenerateModelCode(opts GenerateOptions, modelName, tableName string, column
 
 	hasTime := false
 	for _, col := range columns {
-		goType := MapSQLTypeToGo(col.Type, col.Nullable)
+		goType := MapSQLTypeToGo(col.Type, col.Nullable, col.Unsigned)
 		if goType == "time.Time" || goType == "*time.Time" {
 			hasTime = true
 			break
@@ -125,10 +168,7 @@ func GenerateModelCode(opts GenerateOptions, modelName, tableName string, column
 	sb.WriteString(fmt.Sprintf("// %s represents the %s table.\n", modelName, tableName))
 	sb.WriteString(fmt.Sprintf("type %s struct {\n", modelName))
 
-	alias := "t"
-	if len(tableName) > 0 {
-		alias = string(tableName[0])
-	}
+	alias := ToAlias(tableName)
 	sb.WriteString(fmt.Sprintf("\tbun.BaseModel `bun:\"table:%s,alias:%s\"`\n\n", tableName, alias))
 
 	for _, col := range columns {
@@ -136,7 +176,7 @@ func GenerateModelCode(opts GenerateOptions, modelName, tableName string, column
 			sb.WriteString(fmt.Sprintf("\t// %s\n", col.Comment))
 		}
 
-		goType := MapSQLTypeToGo(col.Type, col.Nullable)
+		goType := MapSQLTypeToGo(col.Type, col.Nullable, col.Unsigned)
 		fieldName := ToCamelCase(col.Name)
 
 		for _, fk := range foreignKeys {
@@ -148,7 +188,24 @@ func GenerateModelCode(opts GenerateOptions, modelName, tableName string, column
 			}
 		}
 
-		tags := []string{fmt.Sprintf(`bun:"%s"`, col.Name)}
+		bunTag := col.Name
+		if col.PrimaryKey {
+			bunTag += ",pk"
+			if col.AutoIncrement {
+				bunTag += ",autoincrement"
+			}
+		}
+		if !col.Nullable && !col.PrimaryKey {
+			bunTag += ",notnull"
+		}
+		if col.Unique {
+			if col.UniqueGroup != "" {
+				bunTag += ",unique:" + col.UniqueGroup
+			} else {
+				bunTag += ",unique"
+			}
+		}
+		tags := []string{fmt.Sprintf(`bun:"%s"`, bunTag)}
 		if opts.JSONTags {
 			// Prefer DB column names (already snake_case); hide sensitive fields.
 			jsonName := col.Name

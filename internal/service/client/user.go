@@ -85,7 +85,7 @@ func (s *userService) Register(ctx context.Context, req *clientdto.RegisterReque
 		Username: username,
 		Password: hash,
 		Email:    strings.TrimSpace(req.Email),
-		Status:   constant.StatusEnabled,
+		Status:   uint8(constant.StatusEnabled),
 	}
 	if err := s.adminRepo.CreateUser(ctx, u); err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
@@ -104,11 +104,11 @@ func (s *userService) Login(ctx context.Context, req *clientdto.LoginRequest, ip
 	}
 	userID := int64(0)
 	if u != nil {
-		userID = u.ID
+		userID = int64(u.ID)
 	}
 	recordLog := func(success bool, msg string) {
 		_ = s.userRepo.CreateUserLoginLog(ctx, &model.UserLoginLogs{
-			UserID:    userID,
+			UserID:    uint64(userID),
 			Username:  username,
 			IP:        ip,
 			UserAgent: ua,
@@ -120,7 +120,7 @@ func (s *userService) Login(ctx context.Context, req *clientdto.LoginRequest, ip
 		recordLog(false, "用户不存在")
 		return nil, errcode.InvalidCredentials
 	}
-	if u.Status != constant.StatusEnabled {
+	if u.Status != uint8(constant.StatusEnabled) {
 		recordLog(false, "账号已禁用")
 		return nil, errcode.UserDisabled
 	}
@@ -128,7 +128,7 @@ func (s *userService) Login(ctx context.Context, req *clientdto.LoginRequest, ip
 		recordLog(false, "密码错误")
 		return nil, errcode.InvalidCredentials
 	}
-	token, err := s.jwtMgr.GenerateAccessTokenFor(u.ID, auth.SubjectUser)
+	token, err := s.jwtMgr.GenerateAccessTokenFor(int64(u.ID), auth.SubjectUser)
 	if err != nil {
 		return nil, errcode.Wrap(errcode.InternalError, err)
 	}
@@ -172,7 +172,7 @@ func (s *userService) ListFavorites(ctx context.Context, userID int64, req *clie
 		if v != nil {
 			item.Title = v.Title
 			item.Cover = v.CoverImage
-			item.Year = v.Year
+			item.Year = uint32(v.Year)
 			item.Rating = v.Rating
 		}
 		out = append(out, item)
@@ -181,7 +181,7 @@ func (s *userService) ListFavorites(ctx context.Context, userID int64, req *clie
 }
 
 func (s *userService) AddFavorite(ctx context.Context, userID, videoID int64) error {
-	v, err := s.videoRepo.GetByID(ctx, videoID)
+	v, err := s.videoRepo.GetByID(ctx, uint64(videoID))
 	if err != nil {
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
@@ -196,8 +196,8 @@ func (s *userService) AddFavorite(ctx context.Context, userID, videoID int64) er
 		return errcode.FavoriteExists
 	}
 	return s.userRepo.AddFavorite(ctx, &model.UserFavorites{
-		UserID:  userID,
-		VideoID: videoID,
+		UserID:  uint64(userID),
+		VideoID: uint64(videoID),
 	})
 }
 
@@ -249,7 +249,7 @@ func (s *userService) UpsertHistory(ctx context.Context, userID int64, req *clie
 	}
 	now := time.Now()
 	return s.userRepo.UpsertHistory(ctx, &model.UserPlayHistory{
-		UserID:       userID,
+		UserID:       uint64(userID),
 		VideoID:      req.VideoID,
 		PlaySourceID: req.PlaySourceID,
 		EpisodeID:    req.EpisodeID,
@@ -286,7 +286,7 @@ func (s *userService) ListComments(ctx context.Context, videoID int64, req *clie
 			CreatedAt: c.CreatedAt.Format(time.RFC3339),
 		}
 		// Fill username
-		if u, _ := s.adminRepo.GetUserByID(ctx, c.UserID); u != nil {
+		if u, _ := s.adminRepo.GetUserByID(ctx, int64(c.UserID)); u != nil {
 			item.Username = u.Username
 			item.Avatar = u.Avatar
 		}
@@ -308,7 +308,7 @@ func (s *userService) CreateComment(ctx context.Context, userID int64, req *clie
 	}
 	c := &model.VideoComments{
 		VideoID:  req.VideoID,
-		UserID:   userID,
+		UserID:   uint64(userID),
 		ParentID: req.ParentID,
 		Content:  strings.TrimSpace(req.Content),
 		Status:   1,
@@ -340,7 +340,7 @@ func (s *userService) DeleteComment(ctx context.Context, userID, commentID int64
 	if c == nil {
 		return errcode.CommentNotFound
 	}
-	if c.UserID != userID {
+	if c.UserID != uint64(userID) {
 		return errcode.InsufficientPermission
 	}
 	return s.userRepo.DeleteComment(ctx, commentID)
@@ -350,15 +350,15 @@ func (s *userService) DeleteComment(ctx context.Context, userID, commentID int64
 
 func toUserProfile(u *model.Users) *clientdto.Profile {
 	return &clientdto.Profile{
-		ID:       u.ID,
+		ID:       uint64(u.ID),
 		Username: u.Username,
 		Email:    u.Email,
 		Avatar:   u.Avatar,
-		Status:   u.Status,
+		Status:   uint8(u.Status),
 	}
 }
 
-func boolToStatus(b bool) int8 {
+func boolToStatus(b bool) uint8 {
 	if b {
 		return 1
 	}

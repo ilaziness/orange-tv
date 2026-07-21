@@ -10,19 +10,12 @@ import (
 type SiteStatsDaily struct {
 	bun.BaseModel `bun:"table:site_stats_daily,alias:ssd"`
 
-	ID         int64     `bun:"id" json:"id"`
-	StatDate   time.Time `bun:"stat_date" json:"stat_date"`
-	PV         int64     `bun:"pv" json:"pv"`
-	UV         int64     `bun:"uv" json:"uv"`
-	OnlinePeak int32     `bun:"online_peak" json:"online_peak"`
-}
-
-// OnlineSessions represents the online_sessions table.
-type OnlineSessions struct {
-	bun.BaseModel `bun:"table:online_sessions,alias:os"`
-
-	ID           int64     `bun:"id" json:"id"`
-	SessionKey   string    `bun:"session_key" json:"session_key"`
-	IP           string    `bun:"ip" json:"ip"`
-	LastActiveAt time.Time `bun:"last_active_at" json:"last_active_at"`
+	ID       uint64    `bun:"id,pk,autoincrement" json:"id"`
+	StatDate time.Time `bun:"stat_date,notnull,unique" json:"stat_date"`
+	// 页面浏览量
+	PV uint64 `bun:"pv,notnull" json:"pv"`
+	// 独立访客（按IP近似）
+	UV uint64 `bun:"uv,notnull" json:"uv"`
+	// 当日在线峰值（近似）
+	OnlinePeak uint32 `bun:"online_peak,notnull" json:"online_peak"`
 }

@@ -57,48 +57,48 @@ type IDURI struct {
 
 // NamedItem is a simple id/name pair shared by content APIs.
 type NamedItem struct {
-	ID   int64  `json:"id"`
+	ID   uint64 `json:"id"`
 	Name string `json:"name"`
 }
 
 // ActorItem is actor info with role.
 type ActorItem struct {
-	ID   int64  `json:"id"`
+	ID   uint64 `json:"id"`
 	Name string `json:"name"`
 	Role string `json:"role"`
 }
 
 // CategoryResponse is a category tree node.
 type CategoryResponse struct {
-	ID        int64              `json:"id"`
+	ID        uint64             `json:"id"`
 	Name      string             `json:"name"`
-	ParentID  int64              `json:"parent_id"`
-	SortOrder int32              `json:"sort_order"`
-	Status    int8               `json:"status"`
+	ParentID  uint64             `json:"parent_id"`
+	SortOrder uint32             `json:"sort_order"`
+	Status    uint8              `json:"status"`
 	Children  []CategoryResponse `json:"children"`
 }
 
 // VideoListItem is a compact video card payload.
 type VideoListItem struct {
-	ID            int64   `json:"id"`
+	ID            uint64  `json:"id"`
 	Title         string  `json:"title"`
 	Subtitle      string  `json:"subtitle"`
 	Cover         string  `json:"cover"`
 	Poster        string  `json:"poster"`
-	Year          int32   `json:"year"`
+	Year          uint32  `json:"year"`
 	Region        string  `json:"region"`
 	Language      string  `json:"language"`
 	Rating        float64 `json:"rating"`
-	CategoryID    int64   `json:"category_id"`
-	PublishStatus int8    `json:"publish_status,omitempty"`
-	SerialStatus  int8    `json:"serial_status"`
-	Duration      int32   `json:"duration"`
-	ViewCount     int32   `json:"view_count"`
+	CategoryID    uint64  `json:"category_id"`
+	PublishStatus uint8   `json:"publish_status,omitempty"`
+	SerialStatus  uint8   `json:"serial_status"`
+	Duration      uint32  `json:"duration"`
+	ViewCount     uint32  `json:"view_count"`
 }
 
 // VideoSourceEpisode is one playable episode under a source.
 type VideoSourceEpisode struct {
-	Episode int32  `json:"episode"`
+	Episode uint32 `json:"episode"`
 	Title   string `json:"title"`
 	URL     string `json:"url"`
 	Quality string `json:"quality"`
@@ -107,76 +107,76 @@ type VideoSourceEpisode struct {
 
 // VideoSourceGroup groups episodes by play source.
 type VideoSourceGroup struct {
-	ID       int64                `json:"id"`
+	ID       uint64               `json:"id"`
 	Name     string               `json:"name"`
 	Episodes []VideoSourceEpisode `json:"episodes"`
 }
 
 // LiveChannelItem is a live channel payload for admin and client.
 type LiveChannelItem struct {
-	ID          int64  `json:"id"`
+	ID          uint64 `json:"id"`
 	Name        string `json:"name"`
 	Category    string `json:"category"`
 	StreamURL   string `json:"stream_url"`
 	Logo        string `json:"logo"`
 	Description string `json:"description"`
-	SortOrder   int32  `json:"sort_order"`
-	Status      int8   `json:"status,omitempty"`
+	SortOrder   uint32 `json:"sort_order"`
+	Status      uint8  `json:"status,omitempty"`
 }
 
 // CollectSourceItem is an admin collect source payload.
 // API key is never returned in list/detail responses.
 type CollectSourceItem struct {
-	ID            int64  `json:"id"`
+	ID            uint64 `json:"id"`
 	Name          string `json:"name"`
-	Type          int8   `json:"type"`
+	Type          uint8  `json:"type"`
 	CollectURL    string `json:"collect_url"`
 	Config        string `json:"config,omitempty"`
 	CronExpr      string `json:"cron_expr"`
-	PlaySourceID  int64  `json:"play_source_id"`
+	PlaySourceID  uint64 `json:"play_source_id"`
 	LastCollectAt string `json:"last_collect_at,omitempty"`
-	Status        int8   `json:"status"`
+	Status        uint8  `json:"status"`
 }
 
 // CollectCategoryMapItem is an external→internal category mapping.
 type CollectCategoryMapItem struct {
-	ID               int64  `json:"id"`
-	SourceID         int64  `json:"source_id"`
+	ID               uint64 `json:"id"`
+	SourceID         uint64 `json:"source_id"`
 	ExternalCategory string `json:"external_category"`
-	CategoryID       int64  `json:"category_id"`
+	CategoryID       uint64 `json:"category_id"`
 }
 
 // CollectLogItem is one collect run log entry.
 type CollectLogItem struct {
-	ID           int64  `json:"id"`
-	SourceID     int64  `json:"source_id"`
-	Status       int8   `json:"status"`
-	TotalCount   int32  `json:"total_count"`
-	SuccessCount int32  `json:"success_count"`
-	FailedCount  int32  `json:"failed_count"`
+	ID           uint64 `json:"id"`
+	SourceID     uint64 `json:"source_id"`
+	Status       uint8  `json:"status"`
+	TotalCount   uint32 `json:"total_count"`
+	SuccessCount uint32 `json:"success_count"`
+	FailedCount  uint32 `json:"failed_count"`
 	ErrorMessage string `json:"error_message,omitempty"`
-	DurationMs   int32  `json:"duration_ms"`
+	DurationMs   uint32 `json:"duration_ms"`
 	CreatedAt    string `json:"created_at,omitempty"`
 }
 
 // VideoDetailResponse is a full video detail payload.
 type VideoDetailResponse struct {
-	ID            int64              `json:"id"`
+	ID            uint64             `json:"id"`
 	Title         string             `json:"title"`
 	Subtitle      string             `json:"subtitle"`
 	Description   string             `json:"description"`
-	CategoryID    int64              `json:"category_id"`
-	PublishStatus int8               `json:"publish_status,omitempty"`
-	SerialStatus  int8               `json:"serial_status"`
+	CategoryID    uint64             `json:"category_id"`
+	PublishStatus uint8              `json:"publish_status,omitempty"`
+	SerialStatus  uint8              `json:"serial_status"`
 	Cover         string             `json:"cover"`
 	Poster        string             `json:"poster"`
-	Year          int32              `json:"year"`
+	Year          uint32             `json:"year"`
 	Region        string             `json:"region"`
 	Language      string             `json:"language"`
-	Duration      int32              `json:"duration"`
+	Duration      uint32             `json:"duration"`
 	ReleaseDate   string             `json:"release_date,omitempty"`
 	Rating        float64            `json:"rating"`
-	ViewCount     int32              `json:"view_count"`
+	ViewCount     uint32             `json:"view_count"`
 	Directors     []NamedItem        `json:"directors"`
 	Actors        []ActorItem        `json:"actors"`
 	Tags          []NamedItem        `json:"tags"`

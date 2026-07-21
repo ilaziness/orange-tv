@@ -6,11 +6,11 @@ import (
 
 // VideoTags represents the video_tags table.
 type VideoTags struct {
-	bun.BaseModel `bun:"table:video_tags,alias:v"`
+	bun.BaseModel `bun:"table:video_tags,alias:vt"`
 
-	ID int64 `bun:"id" json:"id"`
+	ID uint64 `bun:"id,pk,autoincrement" json:"id"`
 	// 影视ID
-	VideoID int64 `bun:"video_id" json:"video_id"`
+	VideoID uint64 `bun:"video_id,notnull" json:"video_id"`
 	// 标签ID
-	TagID int64 `bun:"tag_id" json:"tag_id"`
+	TagID uint64 `bun:"tag_id,notnull" json:"tag_id"`
 }
