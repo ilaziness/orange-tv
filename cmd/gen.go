@@ -42,12 +42,12 @@ var genDtoCmd = &cobra.Command{
 }
 
 func init() {
-	genModelCmd.Flags().StringVar(&genTable, "table", "", "Table name to generate model for (default: all tables)")
-	genModelCmd.Flags().StringVar(&genOutput, "output", "./internal/model", "Output directory for generated models")
-	genModelCmd.Flags().StringVar(&genPackage, "package", "model", "Package name for generated models")
-	genModelCmd.Flags().BoolVar(&genJSONTags, "json-tags", true, "Add JSON tags to generated models")
-	genModelCmd.Flags().BoolVar(&genValidatorTags, "validator-tags", false, "Add validator tags to generated models")
-	genModelCmd.Flags().BoolVar(&genWithRelations, "with-relations", false, "Generate model relationships from foreign keys")
+	genModelCmd.Flags().StringVar(&genTable, "table", "", "Database table name (string; omit to generate all tables)")
+	genModelCmd.Flags().StringVar(&genOutput, "output", "./internal/model", "Generated model output directory (string path)")
+	genModelCmd.Flags().StringVar(&genPackage, "package", "model", "Generated model package name (string)")
+	genModelCmd.Flags().BoolVar(&genJSONTags, "json-tags", true, "Whether to add JSON tags (bool: true or false)")
+	genModelCmd.Flags().BoolVar(&genValidatorTags, "validator-tags", false, "Whether to add validator tags (bool: true or false)")
+	genModelCmd.Flags().BoolVar(&genWithRelations, "with-relations", false, "Whether to generate relationships from foreign keys (bool: true or false)")
 
 	genCmd.AddCommand(genModelCmd)
 	genCmd.AddCommand(genDtoCmd)

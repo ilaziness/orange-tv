@@ -31,8 +31,8 @@ Exits 0 on HTTP 2xx, 1 otherwise.`,
 }
 
 func init() {
-	healthCmd.Flags().StringVar(&healthURL, "url", "", "full probe URL (overrides --probe and config)")
-	healthCmd.Flags().StringVar(&healthProbe, "probe", "readiness", "probe path: health, readiness, or liveness")
+	healthCmd.Flags().StringVar(&healthURL, "url", "", "Full probe URL (string URL; overrides --probe and config)")
+	healthCmd.Flags().StringVar(&healthProbe, "probe", "readiness", "Probe name (string: health, readiness, or liveness)")
 	rootCmd.AddCommand(healthCmd)
 }
 

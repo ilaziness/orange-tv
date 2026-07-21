@@ -50,8 +50,8 @@ var migrateCreateCmd = &cobra.Command{
 }
 
 func init() {
-	migrateCmd.PersistentFlags().StringVar(&migrateDir, "dir", "./migrations", "Directory containing migration files")
-	migrateCmd.PersistentFlags().BoolVar(&dryRun, "dry-run", false, "Preview migrations without executing them")
+	migrateCmd.PersistentFlags().StringVar(&migrateDir, "dir", "./migrations", "Migration file directory (string path)")
+	migrateCmd.PersistentFlags().BoolVar(&dryRun, "dry-run", false, "Whether to preview migrations without executing them (bool: true or false)")
 
 	migrateCmd.AddCommand(migrateUpCmd)
 	migrateCmd.AddCommand(migrateDownCmd)

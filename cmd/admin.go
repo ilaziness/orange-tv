@@ -31,9 +31,9 @@ Does not print the password. Username is globally unique (including soft-deleted
 }
 
 func init() {
-	adminCreateCmd.Flags().StringVar(&adminUsername, "username", "", "admin username (required, 3-50 chars)")
-	adminCreateCmd.Flags().StringVar(&adminPassword, "password", "", "admin password (required, 6-72 chars)")
-	adminCreateCmd.Flags().StringVar(&adminEmail, "email", "", "admin email (optional)")
+	adminCreateCmd.Flags().StringVar(&adminUsername, "username", "", "Administrator username (string; required; 3-50 characters)")
+	adminCreateCmd.Flags().StringVar(&adminPassword, "password", "", "Administrator password (string; required; 6-72 characters)")
+	adminCreateCmd.Flags().StringVar(&adminEmail, "email", "", "Administrator email address (string; optional)")
 	_ = adminCreateCmd.MarkFlagRequired("username")
 	_ = adminCreateCmd.MarkFlagRequired("password")
 
