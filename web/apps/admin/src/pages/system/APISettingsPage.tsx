@@ -91,7 +91,7 @@ export default function APISettingsPage() {
             <FieldGroup>
               <Field>
                 <FieldLabel>站点模式</FieldLabel>
-                <Select value={form.site_mode} onValueChange={(v) => setForm({ ...form, site_mode: v ?? 'video_site' })}>
+                <Select items={[{ value: 'video_site', label: '影视站' }, { value: 'resource_site', label: '资源站' }]} value={form.site_mode} onValueChange={(v) => setForm({ ...form, site_mode: v ?? 'video_site' })}>
                   <SelectTrigger className="w-48">
                     <SelectValue />
                   </SelectTrigger>
@@ -103,7 +103,7 @@ export default function APISettingsPage() {
               </Field>
               <Field>
                 <FieldLabel>API 输出格式</FieldLabel>
-                <Select value={form.api_output_format} onValueChange={(v) => setForm({ ...form, api_output_format: v ?? 'default' })}>
+                <Select items={[{ value: 'default', label: '系统默认格式' }, { value: 'apple_cms', label: '苹果 CMS' }]} value={form.api_output_format} onValueChange={(v) => setForm({ ...form, api_output_format: v ?? 'default' })}>
                   <SelectTrigger className="w-48">
                     <SelectValue />
                   </SelectTrigger>

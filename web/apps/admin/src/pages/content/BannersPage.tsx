@@ -143,7 +143,7 @@ export default function BannersPage() {
                 onChange={(e) => setForm({ ...form, sort: Number(e.target.value) })}
                 className="w-24"
               />
-              <Select value={String(form.status)} onValueChange={(v) => setForm({ ...form, status: Number(v ?? '1') })}>
+              <Select items={[{ value: '1', label: '启用' }, { value: '0', label: '禁用' }]} value={String(form.status)} onValueChange={(v) => setForm({ ...form, status: Number(v ?? '1') })}>
                 <SelectTrigger className="w-28">
                   <SelectValue />
                 </SelectTrigger>

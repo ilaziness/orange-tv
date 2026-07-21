@@ -8,6 +8,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Spinner } from '@/components/ui/spinner'
 
 interface ConfirmDialogProps {
   open: boolean
@@ -17,6 +18,7 @@ interface ConfirmDialogProps {
   confirmText?: string
   cancelText?: string
   destructive?: boolean
+  loading?: boolean
   onConfirm: () => void
 }
 
@@ -28,6 +30,7 @@ export function ConfirmDialog({
   confirmText = '确认',
   cancelText = '取消',
   destructive = false,
+  loading = false,
   onConfirm,
 }: ConfirmDialogProps) {
   return (
@@ -38,12 +41,14 @@ export function ConfirmDialog({
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>{cancelText}</AlertDialogCancel>
+          <AlertDialogCancel disabled={loading}>{cancelText}</AlertDialogCancel>
           <AlertDialogAction
             variant={destructive ? 'destructive' : 'default'}
             onClick={onConfirm}
+            disabled={loading}
           >
-            {confirmText}
+            {loading && <Spinner data-icon="inline-start" />}
+            {loading ? '处理中...' : confirmText}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

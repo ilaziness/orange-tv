@@ -191,7 +191,7 @@ export default function CollectPage() {
                 required
                 className="max-w-xs"
               />
-              <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v ?? '2' })}>
+              <Select items={[{ value: '1', label: '默认格式' }, { value: '2', label: '苹果CMS' }]} value={form.type} onValueChange={(v) => setForm({ ...form, type: v ?? '2' })}>
                 <SelectTrigger className="w-32">
                   <SelectValue />
                 </SelectTrigger>
@@ -221,7 +221,7 @@ export default function CollectPage() {
                 onChange={(e) => setForm({ ...form, cron_expr: e.target.value })}
                 className="max-w-xs"
               />
-              <Select value={form.play_source_id} onValueChange={(v) => setForm({ ...form, play_source_id: v ?? '0' })}>
+              <Select items={playSources.map((source) => ({ value: String(source.id), label: source.name }))} value={form.play_source_id} onValueChange={(v) => setForm({ ...form, play_source_id: v ?? '0' })}>
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="绑定播放源" />
                 </SelectTrigger>
@@ -231,7 +231,7 @@ export default function CollectPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v ?? '1' })}>
+              <Select items={[{ value: '1', label: '启用' }, { value: '0', label: '禁用' }]} value={form.status} onValueChange={(v) => setForm({ ...form, status: v ?? '1' })}>
                 <SelectTrigger className="w-28">
                   <SelectValue />
                 </SelectTrigger>

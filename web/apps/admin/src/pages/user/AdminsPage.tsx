@@ -159,7 +159,7 @@ export default function AdminsPage() {
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 className="max-w-xs"
               />
-              <Select value={form.group_id} onValueChange={(v) => setForm({ ...form, group_id: v ?? '1' })}>
+              <Select items={groups.map((group) => ({ value: String(group.id), label: group.name }))} value={form.group_id} onValueChange={(v) => setForm({ ...form, group_id: v ?? '1' })}>
                 <SelectTrigger className="w-32">
                   <SelectValue placeholder="用户组" />
                 </SelectTrigger>
@@ -169,7 +169,7 @@ export default function AdminsPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v ?? '1' })}>
+              <Select items={[{ value: '1', label: '启用' }, { value: '0', label: '禁用' }]} value={form.status} onValueChange={(v) => setForm({ ...form, status: v ?? '1' })}>
                 <SelectTrigger className="w-28">
                   <SelectValue />
                 </SelectTrigger>

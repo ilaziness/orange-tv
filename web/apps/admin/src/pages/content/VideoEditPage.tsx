@@ -194,7 +194,7 @@ export default function VideoEditPage() {
               </Field>
               <Field>
                 <FieldLabel>分类</FieldLabel>
-                <Select value={form.category_id} onValueChange={(v) => setForm({ ...form, category_id: v ?? '0' })}>
+                <Select items={categories.map((category) => ({ value: String(category.id), label: `${'—'.repeat(category.depth)} ${category.name}` }))} value={form.category_id} onValueChange={(v) => setForm({ ...form, category_id: v ?? '0' })}>
                   <SelectTrigger>
                     <SelectValue placeholder="请选择" />
                   </SelectTrigger>
@@ -209,7 +209,7 @@ export default function VideoEditPage() {
               </Field>
               <Field>
                 <FieldLabel>上下架</FieldLabel>
-                <Select value={form.publish_status} onValueChange={(v) => setForm({ ...form, publish_status: v ?? '0' })}>
+                <Select items={[{ value: '0', label: '下架' }, { value: '1', label: '上架' }]} value={form.publish_status} onValueChange={(v) => setForm({ ...form, publish_status: v ?? '0' })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -221,7 +221,7 @@ export default function VideoEditPage() {
               </Field>
               <Field>
                 <FieldLabel>连载状态</FieldLabel>
-                <Select value={form.serial_status} onValueChange={(v) => setForm({ ...form, serial_status: v ?? '1' })}>
+                <Select items={[{ value: '1', label: '连载中' }, { value: '2', label: '已完结' }, { value: '3', label: '即将上线' }]} value={form.serial_status} onValueChange={(v) => setForm({ ...form, serial_status: v ?? '1' })}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -336,7 +336,7 @@ export default function VideoEditPage() {
               <div className="flex flex-col gap-2">
                 {episodes.map((ep, idx) => (
                   <div key={idx} className="flex flex-wrap items-center gap-2">
-                    <Select value={String(ep.source_id)} onValueChange={(v) => {
+                    <Select items={sources.map((source) => ({ value: String(source.id), label: source.name }))} value={String(ep.source_id)} onValueChange={(v) => {
                       const next = [...episodes]
                       next[idx] = { ...ep, source_id: Number(v ?? '0') }
                       setEpisodes(next)
@@ -381,7 +381,7 @@ export default function VideoEditPage() {
                       }}
                       className="min-w-[200px] flex-1"
                     />
-                    <Select value={ep.format} onValueChange={(v) => {
+                    <Select items={[{ value: 'hls', label: 'hls' }, { value: 'mp4', label: 'mp4' }, { value: 'dash', label: 'dash' }, { value: 'flv', label: 'flv' }]} value={ep.format} onValueChange={(v) => {
                       const next = [...episodes]
                       next[idx] = { ...ep, format: v ?? 'hls' }
                       setEpisodes(next)
