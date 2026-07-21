@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router'
 import { useAuthStore } from '@/store/auth'
 import { useEffect, useState } from 'react'
 import type * as React from 'react'
+import { z } from 'zod'
 import { errorMessage } from '@/lib/api'
 import {
   Card,
@@ -13,9 +14,14 @@ import {
 import { Input } from '@/components/ui/input'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Spinner } from '@/components/ui/spinner'
 import { Tv } from 'lucide-react'
+
+const loginSchema = z.object({
+  username: z.string().min(3, '用户名至少 3 位'),
+  password: z.string().min(6, '密码至少 6 位'),
+})
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -33,9 +39,14 @@ export default function LoginPage() {
   async function onSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
     setError('')
+    const result = loginSchema.safeParse({ username, password })
+    if (!result.success) {
+      setError(result.error.issues[0]?.message || '请输入有效的用户名和密码')
+      return
+    }
     setLoading(true)
     try {
-      await login(username, password)
+      await login(result.data.username, result.data.password)
       navigate('/', { replace: true })
     } catch (err) {
       setError(errorMessage(err))
@@ -83,6 +94,7 @@ export default function LoginPage() {
             </FieldGroup>
             {error && (
               <Alert variant="destructive">
+                <AlertTitle>出错了</AlertTitle>
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}

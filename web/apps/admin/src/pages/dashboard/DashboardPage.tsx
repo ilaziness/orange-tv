@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Film, FolderTree, Settings, ScrollText, ShieldCheck, Users, Image } from 'lucide-react'
@@ -64,6 +64,7 @@ export default function DashboardPage() {
         <CardContent>
           {error && (
             <Alert variant="destructive" className="mb-4">
+              <AlertTitle>出错了</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
