@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none" role="img" aria-label="Orange TV logo">
+  <title>Orange TV logo</title>
+  <circle cx="256" cy="292" r="190" fill="#FF0000"/>
+  <rect x="244" y="56" width="24" height="60" rx="6" fill="#5D4037"/>
+  <path d="M266 56 Q330 10 400 62 Q330 100 266 56 Z" fill="#2E7D32"/>
+</svg>
