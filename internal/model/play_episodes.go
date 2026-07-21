@@ -12,8 +12,10 @@ type PlayEpisodes struct {
 
 	ID uint64 `bun:"id,pk,autoincrement" json:"id"`
 	// 播放源ID
+	// Relation: source_id -> PlaySources(ID)
 	SourceID uint64 `bun:"source_id,notnull,unique:uk_source_video_episode" json:"source_id"`
 	// 影视ID
+	// Relation: video_id -> Videos(ID)
 	VideoID uint64 `bun:"video_id,notnull,unique:uk_source_video_episode" json:"video_id"`
 	// 集数编号
 	EpisodeNumber uint32 `bun:"episode_number,notnull,unique:uk_source_video_episode" json:"episode_number"`
@@ -28,9 +30,12 @@ type PlayEpisodes struct {
 	// 排序
 	SortOrder uint32 `bun:"sort_order,notnull" json:"sort_order"`
 	// 状态：1启用 0禁用
-	Status    uint8      `bun:"status,notnull" json:"status"`
+	Status uint8 `bun:"status,notnull" json:"status"`
 	CreatedAt *time.Time `bun:"created_at" json:"created_at"`
 	UpdatedAt *time.Time `bun:"updated_at" json:"updated_at"`
 	// 软删除时间
 	DeletedAt *time.Time `bun:"deleted_at" json:"deleted_at"`
+	PlaySource *PlaySources `bun:"rel:belongs-to,join:source_id=id" json:"-"`
+	Video *Videos `bun:"rel:belongs-to,join:video_id=id" json:"-"`
+	UserPlayHistories []*UserPlayHistory `bun:"rel:has-many,join:id=episode_id" json:"-"`
 }

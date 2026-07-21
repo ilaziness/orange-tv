@@ -20,13 +20,16 @@ type Admins struct {
 	// 头像
 	Avatar string `bun:"avatar,notnull" json:"avatar"`
 	// 用户组ID
+	// Relation: group_id -> UserGroups(ID)
 	GroupID uint64 `bun:"group_id,notnull" json:"group_id"`
 	// 状态：1启用 0禁用
 	Status uint8 `bun:"status,notnull" json:"status"`
 	// 最后登录时间
 	LastLoginAt *time.Time `bun:"last_login_at" json:"last_login_at"`
-	CreatedAt   *time.Time `bun:"created_at" json:"created_at"`
-	UpdatedAt   *time.Time `bun:"updated_at" json:"updated_at"`
+	CreatedAt *time.Time `bun:"created_at" json:"created_at"`
+	UpdatedAt *time.Time `bun:"updated_at" json:"updated_at"`
 	// 软删除时间
 	DeletedAt *time.Time `bun:"deleted_at" json:"deleted_at"`
+	UserGroup *UserGroups `bun:"rel:belongs-to,join:group_id=id" json:"-"`
+	SystemLogs []*SystemLogs `bun:"rel:has-many,join:id=admin_id" json:"-"`
 }

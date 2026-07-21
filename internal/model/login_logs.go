@@ -22,6 +22,6 @@ type LoginLogs struct {
 	// User-Agent
 	UserAgent string `bun:"user_agent,notnull" json:"user_agent"`
 	// 登录状态：1成功 2失败
-	Status    uint8      `bun:"status,notnull" json:"status"`
+	Status uint8 `bun:"status,notnull" json:"status"`
 	CreatedAt *time.Time `bun:"created_at" json:"created_at"`
 }

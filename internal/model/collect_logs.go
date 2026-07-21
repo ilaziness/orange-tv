@@ -12,6 +12,7 @@ type CollectLogs struct {
 
 	ID uint64 `bun:"id,pk,autoincrement" json:"id"`
 	// 采集源ID
+	// Relation: source_id -> CollectSources(ID)
 	SourceID uint64 `bun:"source_id,notnull" json:"source_id"`
 	// 采集状态：1成功 2失败 3部分成功
 	Status uint8 `bun:"status,notnull" json:"status"`
@@ -24,6 +25,7 @@ type CollectLogs struct {
 	// 错误信息
 	ErrorMessage *string `bun:"error_message" json:"error_message"`
 	// 耗时(毫秒)
-	DurationMs uint32     `bun:"duration_ms,notnull" json:"duration_ms"`
-	CreatedAt  *time.Time `bun:"created_at" json:"created_at"`
+	DurationMs uint32 `bun:"duration_ms,notnull" json:"duration_ms"`
+	CreatedAt *time.Time `bun:"created_at" json:"created_at"`
+	CollectSource *CollectSources `bun:"rel:belongs-to,join:source_id=id" json:"-"`
 }

@@ -18,7 +18,7 @@ type SystemSettings struct {
 	// 设置类型：1string 2number 3boolean 4json
 	SettingType uint8 `bun:"setting_type,notnull" json:"setting_type"`
 	// 描述
-	Description string     `bun:"description,notnull" json:"description"`
-	CreatedAt   *time.Time `bun:"created_at" json:"created_at"`
-	UpdatedAt   *time.Time `bun:"updated_at" json:"updated_at"`
+	Description string `bun:"description,notnull" json:"description"`
+	CreatedAt *time.Time `bun:"created_at" json:"created_at"`
+	UpdatedAt *time.Time `bun:"updated_at" json:"updated_at"`
 }

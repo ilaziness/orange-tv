@@ -18,6 +18,7 @@ type Videos struct {
 	// 描述
 	Description *string `bun:"description" json:"description"`
 	// 分类ID
+	// Relation: category_id -> Categories(ID)
 	CategoryID uint64 `bun:"category_id,notnull" json:"category_id"`
 	// 上下架状态：1上架 0下架
 	PublishStatus uint8 `bun:"publish_status,notnull" json:"publish_status"`
@@ -41,8 +42,17 @@ type Videos struct {
 	Language string `bun:"language,notnull" json:"language"`
 	// 上映日期
 	ReleaseDate *time.Time `bun:"release_date" json:"release_date"`
-	CreatedAt   *time.Time `bun:"created_at" json:"created_at"`
-	UpdatedAt   *time.Time `bun:"updated_at" json:"updated_at"`
+	CreatedAt *time.Time `bun:"created_at" json:"created_at"`
+	UpdatedAt *time.Time `bun:"updated_at" json:"updated_at"`
 	// 软删除时间
 	DeletedAt *time.Time `bun:"deleted_at" json:"deleted_at"`
+	Banners []*Banners `bun:"rel:has-many,join:id=video_id" json:"-"`
+	PlayEpisodes []*PlayEpisodes `bun:"rel:has-many,join:id=video_id" json:"-"`
+	UserFavorites []*UserFavorites `bun:"rel:has-many,join:id=video_id" json:"-"`
+	UserPlayHistories []*UserPlayHistory `bun:"rel:has-many,join:id=video_id" json:"-"`
+	VideoActors []*VideoActors `bun:"rel:has-many,join:id=video_id" json:"-"`
+	VideoComments []*VideoComments `bun:"rel:has-many,join:id=video_id" json:"-"`
+	VideoDirectors []*VideoDirectors `bun:"rel:has-many,join:id=video_id" json:"-"`
+	VideoTags []*VideoTags `bun:"rel:has-many,join:id=video_id" json:"-"`
+	Category *Categories `bun:"rel:belongs-to,join:category_id=id" json:"-"`
 }

@@ -11,4 +11,64 @@
 #     target: users.id
 #     field: Creator
 #     reverse_field: CreatedVideos
-relations: []
+relations:
+  # 管理员 - 用户组
+  - admins.group_id -> user_groups.id
+  # Banner - 影视
+  - banners.video_id -> videos.id
+  # 分类自关联（父子）
+  - source: categories.parent_id
+    target: categories.id
+    field: Parent
+    reverse_field: SubCategories
+  # 采集日志 - 采集源
+  - collect_logs.source_id -> collect_sources.id
+  # 采集源分类映射 - 系统分类
+  - collect_source_categories.category_id -> categories.id
+  # 采集源分类映射 - 采集源
+  - collect_source_categories.source_id -> collect_sources.id
+  # 采集源 - 播放源
+  - collect_sources.play_source_id -> play_sources.id
+  # 播放剧集 - 播放源
+  - play_episodes.source_id -> play_sources.id
+  # 播放剧集 - 影视
+  - play_episodes.video_id -> videos.id
+  # 系统日志 - 管理员
+  - system_logs.admin_id -> admins.id
+  # 用户收藏 - 用户
+  - user_favorites.user_id -> users.id
+  # 用户收藏 - 影视
+  - user_favorites.video_id -> videos.id
+  # 用户登录日志 - 用户
+  - user_login_logs.user_id -> users.id
+  # 用户播放历史 - 播放剧集
+  - user_play_history.episode_id -> play_episodes.id
+  # 用户播放历史 - 播放源
+  - user_play_history.play_source_id -> play_sources.id
+  # 用户播放历史 - 用户
+  - user_play_history.user_id -> users.id
+  # 用户播放历史 - 影视
+  - user_play_history.video_id -> videos.id
+  # 影视演员关联 - 演员
+  - video_actors.actor_id -> actors.id
+  # 影视演员关联 - 影视
+  - video_actors.video_id -> videos.id
+  # 评论自关联（父子）
+  - source: video_comments.parent_id
+    target: video_comments.id
+    field: Parent
+    reverse_field: Replies
+  # 评论 - 用户
+  - video_comments.user_id -> users.id
+  # 评论 - 影视
+  - video_comments.video_id -> videos.id
+  # 影视导演关联 - 导演
+  - video_directors.director_id -> directors.id
+  # 影视导演关联 - 影视
+  - video_directors.video_id -> videos.id
+  # 影视标签关联 - 标签
+  - video_tags.tag_id -> tags.id
+  # 影视标签关联 - 影视
+  - video_tags.video_id -> videos.id
+  # 影视 - 分类
+  - videos.category_id -> categories.id
