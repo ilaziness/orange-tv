@@ -12,6 +12,11 @@ export function useVideos() {
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [batchAction, setBatchAction] = useState<{ type: 'publish' | 'unpublish' | 'delete'; status?: number } | null>(null)
   const [deleteId, setDeleteId] = useState<number | null>(null)
+  const [toggleId, setToggleId] = useState<number | null>(null)
+  const [detailId, setDetailId] = useState<number | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [batchLoading, setBatchLoading] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false)
   const keywordRef = useRef(keyword)
   const pageRef = useRef(page)
 
@@ -20,6 +25,7 @@ export function useVideos() {
 
   const load = useCallback(async (p = pageRef.current) => {
     setError('')
+    setLoading(true)
     try {
       const res = await adminApi.listVideos({ keyword: keywordRef.current, page: p, page_size: 20 })
       setItems(res.data.list || [])
@@ -28,6 +34,8 @@ export function useVideos() {
       setSelected(new Set())
     } catch (err) {
       setError(errorMessage(err))
+    } finally {
+      setLoading(false)
     }
   }, [])
 
@@ -51,6 +59,7 @@ export function useVideos() {
 
   async function confirmBatch() {
     if (!batchAction || selected.size === 0) return
+    setBatchLoading(true)
     try {
       if (batchAction.type === 'delete') {
         await adminApi.batchDeleteVideos(Array.from(selected))
@@ -63,12 +72,14 @@ export function useVideos() {
     } catch (err) {
       toast.error(errorMessage(err))
     } finally {
+      setBatchLoading(false)
       setBatchAction(null)
     }
   }
 
   async function confirmDelete() {
     if (deleteId === null) return
+    setDeleteLoading(true)
     try {
       await adminApi.deleteVideo(deleteId)
       toast.success('影视已删除')
@@ -76,7 +87,24 @@ export function useVideos() {
     } catch (err) {
       toast.error(errorMessage(err))
     } finally {
+      setDeleteLoading(false)
       setDeleteId(null)
+    }
+  }
+
+  async function togglePublish(id: number) {
+    const target = items.find((i) => i.id === id)
+    if (!target) return
+    const next = target.publish_status === 1 ? 0 : 1
+    setToggleId(id)
+    try {
+      await adminApi.batchUpdatePublishStatus([id], next)
+      setItems((prev) => prev.map((it) => it.id === id ? { ...it, publish_status: next } : it))
+      toast.success(`已${next === 1 ? '上架' : '下架'}`)
+    } catch (err) {
+      toast.error(errorMessage(err))
+    } finally {
+      setToggleId(null)
     }
   }
 
@@ -92,10 +120,17 @@ export function useVideos() {
     setBatchAction,
     deleteId,
     setDeleteId,
+    toggleId,
+    detailId,
+    setDetailId,
+    loading,
+    batchLoading,
+    deleteLoading,
     load,
     toggleSelect,
     toggleSelectAll,
     confirmBatch,
     confirmDelete,
+    togglePublish,
   }
 }

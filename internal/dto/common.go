@@ -94,6 +94,8 @@ type VideoListItem struct {
 	SerialStatus  uint8   `json:"serial_status"`
 	Duration      uint32  `json:"duration"`
 	ViewCount     uint32  `json:"view_count"`
+	CreatedAt     string  `json:"created_at,omitempty"`
+	UpdatedAt     string  `json:"updated_at,omitempty"`
 }
 
 // VideoSourceEpisode is one playable episode under a source.

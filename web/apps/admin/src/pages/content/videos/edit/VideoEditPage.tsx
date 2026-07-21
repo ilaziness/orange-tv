@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/card'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { Spinner } from '@/components/ui/spinner'
 import { ArrowLeft, Save } from 'lucide-react'
 
 export default function VideoEditPage() {
@@ -24,6 +25,8 @@ export default function VideoEditPage() {
   const navigate = useNavigate()
   const {
     error,
+    initLoading,
+    submitting,
     categories,
     directors,
     actors,
@@ -41,6 +44,7 @@ export default function VideoEditPage() {
     toggleTag,
     addEpisode,
     updateEpisode,
+    removeEpisode,
     submit,
   } = useVideoEdit()
 
@@ -68,19 +72,26 @@ export default function VideoEditPage() {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-            <VideoBasicForm form={form} setForm={setForm} categories={categories} />
-            <DirectorSelector directors={directors} selected={selectedDirectors} onToggle={toggleDirector} />
-            <ActorSelector actors={actors} selected={selectedActors} onToggle={toggleActor} onChangeRole={updateActorRole} />
-            <TagSelector tags={tags} selected={selectedTags} onToggle={toggleTag} />
-            <EpisodeManager episodes={episodes} sources={sources} onAdd={addEpisode} onUpdate={updateEpisode} />
-            <div className="flex justify-end">
-              <Button type="submit">
-                <Save data-icon="inline-start" />
-                保存
-              </Button>
+          {initLoading ? (
+            <div className="flex items-center justify-center gap-2 py-12 text-sm text-muted-foreground">
+              <Spinner />
+              加载中...
             </div>
-          </form>
+          ) : (
+            <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+              <VideoBasicForm form={form} setForm={setForm} categories={categories} />
+              <DirectorSelector directors={directors} selected={selectedDirectors} onToggle={toggleDirector} />
+              <ActorSelector actors={actors} selected={selectedActors} onToggle={toggleActor} onChangeRole={updateActorRole} />
+              <TagSelector tags={tags} selected={selectedTags} onToggle={toggleTag} />
+              <EpisodeManager episodes={episodes} sources={sources} onAdd={addEpisode} onUpdate={updateEpisode} onRemove={removeEpisode} />
+              <div className="flex justify-end">
+                <Button type="submit" disabled={submitting}>
+                  {submitting ? <Spinner data-icon="inline-start" /> : <Save data-icon="inline-start" />}
+                  {submitting ? '保存中...' : '保存'}
+                </Button>
+              </div>
+            </form>
+          )}
         </CardContent>
       </Card>
     </PageContainer>

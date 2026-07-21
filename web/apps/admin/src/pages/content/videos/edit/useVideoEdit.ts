@@ -11,7 +11,7 @@ const videoFormSchema = z.object({
   title: z.string().min(1, '请输入影视标题'),
   subtitle: z.string(),
   description: z.string(),
-  category_id: z.string().refine((v) => v !== '0', '请选择分类').transform((v) => Number(v)),
+  category_id: z.string().refine((v) => v !== '' && v !== '0', '请选择分类').transform((v) => Number(v)),
   publish_status: z.union([z.string(), z.number()]).transform((v) => Number(v)),
   serial_status: z.union([z.string(), z.number()]).transform((v) => Number(v)),
   cover_image: z.string(),
@@ -28,20 +28,20 @@ const emptyForm = {
   title: '',
   subtitle: '',
   description: '',
-  category_id: '0',
+  category_id: '',
   publish_status: '0',
   serial_status: '1',
   cover_image: '',
   poster_image: '',
-  year: '0',
+  year: '',
   region: '',
   language: '',
-  duration: '0',
-  rating: '0',
+  duration: '',
+  rating: '',
   release_date: '',
 }
 
-const emptyEpisode = { source_id: 0, episode_number: '1', title: '', play_url: '', format: 'hls' }
+const emptyEpisode = { source_id: 0, episode_number: '', title: '', play_url: '', format: 'hls' }
 
 export type VideoForm = typeof emptyForm
 export type EpisodeDraft = typeof emptyEpisode
@@ -60,9 +60,12 @@ export function useVideoEdit() {
   const [selectedTags, setSelectedTags] = useState<number[]>([])
   const [episodes, setEpisodes] = useState<EpisodeDraft[]>([])
   const [form, setForm] = useState(emptyForm)
+  const [submitting, setSubmitting] = useState(false)
+  const [initLoading, setInitLoading] = useState(true)
 
   useEffect(() => {
     void (async () => {
+      setInitLoading(true)
       try {
         const [cats, dirs, acts, tgs, srcs] = await Promise.all([
           adminApi.listCategories(),
@@ -83,16 +86,16 @@ export function useVideoEdit() {
             title: d.title,
             subtitle: d.subtitle,
             description: d.description,
-            category_id: String(d.category_id),
+            category_id: d.category_id ? String(d.category_id) : '',
             publish_status: String(d.publish_status ?? 0),
             serial_status: String(d.serial_status),
             cover_image: d.cover,
             poster_image: d.poster,
-            year: String(d.year ?? 0),
+            year: d.year ? String(d.year) : '',
             region: d.region,
             language: d.language,
-            duration: String(d.duration ?? 0),
-            rating: String(d.rating ?? 0),
+            duration: d.duration ? String(d.duration) : '',
+            rating: d.rating ? String(d.rating) : '',
             release_date: d.release_date || '',
           })
           setSelectedDirectors(d.directors.map((x) => x.id))
@@ -101,6 +104,8 @@ export function useVideoEdit() {
         }
       } catch (err) {
         setError(errorMessage(err))
+      } finally {
+        setInitLoading(false)
       }
     })()
   }, [id, isNew])
@@ -137,6 +142,10 @@ export function useVideoEdit() {
     })
   }
 
+  function removeEpisode(index: number) {
+    setEpisodes((prev) => prev.filter((_, i) => i !== index))
+  }
+
   async function submit(e: React.SyntheticEvent<HTMLFormElement>): Promise<number | null> {
     e.preventDefault()
     setError('')
@@ -151,6 +160,7 @@ export function useVideoEdit() {
       actors: selectedActors,
       tag_ids: selectedTags,
     }
+    setSubmitting(true)
     try {
       let videoId = Number(id)
       if (isNew) {
@@ -181,11 +191,15 @@ export function useVideoEdit() {
     } catch (err) {
       setError(errorMessage(err))
       return null
+    } finally {
+      setSubmitting(false)
     }
   }
 
   return {
     error,
+    initLoading,
+    submitting,
     categories,
     directors,
     actors,
@@ -203,6 +217,7 @@ export function useVideoEdit() {
     toggleTag,
     addEpisode,
     updateEpisode,
+    removeEpisode,
     submit,
   }
 }

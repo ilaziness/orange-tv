@@ -518,9 +518,19 @@ func mapVideoList(items []model.Videos) []shareddto.VideoListItem {
 			SerialStatus:  v.SerialStatus,
 			Duration:      v.Duration,
 			ViewCount:     v.ViewCount,
+			CreatedAt:     derefTimeStr(v.CreatedAt),
+			UpdatedAt:     derefTimeStr(v.UpdatedAt),
 		})
 	}
 	return out
+}
+
+// derefTimeStr safely formats a *time.Time as RFC3339 string, returning "" for nil/zero.
+func derefTimeStr(t *time.Time) string {
+	if t == nil || t.IsZero() {
+		return ""
+	}
+	return t.Format(time.RFC3339)
 }
 
 func uniqueIDs(ids []uint64) []uint64 {

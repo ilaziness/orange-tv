@@ -3,6 +3,7 @@ import { VideoFilter } from './VideoFilter'
 import { VideoTable } from './VideoTable'
 import { VideoBatchBar } from './VideoBatchBar'
 import { VideoPagination } from './VideoPagination'
+import { VideoDetailDialog } from './VideoDetailDialog'
 import { PageContainer, ConfirmDialog } from '@/components/shared'
 import {
   Card,
@@ -29,11 +30,18 @@ export default function VideosPage() {
     setBatchAction,
     deleteId,
     setDeleteId,
+    toggleId,
+    detailId,
+    setDetailId,
+    loading,
+    batchLoading,
+    deleteLoading,
     load,
     toggleSelect,
     toggleSelectAll,
     confirmBatch,
     confirmDelete,
+    togglePublish,
   } = useVideos()
 
   return (
@@ -58,10 +66,12 @@ export default function VideosPage() {
           <VideoFilter
             keyword={keyword}
             setKeyword={setKeyword}
+            loading={loading}
             onSearch={() => void load(1)}
           />
           <VideoBatchBar
             count={selected.size}
+            loading={batchLoading}
             onPublish={() => setBatchAction({ type: 'publish', status: 1 })}
             onUnpublish={() => setBatchAction({ type: 'unpublish', status: 0 })}
             onDelete={() => setBatchAction({ type: 'delete' })}
@@ -69,13 +79,18 @@ export default function VideosPage() {
           <VideoTable
             items={items}
             selected={selected}
+            loading={loading}
+            toggleId={toggleId}
             onToggleSelect={toggleSelect}
             onSelectAll={toggleSelectAll}
             onDelete={setDeleteId}
+            onTogglePublish={togglePublish}
+            onView={setDetailId}
           />
           <VideoPagination
             page={page}
             total={total}
+            loading={loading}
             hasNext={page * 20 < total}
             onPrev={() => void load(page - 1)}
             onNext={() => void load(page + 1)}
@@ -93,6 +108,7 @@ export default function VideosPage() {
             : `确认批量${batchAction?.status === 1 ? '上架' : '下架'} ${selected.size} 条影视？`
         }
         destructive={batchAction?.type === 'delete'}
+        loading={batchLoading}
         onConfirm={confirmBatch}
       />
 
@@ -102,7 +118,14 @@ export default function VideosPage() {
         title="删除影视"
         description="确认删除该影视？此操作不可撤销。"
         destructive
+        loading={deleteLoading}
         onConfirm={confirmDelete}
+      />
+
+      <VideoDetailDialog
+        open={detailId !== null}
+        videoId={detailId}
+        onOpenChange={(open) => { if (!open) setDetailId(null) }}
       />
     </PageContainer>
   )
