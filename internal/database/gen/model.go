@@ -64,6 +64,7 @@ type GenerateOptions struct {
 	JSONTags      bool
 	ValidatorTags bool
 	WithRelations bool
+	Relations     []Relation
 }
 
 // GenerateModels generates model files for the given tables.
@@ -72,12 +73,31 @@ func GenerateModels(ctx context.Context, db *database.DB, driver string, tables 
 		return nil
 	}
 
+	if err := validateRelations(opts.Relations); err != nil {
+		return err
+	}
+
+	physicalRelations, err := getPhysicalRelations(ctx, db, driver, tables, opts.WithRelations)
+	if err != nil {
+		return fmt.Errorf("get physical relations: %w", err)
+	}
+	relations, err := mergeRelations(physicalRelations, opts.Relations)
+	if err != nil {
+		return err
+	}
+
+	tables = expandTablesForRelations(tables, relations)
+
+	if err := validateRelationColumns(ctx, db, driver, relations); err != nil {
+		return err
+	}
+
 	if err := os.MkdirAll(opts.OutputDir, 0o755); err != nil {
 		return fmt.Errorf("create output directory: %w", err)
 	}
 
 	for _, tableName := range tables {
-		if err := generateModel(ctx, db, driver, tableName, opts); err != nil {
+		if err := generateModel(ctx, db, driver, tableName, opts, relations); err != nil {
 			return fmt.Errorf("generate model for table %s: %w", tableName, err)
 		}
 	}
@@ -140,22 +160,14 @@ func GetTableColumns(ctx context.Context, db *database.DB, driver, tableName str
 	}
 }
 
-func generateModel(ctx context.Context, db *database.DB, driver, tableName string, opts GenerateOptions) error {
+func generateModel(ctx context.Context, db *database.DB, driver, tableName string, opts GenerateOptions, relations []Relation) error {
 	columns, err := GetTableColumns(ctx, db, driver, tableName)
 	if err != nil {
 		return err
 	}
 
-	var foreignKeys []ForeignKey
-	if opts.WithRelations {
-		foreignKeys, err = getForeignKeys(ctx, db, driver, tableName)
-		if err != nil {
-			return fmt.Errorf("get foreign keys: %w", err)
-		}
-	}
-
 	modelName := ToCamelCase(tableName)
-	code := GenerateModelCode(opts, modelName, tableName, columns, foreignKeys)
+	code := GenerateModelCode(opts, modelName, tableName, columns, relations)
 
 	filename := filepath.Join(opts.OutputDir, strings.ToLower(tableName)+".go")
 	if err := os.WriteFile(filename, []byte(code), 0o644); err != nil {
@@ -606,4 +618,97 @@ func scanForeignKeys(rows *sql.Rows) ([]ForeignKey, error) {
 	}
 
 	return keys, rows.Err()
+}
+
+func getPhysicalRelations(ctx context.Context, db *database.DB, driver string, tables []string, enabled bool) ([]Relation, error) {
+	if !enabled {
+		return nil, nil
+	}
+
+	var relations []Relation
+	for _, tableName := range tables {
+		foreignKeys, err := getForeignKeys(ctx, db, driver, tableName)
+		if err != nil {
+			return nil, fmt.Errorf("get foreign keys for table %s: %w", tableName, err)
+		}
+		for _, foreignKey := range foreignKeys {
+			relations = append(relations, Relation{
+				SourceTable:  tableName,
+				SourceColumn: foreignKey.ColumnName,
+				TargetTable:  foreignKey.ReferencedTableName,
+				TargetColumn: foreignKey.ReferencedColumnName,
+			})
+		}
+	}
+	return relations, nil
+}
+
+func validateRelationColumns(ctx context.Context, db *database.DB, driver string, relations []Relation) error {
+	columnsByTable := make(map[string]map[string]struct{})
+	fieldsByTable := make(map[string]map[string]struct{})
+	loadColumns := func(tableName string) (map[string]struct{}, map[string]struct{}, error) {
+		if columns, ok := columnsByTable[tableName]; ok {
+			return columns, fieldsByTable[tableName], nil
+		}
+		columns, err := GetTableColumns(ctx, db, driver, tableName)
+		if err != nil {
+			return nil, nil, fmt.Errorf("read relation table %s: %w", tableName, err)
+		}
+		columnNames := make(map[string]struct{}, len(columns))
+		fieldNames := make(map[string]struct{}, len(columns)+1)
+		fieldNames["BaseModel"] = struct{}{}
+		for _, column := range columns {
+			columnNames[column.Name] = struct{}{}
+			fieldNames[ToCamelCase(column.Name)] = struct{}{}
+		}
+		columnsByTable[tableName] = columnNames
+		fieldsByTable[tableName] = fieldNames
+		return columnNames, fieldNames, nil
+	}
+
+	for _, relation := range relations {
+		sourceColumns, sourceFields, err := loadColumns(relation.SourceTable)
+		if err != nil {
+			return err
+		}
+		if _, ok := sourceColumns[relation.SourceColumn]; !ok {
+			return fmt.Errorf("relation source column not found: %s.%s", relation.SourceTable, relation.SourceColumn)
+		}
+		field, reverseField := relationFieldNames(relation)
+		if _, ok := sourceFields[field]; ok {
+			return fmt.Errorf("relation field conflict with column: %s.%s", relation.SourceTable, field)
+		}
+
+		targetColumns, targetFields, err := loadColumns(relation.TargetTable)
+		if err != nil {
+			return err
+		}
+		if _, ok := targetColumns[relation.TargetColumn]; !ok {
+			return fmt.Errorf("relation target column not found: %s.%s", relation.TargetTable, relation.TargetColumn)
+		}
+		if _, ok := targetFields[reverseField]; ok {
+			return fmt.Errorf("relation field conflict with column: %s.%s", relation.TargetTable, reverseField)
+		}
+	}
+	return nil
+}
+
+// expandTablesForRelations ensures that both ends of every relation are
+// generated so that referenced model types are always available.
+func expandTablesForRelations(tables []string, relations []Relation) []string {
+	seen := make(map[string]struct{}, len(tables))
+	for _, tableName := range tables {
+		seen[tableName] = struct{}{}
+	}
+	for _, relation := range relations {
+		if _, ok := seen[relation.SourceTable]; !ok {
+			tables = append(tables, relation.SourceTable)
+			seen[relation.SourceTable] = struct{}{}
+		}
+		if _, ok := seen[relation.TargetTable]; !ok {
+			tables = append(tables, relation.TargetTable)
+			seen[relation.TargetTable] = struct{}{}
+		}
+	}
+	return tables
 }

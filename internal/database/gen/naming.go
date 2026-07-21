@@ -144,7 +144,7 @@ func MapSQLTypeToGo(sqlType string, nullable, unsigned bool) string {
 }
 
 // GenerateModelCode renders Go struct source for a database table.
-func GenerateModelCode(opts GenerateOptions, modelName, tableName string, columns []Column, foreignKeys []ForeignKey) string {
+func GenerateModelCode(opts GenerateOptions, modelName, tableName string, columns []Column, relations []Relation) string {
 	var sb strings.Builder
 
 	sb.WriteString(fmt.Sprintf("package %s\n\n", opts.PackageName))
@@ -179,11 +179,11 @@ func GenerateModelCode(opts GenerateOptions, modelName, tableName string, column
 		goType := MapSQLTypeToGo(col.Type, col.Nullable, col.Unsigned)
 		fieldName := ToCamelCase(col.Name)
 
-		for _, fk := range foreignKeys {
-			if fk.ColumnName == col.Name {
-				refModel := ToCamelCase(fk.ReferencedTableName)
-				refField := ToCamelCase(fk.ReferencedColumnName)
-				sb.WriteString(fmt.Sprintf("\t// FK: %s -> %s(%s)\n", col.Name, refModel, refField))
+		for _, relation := range relations {
+			if relation.SourceTable == tableName && relation.SourceColumn == col.Name {
+				refModel := ToCamelCase(relation.TargetTable)
+				refField := ToCamelCase(relation.TargetColumn)
+				sb.WriteString(fmt.Sprintf("\t// Relation: %s -> %s(%s)\n", col.Name, refModel, refField))
 				break
 			}
 		}
@@ -219,6 +219,16 @@ func GenerateModelCode(opts GenerateOptions, modelName, tableName string, column
 		}
 
 		sb.WriteString(fmt.Sprintf("\t%s %s `%s`\n", fieldName, goType, strings.Join(tags, " ")))
+	}
+
+	for _, relation := range relations {
+		field, reverseField := relationFieldNames(relation)
+		if relation.SourceTable == tableName {
+			sb.WriteString(fmt.Sprintf("\t%s *%s `bun:\"rel:belongs-to,join:%s=%s\" json:\"-\"`\n", field, ToCamelCase(relation.TargetTable), relation.SourceColumn, relation.TargetColumn))
+		}
+		if relation.TargetTable == tableName {
+			sb.WriteString(fmt.Sprintf("\t%s []*%s `bun:\"rel:has-many,join:%s=%s\" json:\"-\"`\n", reverseField, ToCamelCase(relation.SourceTable), relation.TargetColumn, relation.SourceColumn))
+		}
 	}
 
 	sb.WriteString("}\n")

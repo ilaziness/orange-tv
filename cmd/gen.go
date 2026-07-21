@@ -17,6 +17,7 @@ var (
 	genJSONTags      bool
 	genValidatorTags bool
 	genWithRelations bool
+	genRelationsFile string
 )
 
 var genCmd = &cobra.Command{
@@ -48,6 +49,7 @@ func init() {
 	genModelCmd.Flags().BoolVar(&genJSONTags, "json-tags", true, "Whether to add JSON tags (bool: true or false)")
 	genModelCmd.Flags().BoolVar(&genValidatorTags, "validator-tags", false, "Whether to add validator tags (bool: true or false)")
 	genModelCmd.Flags().BoolVar(&genWithRelations, "with-relations", false, "Whether to generate relationships from foreign keys (bool: true or false)")
+	genModelCmd.Flags().StringVar(&genRelationsFile, "relations", "./configs/model-relations.yaml", "Business relation definition YAML file (string path)")
 
 	genCmd.AddCommand(genModelCmd)
 	genCmd.AddCommand(genDtoCmd)
@@ -91,12 +93,18 @@ func runGenModel(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
+	relations, err := gen.LoadRelations(genRelationsFile)
+	if err != nil {
+		return fmt.Errorf("load --relations: %w", err)
+	}
+
 	opts := gen.GenerateOptions{
 		OutputDir:     genOutput,
 		PackageName:   genPackage,
 		JSONTags:      genJSONTags,
 		ValidatorTags: genValidatorTags,
 		WithRelations: genWithRelations,
+		Relations:     relations,
 	}
 
 	if err := gen.GenerateModels(ctx, db, cfg.Database.Driver, tables, opts); err != nil {

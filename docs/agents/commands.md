@@ -54,7 +54,26 @@ go install github.com/swaggo/swag/cmd/swag@latest
 ./build/orange-tv migrate status          # 查看迁移状态
 ./build/orange-tv gen model               # 从数据库生成 Bun 模型到 internal/model
 ./build/orange-tv gen model --table videos
+./build/orange-tv gen model --with-relations # 同时读取数据库物理外键
 ```
+
+### 模型业务关联
+
+数据库不建立外键时，在 [`configs/model-relations.yaml`](../../configs/model-relations.yaml) 声明逻辑关系。`gen model` 默认加载该文件，并生成 Bun 的双向关联字段：子模型的 `belongs-to` 和父模型的 `has-many`；关联字段固定为 `json:"-"`，应通过 DTO 对外输出。
+
+```yaml
+relations:
+  # 简写：源表.外键列 -> 目标表.被引用列
+  - videos.category_id -> categories.id
+
+  # 同一张目标表有多个角色时，指定生成的字段名
+  - source: videos.created_by
+    target: users.id
+    field: Creator
+    reverse_field: CreatedVideos
+```
+
+通过 `--relations <path>` 可使用其他关系文件。`--with-relations` 会把物理外键与 YAML 关系合并；相同关系按一条生成，YAML 的字段名覆盖优先。当前仅支持单列关联；复合外键需要保持手工模型字段。
 
 SQL 迁移多语句请用独立行 `--bun:split` 分隔（Bun 要求；单文件内多条 `CREATE` 不能靠分号自动拆分）。
 

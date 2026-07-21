@@ -1,0 +1,14 @@
+# Logical database relations used by `orange-tv gen model`.
+# These declarations generate Bun relations without adding database foreign keys.
+#
+# Shorthand:
+# relations:
+#   - videos.category_id -> categories.id
+#
+# Override relation field names when a table has multiple references to the same target:
+# relations:
+#   - source: videos.created_by
+#     target: users.id
+#     field: Creator
+#     reverse_field: CreatedVideos
+relations: []
