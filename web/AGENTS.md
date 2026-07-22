@@ -34,6 +34,43 @@ API 前缀：
 - 用户端：`/api/client/v1`
 - 管理端：`/api/admin/v1`
 
+## npm run 命令说明
+
+所有命令在 `web/` 目录下执行。
+
+### 根目录（Monorepo 级别）
+
+| 命令 | 说明 |
+| ------ | ------ |
+| `npm run dev:client` | 启动用户端开发服务器（端口 5173） |
+| `npm run dev:admin` | 启动管理端开发服务器（端口 5174） |
+| `npm run build` | 构建 shared → client → admin（全量） |
+| `npm run build:client` | 仅构建用户端 |
+| `npm run build:admin` | 仅构建管理端 |
+| `npm run lint` | 对 client + admin 执行 Oxlint 检查 |
+| `npm run lint:client` | 仅检查用户端 |
+| `npm run lint:admin` | 仅检查管理端 |
+| `npm run lint:fix` | 对 client + admin 自动修复 lint 问题 |
+| `npm run lint:fix:client` | 仅自动修复用户端 |
+| `npm run lint:fix:admin` | 仅自动修复管理端 |
+| `npm run typecheck` | 对 shared + client + admin 执行 TypeScript 类型检查 |
+| `npm run typecheck:client` | 仅类型检查用户端 |
+| `npm run typecheck:admin` | 仅类型检查管理端 |
+
+### 子包级别
+
+在各子包目录（`apps/client`、`apps/admin`、`packages/shared`）下可直接运行：
+
+| 命令 | 适用包 | 说明 |
+| ------ | ------ | ------ |
+| `npm run dev` | client / admin | 启动 Vite 开发服务器 |
+| `npm run build` | client / admin | `tsc -b` + `vite build` |
+| `npm run build` | shared | `tsc --noEmit` 类型检查（无产物输出） |
+| `npm run lint` | client / admin | Oxlint 检查 |
+| `npm run lint:fix` | client / admin | Oxlint 自动修复 |
+| `npm run typecheck` | client / admin / shared | `tsc -b --noEmit`（shared 为 `tsc --noEmit`） |
+| `npm run preview` | client / admin | Vite 本地预览构建产物 |
+
 ## 核心规则（始终遵守）
 
 1. **格式化与检查**：`npm run lint` 和 `npm run typecheck` 必须通过；提交前执行 `npm run build`
