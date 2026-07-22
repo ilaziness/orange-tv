@@ -22,11 +22,11 @@ type UserPlayHistory struct {
 	// 播放进度（秒）
 	Progress uint32 `bun:"progress,notnull" json:"progress"`
 	// 总时长（秒）
-	Duration uint32 `bun:"duration,notnull" json:"duration"`
-	LastPlayedAt time.Time `bun:"last_played_at,notnull" json:"last_played_at"`
-	CreatedAt time.Time `bun:"created_at,notnull" json:"created_at"`
-	PlayEpisode *PlayEpisodes `bun:"rel:belongs-to,join:episode_id=id" json:"-"`
-	PlaySource *PlaySources `bun:"rel:belongs-to,join:play_source_id=id" json:"-"`
-	User *Users `bun:"rel:belongs-to,join:user_id=id" json:"-"`
-	Video *Videos `bun:"rel:belongs-to,join:video_id=id" json:"-"`
+	Duration     uint32        `bun:"duration,notnull" json:"duration"`
+	LastPlayedAt time.Time     `bun:"last_played_at,notnull" json:"last_played_at"`
+	CreatedAt    time.Time     `bun:"created_at,notnull" json:"created_at"`
+	PlayEpisode  *PlayEpisodes `bun:"rel:belongs-to,join:episode_id=id" json:"-"`
+	PlaySource   *PlaySources  `bun:"rel:belongs-to,join:play_source_id=id" json:"-"`
+	User         *Users        `bun:"rel:belongs-to,join:user_id=id" json:"-"`
+	Video        *Videos       `bun:"rel:belongs-to,join:video_id=id" json:"-"`
 }

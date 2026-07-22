@@ -18,14 +18,14 @@ type VideoComments struct {
 	// 父评论ID，0为顶级
 	// Relation: parent_id -> VideoComments(ID)
 	ParentID uint64 `bun:"parent_id,notnull" json:"parent_id"`
-	Content string `bun:"content,notnull" json:"content"`
+	Content  string `bun:"content,notnull" json:"content"`
 	// 1正常 0隐藏
-	Status uint8 `bun:"status,notnull" json:"status"`
-	LikeCount uint32 `bun:"like_count,notnull" json:"like_count"`
-	CreatedAt time.Time `bun:"created_at,notnull" json:"created_at"`
-	UpdatedAt time.Time `bun:"updated_at,notnull" json:"updated_at"`
-	Parent *VideoComments `bun:"rel:belongs-to,join:parent_id=id" json:"-"`
-	Replies []*VideoComments `bun:"rel:has-many,join:id=parent_id" json:"-"`
-	User *Users `bun:"rel:belongs-to,join:user_id=id" json:"-"`
-	Video *Videos `bun:"rel:belongs-to,join:video_id=id" json:"-"`
+	Status    uint8            `bun:"status,notnull" json:"status"`
+	LikeCount uint32           `bun:"like_count,notnull" json:"like_count"`
+	CreatedAt time.Time        `bun:"created_at,notnull" json:"created_at"`
+	UpdatedAt time.Time        `bun:"updated_at,notnull" json:"updated_at"`
+	Parent    *VideoComments   `bun:"rel:belongs-to,join:parent_id=id" json:"-"`
+	Replies   []*VideoComments `bun:"rel:has-many,join:id=parent_id" json:"-"`
+	User      *Users           `bun:"rel:belongs-to,join:user_id=id" json:"-"`
+	Video     *Videos          `bun:"rel:belongs-to,join:video_id=id" json:"-"`
 }

@@ -2,9 +2,8 @@ import { useVideos } from './useVideos'
 import { VideoFilter } from './VideoFilter'
 import { VideoTable } from './VideoTable'
 import { VideoBatchBar } from './VideoBatchBar'
-import { VideoPagination } from './VideoPagination'
 import { VideoDetailDialog } from './VideoDetailDialog'
-import { PageContainer, ConfirmDialog } from '@/components/shared'
+import { PageContainer, ConfirmDialog, Pagination } from '@/components/shared'
 import {
   Card,
   CardAction,
@@ -87,13 +86,15 @@ export default function VideosPage() {
             onTogglePublish={togglePublish}
             onView={setDetailId}
           />
-          <VideoPagination
+          <Pagination
             page={page}
             total={total}
             loading={loading}
             hasNext={page * 20 < total}
+            onFirst={() => void load(1)}
             onPrev={() => void load(page - 1)}
             onNext={() => void load(page + 1)}
+            onLast={() => void load(Math.ceil(total / 20))}
           />
         </CardContent>
       </Card>

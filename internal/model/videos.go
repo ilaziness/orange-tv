@@ -42,17 +42,17 @@ type Videos struct {
 	Language string `bun:"language,notnull" json:"language"`
 	// 上映日期
 	ReleaseDate *time.Time `bun:"release_date" json:"release_date"`
-	CreatedAt *time.Time `bun:"created_at" json:"created_at"`
-	UpdatedAt *time.Time `bun:"updated_at" json:"updated_at"`
+	CreatedAt   *time.Time `bun:"created_at" json:"created_at"`
+	UpdatedAt   *time.Time `bun:"updated_at" json:"updated_at"`
 	// 软删除时间
-	DeletedAt *time.Time `bun:"deleted_at" json:"deleted_at"`
-	Banners []*Banners `bun:"rel:has-many,join:id=video_id" json:"-"`
-	PlayEpisodes []*PlayEpisodes `bun:"rel:has-many,join:id=video_id" json:"-"`
-	UserFavorites []*UserFavorites `bun:"rel:has-many,join:id=video_id" json:"-"`
+	DeletedAt         *time.Time         `bun:"deleted_at" json:"deleted_at"`
+	Banners           []*Banners         `bun:"rel:has-many,join:id=video_id" json:"-"`
+	PlayEpisodes      []*PlayEpisodes    `bun:"rel:has-many,join:id=video_id" json:"-"`
+	UserFavorites     []*UserFavorites   `bun:"rel:has-many,join:id=video_id" json:"-"`
 	UserPlayHistories []*UserPlayHistory `bun:"rel:has-many,join:id=video_id" json:"-"`
-	VideoActors []*VideoActors `bun:"rel:has-many,join:id=video_id" json:"-"`
-	VideoComments []*VideoComments `bun:"rel:has-many,join:id=video_id" json:"-"`
-	VideoDirectors []*VideoDirectors `bun:"rel:has-many,join:id=video_id" json:"-"`
-	VideoTags []*VideoTags `bun:"rel:has-many,join:id=video_id" json:"-"`
-	Category *Categories `bun:"rel:belongs-to,join:category_id=id" json:"-"`
+	VideoActors       []*VideoActors     `bun:"rel:has-many,join:id=video_id" json:"-"`
+	VideoComments     []*VideoComments   `bun:"rel:has-many,join:id=video_id" json:"-"`
+	VideoDirectors    []*VideoDirectors  `bun:"rel:has-many,join:id=video_id" json:"-"`
+	VideoTags         []*VideoTags       `bun:"rel:has-many,join:id=video_id" json:"-"`
+	Category          *Categories        `bun:"rel:belongs-to,join:category_id=id" json:"-"`
 }

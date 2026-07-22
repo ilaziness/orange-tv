@@ -1,4 +1,5 @@
 export { ConfirmDialog } from './ConfirmDialog'
+export { Pagination } from './Pagination'
 export { PromptDialog } from './PromptDialog'
 export { PageContainer } from './PageContainer'
 export { StatusBadge } from './StatusBadge'

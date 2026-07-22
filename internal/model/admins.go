@@ -26,10 +26,10 @@ type Admins struct {
 	Status uint8 `bun:"status,notnull" json:"status"`
 	// 最后登录时间
 	LastLoginAt *time.Time `bun:"last_login_at" json:"last_login_at"`
-	CreatedAt *time.Time `bun:"created_at" json:"created_at"`
-	UpdatedAt *time.Time `bun:"updated_at" json:"updated_at"`
+	CreatedAt   *time.Time `bun:"created_at" json:"created_at"`
+	UpdatedAt   *time.Time `bun:"updated_at" json:"updated_at"`
 	// 软删除时间
-	DeletedAt *time.Time `bun:"deleted_at" json:"deleted_at"`
-	UserGroup *UserGroups `bun:"rel:belongs-to,join:group_id=id" json:"-"`
+	DeletedAt  *time.Time    `bun:"deleted_at" json:"deleted_at"`
+	UserGroup  *UserGroups   `bun:"rel:belongs-to,join:group_id=id" json:"-"`
 	SystemLogs []*SystemLogs `bun:"rel:has-many,join:id=admin_id" json:"-"`
 }

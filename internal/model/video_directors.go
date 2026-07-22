@@ -14,7 +14,7 @@ type VideoDirectors struct {
 	VideoID uint64 `bun:"video_id,notnull" json:"video_id"`
 	// 导演ID
 	// Relation: director_id -> Directors(ID)
-	DirectorID uint64 `bun:"director_id,notnull" json:"director_id"`
-	Director *Directors `bun:"rel:belongs-to,join:director_id=id" json:"-"`
-	Video *Videos `bun:"rel:belongs-to,join:video_id=id" json:"-"`
+	DirectorID uint64     `bun:"director_id,notnull" json:"director_id"`
+	Director   *Directors `bun:"rel:belongs-to,join:director_id=id" json:"-"`
+	Video      *Videos    `bun:"rel:belongs-to,join:video_id=id" json:"-"`
 }

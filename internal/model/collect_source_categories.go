@@ -18,8 +18,8 @@ type CollectSourceCategories struct {
 	ExternalCategory string `bun:"external_category,notnull,unique:uk_source_external" json:"external_category"`
 	// 系统内分类ID
 	// Relation: category_id -> Categories(ID)
-	CategoryID uint64 `bun:"category_id,notnull" json:"category_id"`
-	CreatedAt *time.Time `bun:"created_at" json:"created_at"`
-	Category *Categories `bun:"rel:belongs-to,join:category_id=id" json:"-"`
+	CategoryID    uint64          `bun:"category_id,notnull" json:"category_id"`
+	CreatedAt     *time.Time      `bun:"created_at" json:"created_at"`
+	Category      *Categories     `bun:"rel:belongs-to,join:category_id=id" json:"-"`
 	CollectSource *CollectSources `bun:"rel:belongs-to,join:source_id=id" json:"-"`
 }

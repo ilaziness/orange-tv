@@ -9,6 +9,7 @@ import (
 
 	"github.com/ilaziness/orange-tv/internal/database"
 	"github.com/ilaziness/orange-tv/internal/model"
+	"github.com/uptrace/bun"
 )
 
 // LiveListFilter filters live channel queries.
@@ -24,10 +25,13 @@ type LiveListFilter struct {
 // LiveRepository provides live channel persistence.
 type LiveRepository interface {
 	List(ctx context.Context, f LiveListFilter) ([]model.LiveChannels, int, error)
+	ListAll(ctx context.Context) ([]model.LiveChannels, error)
 	GetByID(ctx context.Context, id int64) (*model.LiveChannels, error)
 	Create(ctx context.Context, m *model.LiveChannels) error
+	BatchCreate(ctx context.Context, items []model.LiveChannels) error
 	Update(ctx context.Context, m *model.LiveChannels) error
-	SoftDelete(ctx context.Context, id int64) error
+	Delete(ctx context.Context, id int64) error
+	DeleteByIDs(ctx context.Context, ids []int64) error
 }
 
 type liveRepo struct {
@@ -41,7 +45,7 @@ func NewLiveRepo(db *database.DB) LiveRepository {
 
 func (r *liveRepo) List(ctx context.Context, f LiveListFilter) ([]model.LiveChannels, int, error) {
 	var items []model.LiveChannels
-	q := r.db.NewSelect().Model(&items).Where("deleted_at IS NULL")
+	q := r.db.NewSelect().Model(&items)
 	if f.Category != "" {
 		q = q.Where("category = ?", f.Category)
 	}
@@ -72,7 +76,6 @@ func (r *liveRepo) GetByID(ctx context.Context, id int64) (*model.LiveChannels, 
 	item := new(model.LiveChannels)
 	err := r.db.NewSelect().Model(item).
 		Where("id = ?", id).
-		Where("deleted_at IS NULL").
 		Scan(ctx)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
@@ -97,7 +100,6 @@ func (r *liveRepo) Update(ctx context.Context, m *model.LiveChannels) error {
 	_, err := r.db.NewUpdate().Model(m).
 		Column("name", "category", "stream_url", "logo", "description", "sort_order", "status", "updated_at").
 		WherePK().
-		Where("deleted_at IS NULL").
 		Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("update live channel: %w", err)
@@ -105,16 +107,45 @@ func (r *liveRepo) Update(ctx context.Context, m *model.LiveChannels) error {
 	return nil
 }
 
-func (r *liveRepo) SoftDelete(ctx context.Context, id int64) error {
-	now := time.Now()
-	_, err := r.db.NewUpdate().Model((*model.LiveChannels)(nil)).
-		Set("deleted_at = ?", now).
-		Set("updated_at = ?", now).
+func (r *liveRepo) Delete(ctx context.Context, id int64) error {
+	_, err := r.db.NewDelete().Model((*model.LiveChannels)(nil)).
 		Where("id = ?", id).
-		Where("deleted_at IS NULL").
 		Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("soft delete live channel: %w", err)
+		return fmt.Errorf("delete live channel: %w", err)
+	}
+	return nil
+}
+
+func (r *liveRepo) ListAll(ctx context.Context) ([]model.LiveChannels, error) {
+	var items []model.LiveChannels
+	err := r.db.NewSelect().Model(&items).Scan(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list all live channels: %w", err)
+	}
+	return items, nil
+}
+
+func (r *liveRepo) BatchCreate(ctx context.Context, items []model.LiveChannels) error {
+	if len(items) == 0 {
+		return nil
+	}
+	_, err := r.db.NewInsert().Model(&items).Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("batch create live channels: %w", err)
+	}
+	return nil
+}
+
+func (r *liveRepo) DeleteByIDs(ctx context.Context, ids []int64) error {
+	if len(ids) == 0 {
+		return nil
+	}
+	_, err := r.db.NewDelete().Model((*model.LiveChannels)(nil)).
+		Where("id IN (?)", bun.In(ids)).
+		Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("delete live channels by ids: %w", err)
 	}
 	return nil
 }

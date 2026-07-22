@@ -18,6 +18,7 @@ type LiveService interface {
 	Create(ctx context.Context, req *admindto.CreateLiveRequest) (*shareddto.LiveChannelItem, error)
 	Update(ctx context.Context, id int64, req *admindto.UpdateLiveRequest) (*shareddto.LiveChannelItem, error)
 	Delete(ctx context.Context, id int64) error
+	SyncFromSource(ctx context.Context) (*shareddto.LiveSyncResult, error)
 }
 
 type liveService struct {
@@ -134,7 +135,7 @@ func (s *liveService) Delete(ctx context.Context, id int64) error {
 	if item == nil {
 		return errcode.LiveChannelNotFound
 	}
-	if err := s.repo.SoftDelete(ctx, id); err != nil {
+	if err := s.repo.Delete(ctx, id); err != nil {
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return nil
@@ -166,4 +167,68 @@ func toLiveItem(m *model.LiveChannels, withStatus bool) shareddto.LiveChannelIte
 		item.Status = m.Status
 	}
 	return item
+}
+
+func (s *liveService) SyncFromSource(ctx context.Context) (*shareddto.LiveSyncResult, error) {
+	fetcher := &defaultLiveSourceFetcher{url: liveSourceURL}
+	entries, err := fetcher.Fetch(ctx)
+	if err != nil {
+		return nil, errcode.WithMessage(errcode.LiveSyncFailed, err.Error())
+	}
+
+	existing, err := s.repo.ListAll(ctx)
+	if err != nil {
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+
+	existingMap := make(map[string]*model.LiveChannels, len(existing))
+	for i := range existing {
+		existingMap[existing[i].Name] = &existing[i]
+	}
+
+	seenNames := make(map[string]bool, len(entries))
+	var toCreate []model.LiveChannels
+	var toDeleteIDs []int64
+
+	for _, entry := range entries {
+		seenNames[entry.Name] = true
+		if item, ok := existingMap[entry.Name]; ok {
+			item.Category = entry.Category
+			item.StreamURL = entry.StreamURL
+			item.SortOrder = entry.SortOrder
+			if err := s.repo.Update(ctx, item); err != nil {
+				return nil, errcode.Wrap(errcode.DatabaseError, err)
+			}
+		} else {
+			toCreate = append(toCreate, model.LiveChannels{
+				Name:      entry.Name,
+				Category:  entry.Category,
+				StreamURL: entry.StreamURL,
+				SortOrder: entry.SortOrder,
+				Status:    uint8(constant.StatusEnabled),
+			})
+		}
+	}
+
+	for i := range existing {
+		if !seenNames[existing[i].Name] {
+			toDeleteIDs = append(toDeleteIDs, int64(existing[i].ID))
+		}
+	}
+
+	if err := s.repo.BatchCreate(ctx, toCreate); err != nil {
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+
+	if err := s.repo.DeleteByIDs(ctx, toDeleteIDs); err != nil {
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+
+	result := &shareddto.LiveSyncResult{
+		Total:   len(entries),
+		Created: len(toCreate),
+		Updated: len(entries) - len(toCreate),
+		Deleted: len(toDeleteIDs),
+	}
+	return result, nil
 }

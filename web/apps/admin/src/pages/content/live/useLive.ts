@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type * as React from 'react'
 import { z } from 'zod'
 import { adminApi, errorMessage } from '@/lib/api'
@@ -15,41 +15,54 @@ const liveSchema = z.object({
   status: z.union([z.string(), z.number()]).transform((v) => Number(v)),
 })
 
-export const emptyForm = { name: '', category: '', stream_url: '', logo: '', description: '', sort_order: '0', status: '1' }
+export const emptyForm = { name: '', category: '', stream_url: '', logo: '', description: '', sort_order: '', status: '1' }
 
 export type LiveFormState = typeof emptyForm
 
 export function useLive() {
   const [list, setList] = useState<LiveChannel[]>([])
   const [error, setError] = useState('')
+  const [dialogError, setDialogError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
+  const pageRef = useRef(page)
+
+  useEffect(() => { pageRef.current = page }, [page])
   const [form, setForm] = useState(emptyForm)
   const [editId, setEditId] = useState(0)
   const [deleteId, setDeleteId] = useState<number | null>(null)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [syncing, setSyncing] = useState(false)
 
-  async function load() {
+  const load = useCallback(async (p = pageRef.current) => {
     setLoading(true)
     setError('')
     try {
-      const res = await adminApi.listLive({ page: 1, page_size: 100 })
+      const res = await adminApi.listLive({ page: p, page_size: 20 })
       setList(res.data.list || [])
+      setTotal(res.data.total || 0)
+      setPage(res.data.page || p)
     } catch (err) {
       setError(errorMessage(err))
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  useEffect(() => { void load() }, [])
+  useEffect(() => { void load(1) }, [load])
 
   async function onSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
-    setError('')
+    setDialogError('')
     const result = liveSchema.safeParse(form)
     if (!result.success) {
-      setError(result.error.issues[0]?.message || '表单校验失败')
+      setDialogError(result.error.issues[0]?.message || '表单校验失败')
       return
     }
+    setSubmitting(true)
     try {
       if (editId) {
         await adminApi.updateLive(editId, result.data)
@@ -60,26 +73,51 @@ export function useLive() {
       }
       setForm(emptyForm)
       setEditId(0)
-      await load()
+      setDialogOpen(false)
+      await load(page)
     } catch (err) {
-      setError(errorMessage(err))
+      setDialogError(errorMessage(err))
+    } finally {
+      setSubmitting(false)
     }
   }
 
   async function confirmDelete() {
     if (deleteId === null) return
+    setDeleting(true)
     try {
       await adminApi.deleteLive(deleteId)
       toast.success('直播频道已删除')
-      await load()
+      await load(page)
     } catch (err) {
       toast.error(errorMessage(err))
     } finally {
+      setDeleting(false)
       setDeleteId(null)
     }
   }
 
-  function startEdit(item: LiveChannel) {
+  async function syncLiveSource() {
+    setSyncing(true)
+    try {
+      const res = await adminApi.syncLiveSource()
+      toast.success(`同步完成：共 ${res.data.total} 条，新增 ${res.data.created}，更新 ${res.data.updated}，删除 ${res.data.deleted}`)
+      await load(1)
+    } catch (err) {
+      toast.error(errorMessage(err))
+    } finally {
+      setSyncing(false)
+    }
+  }
+
+  function openCreate() {
+    setForm(emptyForm)
+    setEditId(0)
+    setDialogError('')
+    setDialogOpen(true)
+  }
+
+  function openEdit(item: LiveChannel) {
     setEditId(item.id)
     setForm({
       name: item.name,
@@ -87,24 +125,45 @@ export function useLive() {
       stream_url: item.stream_url,
       logo: item.logo || '',
       description: item.description || '',
-      sort_order: String(item.sort_order ?? 0),
+      sort_order: item.sort_order ? String(item.sort_order) : '',
       status: String(item.status ?? 1),
     })
+    setDialogError('')
+    setDialogOpen(true)
+  }
+
+  function closeDialog(open: boolean) {
+    setDialogOpen(open)
+    if (!open) {
+      setForm(emptyForm)
+      setEditId(0)
+      setDialogError('')
+    }
   }
 
   return {
     list,
     error,
     loading,
+    page,
+    total,
     form,
     setForm,
     editId,
     setEditId,
     deleteId,
     setDeleteId,
+    dialogOpen,
+    closeDialog,
+    dialogError,
+    submitting,
+    deleting,
+    syncing,
     onSubmit,
     confirmDelete,
-    startEdit,
+    syncLiveSource,
+    openCreate,
+    openEdit,
     load,
   }
 }

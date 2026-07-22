@@ -126,6 +126,14 @@ type LiveChannelItem struct {
 	Status      uint8  `json:"status,omitempty"`
 }
 
+// LiveSyncResult is the result of a live source synchronization.
+type LiveSyncResult struct {
+	Total   int `json:"total"`
+	Created int `json:"created"`
+	Updated int `json:"updated"`
+	Deleted int `json:"deleted"`
+}
+
 // CollectSourceItem is an admin collect source payload.
 // API key is never returned in list/detail responses.
 type CollectSourceItem struct {

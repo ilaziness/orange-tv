@@ -14,8 +14,8 @@ type UserFavorites struct {
 	// Relation: user_id -> Users(ID)
 	UserID uint64 `bun:"user_id,notnull,unique:uk_user_video" json:"user_id"`
 	// Relation: video_id -> Videos(ID)
-	VideoID uint64 `bun:"video_id,notnull,unique:uk_user_video" json:"video_id"`
+	VideoID   uint64    `bun:"video_id,notnull,unique:uk_user_video" json:"video_id"`
 	CreatedAt time.Time `bun:"created_at,notnull" json:"created_at"`
-	User *Users `bun:"rel:belongs-to,join:user_id=id" json:"-"`
-	Video *Videos `bun:"rel:belongs-to,join:video_id=id" json:"-"`
+	User      *Users    `bun:"rel:belongs-to,join:user_id=id" json:"-"`
+	Video     *Videos   `bun:"rel:belongs-to,join:video_id=id" json:"-"`
 }

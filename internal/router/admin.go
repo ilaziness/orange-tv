@@ -76,6 +76,7 @@ func registerAdminContentRoutes(v1 *gin.RouterGroup, h *Handlers) {
 	v1.POST("/live", h.AdminLive.Create)
 	v1.PUT("/live/:id", h.AdminLive.Update)
 	v1.DELETE("/live/:id", h.AdminLive.Delete)
+	v1.POST("/live/sync", h.AdminLive.Sync)
 
 	v1.GET("/collect-sources", h.AdminCollect.ListSources)
 	v1.POST("/collect-sources", h.AdminCollect.CreateSource)

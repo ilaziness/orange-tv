@@ -16,7 +16,7 @@ type VideoActors struct {
 	// Relation: actor_id -> Actors(ID)
 	ActorID uint64 `bun:"actor_id,notnull" json:"actor_id"`
 	// 角色名
-	Role string `bun:"role,notnull" json:"role"`
+	Role  string  `bun:"role,notnull" json:"role"`
 	Actor *Actors `bun:"rel:belongs-to,join:actor_id=id" json:"-"`
 	Video *Videos `bun:"rel:belongs-to,join:video_id=id" json:"-"`
 }

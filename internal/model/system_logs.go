@@ -23,7 +23,7 @@ type SystemLogs struct {
 	// 日志内容
 	Content *string `bun:"content" json:"content"`
 	// IP地址
-	IPAddress string `bun:"ip_address,notnull" json:"ip_address"`
+	IPAddress string     `bun:"ip_address,notnull" json:"ip_address"`
 	CreatedAt *time.Time `bun:"created_at" json:"created_at"`
-	Admin *Admins `bun:"rel:belongs-to,join:admin_id=id" json:"-"`
+	Admin     *Admins    `bun:"rel:belongs-to,join:admin_id=id" json:"-"`
 }

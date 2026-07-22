@@ -145,6 +145,9 @@ func (s adminLiveSvc) Update(ctx context.Context, id int64, req *admindto.Update
 	return &shareddto.LiveChannelItem{ID: uint64(id)}, nil
 }
 func (s adminLiveSvc) Delete(ctx context.Context, id int64) error { return nil }
+func (s adminLiveSvc) SyncFromSource(ctx context.Context) (*shareddto.LiveSyncResult, error) {
+	return &shareddto.LiveSyncResult{}, nil
+}
 
 type adminCollectSvc struct{}
 

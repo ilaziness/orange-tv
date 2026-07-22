@@ -73,3 +73,12 @@ func (h *LiveHandler) Delete(c *gin.Context) {
 	}
 	response.Success(c, nil)
 }
+
+func (h *LiveHandler) Sync(c *gin.Context) {
+	result, err := h.svc.SyncFromSource(c.Request.Context())
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	response.Success(c, result)
+}

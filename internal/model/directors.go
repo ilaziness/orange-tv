@@ -12,10 +12,10 @@ type Directors struct {
 
 	ID uint64 `bun:"id,pk,autoincrement" json:"id"`
 	// 导演名称
-	Name string `bun:"name,notnull,unique" json:"name"`
+	Name      string     `bun:"name,notnull,unique" json:"name"`
 	CreatedAt *time.Time `bun:"created_at" json:"created_at"`
 	UpdatedAt *time.Time `bun:"updated_at" json:"updated_at"`
 	// 软删除时间
-	DeletedAt *time.Time `bun:"deleted_at" json:"deleted_at"`
+	DeletedAt      *time.Time        `bun:"deleted_at" json:"deleted_at"`
 	VideoDirectors []*VideoDirectors `bun:"rel:has-many,join:id=director_id" json:"-"`
 }

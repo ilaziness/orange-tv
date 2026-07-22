@@ -219,6 +219,13 @@ export type LiveChannel = {
   status?: number
 }
 
+export type LiveSyncResult = {
+  total: number
+  created: number
+  updated: number
+  deleted: number
+}
+
 export type CollectSource = {
   id: number
   name: string

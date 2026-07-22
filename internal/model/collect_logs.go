@@ -25,7 +25,7 @@ type CollectLogs struct {
 	// 错误信息
 	ErrorMessage *string `bun:"error_message" json:"error_message"`
 	// 耗时(毫秒)
-	DurationMs uint32 `bun:"duration_ms,notnull" json:"duration_ms"`
-	CreatedAt *time.Time `bun:"created_at" json:"created_at"`
+	DurationMs    uint32          `bun:"duration_ms,notnull" json:"duration_ms"`
+	CreatedAt     *time.Time      `bun:"created_at" json:"created_at"`
 	CollectSource *CollectSources `bun:"rel:belongs-to,join:source_id=id" json:"-"`
 }

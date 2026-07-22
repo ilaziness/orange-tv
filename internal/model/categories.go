@@ -19,13 +19,13 @@ type Categories struct {
 	// 排序
 	SortOrder uint32 `bun:"sort_order,notnull" json:"sort_order"`
 	// 状态：1启用 0禁用
-	Status uint8 `bun:"status,notnull" json:"status"`
+	Status    uint8      `bun:"status,notnull" json:"status"`
 	CreatedAt *time.Time `bun:"created_at" json:"created_at"`
 	UpdatedAt *time.Time `bun:"updated_at" json:"updated_at"`
 	// 软删除时间
-	DeletedAt *time.Time `bun:"deleted_at" json:"deleted_at"`
-	Parent *Categories `bun:"rel:belongs-to,join:parent_id=id" json:"-"`
-	SubCategories []*Categories `bun:"rel:has-many,join:id=parent_id" json:"-"`
+	DeletedAt               *time.Time                 `bun:"deleted_at" json:"deleted_at"`
+	Parent                  *Categories                `bun:"rel:belongs-to,join:parent_id=id" json:"-"`
+	SubCategories           []*Categories              `bun:"rel:has-many,join:id=parent_id" json:"-"`
 	CollectSourceCategories []*CollectSourceCategories `bun:"rel:has-many,join:id=category_id" json:"-"`
-	Videos []*Videos `bun:"rel:has-many,join:id=category_id" json:"-"`
+	Videos                  []*Videos                  `bun:"rel:has-many,join:id=category_id" json:"-"`
 }

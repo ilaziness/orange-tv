@@ -14,6 +14,7 @@ import {
   type CollectSource,
   type DashboardData,
   type LiveChannel,
+  type LiveSyncResult,
   type LoginLogItem,
   type LoginResult,
   type NamedItem,
@@ -122,6 +123,7 @@ export const adminApi = {
   updateLive: (id: number, body: unknown) =>
     withAuth((token) => apiPut<LiveChannel>(ADMIN_API_BASE, `/live/${id}`, body, { token })),
   deleteLive: (id: number) => withAuth((token) => apiDelete(ADMIN_API_BASE, `/live/${id}`, { token })),
+  syncLiveSource: () => withAuth((token) => apiPost<LiveSyncResult>(ADMIN_API_BASE, '/live/sync', {}, { token })),
 
   listCollectSources: () =>
     withAuth((token) => apiGet<PageData<CollectSource>>(ADMIN_API_BASE, '/collect-sources', { token })),
