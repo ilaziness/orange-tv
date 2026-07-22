@@ -137,15 +137,17 @@ type LiveSyncResult struct {
 // CollectSourceItem is an admin collect source payload.
 // API key is never returned in list/detail responses.
 type CollectSourceItem struct {
-	ID            uint64 `json:"id"`
-	Name          string `json:"name"`
-	Type          uint8  `json:"type"`
-	CollectURL    string `json:"collect_url"`
-	Config        string `json:"config,omitempty"`
-	CronExpr      string `json:"cron_expr"`
-	PlaySourceID  uint64 `json:"play_source_id"`
-	LastCollectAt string `json:"last_collect_at,omitempty"`
-	Status        uint8  `json:"status"`
+	ID              uint64 `json:"id"`
+	Name            string `json:"name"`
+	Type            uint8  `json:"type"`
+	CollectURL      string `json:"collect_url"`
+	CronExpr        string `json:"cron_expr"`
+	PlaySourceID    uint64 `json:"play_source_id"`
+	PlaySourceName  string `json:"play_source_name,omitempty"`
+	LastCollectAt   string `json:"last_collect_at,omitempty"`
+	Status          uint8  `json:"status"`
+	ScheduleEnabled uint8  `json:"schedule_enabled"`
+	DataRange       string `json:"data_range,omitempty"`
 }
 
 // CollectCategoryMapItem is an external→internal category mapping.
@@ -160,12 +162,10 @@ type CollectCategoryMapItem struct {
 type CollectLogItem struct {
 	ID           uint64 `json:"id"`
 	SourceID     uint64 `json:"source_id"`
+	SourceName   string `json:"source_name,omitempty"`
 	Status       uint8  `json:"status"`
-	TotalCount   uint32 `json:"total_count"`
-	SuccessCount uint32 `json:"success_count"`
-	FailedCount  uint32 `json:"failed_count"`
-	ErrorMessage string `json:"error_message,omitempty"`
-	DurationMs   uint32 `json:"duration_ms"`
+	CollectCount uint32 `json:"collect_count"`
+	DurationSec  uint32 `json:"duration_sec"`
 	CreatedAt    string `json:"created_at,omitempty"`
 }
 

@@ -66,14 +66,19 @@ var (
 	LiveSyncFailed      = &Code{4000071, "直播源同步失败", 502, nil}
 
 	// 采集 (40008xx)
-	CollectSourceNotFound   = &Code{4000080, "采集源不存在", 404, nil}
-	CollectSourceDisabled   = &Code{4000081, "采集源已禁用", 400, nil}
-	CollectAlreadyRunning   = &Code{4000082, "该采集源正在执行中", 409, nil}
-	CollectNotRunning       = &Code{4000083, "该采集源未在执行", 400, nil}
-	CollectInvalidCron      = &Code{4000084, "定时采集 cron 表达式无效", 400, nil}
-	CollectFetchFailed      = &Code{4000085, "采集拉取失败", 502, nil}
-	CollectParseFailed      = &Code{4000086, "采集数据解析失败", 422, nil}
-	CollectCategoryMapEmpty = &Code{4000087, "请先配置分类映射", 400, nil}
+	CollectSourceNotFound       = &Code{4000080, "采集源不存在", 404, nil}
+	CollectSourceDisabled       = &Code{4000081, "采集源已禁用", 400, nil}
+	CollectAlreadyRunning       = &Code{4000082, "该采集源正在执行中", 409, nil}
+	CollectNotRunning           = &Code{4000083, "该采集源未在执行", 400, nil}
+	CollectInvalidCron          = &Code{4000084, "定时采集 cron 表达式无效", 400, nil}
+	CollectFetchFailed          = &Code{4000085, "采集拉取失败", 502, nil}
+	CollectParseFailed          = &Code{4000086, "采集数据解析失败", 422, nil}
+	CollectCategoryMapEmpty     = &Code{4000087, "请先配置分类映射", 400, nil}
+	CollectNoSchedule           = &Code{4000088, "未开启定时采集", 400, nil}
+	CollectRemoteCategoryFailed = &Code{4000089, "获取远程分类失败", 502, nil}
+	CollectSourceNotAppleCMS    = &Code{4000090, "仅苹果CMS源支持远程分类获取", 400, nil}
+	CollectInvalidDataRange     = &Code{4000091, "数据范围参数无效", 400, nil}
+	CollectDefaultNotSupported  = &Code{4000092, "默认格式暂不支持，请使用苹果CMS格式", 400, nil}
 
 	// 系统模块 (900xxxx)
 	InternalError         = &Code{9000001, "服务器内部错误", 500, nil}

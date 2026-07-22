@@ -167,10 +167,16 @@ func (s adminCollectSvc) ListCategories(ctx context.Context, sourceID int64) ([]
 func (s adminCollectSvc) SetCategories(ctx context.Context, sourceID int64, req *admindto.SetCollectCategoriesRequest) ([]shareddto.CollectCategoryMapItem, error) {
 	return nil, nil
 }
-func (s adminCollectSvc) Start(ctx context.Context, sourceID int64) error { return nil }
-func (s adminCollectSvc) Stop(ctx context.Context, sourceID int64) error  { return nil }
 func (s adminCollectSvc) ListLogs(ctx context.Context, req *admindto.CollectLogListRequest) ([]shareddto.CollectLogItem, int, error) {
 	return nil, 0, nil
+}
+func (s adminCollectSvc) FetchRemoteCategories(ctx context.Context, sourceID int64) (*admindto.RemoteCategoryResponse, error) {
+	return &admindto.RemoteCategoryResponse{}, nil
+}
+func (s adminCollectSvc) EnableSchedule(ctx context.Context, sourceID int64) error  { return nil }
+func (s adminCollectSvc) DisableSchedule(ctx context.Context, sourceID int64) error { return nil }
+func (s adminCollectSvc) CollectNow(ctx context.Context, sourceID int64, req *admindto.CollectNowRequest) error {
+	return nil
 }
 func (s adminCollectSvc) ReloadScheduler(ctx context.Context) error { return nil }
 func (s adminCollectSvc) StartScheduler(ctx context.Context) error  { return nil }

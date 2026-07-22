@@ -144,6 +144,7 @@ func ParseAppleCMS(body []byte) (*Page, error) {
 		PageCount any             `json:"pagecount"`
 		Total     any             `json:"total"`
 		List      json.RawMessage `json:"list"`
+		Class     json.RawMessage `json:"class"`
 	}
 	if err := json.Unmarshal(body, &raw); err != nil {
 		return nil, fmt.Errorf("apple cms unmarshal: %w", err)
@@ -187,13 +188,22 @@ func ParseAppleCMS(body []byte) (*Page, error) {
 			Actors:      splitNames(row.Actor),
 			Tags:        splitNames(firstNonEmpty(row.VodTag, row.Class)),
 			Episodes:    parseApplePlayURLs(row.VodPlayURL),
+			VodTime:     strings.TrimSpace(row.VodTime),
 		}
 		items = append(items, it)
 	}
 	if total < len(items) {
 		total = len(items)
 	}
-	return &Page{Page: page, PageCount: pageCount, Total: total, Items: items}, nil
+
+	var classes []AppleCMSClass
+	if len(raw.Class) > 0 && string(raw.Class) != "null" {
+		if err := json.Unmarshal(raw.Class, &classes); err != nil {
+			return nil, fmt.Errorf("apple cms class: %w", err)
+		}
+	}
+
+	return &Page{Page: page, PageCount: pageCount, Total: total, Items: items, Classes: classes}, nil
 }
 
 type appleItem struct {
@@ -217,6 +227,7 @@ type appleItem struct {
 	DoubanScore any    `json:"douban_score"`
 	VodPlayFrom string `json:"vod_play_from"`
 	VodPlayURL  string `json:"vod_play_url"`
+	VodTime     string `json:"vod_time"`
 }
 
 func parseApplePlayURLs(raw string) []Episode {

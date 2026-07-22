@@ -28,6 +28,14 @@ type Item struct {
 	Actors      []string
 	Tags        []string
 	Episodes    []Episode
+	VodTime     string // raw vod_time string for time range filtering
+}
+
+// AppleCMSClass is one category from Apple CMS class field.
+type AppleCMSClass struct {
+	TypeID   string `json:"type_id"`
+	TypeName string `json:"type_name"`
+	TypePID  string `json:"type_pid"`
 }
 
 // Page is one page of collected items.
@@ -36,4 +44,5 @@ type Page struct {
 	PageCount int
 	Total     int
 	Items     []Item
+	Classes   []AppleCMSClass
 }

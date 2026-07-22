@@ -24,7 +24,8 @@ func NewFetcher() *Fetcher {
 }
 
 // FetchPage GET the collect URL with page params and optional API key.
-func (f *Fetcher) FetchPage(ctx context.Context, baseURL, apiKey string, page int, isApple bool) ([]byte, error) {
+// dataRange filters by time for Apple CMS (today/last1d/last3d/last1w/last1m/all).
+func (f *Fetcher) FetchPage(ctx context.Context, baseURL, apiKey string, page int, isApple bool, dataRange string) ([]byte, error) {
 	u, err := url.Parse(strings.TrimSpace(baseURL))
 	if err != nil {
 		return nil, fmt.Errorf("parse collect url: %w", err)
@@ -38,6 +39,9 @@ func (f *Fetcher) FetchPage(ctx context.Context, baseURL, apiKey string, page in
 			q.Set("ac", "detail")
 		}
 		q.Set("pg", strconv.Itoa(page))
+		if h := dataRangeToHours(dataRange); h > 0 {
+			q.Set("h", strconv.Itoa(h))
+		}
 	} else {
 		q.Set("page", strconv.Itoa(page))
 	}
@@ -70,4 +74,23 @@ func (f *Fetcher) FetchPage(ctx context.Context, baseURL, apiKey string, page in
 		return nil, fmt.Errorf("http status %d", resp.StatusCode)
 	}
 	return body, nil
+}
+
+// dataRangeToHours converts a data range string to hours for Apple CMS h parameter.
+// Returns 0 for "all" or empty (no filter).
+func dataRangeToHours(dataRange string) int {
+	switch strings.TrimSpace(dataRange) {
+	case "today":
+		return 24
+	case "last1d":
+		return 24
+	case "last3d":
+		return 72
+	case "last1w":
+		return 168
+	case "last1m":
+		return 720
+	default:
+		return 0
+	}
 }

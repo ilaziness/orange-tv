@@ -21,6 +21,7 @@ import {
   type PageData,
   type PlayEpisode,
   type PlaySource,
+  type RemoteCategoryResponse,
   type SystemLogItem,
   type SystemSettings,
   type UserGroupItem,
@@ -125,8 +126,8 @@ export const adminApi = {
   deleteLive: (id: number) => withAuth((token) => apiDelete(ADMIN_API_BASE, `/live/${id}`, { token })),
   syncLiveSource: () => withAuth((token) => apiPost<LiveSyncResult>(ADMIN_API_BASE, '/live/sync', {}, { token })),
 
-  listCollectSources: () =>
-    withAuth((token) => apiGet<PageData<CollectSource>>(ADMIN_API_BASE, '/collect-sources', { token })),
+  listCollectSources: (query?: Record<string, string | number | undefined>) =>
+    withAuth((token) => apiGet<PageData<CollectSource>>(ADMIN_API_BASE, '/collect-sources', { token, query })),
   createCollectSource: (body: unknown) =>
     withAuth((token) => apiPost<CollectSource>(ADMIN_API_BASE, '/collect-sources', body, { token })),
   updateCollectSource: (id: number, body: unknown) =>
@@ -139,10 +140,14 @@ export const adminApi = {
     withAuth((token) =>
       apiPost<CollectCategoryMap[]>(ADMIN_API_BASE, `/collect-sources/${id}/categories`, body, { token }),
     ),
-  startCollect: (sourceId: number) =>
-    withAuth((token) => apiPost(ADMIN_API_BASE, `/collect/${sourceId}/start`, null, { token })),
-  stopCollect: (sourceId: number) =>
-    withAuth((token) => apiPost(ADMIN_API_BASE, `/collect/${sourceId}/stop`, null, { token })),
+  fetchRemoteCategories: (id: number) =>
+    withAuth((token) => apiGet<RemoteCategoryResponse>(ADMIN_API_BASE, `/collect-sources/${id}/remote-categories`, { token })),
+  enableCollectSchedule: (id: number) =>
+    withAuth((token) => apiPost(ADMIN_API_BASE, `/collect-sources/${id}/schedule/enable`, null, { token })),
+  disableCollectSchedule: (id: number) =>
+    withAuth((token) => apiPost(ADMIN_API_BASE, `/collect-sources/${id}/schedule/disable`, null, { token })),
+  collectNow: (id: number, body: unknown) =>
+    withAuth((token) => apiPost(ADMIN_API_BASE, `/collect-sources/${id}/collect`, body, { token })),
   listCollectLogs: (query?: Record<string, string | number | undefined>) =>
     withAuth((token) => apiGet<PageData<CollectLog>>(ADMIN_API_BASE, '/collect/logs', { token, query })),
 

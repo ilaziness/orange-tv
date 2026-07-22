@@ -231,11 +231,13 @@ export type CollectSource = {
   name: string
   type: number
   collect_url: string
-  config?: string
   cron_expr: string
   play_source_id: number
+  play_source_name?: string
   last_collect_at?: string
   status: number
+  schedule_enabled: number
+  data_range?: string
 }
 
 export type CollectCategoryMap = {
@@ -248,13 +250,21 @@ export type CollectCategoryMap = {
 export type CollectLog = {
   id: number
   source_id: number
+  source_name?: string
   status: number
-  total_count: number
-  success_count: number
-  failed_count: number
-  error_message?: string
-  duration_ms: number
+  collect_count: number
+  duration_sec: number
   created_at?: string
+}
+
+export type RemoteCategory = {
+  type_id: string
+  type_name: string
+  type_pid: string
+}
+
+export type RemoteCategoryResponse = {
+  list: RemoteCategory[]
 }
 
 export type SiteSettings = {

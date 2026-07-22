@@ -41,6 +41,7 @@ type CollectRepository interface {
 
 	CreateLog(ctx context.Context, m *model.CollectLogs) error
 	UpdateLog(ctx context.Context, m *model.CollectLogs) error
+	IncrementLogCount(ctx context.Context, logID uint64, count int) error
 	ListLogs(ctx context.Context, f CollectLogListFilter) ([]model.CollectLogs, int, error)
 
 	// FindVideoByTitleYear finds undeleleted video by title+year (dedup).
@@ -80,7 +81,7 @@ func (r *collectRepo) ListEnabledCronSources(ctx context.Context) ([]model.Colle
 	var items []model.CollectSources
 	err := r.db.NewSelect().Model(&items).
 		Where("deleted_at IS NULL").
-		Where("status = ?", 1).
+		Where("schedule_enabled = ?", 1).
 		Where("cron_expr <> ''").
 		OrderExpr("id ASC").
 		Scan(ctx)
@@ -117,7 +118,7 @@ func (r *collectRepo) UpdateSource(ctx context.Context, m *model.CollectSources)
 	now := time.Now()
 	m.UpdatedAt = &now
 	_, err := r.db.NewUpdate().Model(m).
-		Column("name", "type", "collect_url", "api_key", "config", "cron_expr", "play_source_id", "status", "updated_at").
+		Column("name", "type", "collect_url", "api_key", "cron_expr", "play_source_id", "status", "schedule_enabled", "data_range", "updated_at").
 		WherePK().
 		Where("deleted_at IS NULL").
 		Exec(ctx)
@@ -197,11 +198,22 @@ func (r *collectRepo) CreateLog(ctx context.Context, m *model.CollectLogs) error
 
 func (r *collectRepo) UpdateLog(ctx context.Context, m *model.CollectLogs) error {
 	_, err := r.db.NewUpdate().Model(m).
-		Column("status", "total_count", "success_count", "failed_count", "error_message", "duration_ms").
+		Column("status", "duration_sec").
 		WherePK().
 		Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("update collect log: %w", err)
+	}
+	return nil
+}
+
+func (r *collectRepo) IncrementLogCount(ctx context.Context, logID uint64, count int) error {
+	_, err := r.db.NewUpdate().Model((*model.CollectLogs)(nil)).
+		Set("collect_count = collect_count + ?", count).
+		Where("id = ?", logID).
+		Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("increment collect log count: %w", err)
 	}
 	return nil
 }

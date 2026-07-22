@@ -84,8 +84,10 @@ func registerAdminContentRoutes(v1 *gin.RouterGroup, h *Handlers) {
 	v1.DELETE("/collect-sources/:id", h.AdminCollect.DeleteSource)
 	v1.GET("/collect-sources/:id/categories", h.AdminCollect.ListCategories)
 	v1.POST("/collect-sources/:id/categories", h.AdminCollect.SetCategories)
-	v1.POST("/collect/:source_id/start", h.AdminCollect.Start)
-	v1.POST("/collect/:source_id/stop", h.AdminCollect.Stop)
+	v1.GET("/collect-sources/:id/remote-categories", h.AdminCollect.FetchRemoteCategories)
+	v1.POST("/collect-sources/:id/schedule/enable", h.AdminCollect.EnableSchedule)
+	v1.POST("/collect-sources/:id/schedule/disable", h.AdminCollect.DisableSchedule)
+	v1.POST("/collect-sources/:id/collect", h.AdminCollect.CollectNow)
 	v1.GET("/collect/logs", h.AdminCollect.ListLogs)
 }
 

@@ -156,11 +156,9 @@ const (
 
 // Collect log status (collect_logs.status).
 const (
-	CollectLogSuccess        int8 = 1
-	CollectLogFailed         int8 = 2
-	CollectLogPartialSuccess int8 = 3
-	CollectLogRunning        int8 = 4
-	CollectLogCancelled      int8 = 5
+	CollectLogCompleted int8 = 1
+	CollectLogRunning   int8 = 2
+	CollectLogFailed    int8 = 3
 )
 
 // System setting keys.

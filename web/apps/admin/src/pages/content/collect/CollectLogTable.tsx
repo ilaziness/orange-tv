@@ -19,12 +19,10 @@ export function CollectLogTable({ logs }: CollectLogTableProps) {
         <TableHeader>
           <TableRow>
             <TableHead className="w-16">ID</TableHead>
-            <TableHead className="w-20">源</TableHead>
+            <TableHead className="w-32">采集源</TableHead>
             <TableHead className="w-20">状态</TableHead>
-            <TableHead className="w-20">总数</TableHead>
-            <TableHead className="w-20">成功</TableHead>
-            <TableHead className="w-20">失败</TableHead>
-            <TableHead className="w-24">耗时ms</TableHead>
+            <TableHead className="w-24">采集数量</TableHead>
+            <TableHead className="w-24">耗时(秒)</TableHead>
             <TableHead>时间</TableHead>
           </TableRow>
         </TableHeader>
@@ -32,12 +30,20 @@ export function CollectLogTable({ logs }: CollectLogTableProps) {
           {logs.map((l) => (
             <TableRow key={l.id}>
               <TableCell>{l.id}</TableCell>
-              <TableCell>{l.source_id}</TableCell>
-              <TableCell>{l.status}</TableCell>
-              <TableCell>{l.total_count}</TableCell>
-              <TableCell>{l.success_count}</TableCell>
-              <TableCell>{l.failed_count}</TableCell>
-              <TableCell>{l.duration_ms}</TableCell>
+              <TableCell>{l.source_name || `#${l.source_id}`}</TableCell>
+              <TableCell>
+                {l.status === 1 ? (
+                  <span className="text-xs text-green-600">已完成</span>
+                ) : l.status === 2 ? (
+                  <span className="text-xs text-blue-600">采集中</span>
+                ) : l.status === 3 ? (
+                  <span className="text-xs text-red-600">失败</span>
+                ) : (
+                  <span className="text-xs text-muted-foreground">{l.status}</span>
+                )}
+              </TableCell>
+              <TableCell>{l.collect_count}</TableCell>
+              <TableCell>{l.duration_sec}</TableCell>
               <TableCell className="text-xs text-muted-foreground">{l.created_at || '-'}</TableCell>
             </TableRow>
           ))}

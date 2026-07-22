@@ -14,18 +14,12 @@ type CollectLogs struct {
 	// 采集源ID
 	// Relation: source_id -> CollectSources(ID)
 	SourceID uint64 `bun:"source_id,notnull" json:"source_id"`
-	// 采集状态：1成功 2失败 3部分成功
-	Status uint8 `bun:"status,notnull" json:"status"`
-	// 采集总数
-	TotalCount uint32 `bun:"total_count,notnull" json:"total_count"`
-	// 成功数
-	SuccessCount uint32 `bun:"success_count,notnull" json:"success_count"`
-	// 失败数
-	FailedCount uint32 `bun:"failed_count,notnull" json:"failed_count"`
-	// 错误信息
-	ErrorMessage *string `bun:"error_message" json:"error_message"`
-	// 耗时(毫秒)
-	DurationMs    uint32          `bun:"duration_ms,notnull" json:"duration_ms"`
-	CreatedAt     *time.Time      `bun:"created_at" json:"created_at"`
+	// 采集状态：1完成 2采集中
+	Status    uint8      `bun:"status,notnull" json:"status"`
+	CreatedAt *time.Time `bun:"created_at" json:"created_at"`
+	// 采集数量（累加）
+	CollectCount uint32 `bun:"collect_count,notnull" json:"collect_count"`
+	// 耗时(秒)
+	DurationSec   uint32          `bun:"duration_sec,notnull" json:"duration_sec"`
 	CollectSource *CollectSources `bun:"rel:belongs-to,join:source_id=id" json:"-"`
 }

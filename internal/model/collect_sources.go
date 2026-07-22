@@ -19,8 +19,6 @@ type CollectSources struct {
 	CollectURL string `bun:"collect_url,notnull" json:"collect_url"`
 	// API密钥
 	APIKey string `bun:"api_key,notnull" json:"-"`
-	// 采集配置
-	Config *string `bun:"config" json:"config"`
 	// 定时采集cron表达式，空表示未开启定时采集
 	CronExpr string `bun:"cron_expr,notnull" json:"cron_expr"`
 	// 绑定播放源ID，采集到的播放链接存入该播放源
@@ -33,7 +31,11 @@ type CollectSources struct {
 	CreatedAt *time.Time `bun:"created_at" json:"created_at"`
 	UpdatedAt *time.Time `bun:"updated_at" json:"updated_at"`
 	// 软删除时间
-	DeletedAt               *time.Time                 `bun:"deleted_at" json:"deleted_at"`
+	DeletedAt *time.Time `bun:"deleted_at" json:"deleted_at"`
+	// 是否开启定时采集：1是 0否
+	ScheduleEnabled uint8 `bun:"schedule_enabled,notnull" json:"schedule_enabled"`
+	// 定时采集数据范围：today/last1d/last3d/last1w/last1m/all
+	DataRange               string                     `bun:"data_range,notnull" json:"data_range"`
 	CollectLogs             []*CollectLogs             `bun:"rel:has-many,join:id=source_id" json:"-"`
 	CollectSourceCategories []*CollectSourceCategories `bun:"rel:has-many,join:id=source_id" json:"-"`
 	PlaySource              *PlaySources               `bun:"rel:belongs-to,join:play_source_id=id" json:"-"`

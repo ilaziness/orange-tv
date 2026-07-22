@@ -46,18 +46,20 @@ func NewEngine(
 
 // Result is the summary of one collect run.
 type Result struct {
-	Total   int
-	Success int
-	Failed  int
-	Message string
+	CollectCount int
+	HasError     bool
+	Message      string
 }
 
-// Run executes collection for a source (all pages until page_count).
-func (e *Engine) Run(ctx context.Context, source *model.CollectSources) Result {
-	start := time.Now()
+// Run executes collection for a source (all pages until page_count or vod_time out of range).
+// dataRange filters by time (today/last1d/last3d/last1w/last1m/all).
+// logID is the collect_logs row ID for incremental count updates.
+func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRange string, logID uint64) Result {
 	res := Result{}
+
 	maps, err := e.collectRepo.ListCategories(ctx, int64(source.ID))
 	if err != nil {
+		res.HasError = true
 		res.Message = err.Error()
 		return res
 	}
@@ -65,32 +67,20 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources) Result {
 	for _, m := range maps {
 		catMap[strings.TrimSpace(m.ExternalCategory)] = int64(m.CategoryID)
 	}
-	if len(catMap) == 0 {
-		res.Message = "请先配置分类映射"
-		return res
-	}
-	if source.PlaySourceID <= 0 {
-		res.Message = "采集源未绑定播放源"
-		return res
-	}
-	playSrc, err := e.playRepo.GetSource(ctx, int64(source.PlaySourceID))
-	if err != nil || playSrc == nil {
-		res.Message = "绑定的播放源不存在"
-		return res
-	}
 
 	isApple := source.Type == uint8(constant.CollectTypeAppleCMS)
 	pageNo := 1
-	maxPages := 50 // safety cap per run
-	cancelled := false
+	maxPages := 50
+	cutoffTime := dataRangeCutoff(dataRange)
+
 	for pageNo <= maxPages {
 		if err := ctx.Err(); err != nil {
 			res.Message = "采集已取消"
 			break
 		}
-		body, err := e.fetcher.FetchPage(ctx, source.CollectURL, source.APIKey, pageNo, isApple)
+		body, err := e.fetcher.FetchPage(ctx, source.CollectURL, source.APIKey, pageNo, isApple, dataRange)
 		if err != nil {
-			res.Failed++
+			res.HasError = true
 			res.Message = fmt.Sprintf("拉取第%d页失败: %v", pageNo, err)
 			break
 		}
@@ -101,22 +91,32 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources) Result {
 			page, err = ParseDefaultJSON(body)
 		}
 		if err != nil {
-			res.Failed++
+			res.HasError = true
 			res.Message = fmt.Sprintf("解析第%d页失败: %v", pageNo, err)
 			break
 		}
 		if len(page.Items) == 0 {
 			break
 		}
+
+		pageCollected := 0
+		stopCollection := false
 		for _, item := range page.Items {
 			if err := ctx.Err(); err != nil {
 				res.Message = "采集已取消"
-				cancelled = true
+				stopCollection = true
 				break
 			}
-			res.Total++
+
+			// vod_time filtering: if item time is before cutoff, stop all subsequent pages
+			if cutoffTime != nil && item.VodTime != "" {
+				if isVodTimeBefore(item.VodTime, cutoffTime) {
+					stopCollection = true
+					break
+				}
+			}
+
 			if err := e.upsertItem(ctx, source, catMap, item); err != nil {
-				res.Failed++
 				if e.log != nil {
 					e.log.Warn("collect item failed",
 						zap.Int64("source_id", int64(source.ID)),
@@ -126,9 +126,18 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources) Result {
 				}
 				continue
 			}
-			res.Success++
+			pageCollected++
 		}
-		if cancelled {
+
+		// increment log count for this page
+		if logID > 0 && pageCollected > 0 {
+			if err := e.collectRepo.IncrementLogCount(ctx, logID, pageCollected); err != nil && e.log != nil {
+				e.log.Warn("increment log count failed", zap.Error(err))
+			}
+		}
+		res.CollectCount += pageCollected
+
+		if stopCollection {
 			break
 		}
 		if pageNo >= page.PageCount || pageNo >= maxPages {
@@ -136,8 +145,45 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources) Result {
 		}
 		pageNo++
 	}
-	_ = start
 	return res
+}
+
+// dataRangeCutoff returns the earliest time for the given data range.
+// Returns nil for "all" or empty (no filtering).
+func dataRangeCutoff(dataRange string) *time.Time {
+	now := time.Now()
+	switch strings.TrimSpace(dataRange) {
+	case "today":
+		t := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+		return &t
+	case "last1d":
+		t := now.AddDate(0, 0, -1)
+		return &t
+	case "last3d":
+		t := now.AddDate(0, 0, -3)
+		return &t
+	case "last1w":
+		t := now.AddDate(0, 0, -7)
+		return &t
+	case "last1m":
+		t := now.AddDate(0, -1, 0)
+		return &t
+	default:
+		return nil
+	}
+}
+
+// isVodTimeBefore checks if vod_time (format "2006-01-02 15:04:05") is before cutoff.
+func isVodTimeBefore(vodTime string, cutoff *time.Time) bool {
+	t, err := time.ParseInLocation("2006-01-02 15:04:05", strings.TrimSpace(vodTime), time.Local)
+	if err != nil {
+		// try date-only format
+		t, err = time.ParseInLocation("2006-01-02", strings.TrimSpace(vodTime), time.Local)
+		if err != nil {
+			return false
+		}
+	}
+	return t.Before(*cutoff)
 }
 
 func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, catMap map[string]int64, item Item) error {
