@@ -227,10 +227,10 @@ func (s *collectService) ListCategories(ctx context.Context, sourceID int64) ([]
 	out := make([]shareddto.CollectCategoryMapItem, 0, len(items))
 	for _, it := range items {
 		out = append(out, shareddto.CollectCategoryMapItem{
-			ID:               it.ID,
-			SourceID:         it.SourceID,
-			ExternalCategory: it.ExternalCategory,
-			CategoryID:       it.CategoryID,
+			ID:                 it.ID,
+			SourceID:           it.SourceID,
+			ExternalCategoryID: it.ExternalCategoryID,
+			CategoryID:         it.CategoryID,
 		})
 	}
 	return out, nil
@@ -241,16 +241,15 @@ func (s *collectService) SetCategories(ctx context.Context, sourceID int64, req 
 		return nil, err
 	}
 	rows := make([]model.CollectSourceCategories, 0, len(req.Items))
-	seen := map[string]bool{}
+	seen := map[uint64]bool{}
 	for _, in := range req.Items {
-		ext := strings.TrimSpace(in.ExternalCategory)
-		if ext == "" || in.CategoryID <= 0 {
+		if in.ExternalCategoryID == 0 || in.CategoryID == 0 {
 			return nil, errcode.WithMessage(errcode.ParamError, "分类映射参数无效")
 		}
-		if seen[ext] {
+		if seen[in.ExternalCategoryID] {
 			continue
 		}
-		seen[ext] = true
+		seen[in.ExternalCategoryID] = true
 		cat, err := s.categoryRepo.GetByID(ctx, int64(in.CategoryID))
 		if err != nil {
 			return nil, errcode.Wrap(errcode.DatabaseError, err)
@@ -259,8 +258,8 @@ func (s *collectService) SetCategories(ctx context.Context, sourceID int64, req 
 			return nil, errcode.CategoryNotFound
 		}
 		rows = append(rows, model.CollectSourceCategories{
-			ExternalCategory: ext,
-			CategoryID:       in.CategoryID,
+			ExternalCategoryID: in.ExternalCategoryID,
+			CategoryID:         in.CategoryID,
 		})
 	}
 	if err := s.repo.ReplaceCategories(ctx, sourceID, rows); err != nil {
@@ -551,8 +550,9 @@ func (s *collectService) FetchRemoteCategories(ctx context.Context, sourceID int
 	if source.Type != uint8(constant.CollectTypeAppleCMS) {
 		return nil, errcode.CollectSourceNotAppleCMS
 	}
+	// Apple CMS class is returned on ac=list (and bare list URL), not on ac=detail.
 	fetcher := collect.NewFetcher()
-	body, err := fetcher.FetchPage(ctx, source.CollectURL, source.APIKey, 1, true, "")
+	body, err := fetcher.FetchAppleCMSCategories(ctx, source.CollectURL, source.APIKey)
 	if err != nil {
 		return nil, errcode.Wrap(errcode.CollectFetchFailed, err)
 	}
@@ -562,6 +562,9 @@ func (s *collectService) FetchRemoteCategories(ctx context.Context, sourceID int
 	}
 	items := make([]admindto.RemoteCategoryItem, 0, len(page.Classes))
 	for _, c := range page.Classes {
+		if c.TypeID <= 0 {
+			continue
+		}
 		items = append(items, admindto.RemoteCategoryItem{
 			TypeID:   c.TypeID,
 			TypeName: c.TypeName,
@@ -581,7 +584,7 @@ func (s *collectService) EnableSchedule(ctx context.Context, sourceID int64) err
 	}
 	expr := strings.TrimSpace(source.CronExpr)
 	if expr == "" {
-		return errcode.WithMessage(errcode.ParamError, "请先设置cron表达式")
+		return errcode.WithMessage(errcode.ParamError, "请先设置定时时间")
 	}
 	if _, err := collectCronParser().Parse(expr); err != nil {
 		return errcode.CollectInvalidCron

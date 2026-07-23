@@ -243,7 +243,7 @@ export type CollectSource = {
 export type CollectCategoryMap = {
   id: number
   source_id: number
-  external_category: string
+  external_category_id: number
   category_id: number
 }
 
@@ -258,9 +258,9 @@ export type CollectLog = {
 }
 
 export type RemoteCategory = {
-  type_id: string
+  type_id: number
   type_name: string
-  type_pid: string
+  type_pid: number
 }
 
 export type RemoteCategoryResponse = {

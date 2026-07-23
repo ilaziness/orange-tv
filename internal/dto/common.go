@@ -152,10 +152,10 @@ type CollectSourceItem struct {
 
 // CollectCategoryMapItem is an external→internal category mapping.
 type CollectCategoryMapItem struct {
-	ID               uint64 `json:"id"`
-	SourceID         uint64 `json:"source_id"`
-	ExternalCategory string `json:"external_category"`
-	CategoryID       uint64 `json:"category_id"`
+	ID                 uint64 `json:"id"`
+	SourceID           uint64 `json:"source_id"`
+	ExternalCategoryID uint64 `json:"external_category_id"`
+	CategoryID         uint64 `json:"category_id"`
 }
 
 // CollectLogItem is one collect run log entry.

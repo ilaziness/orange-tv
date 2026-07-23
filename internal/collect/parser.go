@@ -52,22 +52,22 @@ func ParseDefaultJSON(body []byte) (*Page, error) {
 	items := make([]Item, 0, len(rows))
 	for _, row := range rows {
 		it := Item{
-			ExternalID:  strings.TrimSpace(row.ID),
-			Title:       strings.TrimSpace(row.Title),
-			Subtitle:    strings.TrimSpace(row.Subtitle),
-			Description: strings.TrimSpace(row.Description),
-			Cover:       strings.TrimSpace(row.Cover),
-			Poster:      strings.TrimSpace(row.Poster),
-			Year:        row.Year,
-			Region:      strings.TrimSpace(row.Region),
-			Language:    strings.TrimSpace(row.Language),
-			Duration:    row.Duration,
-			Rating:      row.Rating,
-			ReleaseDate: strings.TrimSpace(row.ReleaseDate),
-			CategoryKey: firstNonEmpty(row.Category, strconv.FormatInt(row.CategoryID, 10)),
-			Directors:   splitNames(row.Directors),
-			Actors:      splitNames(row.Actors),
-			Tags:        splitNames(row.Tags),
+			ExternalID:         strings.TrimSpace(row.ID),
+			Title:              strings.TrimSpace(row.Title),
+			Subtitle:           strings.TrimSpace(row.Subtitle),
+			Description:        strings.TrimSpace(row.Description),
+			Cover:              strings.TrimSpace(row.Cover),
+			Poster:             strings.TrimSpace(row.Poster),
+			Year:               row.Year,
+			Region:             strings.TrimSpace(row.Region),
+			Language:           strings.TrimSpace(row.Language),
+			Duration:           row.Duration,
+			Rating:             row.Rating,
+			ReleaseDate:        strings.TrimSpace(row.ReleaseDate),
+			ExternalCategoryID: row.CategoryID,
+			Directors:          splitNames(row.Directors),
+			Actors:             splitNames(row.Actors),
+			Tags:               splitNames(row.Tags),
 		}
 		if it.Title == "" {
 			continue
@@ -171,24 +171,24 @@ func ParseAppleCMS(body []byte) (*Page, error) {
 			continue
 		}
 		it := Item{
-			ExternalID:  strings.TrimSpace(row.VodID),
-			Title:       title,
-			Subtitle:    strings.TrimSpace(row.VodSub),
-			Description: firstNonEmpty(strings.TrimSpace(row.Blurb), strings.TrimSpace(row.Content)),
-			Cover:       strings.TrimSpace(row.Pic),
-			Poster:      strings.TrimSpace(row.Pic),
-			Year:        int32(anyToInt(row.VodYear)),
-			Region:      strings.TrimSpace(row.VodArea),
-			Language:    strings.TrimSpace(row.VodLang),
-			Duration:    int32(anyToInt(row.VodDuration)),
-			Rating:      anyToFloat(row.DoubanScore),
-			ReleaseDate: strings.TrimSpace(row.Pubdate),
-			CategoryKey: firstNonEmpty(strings.TrimSpace(row.TypeID), strings.TrimSpace(row.TypeName), strings.TrimSpace(row.Class)),
-			Directors:   splitNames(row.Director),
-			Actors:      splitNames(row.Actor),
-			Tags:        splitNames(firstNonEmpty(row.VodTag, row.Class)),
-			Episodes:    parseApplePlayURLs(row.VodPlayURL),
-			VodTime:     strings.TrimSpace(row.VodTime),
+			ExternalID:         anyToString(row.VodID),
+			Title:              title,
+			Subtitle:           strings.TrimSpace(row.VodSub),
+			Description:        firstNonEmpty(strings.TrimSpace(row.Blurb), strings.TrimSpace(row.Content)),
+			Cover:              strings.TrimSpace(row.Pic),
+			Poster:             strings.TrimSpace(row.Pic),
+			Year:               int32(anyToInt(row.VodYear)),
+			Region:             strings.TrimSpace(row.VodArea),
+			Language:           strings.TrimSpace(row.VodLang),
+			Duration:           int32(anyToInt(row.VodDuration)),
+			Rating:             anyToFloat(row.DoubanScore),
+			ReleaseDate:        strings.TrimSpace(row.Pubdate),
+			ExternalCategoryID: int64(anyToInt(row.TypeID)),
+			Directors:          splitNames(row.Director),
+			Actors:             splitNames(row.Actor),
+			Tags:               splitNames(firstNonEmpty(row.VodTag, row.Class)),
+			Episodes:           parseApplePlayURLs(row.VodPlayURL),
+			VodTime:            strings.TrimSpace(row.VodTime),
 		}
 		items = append(items, it)
 	}
@@ -196,19 +196,33 @@ func ParseAppleCMS(body []byte) (*Page, error) {
 		total = len(items)
 	}
 
-	var classes []AppleCMSClass
+	var classRows []appleClass
 	if len(raw.Class) > 0 && string(raw.Class) != "null" {
-		if err := json.Unmarshal(raw.Class, &classes); err != nil {
+		if err := json.Unmarshal(raw.Class, &classRows); err != nil {
 			return nil, fmt.Errorf("apple cms class: %w", err)
 		}
+	}
+	classes := make([]AppleCMSClass, 0, len(classRows))
+	for _, c := range classRows {
+		classes = append(classes, AppleCMSClass{
+			TypeID:   int64(anyToInt(c.TypeID)),
+			TypeName: strings.TrimSpace(c.TypeName),
+			TypePID:  int64(anyToInt(c.TypePID)),
+		})
 	}
 
 	return &Page{Page: page, PageCount: pageCount, Total: total, Items: items, Classes: classes}, nil
 }
 
+type appleClass struct {
+	TypeID   any    `json:"type_id"`
+	TypeName string `json:"type_name"`
+	TypePID  any    `json:"type_pid"`
+}
+
 type appleItem struct {
-	VodID       string `json:"vod_id"`
-	TypeID      string `json:"type_id"`
+	VodID       any    `json:"vod_id"`
+	TypeID      any    `json:"type_id"`
 	TypeName    string `json:"type_name"`
 	Class       string `json:"class"`
 	VodName     string `json:"vod_name"`
@@ -350,9 +364,19 @@ func anyToInt(v any) int {
 		return 0
 	case float64:
 		return int(t)
+	case float32:
+		return int(t)
 	case int:
 		return t
+	case int32:
+		return int(t)
 	case int64:
+		return int(t)
+	case uint:
+		return int(t)
+	case uint32:
+		return int(t)
+	case uint64:
 		return int(t)
 	case json.Number:
 		i, _ := t.Int64()
@@ -364,6 +388,24 @@ func anyToInt(v any) int {
 		s := fmt.Sprint(t)
 		i, _ := strconv.Atoi(strings.TrimSpace(s))
 		return i
+	}
+}
+
+func anyToString(v any) string {
+	switch t := v.(type) {
+	case nil:
+		return ""
+	case string:
+		return strings.TrimSpace(t)
+	case json.Number:
+		return t.String()
+	case float64:
+		if t == float64(int64(t)) {
+			return strconv.FormatInt(int64(t), 10)
+		}
+		return strconv.FormatFloat(t, 'f', -1, 64)
+	default:
+		return strings.TrimSpace(fmt.Sprint(t))
 	}
 }
 

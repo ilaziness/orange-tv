@@ -36,10 +36,10 @@ type SetCollectCategoriesRequest struct {
 	Items []CollectCategoryInput `json:"items" validate:"omitempty,dive"`
 }
 
-// CollectCategoryInput is one external→internal mapping.
+// CollectCategoryInput is one external→internal mapping by integer IDs.
 type CollectCategoryInput struct {
-	ExternalCategory string `json:"external_category" validate:"required,min=1,max=100"`
-	CategoryID       uint64 `json:"category_id" validate:"required,gt=0"`
+	ExternalCategoryID uint64 `json:"external_category_id" validate:"required,gt=0"`
+	CategoryID         uint64 `json:"category_id" validate:"required,gt=0"`
 }
 
 // CollectLogListRequest filters collect logs.
@@ -55,9 +55,9 @@ type CollectNowRequest struct {
 
 // RemoteCategoryItem is one external category from a collect source.
 type RemoteCategoryItem struct {
-	TypeID   string `json:"type_id"`
+	TypeID   int64  `json:"type_id"`
 	TypeName string `json:"type_name"`
-	TypePID  string `json:"type_pid"`
+	TypePID  int64  `json:"type_pid"`
 }
 
 // RemoteCategoryResponse is the response for fetching remote categories.

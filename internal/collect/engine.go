@@ -63,9 +63,12 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRang
 		res.Message = err.Error()
 		return res
 	}
-	catMap := map[string]int64{}
+	catMap := map[int64]int64{}
 	for _, m := range maps {
-		catMap[strings.TrimSpace(m.ExternalCategory)] = int64(m.CategoryID)
+		if m.ExternalCategoryID == 0 {
+			continue
+		}
+		catMap[int64(m.ExternalCategoryID)] = int64(m.CategoryID)
 	}
 
 	isApple := source.Type == uint8(constant.CollectTypeAppleCMS)
@@ -186,11 +189,13 @@ func isVodTimeBefore(vodTime string, cutoff *time.Time) bool {
 	return t.Before(*cutoff)
 }
 
-func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, catMap map[string]int64, item Item) error {
-	categoryID, ok := catMap[item.CategoryKey]
+func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, catMap map[int64]int64, item Item) error {
+	if item.ExternalCategoryID <= 0 {
+		return fmt.Errorf("外部分类ID无效")
+	}
+	categoryID, ok := catMap[item.ExternalCategoryID]
 	if !ok {
-		// try numeric/name fallback already in map keys only
-		return fmt.Errorf("未映射分类: %s", item.CategoryKey)
+		return fmt.Errorf("未映射分类: %d", item.ExternalCategoryID)
 	}
 	if item.Title == "" {
 		return fmt.Errorf("标题为空")

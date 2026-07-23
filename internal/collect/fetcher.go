@@ -25,6 +25,7 @@ func NewFetcher() *Fetcher {
 
 // FetchPage GET the collect URL with page params and optional API key.
 // dataRange filters by time for Apple CMS (today/last1d/last3d/last1w/last1m/all).
+// Apple CMS content collection uses ac=detail (full vod fields); category class is usually absent.
 func (f *Fetcher) FetchPage(ctx context.Context, baseURL, apiKey string, page int, isApple bool, dataRange string) ([]byte, error) {
 	u, err := url.Parse(strings.TrimSpace(baseURL))
 	if err != nil {
@@ -51,8 +52,33 @@ func (f *Fetcher) FetchPage(ctx context.Context, baseURL, apiKey string, page in
 		}
 	}
 	u.RawQuery = q.Encode()
+	return f.doGet(ctx, u.String(), apiKey)
+}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+// FetchAppleCMSCategories GET Apple CMS list API (ac=list) which includes the class field.
+// Many providers omit class when ac=detail; binding remote categories must use list mode.
+func (f *Fetcher) FetchAppleCMSCategories(ctx context.Context, baseURL, apiKey string) ([]byte, error) {
+	u, err := url.Parse(strings.TrimSpace(baseURL))
+	if err != nil {
+		return nil, fmt.Errorf("parse collect url: %w", err)
+	}
+	q := u.Query()
+	q.Set("ac", "list")
+	// drop detail-only filters that some sources reject on list endpoints
+	q.Del("h")
+	q.Del("ids")
+	q.Del("t")
+	if apiKey != "" {
+		if q.Get("key") == "" && q.Get("api_key") == "" {
+			q.Set("key", apiKey)
+		}
+	}
+	u.RawQuery = q.Encode()
+	return f.doGet(ctx, u.String(), apiKey)
+}
+
+func (f *Fetcher) doGet(ctx context.Context, rawURL, apiKey string) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, rawURL, nil)
 	if err != nil {
 		return nil, fmt.Errorf("new request: %w", err)
 	}

@@ -155,10 +155,10 @@ CREATE TABLE IF NOT EXISTS collect_sources (
 CREATE TABLE IF NOT EXISTS collect_source_categories (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     source_id BIGINT UNSIGNED NOT NULL COMMENT '采集源ID',
-    external_category VARCHAR(100) NOT NULL COMMENT '外部分类名称（采集源返回的分类）',
+    external_category_id BIGINT UNSIGNED NOT NULL COMMENT '外部分类ID（采集源返回的 type_id）',
     category_id BIGINT UNSIGNED NOT NULL COMMENT '系统内分类ID',
     created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE uk_source_external (source_id, external_category),
+    UNIQUE uk_source_external (source_id, external_category_id),
     INDEX idx_category (category_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

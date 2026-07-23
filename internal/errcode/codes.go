@@ -73,7 +73,7 @@ var (
 	CollectInvalidCron          = &Code{4000084, "定时采集 cron 表达式无效", 400, nil}
 	CollectFetchFailed          = &Code{4000085, "采集拉取失败", 502, nil}
 	CollectParseFailed          = &Code{4000086, "采集数据解析失败", 422, nil}
-	CollectCategoryMapEmpty     = &Code{4000087, "请先配置分类映射", 400, nil}
+	CollectCategoryMapEmpty     = &Code{4000087, "请先绑定分类", 400, nil}
 	CollectNoSchedule           = &Code{4000088, "未开启定时采集", 400, nil}
 	CollectRemoteCategoryFailed = &Code{4000089, "获取远程分类失败", 502, nil}
 	CollectSourceNotAppleCMS    = &Code{4000090, "仅苹果CMS源支持远程分类获取", 400, nil}

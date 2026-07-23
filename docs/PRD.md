@@ -1080,10 +1080,10 @@ CREATE TABLE collect_sources (
 CREATE TABLE collect_source_categories (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
     source_id BIGINT NOT NULL COMMENT '采集源ID',
-    external_category VARCHAR(100) NOT NULL COMMENT '外部分类名称（采集源返回的分类）',
+    external_category_id BIGINT NOT NULL COMMENT '外部分类ID（采集源返回的 type_id）',
     category_id BIGINT NOT NULL COMMENT '系统内分类ID',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE uk_source_external (source_id, external_category),
+    UNIQUE uk_source_external (source_id, external_category_id),
     INDEX idx_category (category_id)
 );
 

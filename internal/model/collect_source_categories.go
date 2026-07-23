@@ -14,8 +14,8 @@ type CollectSourceCategories struct {
 	// 采集源ID
 	// Relation: source_id -> CollectSources(ID)
 	SourceID uint64 `bun:"source_id,notnull,unique:uk_source_external" json:"source_id"`
-	// 外部分类名称（采集源返回的分类）
-	ExternalCategory string `bun:"external_category,notnull,unique:uk_source_external" json:"external_category"`
+	// 外部分类ID（采集源返回的 type_id）
+	ExternalCategoryID uint64 `bun:"external_category_id,notnull,unique:uk_source_external" json:"external_category_id"`
 	// 系统内分类ID
 	// Relation: category_id -> Categories(ID)
 	CategoryID    uint64          `bun:"category_id,notnull" json:"category_id"`

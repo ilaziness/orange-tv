@@ -7,9 +7,23 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Badge } from '@/components/ui/badge'
 
 interface CollectLogTableProps {
   logs: CollectLog[]
+}
+
+function LogStatusBadge({ status }: { status: number }) {
+  if (status === 1) {
+    return <Badge>已完成</Badge>
+  }
+  if (status === 2) {
+    return <Badge variant="secondary">采集中</Badge>
+  }
+  if (status === 3) {
+    return <Badge variant="destructive">失败</Badge>
+  }
+  return <Badge variant="outline">{String(status)}</Badge>
 }
 
 export function CollectLogTable({ logs }: CollectLogTableProps) {
@@ -32,15 +46,7 @@ export function CollectLogTable({ logs }: CollectLogTableProps) {
               <TableCell>{l.id}</TableCell>
               <TableCell>{l.source_name || `#${l.source_id}`}</TableCell>
               <TableCell>
-                {l.status === 1 ? (
-                  <span className="text-xs text-green-600">已完成</span>
-                ) : l.status === 2 ? (
-                  <span className="text-xs text-blue-600">采集中</span>
-                ) : l.status === 3 ? (
-                  <span className="text-xs text-red-600">失败</span>
-                ) : (
-                  <span className="text-xs text-muted-foreground">{l.status}</span>
-                )}
+                <LogStatusBadge status={l.status} />
               </TableCell>
               <TableCell>{l.collect_count}</TableCell>
               <TableCell>{l.duration_sec}</TableCell>

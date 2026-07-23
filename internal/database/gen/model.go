@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"go/format"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -169,8 +170,13 @@ func generateModel(ctx context.Context, db *database.DB, driver, tableName strin
 	modelName := ToCamelCase(tableName)
 	code := GenerateModelCode(opts, modelName, tableName, columns, relations)
 
+	formatted, err := format.Source([]byte(code))
+	if err != nil {
+		return fmt.Errorf("format generated code: %w", err)
+	}
+
 	filename := filepath.Join(opts.OutputDir, strings.ToLower(tableName)+".go")
-	if err := os.WriteFile(filename, []byte(code), 0o644); err != nil {
+	if err := os.WriteFile(filename, formatted, 0o644); err != nil {
 		return err
 	}
 

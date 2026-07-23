@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { Category, CollectCategoryMap, RemoteCategory } from '@orange-tv/shared'
+import type { CategoryBindingItem } from './useCollect'
 import {
   Dialog,
   DialogContent,
@@ -16,6 +17,8 @@ import {
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from '@/components/ui/empty'
 
 interface CollectMapEditorProps {
   open: boolean
@@ -24,7 +27,9 @@ interface CollectMapEditorProps {
   flatCats: Array<Category & { depth: number }>
   maps: CollectCategoryMap[]
   remoteCategories: RemoteCategory[]
-  onSave: (items: { external_category: string; category_id: number }[]) => void
+  loading?: boolean
+  saving?: boolean
+  onSave: (items: CategoryBindingItem[]) => void | Promise<void>
 }
 
 export function CollectMapEditor({
@@ -34,46 +39,76 @@ export function CollectMapEditor({
   flatCats,
   maps,
   remoteCategories,
+  loading = false,
+  saving = false,
   onSave,
 }: CollectMapEditorProps) {
   const [bindings, setBindings] = useState<Record<string, string>>({})
-  const [saving, setSaving] = useState(false)
 
-  function initBindings() {
+  const categoryOptions = useMemo(
+    () => [
+      { value: '0', label: '不绑定' },
+      ...flatCats.map((c) => ({
+        value: String(c.id),
+        label: `${'　'.repeat(c.depth)}${c.name}`,
+      })),
+    ],
+    [flatCats],
+  )
+
+  useEffect(() => {
+    if (!open) return
     const b: Record<string, string> = {}
     for (const m of maps) {
-      b[m.external_category] = String(m.category_id)
-    }
-    setBindings(b)
-  }
-
-  function handleSave() {
-    const items: { external_category: string; category_id: number }[] = []
-    for (const [ext, catId] of Object.entries(bindings)) {
-      if (catId && catId !== '0') {
-        items.push({ external_category: ext, category_id: Number(catId) })
+      if (m.external_category_id > 0) {
+        b[String(m.external_category_id)] = String(m.category_id)
       }
     }
-    setSaving(true)
-    onSave(items)
-    setSaving(false)
+    setBindings(b)
+  }, [open, maps])
+
+  async function handleSave() {
+    if (loading || saving) return
+    const items: CategoryBindingItem[] = []
+    for (const [ext, catId] of Object.entries(bindings)) {
+      const externalId = Number(ext)
+      const categoryId = Number(catId)
+      if (
+        Number.isSafeInteger(externalId) &&
+        externalId > 0 &&
+        Number.isSafeInteger(categoryId) &&
+        categoryId > 0
+      ) {
+        items.push({ external_category_id: externalId, category_id: categoryId })
+      }
+    }
+    await onSave(items)
   }
 
+  const busy = loading || saving
+
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(v) => {
-        if (v) initBindings()
-        onOpenChange(v)
-      }}
-    >
-      <DialogContent className="sm:max-w-2xl">
+    <Dialog open={open} onOpenChange={(v) => { if (!busy) onOpenChange(v) }}>
+      <DialogContent className="sm:max-w-2xl" showCloseButton={!busy}>
         <DialogHeader>
           <DialogTitle>分类绑定 — 源 #{sourceId}</DialogTitle>
         </DialogHeader>
         <div className="max-h-[400px] overflow-y-auto">
-          {remoteCategories.length === 0 ? (
-            <p className="text-sm text-muted-foreground">暂无远程分类数据，请确保采集源类型为苹果CMS且地址正确。</p>
+          {loading ? (
+            <div className="flex flex-col gap-2 py-2">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-9 w-full" />
+              ))}
+            </div>
+          ) : remoteCategories.length === 0 ? (
+            <Empty className="py-8">
+              <EmptyHeader>
+                <EmptyTitle>暂无远程分类</EmptyTitle>
+                <EmptyDescription>
+                  请确保采集源类型为苹果CMS且地址正确后重试。
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <div className="flex flex-col gap-2">
               {remoteCategories.map((rc) => (
@@ -82,21 +117,20 @@ export function CollectMapEditor({
                     {rc.type_name} ({rc.type_id})
                   </span>
                   <Select
-                    items={flatCats.map((c) => ({
-                      value: String(c.id),
-                      label: `${'　'.repeat(c.depth)}${c.name}`,
-                    }))}
-                    value={bindings[rc.type_id] || '0'}
-                    onValueChange={(v) => setBindings((prev) => ({ ...prev, [rc.type_id]: v ?? '0' }))}
+                    items={categoryOptions}
+                    value={bindings[String(rc.type_id)] || '0'}
+                    onValueChange={(v) =>
+                      setBindings((prev) => ({ ...prev, [String(rc.type_id)]: v ?? '0' }))
+                    }
+                    disabled={busy}
                   >
-                    <SelectTrigger className="flex-1">
+                    <SelectTrigger className="flex-1" disabled={busy}>
                       <SelectValue placeholder="选择系统分类" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="0">不绑定</SelectItem>
-                      {flatCats.map((c) => (
-                        <SelectItem key={c.id} value={String(c.id)}>
-                          {'　'.repeat(c.depth)}{c.name}
+                      {categoryOptions.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -107,7 +141,7 @@ export function CollectMapEditor({
           )}
         </div>
         <DialogFooter>
-          <Button onClick={() => void handleSave()} disabled={saving}>
+          <Button onClick={() => void handleSave()} disabled={busy || remoteCategories.length === 0}>
             {saving && <Spinner data-icon="inline-start" />}
             {saving ? '保存中...' : '保存绑定'}
           </Button>

@@ -11,31 +11,31 @@ type Episode struct {
 
 // Item is a normalized video item from any collect format.
 type Item struct {
-	ExternalID  string
-	Title       string
-	Subtitle    string
-	Description string
-	Cover       string
-	Poster      string
-	Year        int32
-	Region      string
-	Language    string
-	Duration    int32
-	Rating      float64
-	ReleaseDate string
-	CategoryKey string // external category id/name for mapping
-	Directors   []string
-	Actors      []string
-	Tags        []string
-	Episodes    []Episode
-	VodTime     string // raw vod_time string for time range filtering
+	ExternalID         string
+	Title              string
+	Subtitle           string
+	Description        string
+	Cover              string
+	Poster             string
+	Year               int32
+	Region             string
+	Language           string
+	Duration           int32
+	Rating             float64
+	ReleaseDate        string
+	ExternalCategoryID int64 // external category type_id for mapping
+	Directors          []string
+	Actors             []string
+	Tags               []string
+	Episodes           []Episode
+	VodTime            string // raw vod_time string for time range filtering
 }
 
 // AppleCMSClass is one category from Apple CMS class field.
 type AppleCMSClass struct {
-	TypeID   string `json:"type_id"`
+	TypeID   int64  `json:"type_id"`
 	TypeName string `json:"type_name"`
-	TypePID  string `json:"type_pid"`
+	TypePID  int64  `json:"type_pid"`
 }
 
 // Page is one page of collected items.

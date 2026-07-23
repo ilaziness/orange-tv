@@ -2,6 +2,9 @@ package gen
 
 import (
 	"context"
+	"go/format"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/ilaziness/orange-tv/internal/constant"
@@ -137,4 +140,30 @@ func TestIsSensitiveColumn(t *testing.T) {
 	assert.True(t, isSensitiveColumn("password"))
 	assert.True(t, isSensitiveColumn("api_key"))
 	assert.False(t, isSensitiveColumn("username"))
+}
+
+func TestGenerateModels_writesGofmtFormattedFiles(t *testing.T) {
+	db := testutil.OpenBunDB(t)
+	ctx := context.Background()
+
+	_, err := db.ExecContext(ctx, `CREATE TABLE sample_items (
+		id INTEGER PRIMARY KEY,
+		title TEXT NOT NULL
+	)`)
+	require.NoError(t, err)
+
+	outputDir := t.TempDir()
+	err = GenerateModels(ctx, db, constant.DriverSQLite, []string{"sample_items"}, GenerateOptions{
+		OutputDir:   outputDir,
+		PackageName: "model",
+		JSONTags:    true,
+	})
+	require.NoError(t, err)
+
+	got, err := os.ReadFile(filepath.Join(outputDir, "sample_items.go"))
+	require.NoError(t, err)
+
+	want, err := format.Source(got)
+	require.NoError(t, err)
+	assert.Equal(t, string(want), string(got), "generated file should already be gofmt-formatted")
 }

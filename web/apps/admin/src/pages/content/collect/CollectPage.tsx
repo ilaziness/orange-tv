@@ -21,12 +21,15 @@ import {
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import {
   Card,
+  CardAction,
   CardContent,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Spinner } from '@/components/ui/spinner'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from '@/components/ui/empty'
 import { Plus, RefreshCw } from 'lucide-react'
 
 export default function CollectPage() {
@@ -43,10 +46,14 @@ export default function CollectPage() {
     logsPageSize,
     maps,
     remoteCategories,
-    error,
     formError,
     loading,
     submitting,
+    categoryLoading,
+    savingCategories,
+    collecting,
+    deleting,
+    schedulingId,
     formOpen,
     setFormOpen,
     editId,
@@ -78,52 +85,68 @@ export default function CollectPage() {
     load,
   } = useCollect()
 
+  const dataRangeItems = DATA_RANGE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))
+
   return (
     <PageContainer>
       <Card>
-        <CardHeader className="flex-row items-center justify-between">
+        <CardHeader>
           <CardTitle>数据采集</CardTitle>
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => void load()}>
-              <RefreshCw data-icon="inline-start" />
-              刷新
-            </Button>
-            <Button size="sm" onClick={openCreate}>
-              <Plus data-icon="inline-start" />
-              新增采集源
-            </Button>
-          </div>
+          <CardAction>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={() => void load()} disabled={loading}>
+                {loading ? <Spinner data-icon="inline-start" /> : <RefreshCw data-icon="inline-start" />}
+                刷新
+              </Button>
+              <Button size="sm" onClick={openCreate}>
+                <Plus data-icon="inline-start" />
+                新增采集源
+              </Button>
+            </div>
+          </CardAction>
         </CardHeader>
         <CardContent>
           <p className="mb-4 text-sm text-muted-foreground">
             优先支持苹果CMS格式，采集地址需为视频列表API。可配置定时采集和数据范围，采集时按 vod_time 过滤。
           </p>
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertTitle>出错了</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
+          {loading && sources.length === 0 ? (
+            <div className="flex flex-col gap-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
+            </div>
+          ) : sources.length > 0 ? (
+            <>
+              <CollectSourceList
+                sources={sources}
+                schedulingId={schedulingId}
+                onEdit={openEdit}
+                onBindCategory={openCategoryBinding}
+                onEnableSchedule={enableSchedule}
+                onDisableSchedule={disableSchedule}
+                onCollectNow={openCollectNow}
+                onDelete={setDeleteId}
+              />
+              <Pagination
+                page={sourcesPage}
+                total={sourcesTotal}
+                pageSize={sourcesPageSize}
+                hasNext={sourcesPage * sourcesPageSize < sourcesTotal}
+                loading={loading}
+                onFirst={() => void loadSources(1)}
+                onPrev={() => void loadSources(sourcesPage - 1)}
+                onNext={() => void loadSources(sourcesPage + 1)}
+                onLast={() => void loadSources(Math.ceil(sourcesTotal / sourcesPageSize))}
+              />
+            </>
+          ) : (
+            <Empty className="py-8">
+              <EmptyHeader>
+                <EmptyTitle>暂无采集源</EmptyTitle>
+                <EmptyDescription>点击右上角「新增采集源」添加第一个采集源</EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           )}
-          <CollectSourceList
-            sources={sources}
-            onEdit={openEdit}
-            onBindCategory={openCategoryBinding}
-            onEnableSchedule={enableSchedule}
-            onDisableSchedule={disableSchedule}
-            onCollectNow={openCollectNow}
-            onDelete={setDeleteId}
-          />
-          <Pagination
-            page={sourcesPage}
-            total={sourcesTotal}
-            pageSize={sourcesPageSize}
-            hasNext={sourcesPage * sourcesPageSize < sourcesTotal}
-            loading={loading}
-            onFirst={() => void loadSources(1)}
-            onPrev={() => void loadSources(sourcesPage - 1)}
-            onNext={() => void loadSources(sourcesPage + 1)}
-            onLast={() => void loadSources(Math.ceil(sourcesTotal / sourcesPageSize))}
-          />
         </CardContent>
       </Card>
 
@@ -147,11 +170,13 @@ export default function CollectPage() {
         flatCats={flatCats}
         maps={maps}
         remoteCategories={remoteCategories}
+        loading={categoryLoading}
+        saving={savingCategories}
         onSave={saveCategoryBinding}
       />
 
-      <Dialog open={collectOpen} onOpenChange={setCollectOpen}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog open={collectOpen} onOpenChange={(v) => { if (!collecting) setCollectOpen(v) }}>
+        <DialogContent className="sm:max-w-md" showCloseButton={!collecting}>
           <DialogHeader>
             <DialogTitle>立即采集 — 源 #{collectSourceId}</DialogTitle>
           </DialogHeader>
@@ -159,11 +184,12 @@ export default function CollectPage() {
             <Field>
               <FieldLabel htmlFor="collect_data_range">数据范围</FieldLabel>
               <Select
-                items={DATA_RANGE_OPTIONS.map((o) => ({ value: o.value, label: o.label }))}
+                items={dataRangeItems}
                 value={collectDataRange}
                 onValueChange={(v) => setCollectDataRange(v ?? 'all')}
+                disabled={collecting}
               >
-                <SelectTrigger id="collect_data_range">
+                <SelectTrigger id="collect_data_range" disabled={collecting}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -175,7 +201,13 @@ export default function CollectPage() {
             </Field>
           </FieldGroup>
           <DialogFooter>
-            <Button onClick={() => void submitCollectNow()}>开始采集</Button>
+            <Button type="button" variant="outline" onClick={() => setCollectOpen(false)} disabled={collecting}>
+              取消
+            </Button>
+            <Button onClick={() => void submitCollectNow()} disabled={collecting}>
+              {collecting && <Spinner data-icon="inline-start" />}
+              {collecting ? '启动中...' : '开始采集'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -185,26 +217,37 @@ export default function CollectPage() {
           <CardTitle>采集日志</CardTitle>
         </CardHeader>
         <CardContent>
-          <CollectLogTable logs={logs} />
-          <Pagination
-            page={logsPage}
-            total={logsTotal}
-            pageSize={logsPageSize}
-            hasNext={logsPage * logsPageSize < logsTotal}
-            onFirst={() => void loadLogs(1)}
-            onPrev={() => void loadLogs(logsPage - 1)}
-            onNext={() => void loadLogs(logsPage + 1)}
-            onLast={() => void loadLogs(Math.ceil(logsTotal / logsPageSize))}
-          />
+          {logs.length > 0 ? (
+            <>
+              <CollectLogTable logs={logs} />
+              <Pagination
+                page={logsPage}
+                total={logsTotal}
+                pageSize={logsPageSize}
+                hasNext={logsPage * logsPageSize < logsTotal}
+                onFirst={() => void loadLogs(1)}
+                onPrev={() => void loadLogs(logsPage - 1)}
+                onNext={() => void loadLogs(logsPage + 1)}
+                onLast={() => void loadLogs(Math.ceil(logsTotal / logsPageSize))}
+              />
+            </>
+          ) : (
+            <Empty className="py-8">
+              <EmptyHeader>
+                <EmptyTitle>暂无采集日志</EmptyTitle>
+              </EmptyHeader>
+            </Empty>
+          )}
         </CardContent>
       </Card>
 
       <ConfirmDialog
         open={deleteId !== null}
-        onOpenChange={(open) => { if (!open) setDeleteId(null) }}
+        onOpenChange={(open) => { if (!open && !deleting) setDeleteId(null) }}
         title="删除采集源"
         description="确认删除该采集源？此操作不可撤销。"
         destructive
+        loading={deleting}
         onConfirm={confirmDelete}
       />
     </PageContainer>

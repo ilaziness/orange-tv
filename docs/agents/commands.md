@@ -57,6 +57,8 @@ go install github.com/swaggo/swag/cmd/swag@latest
 ./build/orange-tv gen model --with-relations # 同时读取数据库物理外键
 ```
 
+生成每个模型文件时会先用等价于 `gofmt` 的方式格式化再写入，避免因缩进/空格差异导致每次生成都产生无意义 diff。
+
 ### 模型业务关联
 
 数据库不建立外键时，在 [`configs/model-relations.yaml`](../../configs/model-relations.yaml) 声明逻辑关系。`gen model` 默认加载该文件，并生成 Bun 的双向关联字段：子模型的 `belongs-to` 和父模型的 `has-many`；关联字段固定为 `json:"-"`，应通过 DTO 对外输出。

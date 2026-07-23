@@ -50,9 +50,19 @@ export function CollectSourceForm({
   dataRangeOptions,
   formError,
 }: CollectSourceFormProps) {
+  const typeOptions = [
+    { value: '1', label: '默认格式' },
+    { value: '2', label: '苹果CMS' },
+  ]
+  const playSourceOptions = playSources.map((source) => ({
+    value: String(source.id),
+    label: source.name,
+  }))
+  const rangeOptions = dataRangeOptions.map((o) => ({ value: o.value, label: o.label }))
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
+    <Dialog open={open} onOpenChange={(v) => { if (!submitting) onOpenChange(v) }}>
+      <DialogContent className="sm:max-w-2xl" showCloseButton={!submitting}>
         <DialogHeader>
           <DialogTitle>{editId ? '编辑采集源' : '新增采集源'}</DialogTitle>
         </DialogHeader>
@@ -71,21 +81,24 @@ export function CollectSourceForm({
                 value={form.name}
                 onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
                 required
+                disabled={submitting}
               />
             </Field>
             <Field>
               <FieldLabel htmlFor="type">类型<RequiredMark /></FieldLabel>
               <Select
-                items={[{ value: '1', label: '默认格式' }, { value: '2', label: '苹果CMS' }]}
+                items={typeOptions}
                 value={form.type}
                 onValueChange={(v) => setForm((prev) => ({ ...prev, type: v ?? '2' }))}
+                disabled={submitting}
               >
-                <SelectTrigger id="type">
+                <SelectTrigger id="type" disabled={submitting}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">默认格式</SelectItem>
-                  <SelectItem value="2">苹果CMS</SelectItem>
+                  {typeOptions.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </Field>
@@ -97,6 +110,7 @@ export function CollectSourceForm({
                 value={form.collect_url}
                 onChange={(e) => setForm((prev) => ({ ...prev, collect_url: e.target.value }))}
                 required
+                disabled={submitting}
               />
             </Field>
             <Field>
@@ -106,16 +120,18 @@ export function CollectSourceForm({
                 placeholder="可选，API密钥"
                 value={form.api_key}
                 onChange={(e) => setForm((prev) => ({ ...prev, api_key: e.target.value }))}
+                disabled={submitting}
               />
             </Field>
             <Field>
               <FieldLabel htmlFor="play_source_id">绑定播放源<RequiredMark /></FieldLabel>
               <Select
-                items={playSources.map((source) => ({ value: String(source.id), label: source.name }))}
+                items={playSourceOptions}
                 value={form.play_source_id === '0' ? '' : form.play_source_id}
                 onValueChange={(v) => setForm((prev) => ({ ...prev, play_source_id: v ?? '0' }))}
+                disabled={submitting}
               >
-                <SelectTrigger id="play_source_id">
+                <SelectTrigger id="play_source_id" disabled={submitting}>
                   <SelectValue placeholder="选择播放源" />
                 </SelectTrigger>
                 <SelectContent>
@@ -140,6 +156,7 @@ export function CollectSourceForm({
                 placeholder="0-59，如 0"
                 value={form.cron_minute}
                 onChange={(e) => setForm((prev) => ({ ...prev, cron_minute: e.target.value }))}
+                disabled={submitting}
               />
             </Field>
             <Field>
@@ -149,16 +166,18 @@ export function CollectSourceForm({
                 placeholder="如 8 或 6,18（多个用英文逗号分隔）"
                 value={form.cron_hour}
                 onChange={(e) => setForm((prev) => ({ ...prev, cron_hour: e.target.value }))}
+                disabled={submitting}
               />
             </Field>
             <Field className="sm:col-span-2">
               <FieldLabel htmlFor="data_range">数据范围</FieldLabel>
               <Select
-                items={dataRangeOptions.map((o) => ({ value: o.value, label: o.label }))}
+                items={rangeOptions}
                 value={form.data_range}
                 onValueChange={(v) => setForm((prev) => ({ ...prev, data_range: v ?? 'all' }))}
+                disabled={submitting}
               >
-                <SelectTrigger id="data_range">
+                <SelectTrigger id="data_range" disabled={submitting}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -171,6 +190,9 @@ export function CollectSourceForm({
           </FieldGroup>
 
           <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
+              取消
+            </Button>
             <Button type="submit" disabled={submitting}>
               {submitting && <Spinner data-icon="inline-start" />}
               {submitting ? '保存中...' : editId ? '保存' : '新增'}

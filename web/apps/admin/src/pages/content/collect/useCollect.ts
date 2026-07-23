@@ -75,6 +75,11 @@ const DATA_RANGE_OPTIONS = [
   { value: 'all', label: '全部' },
 ]
 
+export type CategoryBindingItem = {
+  external_category_id: number
+  category_id: number
+}
+
 export function useCollect() {
   const [sources, setSources] = useState<CollectSource[]>([])
   const [sourcesTotal, setSourcesTotal] = useState(0)
@@ -88,10 +93,14 @@ export function useCollect() {
   const [logsPageSize] = useState(20)
   const [maps, setMaps] = useState<CollectCategoryMap[]>([])
   const [remoteCategories, setRemoteCategories] = useState<RemoteCategory[]>([])
-  const [error, setError] = useState('')
   const [formError, setFormError] = useState('')
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [categoryLoading, setCategoryLoading] = useState(false)
+  const [savingCategories, setSavingCategories] = useState(false)
+  const [collecting, setCollecting] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [schedulingId, setSchedulingId] = useState<number | null>(null)
 
   // dialog states
   const [formOpen, setFormOpen] = useState(false)
@@ -104,34 +113,41 @@ export function useCollect() {
   const [collectDataRange, setCollectDataRange] = useState('all')
   const [deleteId, setDeleteId] = useState<number | null>(null)
 
+  const fetchSources = useCallback(async (page: number) => {
+    const s = await adminApi.listCollectSources({ page, page_size: sourcesPageSize })
+    setSources(s.data.list || [])
+    setSourcesTotal(s.data.total || 0)
+    setSourcesPage(page)
+  }, [sourcesPageSize])
+
+  const fetchLogs = useCallback(async (page: number) => {
+    const l = await adminApi.listCollectLogs({ page, page_size: logsPageSize })
+    setLogs(l.data.list || [])
+    setLogsTotal(l.data.total || 0)
+    setLogsPage(page)
+  }, [logsPageSize])
+
   const loadSources = useCallback(async (page: number) => {
     setLoading(true)
-    setError('')
     try {
-      const s = await adminApi.listCollectSources({ page, page_size: 20 })
-      setSources(s.data.list || [])
-      setSourcesTotal(s.data.total || 0)
-      setSourcesPage(page)
+      await fetchSources(page)
     } catch (err) {
-      setError(errorMessage(err))
+      toast.error(errorMessage(err))
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [fetchSources])
 
   const loadLogs = useCallback(async (page: number) => {
     try {
-      const l = await adminApi.listCollectLogs({ page, page_size: 20 })
-      setLogs(l.data.list || [])
-      setLogsTotal(l.data.total || 0)
-      setLogsPage(page)
+      await fetchLogs(page)
     } catch (err) {
-      setError(errorMessage(err))
+      toast.error(errorMessage(err))
     }
-  }, [])
+  }, [fetchLogs])
 
   const load = useCallback(async () => {
-    setError('')
+    setLoading(true)
     try {
       const [p, c] = await Promise.all([
         adminApi.listPlaySources(),
@@ -139,11 +155,13 @@ export function useCollect() {
       ])
       setPlaySources(p.data.list || [])
       setCategories(c.data || [])
-      await Promise.all([loadSources(1), loadLogs(1)])
+      await Promise.all([fetchSources(1), fetchLogs(1)])
     } catch (err) {
-      setError(errorMessage(err))
+      toast.error(errorMessage(err))
+    } finally {
+      setLoading(false)
     }
-  }, [loadSources, loadLogs])
+  }, [fetchSources, fetchLogs])
 
   useEffect(() => { void load() }, [load])
 
@@ -175,6 +193,7 @@ export function useCollect() {
 
   async function onSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
+    if (submitting) return
     setFormError('')
     const result = collectSchema.safeParse(form)
     if (!result.success) {
@@ -182,9 +201,15 @@ export function useCollect() {
       return
     }
     const cronExpr = formatCronExpr(result.data.cron_minute, result.data.cron_hour)
-    const payload = { ...result.data, cron_expr: cronExpr }
-    delete (payload as Record<string, unknown>).cron_minute
-    delete (payload as Record<string, unknown>).cron_hour
+    const payload = {
+      name: result.data.name,
+      type: result.data.type,
+      collect_url: result.data.collect_url,
+      api_key: result.data.api_key,
+      play_source_id: result.data.play_source_id,
+      data_range: result.data.data_range,
+      cron_expr: cronExpr,
+    }
     setSubmitting(true)
     try {
       if (editId) {
@@ -205,7 +230,10 @@ export function useCollect() {
 
   async function openCategoryBinding(sourceId: number) {
     setCategorySourceId(sourceId)
+    setMaps([])
+    setRemoteCategories([])
     setCategoryOpen(true)
+    setCategoryLoading(true)
     try {
       const [mapRes, remoteRes] = await Promise.all([
         adminApi.getCollectCategories(sourceId),
@@ -214,43 +242,56 @@ export function useCollect() {
       setMaps(mapRes.data || [])
       setRemoteCategories(remoteRes.data.list || [])
     } catch (err) {
-      setError(errorMessage(err))
+      toast.error(errorMessage(err))
+    } finally {
+      setCategoryLoading(false)
     }
   }
 
-  async function saveCategoryBinding(items: { external_category: string; category_id: number }[]) {
+  async function saveCategoryBinding(items: CategoryBindingItem[]) {
     if (!categorySourceId) return
+    setSavingCategories(true)
     try {
       const res = await adminApi.setCollectCategories(categorySourceId, { items })
       setMaps(res.data || [])
       toast.success('分类映射已保存')
+      setCategoryOpen(false)
     } catch (err) {
       toast.error(errorMessage(err))
+    } finally {
+      setSavingCategories(false)
     }
   }
 
   async function enableSchedule(id: number) {
+    setSchedulingId(id)
     try {
       await adminApi.enableCollectSchedule(id)
       toast.success('定时采集已启用')
       await loadSources(sourcesPage)
     } catch (err) {
       toast.error(errorMessage(err))
+    } finally {
+      setSchedulingId(null)
     }
   }
 
   async function disableSchedule(id: number) {
+    setSchedulingId(id)
     try {
       await adminApi.disableCollectSchedule(id)
       toast.success('定时采集已禁用')
       await loadSources(sourcesPage)
     } catch (err) {
       toast.error(errorMessage(err))
+    } finally {
+      setSchedulingId(null)
     }
   }
 
   async function confirmDelete() {
     if (deleteId === null) return
+    setDeleting(true)
     try {
       await adminApi.deleteCollectSource(deleteId)
       toast.success('采集源已删除')
@@ -258,25 +299,30 @@ export function useCollect() {
     } catch (err) {
       toast.error(errorMessage(err))
     } finally {
+      setDeleting(false)
       setDeleteId(null)
     }
   }
 
   function openCollectNow(sourceId: number) {
+    const source = sources.find((s) => s.id === sourceId)
     setCollectSourceId(sourceId)
-    setCollectDataRange('all')
+    setCollectDataRange(source?.data_range || 'all')
     setCollectOpen(true)
   }
 
   async function submitCollectNow() {
-    if (!collectSourceId) return
+    if (!collectSourceId || collecting) return
+    setCollecting(true)
     try {
       await adminApi.collectNow(collectSourceId, { data_range: collectDataRange })
       toast.success('采集已启动')
       setCollectOpen(false)
-      await loadSources(sourcesPage)
+      await Promise.all([loadSources(sourcesPage), loadLogs(1)])
     } catch (err) {
       toast.error(errorMessage(err))
+    } finally {
+      setCollecting(false)
     }
   }
 
@@ -293,10 +339,14 @@ export function useCollect() {
     logsPageSize,
     maps,
     remoteCategories,
-    error,
     formError,
     loading,
     submitting,
+    categoryLoading,
+    savingCategories,
+    collecting,
+    deleting,
+    schedulingId,
     formOpen,
     setFormOpen,
     editId,
