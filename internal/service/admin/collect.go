@@ -323,7 +323,7 @@ func (s *collectService) ListLogs(ctx context.Context, req *admindto.CollectLogL
 	for _, it := range items {
 		created := ""
 		if it.CreatedAt != nil {
-			created = it.CreatedAt.Format(time.RFC3339)
+			created = it.CreatedAt.Format(time.DateTime)
 		}
 		out = append(out, shareddto.CollectLogItem{
 			ID:           it.ID,
@@ -526,7 +526,7 @@ func (s *collectService) requireSource(ctx context.Context, id int64) (*model.Co
 func toCollectSource(m *model.CollectSources) shareddto.CollectSourceItem {
 	last := ""
 	if m.LastCollectAt != nil {
-		last = m.LastCollectAt.Format(time.RFC3339)
+		last = m.LastCollectAt.Format(time.DateTime)
 	}
 	return shareddto.CollectSourceItem{
 		ID:              m.ID,

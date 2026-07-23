@@ -525,12 +525,12 @@ func mapVideoList(items []model.Videos) []shareddto.VideoListItem {
 	return out
 }
 
-// derefTimeStr safely formats a *time.Time as RFC3339 string, returning "" for nil/zero.
+// derefTimeStr safely formats a *time.Time as DateTime string, returning "" for nil/zero.
 func derefTimeStr(t *time.Time) string {
 	if t == nil || t.IsZero() {
 		return ""
 	}
-	return t.Format(time.RFC3339)
+	return t.Format(time.DateTime)
 }
 
 func uniqueIDs(ids []uint64) []uint64 {

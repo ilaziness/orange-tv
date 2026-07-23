@@ -27,14 +27,6 @@ interface VideoTableProps {
   onView: (id: number) => void
 }
 
-function formatDateTime(s?: string) {
-  if (!s) return '-'
-  const d = new Date(s)
-  if (Number.isNaN(d.getTime())) return s
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
-}
-
 export function VideoTable({
   items,
   selected,
@@ -86,8 +78,8 @@ export function VideoTable({
                 <TableCell>
                   <StatusBadge status={item.publish_status ?? 0} activeText="上架" inactiveText="下架" />
                 </TableCell>
-                <TableCell className="text-muted-foreground">{formatDateTime(item.created_at)}</TableCell>
-                <TableCell className="text-muted-foreground">{formatDateTime(item.updated_at)}</TableCell>
+                <TableCell className="text-muted-foreground">{item.created_at || '-'}</TableCell>
+                <TableCell className="text-muted-foreground">{item.updated_at || '-'}</TableCell>
                 <TableCell>
                   <div className="flex gap-1">
                     <Button size="sm" variant="ghost" onClick={() => onView(item.id)} title="查看详情">
