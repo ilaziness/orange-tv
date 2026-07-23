@@ -130,7 +130,7 @@ export function useCollect() {
     }
   }, [])
 
-  async function load() {
+  const load = useCallback(async () => {
     setError('')
     try {
       const [p, c] = await Promise.all([
@@ -143,9 +143,9 @@ export function useCollect() {
     } catch (err) {
       setError(errorMessage(err))
     }
-  }
+  }, [loadSources, loadLogs])
 
-  useEffect(() => { void load() }, [])
+  useEffect(() => { void load() }, [load])
 
   const flatCats = flattenCategories(categories)
 

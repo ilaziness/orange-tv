@@ -4,14 +4,14 @@ import "github.com/ilaziness/orange-tv/internal/dto"
 
 // CreatePlaySourceRequest creates a global play source.
 type CreatePlaySourceRequest struct {
-	Name      string `json:"name" validate:"required,min=1,max:100"`
+	Name      string `json:"name" validate:"required,min=1,max=100"`
 	SortOrder uint32 `json:"sort_order" validate:"omitempty,min=0"`
 	Status    *uint8 `json:"status" validate:"omitempty,oneof=0 1"`
 }
 
 // UpdatePlaySourceRequest updates a global play source.
 type UpdatePlaySourceRequest struct {
-	Name      *string `json:"name" validate:"omitempty,min=1,max:100"`
+	Name      *string `json:"name" validate:"omitempty,min=1,max=100"`
 	SortOrder *uint32 `json:"sort_order" validate:"omitempty,min=0"`
 	Status    *uint8  `json:"status" validate:"omitempty,oneof=0 1"`
 }
