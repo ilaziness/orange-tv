@@ -254,7 +254,7 @@ export function useCollect() {
     try {
       const res = await adminApi.setCollectCategories(categorySourceId, { items })
       setMaps(res.data || [])
-      toast.success('分类映射已保存')
+      toast.success('绑定分类已保存')
       setCategoryOpen(false)
     } catch (err) {
       toast.error(errorMessage(err))

@@ -32,6 +32,37 @@ interface CollectMapEditorProps {
   onSave: (items: CategoryBindingItem[]) => void | Promise<void>
 }
 
+type RemoteCategoryNode = RemoteCategory & { depth: number }
+type RemoteCategoryTreeNode = RemoteCategory & { children: RemoteCategoryTreeNode[] }
+
+function buildRemoteCategoryTree(list: RemoteCategory[]): RemoteCategoryNode[] {
+  const map = new Map<number, RemoteCategoryTreeNode>()
+  const roots: RemoteCategoryTreeNode[] = []
+
+  for (const item of list) {
+    map.set(item.type_id, { ...item, children: [] })
+  }
+
+  for (const item of list) {
+    const node = map.get(item.type_id)!
+    if (item.type_pid > 0 && map.has(item.type_pid)) {
+      map.get(item.type_pid)!.children.push(node)
+    } else {
+      roots.push(node)
+    }
+  }
+
+  const result: RemoteCategoryNode[] = []
+  function flatten(nodes: RemoteCategoryTreeNode[], depth: number) {
+    for (const n of nodes) {
+      result.push({ ...n, depth })
+      if (n.children.length) flatten(n.children, depth + 1)
+    }
+  }
+  flatten(roots, 0)
+  return result
+}
+
 export function CollectMapEditor({
   open,
   onOpenChange,
@@ -54,6 +85,11 @@ export function CollectMapEditor({
       })),
     ],
     [flatCats],
+  )
+
+  const flatRemote = useMemo(
+    () => buildRemoteCategoryTree(remoteCategories),
+    [remoteCategories],
   )
 
   useEffect(() => {
@@ -91,7 +127,7 @@ export function CollectMapEditor({
     <Dialog open={open} onOpenChange={(v) => { if (!busy) onOpenChange(v) }}>
       <DialogContent className="sm:max-w-2xl" showCloseButton={!busy}>
         <DialogHeader>
-          <DialogTitle>分类绑定 — 源 #{sourceId}</DialogTitle>
+          <DialogTitle>绑定分类 — 源 #{sourceId}</DialogTitle>
         </DialogHeader>
         <div className="max-h-[400px] overflow-y-auto">
           {loading ? (
@@ -111,9 +147,13 @@ export function CollectMapEditor({
             </Empty>
           ) : (
             <div className="flex flex-col gap-2">
-              {remoteCategories.map((rc) => (
+              {flatRemote.map((rc) => (
                 <div key={rc.type_id} className="flex items-center gap-3">
-                  <span className="w-40 truncate text-sm" title={rc.type_name}>
+                  <span
+                    className="w-40 truncate text-sm"
+                    title={rc.type_name}
+                    style={{ paddingLeft: rc.depth * 20 }}
+                  >
                     {rc.type_name} ({rc.type_id})
                   </span>
                   <Select
@@ -143,7 +183,7 @@ export function CollectMapEditor({
         <DialogFooter>
           <Button onClick={() => void handleSave()} disabled={busy || remoteCategories.length === 0}>
             {saving && <Spinner data-icon="inline-start" />}
-            {saving ? '保存中...' : '保存绑定'}
+            {saving ? '保存中...' : '保存绑定分类'}
           </Button>
         </DialogFooter>
       </DialogContent>
