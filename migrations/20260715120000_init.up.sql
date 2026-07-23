@@ -1,4 +1,5 @@
--- Phase 1 full schema (MySQL). Soft-delete via deleted_at WITHOUT dedicated index.
+-- Initial schema (MySQL). Merged from all pre-release migrations.
+-- Soft-delete via deleted_at WITHOUT dedicated index.
 
 CREATE TABLE IF NOT EXISTS categories (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
@@ -140,8 +141,9 @@ CREATE TABLE IF NOT EXISTS collect_sources (
     type TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '采集源格式：1默认(系统格式) 2苹果CMS格式',
     collect_url VARCHAR(500) NOT NULL COMMENT '采集地址',
     api_key VARCHAR(255) NOT NULL DEFAULT '' COMMENT 'API密钥',
-    config JSON COMMENT '采集配置',
     cron_expr VARCHAR(100) NOT NULL DEFAULT '' COMMENT '定时采集cron表达式，空表示未开启定时采集',
+    schedule_enabled TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '是否开启定时采集：1是 0否',
+    data_range VARCHAR(20) NOT NULL DEFAULT '' COMMENT '定时采集数据范围：today/last1d/last3d/last1w/last1m/all',
     play_source_id BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '绑定播放源ID，采集到的播放链接存入该播放源',
     last_collect_at TIMESTAMP NULL COMMENT '最后采集时间',
     status TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '状态：1启用 0禁用',
@@ -155,7 +157,7 @@ CREATE TABLE IF NOT EXISTS collect_sources (
 CREATE TABLE IF NOT EXISTS collect_source_categories (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     source_id BIGINT UNSIGNED NOT NULL COMMENT '采集源ID',
-    external_category_id BIGINT UNSIGNED NOT NULL COMMENT '外部分类ID（采集源返回的 type_id）',
+    external_category_id BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '外部分类ID（采集源返回的 type_id）',
     category_id BIGINT UNSIGNED NOT NULL COMMENT '系统内分类ID',
     created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE uk_source_external (source_id, external_category_id),
@@ -167,12 +169,9 @@ CREATE TABLE IF NOT EXISTS collect_source_categories (
 CREATE TABLE IF NOT EXISTS collect_logs (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     source_id BIGINT UNSIGNED NOT NULL COMMENT '采集源ID',
-    status TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '采集状态：1成功 2失败 3部分成功',
-    total_count INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '采集总数',
-    success_count INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '成功数',
-    failed_count INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '失败数',
-    error_message TEXT COMMENT '错误信息',
-    duration_ms INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '耗时(毫秒)',
+    status TINYINT UNSIGNED NOT NULL DEFAULT 2 COMMENT '采集状态：1完成 2采集中',
+    collect_count INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '采集数量（累加）',
+    duration_sec INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '耗时(秒)',
     created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_source (source_id),
     INDEX idx_created (created_at)
@@ -190,8 +189,7 @@ CREATE TABLE IF NOT EXISTS live_channels (
     sort_order INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '排序',
     status TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '状态：1启用 0禁用',
     created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL DEFAULT NULL COMMENT '软删除时间'
+    updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 --bun:split
@@ -211,7 +209,14 @@ CREATE TABLE IF NOT EXISTS system_settings (
 INSERT IGNORE INTO system_settings (setting_key, setting_value, setting_type, description) VALUES
 ('site_mode', 'video_site', 1, '站点模式：video_site(影视站) resource_site(资源站)'),
 ('api_output_format', 'default', 1, 'API输出格式：default(系统默认) apple_cms(苹果CMS)'),
-('enable_third_party_collect', '1', 3, '是否允许第三方采集');
+('enable_third_party_collect', '1', 3, '是否允许第三方采集'),
+('site_name', 'Orange TV', 1, '站点名称'),
+('site_logo', '', 1, '站点 Logo URL'),
+('site_copyright', '', 1, '站点版权信息'),
+('site_icp', '', 1, '备案号'),
+('site_seo_keywords', '', 1, 'SEO 关键词'),
+('site_description', '', 1, '站点描述'),
+('resource_api_key', '', 1, '资源站 API 访问密钥');
 
 --bun:split
 
@@ -224,6 +229,16 @@ CREATE TABLE IF NOT EXISTS user_groups (
     updated_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted_at TIMESTAMP NULL DEFAULT NULL COMMENT '软删除时间'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--bun:split
+
+INSERT IGNORE INTO user_groups (id, name, permissions, description, created_at, updated_at)
+VALUES (1, 'super_admin', '["*"]', '超级管理员', NOW(), NOW());
+
+--bun:split
+
+INSERT IGNORE INTO user_groups (id, name, permissions, description, created_at, updated_at)
+VALUES (2, 'member', '[]', '普通用户', NOW(), NOW());
 
 --bun:split
 
@@ -284,4 +299,108 @@ CREATE TABLE IF NOT EXISTS system_logs (
     ip_address VARCHAR(45) NOT NULL DEFAULT '' COMMENT 'IP地址',
     created_at TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_module_created (module, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--bun:split
+
+CREATE TABLE IF NOT EXISTS user_login_logs (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    user_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    username VARCHAR(64) NOT NULL DEFAULT '',
+    ip VARCHAR(64) NOT NULL DEFAULT '',
+    user_agent VARCHAR(255) NOT NULL DEFAULT '',
+    status TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '1成功 0失败',
+    message VARCHAR(255) NOT NULL DEFAULT '',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY idx_user_login_logs_user_id (user_id),
+    KEY idx_user_login_logs_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--bun:split
+
+CREATE TABLE IF NOT EXISTS user_favorites (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    user_id BIGINT UNSIGNED NOT NULL,
+    video_id BIGINT UNSIGNED NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_user_video (user_id, video_id),
+    KEY idx_user_favorites_user_id (user_id),
+    KEY idx_user_favorites_video_id (video_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--bun:split
+
+CREATE TABLE IF NOT EXISTS user_play_history (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    user_id BIGINT UNSIGNED NOT NULL,
+    video_id BIGINT UNSIGNED NOT NULL,
+    play_source_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    episode_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    progress INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '播放进度（秒）',
+    duration INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '总时长（秒）',
+    last_played_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_user_video (user_id, video_id),
+    KEY idx_user_play_history_user_id (user_id, last_played_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--bun:split
+
+CREATE TABLE IF NOT EXISTS video_comments (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    video_id BIGINT UNSIGNED NOT NULL,
+    user_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    parent_id BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '父评论ID，0为顶级',
+    content VARCHAR(1000) NOT NULL,
+    status TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '1正常 0隐藏',
+    like_count INT UNSIGNED NOT NULL DEFAULT 0,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY idx_video_comments_video_id (video_id, status, created_at),
+    KEY idx_video_comments_user_id (user_id),
+    KEY idx_video_comments_parent_id (parent_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--bun:split
+
+CREATE TABLE IF NOT EXISTS banners (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    title VARCHAR(128) NOT NULL DEFAULT '',
+    cover VARCHAR(500) NOT NULL DEFAULT '',
+    link VARCHAR(500) NOT NULL DEFAULT '',
+    video_id BIGINT UNSIGNED NOT NULL DEFAULT 0,
+    sort INT UNSIGNED NOT NULL DEFAULT 0,
+    status TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '1启用 0禁用',
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY idx_banners_status_sort (status, sort)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--bun:split
+
+CREATE TABLE IF NOT EXISTS site_stats_daily (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    stat_date DATE NOT NULL,
+    pv BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '页面浏览量',
+    uv BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '独立访客（按IP近似）',
+    online_peak INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '当日在线峰值（近似）',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_site_stats_date (stat_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--bun:split
+
+CREATE TABLE IF NOT EXISTS online_sessions (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    session_key VARCHAR(64) NOT NULL,
+    ip VARCHAR(64) NOT NULL DEFAULT '',
+    last_active_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_online_sessions_key (session_key),
+    KEY idx_online_sessions_last_active (last_active_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
