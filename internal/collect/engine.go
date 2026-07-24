@@ -57,6 +57,12 @@ type Result struct {
 func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRange string, logID uint64) Result {
 	res := Result{}
 
+	if source.Type != constant.CollectTypeAppleCMS {
+		res.HasError = true
+		res.Message = "仅支持苹果CMS采集源"
+		return res
+	}
+
 	maps, err := e.collectRepo.ListCategories(ctx, int64(source.ID))
 	if err != nil {
 		res.HasError = true
@@ -71,39 +77,88 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRang
 		catMap[int64(m.ExternalCategoryID)] = int64(m.CategoryID)
 	}
 
-	isApple := source.Type == constant.CollectTypeAppleCMS
-	pageNo := 1
-	maxPages := 50
 	cutoffTime := dataRangeCutoff(dataRange)
 
+	// Phase 1: collect all vod_ids from list pages
+	var allVodIDs []int64
+	pageNo := 1
+	maxPages := 50
 	for pageNo <= maxPages {
 		if err := ctx.Err(); err != nil {
 			res.Message = "采集已取消"
-			break
+			return res
 		}
-		body, err := e.fetcher.FetchPage(ctx, source.CollectURL, source.APIKey, pageNo, isApple, dataRange)
+		body, err := e.fetcher.FetchList(ctx, source.CollectURL, source.APIKey, pageNo, dataRange)
 		if err != nil {
 			res.HasError = true
-			res.Message = fmt.Sprintf("拉取第%d页失败: %v", pageNo, err)
-			break
+			res.Message = fmt.Sprintf("拉取列表第%d页失败: %v", pageNo, err)
+			return res
 		}
-		var page *Page
-		if isApple {
-			page, err = ParseAppleCMS(body)
-		} else {
-			page, err = ParseDefaultJSON(body)
-		}
+		listPage, err := ParseAppleCMSList(body)
 		if err != nil {
 			res.HasError = true
-			res.Message = fmt.Sprintf("解析第%d页失败: %v", pageNo, err)
-			break
+			res.Message = fmt.Sprintf("解析列表第%d页失败: %v", pageNo, err)
+			return res
 		}
-		if len(page.Items) == 0 {
+		if len(listPage.VodIDs) == 0 {
 			break
 		}
 
-		pageCollected := 0
+		// check vod_time for time range filtering: stop if the last item is before cutoff
+		if cutoffTime != nil && len(listPage.VodTimes) > 0 {
+			lastTime := listPage.VodTimes[len(listPage.VodTimes)-1]
+			if lastTime != "" && isVodTimeBefore(lastTime, cutoffTime) {
+				// still add IDs whose vod_time is within range
+				for i, t := range listPage.VodTimes {
+					if t != "" && isVodTimeBefore(t, cutoffTime) {
+						break
+					}
+					allVodIDs = append(allVodIDs, listPage.VodIDs[i])
+				}
+				break
+			}
+		}
+
+		allVodIDs = append(allVodIDs, listPage.VodIDs...)
+
+		if pageNo >= listPage.PageCount || pageNo >= maxPages {
+			break
+		}
+		pageNo++
+	}
+
+	if len(allVodIDs) == 0 {
+		return res
+	}
+
+	// Phase 2: fetch details in batches of 25 and process
+	batchSize := 25
+	for i := 0; i < len(allVodIDs); i += batchSize {
+		if err := ctx.Err(); err != nil {
+			res.Message = "采集已取消"
+			return res
+		}
+		end := i + batchSize
+		if end > len(allVodIDs) {
+			end = len(allVodIDs)
+		}
+		batch := allVodIDs[i:end]
+
+		body, err := e.fetcher.FetchDetail(ctx, source.CollectURL, source.APIKey, batch)
+		if err != nil {
+			res.HasError = true
+			res.Message = fmt.Sprintf("拉取详情失败(batch %d-%d): %v", i, end, err)
+			return res
+		}
+		page, err := ParseAppleCMSDetail(body)
+		if err != nil {
+			res.HasError = true
+			res.Message = fmt.Sprintf("解析详情失败(batch %d-%d): %v", i, end, err)
+			return res
+		}
+
 		stopCollection := false
+		pageCollected := 0
 		for _, item := range page.Items {
 			if err := ctx.Err(); err != nil {
 				res.Message = "采集已取消"
@@ -111,7 +166,7 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRang
 				break
 			}
 
-			// vod_time filtering: if item time is before cutoff, stop all subsequent pages
+			// vod_time filtering: if item time is before cutoff, stop all subsequent processing
 			if cutoffTime != nil && item.VodTime != "" {
 				if isVodTimeBefore(item.VodTime, cutoffTime) {
 					stopCollection = true
@@ -132,7 +187,6 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRang
 			pageCollected++
 		}
 
-		// increment log count for this page
 		if logID > 0 && pageCollected > 0 {
 			if err := e.collectRepo.IncrementLogCount(ctx, logID, pageCollected); err != nil && e.log != nil {
 				e.log.Warn("increment log count failed", zap.Error(err))
@@ -143,10 +197,6 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRang
 		if stopCollection {
 			break
 		}
-		if pageNo >= page.PageCount || pageNo >= maxPages {
-			break
-		}
-		pageNo++
 	}
 	return res
 }
@@ -206,7 +256,15 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 		return err
 	}
 
-	// ensure metadata names
+	// If video was collected by a different source, only add play episodes (no metadata creation)
+	if existing != nil && existing.CollectSourceID != 0 && existing.CollectSourceID != uint64(source.ID) {
+		return e.videoRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
+			pRepo := e.playRepo.WithTx(tx)
+			return e.upsertEpisodes(ctx, pRepo, source, existing.ID, item)
+		})
+	}
+
+	// ensure metadata names (only for same-source updates or new videos)
 	directorIDs, err := e.ensureDirectors(ctx, item.Directors)
 	if err != nil {
 		return err
@@ -220,12 +278,19 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 		return err
 	}
 
+	serialStatus := parseSerialStatus(item.Remarks)
+
 	return e.videoRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
 		vRepo := e.videoRepo.WithTx(tx)
 		pRepo := e.playRepo.WithTx(tx)
 		var videoID uint64
 		if existing != nil {
 			videoID = existing.ID
+			// Same source or manually created (CollectSourceID==0): claim it
+			if existing.CollectSourceID == 0 {
+				existing.CollectSourceID = uint64(source.ID)
+			}
+			// Same source: update video fields
 			existing.Subtitle = item.Subtitle
 			if item.Description != "" {
 				existing.Description = &item.Description
@@ -254,6 +319,9 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 			if rd := parseReleaseDate(item.ReleaseDate); rd != nil {
 				existing.ReleaseDate = rd
 			}
+			if serialStatus > 0 {
+				existing.SerialStatus = serialStatus
+			}
 			existing.CategoryID = uint64(categoryID)
 			if existing.PublishStatus == 0 {
 				existing.PublishStatus = constant.PublishStatusOnline
@@ -268,20 +336,24 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 				descPtr = &desc
 			}
 			v := &model.Videos{
-				Title:         item.Title,
-				Subtitle:      item.Subtitle,
-				Description:   descPtr,
-				CategoryID:    uint64(categoryID),
-				PublishStatus: constant.PublishStatusOnline,
-				SerialStatus:  constant.SerialStatusFinished,
-				CoverImage:    item.Cover,
-				PosterImage:   firstNonEmpty(item.Poster, item.Cover),
-				Year:          uint32(item.Year),
-				Region:        item.Region,
-				Language:      item.Language,
-				Duration:      uint32(item.Duration),
-				Rating:        item.Rating,
-				ReleaseDate:   parseReleaseDate(item.ReleaseDate),
+				Title:           item.Title,
+				Subtitle:        item.Subtitle,
+				Description:     descPtr,
+				CategoryID:      uint64(categoryID),
+				PublishStatus:   constant.PublishStatusOnline,
+				SerialStatus:    serialStatus,
+				CoverImage:      item.Cover,
+				PosterImage:     firstNonEmpty(item.Poster, item.Cover),
+				Year:            uint32(item.Year),
+				Region:          item.Region,
+				Language:        item.Language,
+				Duration:        uint32(item.Duration),
+				Rating:          item.Rating,
+				ReleaseDate:     parseReleaseDate(item.ReleaseDate),
+				CollectSourceID: uint64(source.ID),
+			}
+			if v.SerialStatus == 0 {
+				v.SerialStatus = constant.SerialStatusFinished
 			}
 			if err := vRepo.Create(ctx, v); err != nil {
 				return err
@@ -452,6 +524,78 @@ func parseReleaseDate(s string) *time.Time {
 	for _, layout := range []string{"2006-01-02", "2006/01/02", "2006-1-2", time.RFC3339} {
 		if tm, err := time.ParseInLocation(layout, s, time.Local); err == nil {
 			return &tm
+		}
+	}
+	return nil
+}
+
+// parseSerialStatus parses vod_remarks to determine serial status.
+// Common remarks: "完结", "已完结", "完结中" → Finished; "更新至", "连载中" → Ongoing; "预告" → Upcoming.
+func parseSerialStatus(remarks string) uint8 {
+	remarks = strings.TrimSpace(remarks)
+	if remarks == "" {
+		return 0
+	}
+	switch {
+	case strings.Contains(remarks, "完结"):
+		return constant.SerialStatusFinished
+	case strings.Contains(remarks, "更新") || strings.Contains(remarks, "连载") || (strings.Contains(remarks, "第") && strings.Contains(remarks, "集")):
+		return constant.SerialStatusOngoing
+	case strings.Contains(remarks, "预告") || strings.Contains(remarks, "即将"):
+		return constant.SerialStatusUpcoming
+	default:
+		return 0
+	}
+}
+
+// upsertEpisodes only adds/updates play episodes for a video collected by a different source.
+// It does not modify the video record itself.
+func (e *Engine) upsertEpisodes(ctx context.Context, pRepo repository.PlayRepository, source *model.CollectSources, videoID uint64, item Item) error {
+	for _, ep := range item.Episodes {
+		if ep.URL == "" {
+			continue
+		}
+		num := ep.Number
+		if num <= 0 {
+			num = 1
+		}
+		format := ep.Format
+		if format == "" {
+			format = constant.PlayFormatHLS
+		}
+		existingEp, err := pRepo.GetEpisodeByKey(ctx, int64(videoID), int64(source.PlaySourceID), num)
+		if err != nil {
+			return err
+		}
+		if existingEp != nil {
+			existingEp.Title = ep.Title
+			existingEp.PlayURL = ep.URL
+			existingEp.Quality = ep.Quality
+			existingEp.Format = format
+			existingEp.Status = constant.StatusEnabled
+			if existingEp.DeletedAt != nil {
+				if err := pRepo.RestoreAndUpdateEpisode(ctx, existingEp); err != nil {
+					return err
+				}
+			} else {
+				if err := pRepo.UpdateEpisode(ctx, existingEp); err != nil {
+					return err
+				}
+			}
+			continue
+		}
+		m := &model.PlayEpisodes{
+			SourceID:      uint64(source.PlaySourceID),
+			VideoID:       videoID,
+			EpisodeNumber: uint32(num),
+			Title:         ep.Title,
+			PlayURL:       ep.URL,
+			Quality:       ep.Quality,
+			Format:        format,
+			Status:        constant.StatusEnabled,
+		}
+		if err := pRepo.CreateEpisode(ctx, m); err != nil {
+			return err
 		}
 	}
 	return nil

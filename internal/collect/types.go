@@ -29,6 +29,7 @@ type Item struct {
 	Tags               []string
 	Episodes           []Episode
 	VodTime            string // raw vod_time string for time range filtering
+	Remarks            string // vod_remarks, used to determine serial status
 }
 
 // AppleCMSClass is one category from Apple CMS class field.
@@ -44,5 +45,16 @@ type Page struct {
 	PageCount int
 	Total     int
 	Items     []Item
+	Classes   []AppleCMSClass
+}
+
+// ListPage is the parsed result of an Apple CMS list API response.
+// It only extracts vod_id list and class info; detailed fields come from the detail API.
+type ListPage struct {
+	Page      int
+	PageCount int
+	Total     int
+	VodIDs    []int64  // vod_id list (integer IDs)
+	VodTimes  []string // vod_time list, parallel to VodIDs, for time range filtering
 	Classes   []AppleCMSClass
 }

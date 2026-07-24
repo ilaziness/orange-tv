@@ -550,18 +550,18 @@ func (s *collectService) FetchRemoteCategories(ctx context.Context, sourceID int
 	if source.Type != constant.CollectTypeAppleCMS {
 		return nil, errcode.CollectSourceNotAppleCMS
 	}
-	// Apple CMS class is returned on ac=list (and bare list URL), not on ac=detail.
+	// Apple CMS class is returned on ac=list; use FetchList with dataRange="all" to get classes.
 	fetcher := collect.NewFetcher()
-	body, err := fetcher.FetchAppleCMSCategories(ctx, source.CollectURL, source.APIKey)
+	body, err := fetcher.FetchList(ctx, source.CollectURL, source.APIKey, 1, "all")
 	if err != nil {
 		return nil, errcode.Wrap(errcode.CollectFetchFailed, err)
 	}
-	page, err := collect.ParseAppleCMS(body)
+	listPage, err := collect.ParseAppleCMSList(body)
 	if err != nil {
 		return nil, errcode.Wrap(errcode.CollectParseFailed, err)
 	}
-	items := make([]admindto.RemoteCategoryItem, 0, len(page.Classes))
-	for _, c := range page.Classes {
+	items := make([]admindto.RemoteCategoryItem, 0, len(listPage.Classes))
+	for _, c := range listPage.Classes {
 		if c.TypeID <= 0 {
 			continue
 		}

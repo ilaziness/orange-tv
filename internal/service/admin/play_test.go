@@ -136,6 +136,9 @@ func (v *videoRepoStub) GetByID(ctx context.Context, id uint64) (*model.Videos, 
 	return &cp, nil
 }
 func (v *videoRepoStub) Create(ctx context.Context, video *model.Videos) error { return nil }
+func (v *videoRepoStub) BatchCreate(ctx context.Context, videos []*model.Videos) error {
+	return nil
+}
 func (v *videoRepoStub) Update(ctx context.Context, video *model.Videos) error { return nil }
 func (v *videoRepoStub) SoftDelete(ctx context.Context, id uint64) error       { return nil }
 func (v *videoRepoStub) ReplaceDirectors(ctx context.Context, videoID uint64, directorIDs []uint64) error {

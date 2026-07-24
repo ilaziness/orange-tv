@@ -40,6 +40,8 @@ type Videos struct {
 	Duration uint32 `bun:"duration,notnull" json:"duration"`
 	// 语言
 	Language string `bun:"language,notnull" json:"language"`
+	// 采集源ID，标识最初由哪个采集源采集
+	CollectSourceID uint64 `bun:"collect_source_id,notnull" json:"collect_source_id"`
 	// 上映日期
 	ReleaseDate *time.Time `bun:"release_date" json:"release_date"`
 	CreatedAt   *time.Time `bun:"created_at" json:"created_at"`

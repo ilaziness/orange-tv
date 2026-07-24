@@ -3,6 +3,7 @@ package collect
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -136,8 +137,10 @@ type defaultEpisode struct {
 	Format  string `json:"format"`
 }
 
-// ParseAppleCMS parses 苹果CMS list API JSON.
-func ParseAppleCMS(body []byte) (*Page, error) {
+// ParseAppleCMSList parses an Apple CMS list API response (ac=list).
+// It only extracts vod_id list, vod_time list, and class info.
+// Detailed fields are obtained separately via the detail API.
+func ParseAppleCMSList(body []byte) (*ListPage, error) {
 	var raw struct {
 		Code      any             `json:"code"`
 		Page      any             `json:"page"`
@@ -147,7 +150,62 @@ func ParseAppleCMS(body []byte) (*Page, error) {
 		Class     json.RawMessage `json:"class"`
 	}
 	if err := json.Unmarshal(body, &raw); err != nil {
-		return nil, fmt.Errorf("apple cms unmarshal: %w", err)
+		return nil, fmt.Errorf("apple cms list unmarshal: %w", err)
+	}
+	page := anyToInt(raw.Page)
+	pageCount := anyToInt(raw.PageCount)
+	total := anyToInt(raw.Total)
+	if page < 1 {
+		page = 1
+	}
+	if pageCount < 1 {
+		pageCount = 1
+	}
+
+	var rows []appleListItem
+	if len(raw.List) > 0 && string(raw.List) != "null" {
+		if err := json.Unmarshal(raw.List, &rows); err != nil {
+			return nil, fmt.Errorf("apple cms list rows: %w", err)
+		}
+	}
+	vodIDs := make([]int64, 0, len(rows))
+	vodTimes := make([]string, 0, len(rows))
+	for _, row := range rows {
+		vodIDs = append(vodIDs, int64(anyToInt(row.VodID)))
+		vodTimes = append(vodTimes, strings.TrimSpace(row.VodTime))
+	}
+
+	var classRows []appleClass
+	if len(raw.Class) > 0 && string(raw.Class) != "null" {
+		if err := json.Unmarshal(raw.Class, &classRows); err != nil {
+			return nil, fmt.Errorf("apple cms class: %w", err)
+		}
+	}
+	classes := make([]AppleCMSClass, 0, len(classRows))
+	for _, c := range classRows {
+		classes = append(classes, AppleCMSClass{
+			TypeID:   int64(anyToInt(c.TypeID)),
+			TypeName: strings.TrimSpace(c.TypeName),
+			TypePID:  int64(anyToInt(c.TypePID)),
+		})
+	}
+
+	return &ListPage{Page: page, PageCount: pageCount, Total: total, VodIDs: vodIDs, VodTimes: vodTimes, Classes: classes}, nil
+}
+
+// ParseAppleCMSDetail parses an Apple CMS detail API response (ac=detail).
+// It extracts full vod fields for each item, including directors, actors, tags, and episodes.
+func ParseAppleCMSDetail(body []byte) (*Page, error) {
+	var raw struct {
+		Code      any             `json:"code"`
+		Page      any             `json:"page"`
+		PageCount any             `json:"pagecount"`
+		Total     any             `json:"total"`
+		List      json.RawMessage `json:"list"`
+		Class     json.RawMessage `json:"class"`
+	}
+	if err := json.Unmarshal(body, &raw); err != nil {
+		return nil, fmt.Errorf("apple cms detail unmarshal: %w", err)
 	}
 	page := anyToInt(raw.Page)
 	pageCount := anyToInt(raw.PageCount)
@@ -161,7 +219,7 @@ func ParseAppleCMS(body []byte) (*Page, error) {
 	var rows []appleItem
 	if len(raw.List) > 0 && string(raw.List) != "null" {
 		if err := json.Unmarshal(raw.List, &rows); err != nil {
-			return nil, fmt.Errorf("apple cms list: %w", err)
+			return nil, fmt.Errorf("apple cms detail list: %w", err)
 		}
 	}
 	items := make([]Item, 0, len(rows))
@@ -174,7 +232,7 @@ func ParseAppleCMS(body []byte) (*Page, error) {
 			ExternalID:         anyToString(row.VodID),
 			Title:              title,
 			Subtitle:           strings.TrimSpace(row.VodSub),
-			Description:        firstNonEmpty(strings.TrimSpace(row.Blurb), strings.TrimSpace(row.Content)),
+			Description:        stripHTMLTags(row.Content),
 			Cover:              strings.TrimSpace(row.Pic),
 			Poster:             strings.TrimSpace(row.Pic),
 			Year:               int32(anyToInt(row.VodYear)),
@@ -186,9 +244,10 @@ func ParseAppleCMS(body []byte) (*Page, error) {
 			ExternalCategoryID: int64(anyToInt(row.TypeID)),
 			Directors:          splitNames(row.Director),
 			Actors:             splitNames(row.Actor),
-			Tags:               splitNames(firstNonEmpty(row.VodTag, row.Class)),
+			Tags:               splitNames(row.VodTag, row.Class),
 			Episodes:           parseApplePlayURLs(row.VodPlayURL),
 			VodTime:            strings.TrimSpace(row.VodTime),
+			Remarks:            strings.TrimSpace(row.VodRemarks),
 		}
 		items = append(items, it)
 	}
@@ -220,20 +279,26 @@ type appleClass struct {
 	TypePID  any    `json:"type_pid"`
 }
 
+// appleListItem is the minimal struct for parsing list API responses.
+// Only vod_id and vod_time are needed from the list endpoint.
+type appleListItem struct {
+	VodID   any    `json:"vod_id"`
+	VodTime string `json:"vod_time"`
+}
+
 type appleItem struct {
 	VodID       any    `json:"vod_id"`
 	TypeID      any    `json:"type_id"`
 	TypeName    string `json:"type_name"`
-	Class       string `json:"class"`
+	Class       string `json:"vod_class"`
 	VodName     string `json:"vod_name"`
 	VodSub      string `json:"vod_sub"`
 	VodTag      string `json:"vod_tag"`
-	Pic         string `json:"pic"`
-	Actor       string `json:"actor"`
-	Director    string `json:"director"`
-	Blurb       string `json:"blurb"`
+	Pic         string `json:"vod_pic"`
+	Actor       string `json:"vod_actor"`
+	Director    string `json:"vod_director"`
 	Content     string `json:"vod_content"`
-	Pubdate     string `json:"pubdate"`
+	Pubdate     string `json:"vod_pubdate"`
 	VodYear     any    `json:"vod_year"`
 	VodArea     string `json:"vod_area"`
 	VodLang     string `json:"vod_lang"`
@@ -242,6 +307,7 @@ type appleItem struct {
 	VodPlayFrom string `json:"vod_play_from"`
 	VodPlayURL  string `json:"vod_play_url"`
 	VodTime     string `json:"vod_time"`
+	VodRemarks  string `json:"vod_remarks"`
 }
 
 func parseApplePlayURLs(raw string) []Episode {
@@ -249,11 +315,14 @@ func parseApplePlayURLs(raw string) []Episode {
 	if raw == "" {
 		return nil
 	}
-	// multi-source groups are separated by $$$; take all groups
+	// multi-source groups are separated by $$$; only parse groups containing .m3u8 URLs
 	groups := strings.Split(raw, "$$$")
 	var eps []Episode
 	seen := map[int32]bool{}
 	for _, g := range groups {
+		if !strings.Contains(g, ".m3u8") {
+			continue
+		}
 		parts := strings.Split(g, "#")
 		for i, part := range parts {
 			part = strings.TrimSpace(part)
@@ -310,25 +379,32 @@ func extractEpisodeNumber(s string) int32 {
 	return int32(n)
 }
 
-func splitNames(s string) []string {
-	s = strings.TrimSpace(s)
-	if s == "" {
-		return nil
-	}
-	s = strings.ReplaceAll(s, "，", ",")
-	s = strings.ReplaceAll(s, "、", ",")
-	s = strings.ReplaceAll(s, "/", ",")
-	s = strings.ReplaceAll(s, "|", ",")
-	parts := strings.Split(s, ",")
-	out := make([]string, 0, len(parts))
+func splitNames(parts ...string) []string {
+	out := make([]string, 0)
 	seen := map[string]bool{}
-	for _, p := range parts {
-		p = strings.TrimSpace(p)
-		if p == "" || seen[p] {
+	for _, s := range parts {
+		s = strings.TrimSpace(s)
+		if s == "" {
 			continue
 		}
-		seen[p] = true
-		out = append(out, p)
+		s = strings.ReplaceAll(s, "，", ",")
+		s = strings.ReplaceAll(s, "、", ",")
+		s = strings.ReplaceAll(s, "/", ",")
+		s = strings.ReplaceAll(s, "|", ",")
+		// split by comma first, then by whitespace for each part
+		commaParts := strings.Split(s, ",")
+		for _, cp := range commaParts {
+			// split each comma-separated part by whitespace to handle space-delimited names
+			spaceParts := strings.Fields(cp)
+			for _, p := range spaceParts {
+				p = strings.TrimSpace(p)
+				if p == "" || seen[p] {
+					continue
+				}
+				seen[p] = true
+				out = append(out, p)
+			}
+		}
 	}
 	return out
 }
@@ -347,6 +423,18 @@ func guessFormat(url string) string {
 	default:
 		return "hls"
 	}
+}
+
+var htmlTagRegexp = regexp.MustCompile(`<[^>]*>`)
+
+// stripHTMLTags removes HTML tags from s and trims whitespace.
+func stripHTMLTags(s string) string {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return ""
+	}
+	s = htmlTagRegexp.ReplaceAllString(s, "")
+	return strings.TrimSpace(s)
 }
 
 func firstNonEmpty(vals ...string) string {

@@ -33,6 +33,7 @@ type VideoRepository interface {
 	List(ctx context.Context, f VideoListFilter) ([]model.Videos, int, error)
 	GetByID(ctx context.Context, id uint64) (*model.Videos, error)
 	Create(ctx context.Context, v *model.Videos) error
+	BatchCreate(ctx context.Context, videos []*model.Videos) error
 	Update(ctx context.Context, v *model.Videos) error
 	SoftDelete(ctx context.Context, id uint64) error
 	ReplaceDirectors(ctx context.Context, videoID uint64, directorIDs []uint64) error
@@ -152,6 +153,17 @@ func (r *videoRepo) Create(ctx context.Context, v *model.Videos) error {
 	_, err := r.db.NewInsert().Model(v).Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("create video: %w", err)
+	}
+	return nil
+}
+
+func (r *videoRepo) BatchCreate(ctx context.Context, videos []*model.Videos) error {
+	if len(videos) == 0 {
+		return nil
+	}
+	_, err := r.db.NewInsert().Model(&videos).Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("batch create videos: %w", err)
 	}
 	return nil
 }

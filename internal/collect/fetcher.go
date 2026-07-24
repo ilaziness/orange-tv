@@ -23,10 +23,10 @@ func NewFetcher() *Fetcher {
 	}
 }
 
-// FetchPage GET the collect URL with page params and optional API key.
-// dataRange filters by time for Apple CMS (today/last1d/last3d/last1w/last1m/all).
-// Apple CMS content collection uses ac=detail (full vod fields); category class is usually absent.
-func (f *Fetcher) FetchPage(ctx context.Context, baseURL, apiKey string, page int, isApple bool, dataRange string) ([]byte, error) {
+// FetchList GET the collect URL with ac=list mode to retrieve vod_id list and class info.
+// dataRange filters by time via the h parameter (today/last1d/last3d/last1w/last1m/all).
+// limit=50 is set to get more items per page (default is 20).
+func (f *Fetcher) FetchList(ctx context.Context, baseURL, apiKey string, page int, dataRange string) ([]byte, error) {
 	u, err := url.Parse(strings.TrimSpace(baseURL))
 	if err != nil {
 		return nil, fmt.Errorf("parse collect url: %w", err)
@@ -35,16 +35,11 @@ func (f *Fetcher) FetchPage(ctx context.Context, baseURL, apiKey string, page in
 	if page < 1 {
 		page = 1
 	}
-	if isApple {
-		if q.Get("ac") == "" {
-			q.Set("ac", "detail")
-		}
-		q.Set("pg", strconv.Itoa(page))
-		if h := dataRangeToHours(dataRange); h > 0 {
-			q.Set("h", strconv.Itoa(h))
-		}
-	} else {
-		q.Set("page", strconv.Itoa(page))
+	q.Set("ac", "list")
+	q.Set("pg", strconv.Itoa(page))
+	q.Set("limit", "50")
+	if h := dataRangeToHours(dataRange); h > 0 {
+		q.Set("h", strconv.Itoa(h))
 	}
 	if apiKey != "" {
 		if q.Get("key") == "" && q.Get("api_key") == "" {
@@ -55,19 +50,26 @@ func (f *Fetcher) FetchPage(ctx context.Context, baseURL, apiKey string, page in
 	return f.doGet(ctx, u.String(), apiKey)
 }
 
-// FetchAppleCMSCategories GET Apple CMS list API (ac=list) which includes the class field.
-// Many providers omit class when ac=detail; binding remote categories must use list mode.
-func (f *Fetcher) FetchAppleCMSCategories(ctx context.Context, baseURL, apiKey string) ([]byte, error) {
+// FetchDetail GET the collect URL with ac=detail mode to retrieve full vod info for given IDs.
+// The caller should batch IDs (max 25 per call) to avoid URL length limits.
+func (f *Fetcher) FetchDetail(ctx context.Context, baseURL, apiKey string, ids []int64) ([]byte, error) {
 	u, err := url.Parse(strings.TrimSpace(baseURL))
 	if err != nil {
 		return nil, fmt.Errorf("parse collect url: %w", err)
 	}
 	q := u.Query()
-	q.Set("ac", "list")
-	// drop detail-only filters that some sources reject on list endpoints
+	q.Set("ac", "detail")
+	// remove list-only params that detail endpoints don't need
+	q.Del("pg")
 	q.Del("h")
-	q.Del("ids")
-	q.Del("t")
+	q.Del("limit")
+	if len(ids) > 0 {
+		parts := make([]string, len(ids))
+		for i, id := range ids {
+			parts[i] = strconv.FormatInt(id, 10)
+		}
+		q.Set("ids", strings.Join(parts, ","))
+	}
 	if apiKey != "" {
 		if q.Get("key") == "" && q.Get("api_key") == "" {
 			q.Set("key", apiKey)
