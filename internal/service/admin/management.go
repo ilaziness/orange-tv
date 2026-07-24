@@ -12,6 +12,7 @@ import (
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
+	"go.uber.org/zap"
 )
 
 // ManagementService handles dashboard, batch ops, admin/user/user-group CRUD, banners.
@@ -55,6 +56,7 @@ type managementService struct {
 	videoRepo repository.VideoRepository
 	userRepo  repository.UserFeatureRepository
 	audit     *audit.Recorder
+	log       *zap.Logger
 }
 
 // NewManagementService creates a ManagementService.
@@ -63,12 +65,17 @@ func NewManagementService(
 	videoRepo repository.VideoRepository,
 	userRepo repository.UserFeatureRepository,
 	recorder *audit.Recorder,
+	log *zap.Logger,
 ) ManagementService {
+	if log == nil {
+		log = zap.NewNop()
+	}
 	return &managementService{
 		adminRepo: adminRepo,
 		videoRepo: videoRepo,
 		userRepo:  userRepo,
 		audit:     recorder,
+		log:       log,
 	}
 }
 
@@ -81,6 +88,7 @@ func (s *managementService) Dashboard(ctx context.Context) (*dto.DashboardRespon
 
 	totalVideos, err := s.videoRepo.CountVideos(ctx)
 	if err != nil {
+		s.log.Error("management: dashboard count videos failed", zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	resp.TotalVideos = int64(totalVideos)
@@ -90,30 +98,35 @@ func (s *managementService) Dashboard(ctx context.Context) (*dto.DashboardRespon
 	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	todayVideos, err := s.videoRepo.CountVideosToday(ctx, startOfDay)
 	if err != nil {
+		s.log.Error("management: dashboard count videos today failed", zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	resp.TodayVideos = int64(todayVideos)
 
 	onlineVideos, err := s.videoRepo.CountVideosByStatus(ctx, constant.PublishStatusOnline)
 	if err != nil {
+		s.log.Error("management: dashboard count online videos failed", zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	resp.OnlineVideos = int64(onlineVideos)
 
 	offlineVideos, err := s.videoRepo.CountVideosByStatus(ctx, constant.PublishStatusOffline)
 	if err != nil {
+		s.log.Error("management: dashboard count offline videos failed", zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	resp.OfflineVideos = int64(offlineVideos)
 
 	totalCats, err := s.videoRepo.CountCategories(ctx)
 	if err != nil {
+		s.log.Error("management: dashboard count categories failed", zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	resp.TotalCategories = int64(totalCats)
 
 	admins, totalAdmins, err := s.adminRepo.ListAdmins(ctx, repository.AdminListFilter{Offset: 0, Limit: 1})
 	if err != nil {
+		s.log.Error("management: dashboard list admins failed", zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	_ = admins
@@ -121,6 +134,7 @@ func (s *managementService) Dashboard(ctx context.Context) (*dto.DashboardRespon
 
 	users, totalUsers, err := s.adminRepo.ListUsers(ctx, repository.UserListFilter{Offset: 0, Limit: 1})
 	if err != nil {
+		s.log.Error("management: dashboard list users failed", zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	_ = users
@@ -129,6 +143,7 @@ func (s *managementService) Dashboard(ctx context.Context) (*dto.DashboardRespon
 	// Online count (approximate: sessions active in last 5 minutes)
 	onlineCount, err := s.userRepo.CountOnlineSessions(ctx, time.Now().Add(-5*time.Minute))
 	if err != nil {
+		s.log.Warn("management: dashboard count online sessions failed", zap.Error(err))
 		// non-fatal: return 0
 		resp.OnlineCount = 0
 	} else {
@@ -138,6 +153,7 @@ func (s *managementService) Dashboard(ctx context.Context) (*dto.DashboardRespon
 	// Today PV/UV (use the same local zero point for consistency with startOfDay)
 	stats, err := s.userRepo.GetDailyStats(ctx, startOfDay)
 	if err != nil {
+		s.log.Warn("management: dashboard get daily stats failed", zap.Error(err))
 		resp.TodayPV = 0
 		resp.TodayUV = 0
 	} else if stats != nil {
@@ -157,6 +173,7 @@ func (s *managementService) BatchUpdatePublishStatus(ctx context.Context, req *d
 	}
 	n, err := s.videoRepo.BatchUpdatePublishStatus(ctx, req.IDs, status)
 	if err != nil {
+		s.log.Error("management: batch update publish status failed", zap.Int("count", len(req.IDs)), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return &dto.BatchVideoResponse{Affected: n}, nil
@@ -165,6 +182,7 @@ func (s *managementService) BatchUpdatePublishStatus(ctx context.Context, req *d
 func (s *managementService) BatchDeleteVideos(ctx context.Context, req *dto.BatchVideoRequest) (*dto.BatchVideoResponse, error) {
 	n, err := s.videoRepo.BatchSoftDelete(ctx, req.IDs)
 	if err != nil {
+		s.log.Error("management: batch delete videos failed", zap.Int("count", len(req.IDs)), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return &dto.BatchVideoResponse{Affected: n}, nil
@@ -181,6 +199,7 @@ func (s *managementService) ListAdmins(ctx context.Context, req *dto.AdminListRe
 		Limit:   req.GetPageSize(),
 	})
 	if err != nil {
+		s.log.Error("management: list admins failed", zap.Error(err))
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	out := make([]dto.AdminItem, 0, len(items))
@@ -208,6 +227,7 @@ func (s *managementService) CreateAdmin(ctx context.Context, req *dto.CreateAdmi
 	username := strings.TrimSpace(req.Username)
 	exists, err := s.adminRepo.ExistsUsername(ctx, username)
 	if err != nil {
+		s.log.Error("management: check admin username exists failed", zap.String("username", username), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if exists {
@@ -215,6 +235,7 @@ func (s *managementService) CreateAdmin(ctx context.Context, req *dto.CreateAdmi
 	}
 	group, err := s.adminRepo.GetGroupByID(ctx, int64(req.GroupID))
 	if err != nil {
+		s.log.Error("management: get group by id for create admin failed", zap.Uint64("group_id", req.GroupID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if group == nil {
@@ -222,6 +243,7 @@ func (s *managementService) CreateAdmin(ctx context.Context, req *dto.CreateAdmi
 	}
 	hash, err := crypto.HashPassword(req.Password)
 	if err != nil {
+		s.log.Error("management: hash password for create admin failed", zap.String("username", username), zap.Error(err))
 		return nil, errcode.Wrap(errcode.InternalError, err)
 	}
 	status := constant.StatusEnabled
@@ -237,6 +259,7 @@ func (s *managementService) CreateAdmin(ctx context.Context, req *dto.CreateAdmi
 		Status:   status,
 	}
 	if err := s.adminRepo.Create(ctx, admin); err != nil {
+		s.log.Error("management: create admin failed", zap.String("username", username), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return &dto.AdminItem{
@@ -254,6 +277,7 @@ func (s *managementService) CreateAdmin(ctx context.Context, req *dto.CreateAdmi
 func (s *managementService) UpdateAdmin(ctx context.Context, id int64, req *dto.UpdateAdminRequest) (*dto.AdminItem, error) {
 	admin, err := s.adminRepo.GetByID(ctx, id)
 	if err != nil {
+		s.log.Error("management: get admin by id for update failed", zap.Int64("admin_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if admin == nil {
@@ -268,6 +292,7 @@ func (s *managementService) UpdateAdmin(ctx context.Context, id int64, req *dto.
 	if req.GroupID != nil {
 		group, err := s.adminRepo.GetGroupByID(ctx, int64(*req.GroupID))
 		if err != nil {
+			s.log.Error("management: get group by id for update admin failed", zap.Uint64("group_id", *req.GroupID), zap.Error(err))
 			return nil, errcode.Wrap(errcode.DatabaseError, err)
 		}
 		if group == nil {
@@ -279,6 +304,7 @@ func (s *managementService) UpdateAdmin(ctx context.Context, id int64, req *dto.
 		admin.Status = *req.Status
 	}
 	if err := s.adminRepo.UpdateAdmin(ctx, admin); err != nil {
+		s.log.Error("management: update admin failed", zap.Int64("admin_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	groupName := ""
@@ -301,6 +327,7 @@ func (s *managementService) UpdateAdmin(ctx context.Context, id int64, req *dto.
 func (s *managementService) ResetAdminPassword(ctx context.Context, id int64, req *dto.ResetAdminPasswordRequest) error {
 	admin, err := s.adminRepo.GetByID(ctx, id)
 	if err != nil {
+		s.log.Error("management: get admin by id for reset password failed", zap.Int64("admin_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if admin == nil {
@@ -308,10 +335,12 @@ func (s *managementService) ResetAdminPassword(ctx context.Context, id int64, re
 	}
 	hash, err := crypto.HashPassword(req.Password)
 	if err != nil {
+		s.log.Error("management: hash password for reset admin password failed", zap.Int64("admin_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.InternalError, err)
 	}
 	admin.Password = hash
 	if err := s.adminRepo.UpdateAdmin(ctx, admin); err != nil {
+		s.log.Error("management: update admin for reset password failed", zap.Int64("admin_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return nil
@@ -320,12 +349,14 @@ func (s *managementService) ResetAdminPassword(ctx context.Context, id int64, re
 func (s *managementService) DeleteAdmin(ctx context.Context, id int64) error {
 	admin, err := s.adminRepo.GetByID(ctx, id)
 	if err != nil {
+		s.log.Error("management: get admin by id for delete failed", zap.Int64("admin_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if admin == nil {
 		return errcode.AdminNotFound
 	}
 	if err := s.adminRepo.SoftDeleteAdmin(ctx, id); err != nil {
+		s.log.Error("management: soft delete admin failed", zap.Int64("admin_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return nil
@@ -340,6 +371,7 @@ func (s *managementService) ListGroups(ctx context.Context, req *dto.UserGroupLi
 		Limit:   req.GetPageSize(),
 	})
 	if err != nil {
+		s.log.Error("management: list groups failed", zap.Error(err))
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	out := make([]dto.UserGroupItem, 0, len(items))
@@ -363,6 +395,7 @@ func (s *managementService) CreateGroup(ctx context.Context, req *dto.CreateUser
 		Description: strings.TrimSpace(req.Description),
 	}
 	if err := s.adminRepo.CreateGroup(ctx, g); err != nil {
+		s.log.Error("management: create group failed", zap.String("name", name), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return &dto.UserGroupItem{
@@ -377,6 +410,7 @@ func (s *managementService) CreateGroup(ctx context.Context, req *dto.CreateUser
 func (s *managementService) UpdateGroup(ctx context.Context, id int64, req *dto.UpdateUserGroupRequest) (*dto.UserGroupItem, error) {
 	group, err := s.adminRepo.GetGroupByID(ctx, id)
 	if err != nil {
+		s.log.Error("management: get group by id for update failed", zap.Int64("group_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if group == nil {
@@ -386,6 +420,7 @@ func (s *managementService) UpdateGroup(ctx context.Context, id int64, req *dto.
 		name := strings.TrimSpace(req.Name)
 		exists, err := s.adminRepo.ExistsGroupNameExcludeID(ctx, name, id)
 		if err != nil {
+			s.log.Error("management: check group name exists for update failed", zap.Int64("group_id", id), zap.String("name", name), zap.Error(err))
 			return nil, errcode.Wrap(errcode.DatabaseError, err)
 		}
 		if exists {
@@ -400,6 +435,7 @@ func (s *managementService) UpdateGroup(ctx context.Context, id int64, req *dto.
 		group.Description = strings.TrimSpace(req.Description)
 	}
 	if err := s.adminRepo.UpdateGroup(ctx, group); err != nil {
+		s.log.Error("management: update group failed", zap.Int64("group_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return &dto.UserGroupItem{
@@ -414,6 +450,7 @@ func (s *managementService) UpdateGroup(ctx context.Context, id int64, req *dto.
 func (s *managementService) DeleteGroup(ctx context.Context, id int64) error {
 	group, err := s.adminRepo.GetGroupByID(ctx, id)
 	if err != nil {
+		s.log.Error("management: get group by id for delete failed", zap.Int64("group_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if group == nil {
@@ -424,6 +461,7 @@ func (s *managementService) DeleteGroup(ctx context.Context, id int64) error {
 		return errcode.InsufficientPermission
 	}
 	if err := s.adminRepo.SoftDeleteGroup(ctx, id); err != nil {
+		s.log.Error("management: soft delete group failed", zap.Int64("group_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return nil
@@ -439,6 +477,7 @@ func (s *managementService) ListUsers(ctx context.Context, req *dto.UserListRequ
 		Limit:   req.GetPageSize(),
 	})
 	if err != nil {
+		s.log.Error("management: list users failed", zap.Error(err))
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	out := make([]dto.UserItem, 0, len(items))
@@ -459,6 +498,7 @@ func (s *managementService) ListUsers(ctx context.Context, req *dto.UserListRequ
 func (s *managementService) UpdateUser(ctx context.Context, id int64, req *dto.UpdateUserRequest) (*dto.UserItem, error) {
 	u, err := s.adminRepo.GetUserByID(ctx, id)
 	if err != nil {
+		s.log.Error("management: get user by id for update failed", zap.Int64("user_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if u == nil {
@@ -474,6 +514,7 @@ func (s *managementService) UpdateUser(ctx context.Context, id int64, req *dto.U
 		u.Status = *req.Status
 	}
 	if err := s.adminRepo.UpdateUser(ctx, u); err != nil {
+		s.log.Error("management: update user failed", zap.Int64("user_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return &dto.UserItem{
@@ -490,6 +531,7 @@ func (s *managementService) UpdateUser(ctx context.Context, id int64, req *dto.U
 func (s *managementService) ResetUserPassword(ctx context.Context, id int64, req *dto.ResetUserPasswordRequest) error {
 	u, err := s.adminRepo.GetUserByID(ctx, id)
 	if err != nil {
+		s.log.Error("management: get user by id for reset password failed", zap.Int64("user_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if u == nil {
@@ -497,10 +539,12 @@ func (s *managementService) ResetUserPassword(ctx context.Context, id int64, req
 	}
 	hash, err := crypto.HashPassword(req.Password)
 	if err != nil {
+		s.log.Error("management: hash password for reset user password failed", zap.Int64("user_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.InternalError, err)
 	}
 	u.Password = hash
 	if err := s.adminRepo.UpdateUser(ctx, u); err != nil {
+		s.log.Error("management: update user for reset password failed", zap.Int64("user_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return nil
@@ -509,12 +553,14 @@ func (s *managementService) ResetUserPassword(ctx context.Context, id int64, req
 func (s *managementService) DeleteUser(ctx context.Context, id int64) error {
 	u, err := s.adminRepo.GetUserByID(ctx, id)
 	if err != nil {
+		s.log.Error("management: get user by id for delete failed", zap.Int64("user_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if u == nil {
 		return errcode.UserNotFound
 	}
 	if err := s.adminRepo.SoftDeleteUser(ctx, id); err != nil {
+		s.log.Error("management: soft delete user failed", zap.Int64("user_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return nil
@@ -529,6 +575,7 @@ func (s *managementService) ListUserLoginLogs(ctx context.Context, userID int64,
 func (s *managementService) ListBanners(ctx context.Context, offset, limit int) ([]dto.BannerItem, int, error) {
 	items, total, err := s.userRepo.ListAllBanners(ctx, offset, limit)
 	if err != nil {
+		s.log.Error("management: list banners failed", zap.Error(err))
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	out := make([]dto.BannerItem, 0, len(items))
@@ -552,6 +599,7 @@ func (s *managementService) CreateBanner(ctx context.Context, req *dto.CreateBan
 		Status:  status,
 	}
 	if err := s.userRepo.CreateBanner(ctx, b); err != nil {
+		s.log.Error("management: create banner failed", zap.String("title", b.Title), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return toBannerItem(b), nil
@@ -560,6 +608,7 @@ func (s *managementService) CreateBanner(ctx context.Context, req *dto.CreateBan
 func (s *managementService) UpdateBanner(ctx context.Context, id int64, req *dto.UpdateBannerRequest) (*dto.BannerItem, error) {
 	b, err := s.userRepo.GetBanner(ctx, id)
 	if err != nil {
+		s.log.Error("management: get banner for update failed", zap.Int64("banner_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if b == nil {
@@ -584,6 +633,7 @@ func (s *managementService) UpdateBanner(ctx context.Context, id int64, req *dto
 		b.Status = *req.Status
 	}
 	if err := s.userRepo.UpdateBanner(ctx, b); err != nil {
+		s.log.Error("management: update banner failed", zap.Int64("banner_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return toBannerItem(b), nil
@@ -592,12 +642,14 @@ func (s *managementService) UpdateBanner(ctx context.Context, id int64, req *dto
 func (s *managementService) DeleteBanner(ctx context.Context, id int64) error {
 	b, err := s.userRepo.GetBanner(ctx, id)
 	if err != nil {
+		s.log.Error("management: get banner for delete failed", zap.Int64("banner_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if b == nil {
 		return errcode.BannerNotFound
 	}
 	if err := s.userRepo.DeleteBanner(ctx, id); err != nil {
+		s.log.Error("management: delete banner failed", zap.Int64("banner_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return nil

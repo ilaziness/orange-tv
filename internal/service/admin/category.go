@@ -11,6 +11,7 @@ import (
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
+	"go.uber.org/zap"
 )
 
 // CategoryService manages categories.
@@ -24,19 +25,24 @@ type CategoryService interface {
 type categoryService struct {
 	repo  repository.CategoryRepository
 	cache cache.Cache
+	log   *zap.Logger
 }
 
 // NewCategoryService creates a CategoryService.
-func NewCategoryService(repo repository.CategoryRepository, c cache.Cache) CategoryService {
+func NewCategoryService(repo repository.CategoryRepository, c cache.Cache, log *zap.Logger) CategoryService {
 	if c == nil {
 		c = cache.NewNopCache()
 	}
-	return &categoryService{repo: repo, cache: c}
+	if log == nil {
+		log = zap.NewNop()
+	}
+	return &categoryService{repo: repo, cache: c, log: log}
 }
 
 func (s *categoryService) ListTree(ctx context.Context, onlyEnabled bool) ([]shareddto.CategoryResponse, error) {
 	items, err := s.repo.List(ctx, onlyEnabled)
 	if err != nil {
+		s.log.Error("category: list failed", zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return buildCategoryTree(items), nil
@@ -49,6 +55,7 @@ func (s *categoryService) Create(ctx context.Context, req *dto.CreateCategoryReq
 	}
 	exists, err := s.repo.ExistsName(ctx, name, 0)
 	if err != nil {
+		s.log.Error("category: check name exists failed", zap.String("name", name), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if exists {
@@ -57,6 +64,7 @@ func (s *categoryService) Create(ctx context.Context, req *dto.CreateCategoryReq
 	if req.ParentID > 0 {
 		parent, err := s.repo.GetByID(ctx, int64(req.ParentID))
 		if err != nil {
+			s.log.Error("category: get parent by id failed", zap.Uint64("parent_id", req.ParentID), zap.Error(err))
 			return nil, errcode.Wrap(errcode.DatabaseError, err)
 		}
 		if parent == nil {
@@ -75,6 +83,7 @@ func (s *categoryService) Create(ctx context.Context, req *dto.CreateCategoryReq
 		Status:    status,
 	}
 	if err := s.repo.Create(ctx, item); err != nil {
+		s.log.Error("category: create failed", zap.String("name", name), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	s.invalidateCaches(ctx)
@@ -84,6 +93,7 @@ func (s *categoryService) Create(ctx context.Context, req *dto.CreateCategoryReq
 func (s *categoryService) Update(ctx context.Context, id int64, req *dto.UpdateCategoryRequest) (*shareddto.CategoryResponse, error) {
 	item, err := s.repo.GetByID(ctx, id)
 	if err != nil {
+		s.log.Error("category: get by id failed", zap.Int64("category_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if item == nil {
@@ -97,6 +107,7 @@ func (s *categoryService) Update(ctx context.Context, id int64, req *dto.UpdateC
 		}
 		exists, err := s.repo.ExistsName(ctx, name, id)
 		if err != nil {
+			s.log.Error("category: check name exists for update failed", zap.Int64("category_id", id), zap.String("name", name), zap.Error(err))
 			return nil, errcode.Wrap(errcode.DatabaseError, err)
 		}
 		if exists {
@@ -112,6 +123,7 @@ func (s *categoryService) Update(ctx context.Context, id int64, req *dto.UpdateC
 		if parentID > 0 {
 			parent, err := s.repo.GetByID(ctx, int64(parentID))
 			if err != nil {
+				s.log.Error("category: get parent for update failed", zap.Int64("category_id", id), zap.Uint64("parent_id", parentID), zap.Error(err))
 				return nil, errcode.Wrap(errcode.DatabaseError, err)
 			}
 			if parent == nil {
@@ -120,6 +132,7 @@ func (s *categoryService) Update(ctx context.Context, id int64, req *dto.UpdateC
 			// prevent cycle: new parent cannot be a descendant of current node
 			all, err := s.repo.List(ctx, false)
 			if err != nil {
+				s.log.Error("category: list for cycle check failed", zap.Int64("category_id", id), zap.Error(err))
 				return nil, errcode.Wrap(errcode.DatabaseError, err)
 			}
 			if isDescendant(all, uint64(id), parentID) {
@@ -135,6 +148,7 @@ func (s *categoryService) Update(ctx context.Context, id int64, req *dto.UpdateC
 		item.Status = *req.Status
 	}
 	if err := s.repo.Update(ctx, item); err != nil {
+		s.log.Error("category: update failed", zap.Int64("category_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	s.invalidateCaches(ctx)
@@ -144,6 +158,7 @@ func (s *categoryService) Update(ctx context.Context, id int64, req *dto.UpdateC
 func (s *categoryService) Delete(ctx context.Context, id int64) error {
 	item, err := s.repo.GetByID(ctx, id)
 	if err != nil {
+		s.log.Error("category: get by id for delete failed", zap.Int64("category_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if item == nil {
@@ -151,6 +166,7 @@ func (s *categoryService) Delete(ctx context.Context, id int64) error {
 	}
 	children, err := s.repo.CountChildren(ctx, id)
 	if err != nil {
+		s.log.Error("category: count children failed", zap.Int64("category_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if children > 0 {
@@ -158,12 +174,14 @@ func (s *categoryService) Delete(ctx context.Context, id int64) error {
 	}
 	videos, err := s.repo.CountVideos(ctx, id)
 	if err != nil {
+		s.log.Error("category: count videos failed", zap.Int64("category_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if videos > 0 {
 		return errcode.CategoryHasVideos
 	}
 	if err := s.repo.SoftDelete(ctx, id); err != nil {
+		s.log.Error("category: soft delete failed", zap.Int64("category_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	s.invalidateCaches(ctx)

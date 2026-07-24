@@ -9,6 +9,7 @@ import (
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
+	"go.uber.org/zap"
 )
 
 const categoryTreeCacheKey = "category:tree:client"
@@ -22,14 +23,18 @@ type CategoryService interface {
 type categoryService struct {
 	repo  repository.CategoryRepository
 	cache cache.Cache
+	log   *zap.Logger
 }
 
 // NewCategoryService creates a client CategoryService.
-func NewCategoryService(repo repository.CategoryRepository, c cache.Cache) CategoryService {
+func NewCategoryService(repo repository.CategoryRepository, c cache.Cache, log *zap.Logger) CategoryService {
 	if c == nil {
 		c = cache.NewNopCache()
 	}
-	return &categoryService{repo: repo, cache: c}
+	if log == nil {
+		log = zap.NewNop()
+	}
+	return &categoryService{repo: repo, cache: c, log: log}
 }
 
 func (s *categoryService) ListTree(ctx context.Context) ([]shareddto.CategoryResponse, error) {
@@ -40,6 +45,7 @@ func (s *categoryService) ListTree(ctx context.Context) ([]shareddto.CategoryRes
 	}
 	items, err := s.repo.List(ctx, true)
 	if err != nil {
+		s.log.Error("client category: list tree failed", zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	tree := buildCategoryTree(items)

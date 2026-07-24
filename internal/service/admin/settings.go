@@ -12,6 +12,7 @@ import (
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
+	"go.uber.org/zap"
 )
 
 const (
@@ -41,14 +42,18 @@ type ResourceConfig struct {
 type settingsService struct {
 	repo  repository.SettingsRepository
 	cache cache.Cache
+	log   *zap.Logger
 }
 
 // NewSettingsService creates a SettingsService.
-func NewSettingsService(repo repository.SettingsRepository, c cache.Cache) SettingsService {
+func NewSettingsService(repo repository.SettingsRepository, c cache.Cache, log *zap.Logger) SettingsService {
 	if c == nil {
 		c = cache.NewNopCache()
 	}
-	return &settingsService{repo: repo, cache: c}
+	if log == nil {
+		log = zap.NewNop()
+	}
+	return &settingsService{repo: repo, cache: c, log: log}
 }
 
 func (s *settingsService) Get(ctx context.Context) (*admindto.SettingsResponse, error) {
@@ -188,6 +193,7 @@ func (s *settingsService) Update(ctx context.Context, req *admindto.UpdateSettin
 		return nil, errcode.WithMessage(errcode.ParamError, "无更新内容")
 	}
 	if err := s.repo.UpsertMany(ctx, upserts); err != nil {
+		s.log.Error("settings: upsert many failed", zap.Int("count", len(upserts)), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	s.InvalidateCache(ctx)
@@ -207,6 +213,7 @@ func (s *settingsService) loadMap(ctx context.Context) (map[string]model.SystemS
 	}
 	items, err := s.repo.ListAll(ctx)
 	if err != nil {
+		s.log.Error("settings: list all failed", zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	m := make(map[string]model.SystemSettings, len(items))

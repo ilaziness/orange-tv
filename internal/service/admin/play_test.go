@@ -185,7 +185,7 @@ func TestPlayService_CreateEpisodeRestoresSoftDeleted(t *testing.T) {
 	playRepo.episodes[9] = &model.PlayEpisodes{
 		ID: 9, VideoID: 1, SourceID: 1, EpisodeNumber: 1, Title: "旧", PlayURL: "old", Format: "hls", DeletedAt: &now,
 	}
-	svc := NewPlayService(playRepo, &videoRepoStub{videos: map[uint64]*model.Videos{1: {ID: 1, Title: "v"}}})
+	svc := NewPlayService(playRepo, &videoRepoStub{videos: map[uint64]*model.Videos{1: {ID: 1, Title: "v"}}}, nil)
 
 	resp, err := svc.CreateEpisode(context.Background(), &dto.CreatePlayEpisodeRequest{
 		SourceID: 1, VideoID: 1, EpisodeNumber: 1, PlayURL: "https://example.com/1.m3u8", Format: "hls",
@@ -202,7 +202,7 @@ func TestPlayService_CreateEpisodeRejectsActiveDuplicate(t *testing.T) {
 	playRepo.episodes[9] = &model.PlayEpisodes{
 		ID: 9, VideoID: 1, SourceID: 1, EpisodeNumber: 1, Title: "旧", PlayURL: "old", Format: "hls",
 	}
-	svc := NewPlayService(playRepo, &videoRepoStub{videos: map[uint64]*model.Videos{1: {ID: 1, Title: "v"}}})
+	svc := NewPlayService(playRepo, &videoRepoStub{videos: map[uint64]*model.Videos{1: {ID: 1, Title: "v"}}}, nil)
 
 	_, err := svc.CreateEpisode(context.Background(), &dto.CreatePlayEpisodeRequest{
 		SourceID: 1, VideoID: 1, EpisodeNumber: 1, PlayURL: "https://example.com/1.m3u8", Format: "hls",

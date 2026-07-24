@@ -9,6 +9,7 @@ import (
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
+	"go.uber.org/zap"
 )
 
 // LiveService provides public live channel queries.
@@ -18,11 +19,15 @@ type LiveService interface {
 
 type liveService struct {
 	repo repository.LiveRepository
+	log  *zap.Logger
 }
 
 // NewLiveService creates a client LiveService.
-func NewLiveService(repo repository.LiveRepository) LiveService {
-	return &liveService{repo: repo}
+func NewLiveService(repo repository.LiveRepository, log *zap.Logger) LiveService {
+	if log == nil {
+		log = zap.NewNop()
+	}
+	return &liveService{repo: repo, log: log}
 }
 
 func (s *liveService) List(ctx context.Context, req *clientdto.LiveListRequest) ([]shareddto.LiveChannelItem, int, error) {
@@ -33,6 +38,7 @@ func (s *liveService) List(ctx context.Context, req *clientdto.LiveListRequest) 
 		Limit:      req.GetLimit(),
 	})
 	if err != nil {
+		s.log.Error("client live: list failed", zap.Error(err))
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return mapLiveItems(items), total, nil

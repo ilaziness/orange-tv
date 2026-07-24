@@ -8,6 +8,7 @@ import (
 	clientdto "github.com/ilaziness/orange-tv/internal/dto/client"
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/repository"
+	"go.uber.org/zap"
 )
 
 // BannerService provides client banner queries.
@@ -17,17 +18,22 @@ type BannerService interface {
 
 type bannerService struct {
 	userRepo repository.UserFeatureRepository
+	log      *zap.Logger
 }
 
 // NewBannerService creates a client BannerService.
-func NewBannerService(userRepo repository.UserFeatureRepository) BannerService {
-	return &bannerService{userRepo: userRepo}
+func NewBannerService(userRepo repository.UserFeatureRepository, log *zap.Logger) BannerService {
+	if log == nil {
+		log = zap.NewNop()
+	}
+	return &bannerService{userRepo: userRepo, log: log}
 }
 
 func (s *bannerService) ListBanners(ctx context.Context) ([]clientdto.BannerItem, error) {
 	status := constant.StatusEnabled
 	items, err := s.userRepo.ListBanners(ctx, &status)
 	if err != nil {
+		s.log.Error("client banner: list failed", zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	out := make([]clientdto.BannerItem, 0, len(items))

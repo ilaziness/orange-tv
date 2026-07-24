@@ -23,7 +23,7 @@ func TestPlayService_UpdateEpisodeReclaimsSoftDeletedKey(t *testing.T) {
 	playRepo.episodes[2] = &model.PlayEpisodes{
 		ID: 2, VideoID: 1, SourceID: 1, EpisodeNumber: 1, Title: "E1-old", PlayURL: "b", Format: "hls", DeletedAt: &now,
 	}
-	svc := NewPlayService(playRepo, &videoRepoStub{videos: map[uint64]*model.Videos{1: {ID: 1, Title: "v"}}})
+	svc := NewPlayService(playRepo, &videoRepoStub{videos: map[uint64]*model.Videos{1: {ID: 1, Title: "v"}}}, nil)
 
 	epNum := uint32(1)
 	resp, err := svc.UpdateEpisode(context.Background(), 1, &dto.UpdatePlayEpisodeRequest{EpisodeNumber: &epNum})
@@ -43,7 +43,7 @@ func TestPlayService_UpdateEpisodeRejectsActiveKeyConflict(t *testing.T) {
 	playRepo.episodes[2] = &model.PlayEpisodes{
 		ID: 2, VideoID: 1, SourceID: 1, EpisodeNumber: 2, Title: "E2", PlayURL: "b", Format: "hls",
 	}
-	svc := NewPlayService(playRepo, &videoRepoStub{videos: map[uint64]*model.Videos{1: {ID: 1, Title: "v"}}})
+	svc := NewPlayService(playRepo, &videoRepoStub{videos: map[uint64]*model.Videos{1: {ID: 1, Title: "v"}}}, nil)
 
 	epNum := uint32(1)
 	_, err := svc.UpdateEpisode(context.Background(), 2, &dto.UpdatePlayEpisodeRequest{EpisodeNumber: &epNum})

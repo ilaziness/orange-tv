@@ -15,6 +15,7 @@ import (
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
+	"go.uber.org/zap"
 )
 
 // LoginMeta carries request client info for login audit.
@@ -36,15 +37,19 @@ type authService struct {
 	jwtMgr    *auth.JWTManager
 	accessTTL int
 	audit     *audit.Recorder
+	log       *zap.Logger
 }
 
 // NewAuthService creates an AuthService.
-func NewAuthService(adminRepo repository.AdminRepository, jwtMgr *auth.JWTManager, cfg *config.Config, recorder *audit.Recorder) AuthService {
+func NewAuthService(adminRepo repository.AdminRepository, jwtMgr *auth.JWTManager, cfg *config.Config, recorder *audit.Recorder, log *zap.Logger) AuthService {
 	ttl := 7200
 	if cfg != nil && cfg.JWT.AccessTokenTTL > 0 {
 		ttl = cfg.JWT.AccessTokenTTL
 	}
-	return &authService{adminRepo: adminRepo, jwtMgr: jwtMgr, accessTTL: ttl, audit: recorder}
+	if log == nil {
+		log = zap.NewNop()
+	}
+	return &authService{adminRepo: adminRepo, jwtMgr: jwtMgr, accessTTL: ttl, audit: recorder, log: log}
 }
 
 func (s *authService) Login(ctx context.Context, req *dto.LoginRequest, meta *LoginMeta) (*dto.LoginResponse, error) {
@@ -69,6 +74,7 @@ func (s *authService) Login(ctx context.Context, req *dto.LoginRequest, meta *Lo
 	username := strings.TrimSpace(req.Username)
 	admin, err := s.adminRepo.GetByUsername(ctx, username)
 	if err != nil {
+		s.log.Error("auth: get admin by username failed", zap.String("username", username), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if admin == nil {
@@ -86,6 +92,7 @@ func (s *authService) Login(ctx context.Context, req *dto.LoginRequest, meta *Lo
 
 	group, err := s.adminRepo.GetGroupByID(ctx, int64(admin.GroupID))
 	if err != nil {
+		s.log.Error("auth: get group by id failed", zap.Int64("admin_id", int64(admin.ID)), zap.Uint64("group_id", admin.GroupID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if group == nil || group.Name != constant.RoleSuperAdmin {
@@ -95,10 +102,12 @@ func (s *authService) Login(ctx context.Context, req *dto.LoginRequest, meta *Lo
 
 	token, err := s.jwtMgr.GenerateAccessToken(int64(admin.ID))
 	if err != nil {
+		s.log.Error("auth: generate access token failed", zap.Int64("admin_id", int64(admin.ID)), zap.Error(err))
 		return nil, errcode.Wrap(errcode.InternalError, err)
 	}
 	now := time.Now()
 	if err := s.adminRepo.UpdateLastLogin(ctx, int64(admin.ID), now); err != nil {
+		s.log.Error("auth: update last login failed", zap.Int64("admin_id", int64(admin.ID)), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	recordOK(int64(admin.ID), username)
@@ -125,6 +134,7 @@ func (s *authService) EnsureSuperAdmin(ctx context.Context, adminID int64) (*mod
 	}
 	admin, err := s.adminRepo.GetByID(ctx, adminID)
 	if err != nil {
+		s.log.Error("auth: get admin by id failed", zap.Int64("admin_id", adminID), zap.Error(err))
 		return nil, nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if admin == nil {
@@ -135,6 +145,7 @@ func (s *authService) EnsureSuperAdmin(ctx context.Context, adminID int64) (*mod
 	}
 	group, err := s.adminRepo.GetGroupByID(ctx, int64(admin.GroupID))
 	if err != nil {
+		s.log.Error("auth: get group by id for super admin check failed", zap.Int64("admin_id", adminID), zap.Uint64("group_id", admin.GroupID), zap.Error(err))
 		return nil, nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if group == nil || group.Name != constant.RoleSuperAdmin {

@@ -131,7 +131,7 @@ func TestAuthService_LoginSuccess(t *testing.T) {
 		},
 	}
 	jwtMgr := auth.NewJWTManager("test-secret-key", 3600, 86400)
-	svc := NewAuthService(repo, jwtMgr, &config.Config{JWT: config.JWTConfig{AccessTokenTTL: 3600}}, nil)
+	svc := NewAuthService(repo, jwtMgr, &config.Config{JWT: config.JWTConfig{AccessTokenTTL: 3600}}, nil, nil)
 
 	resp, err := svc.Login(context.Background(), &dto.LoginRequest{Username: "admin", Password: "secret12"}, nil)
 	require.NoError(t, err)
@@ -151,7 +151,7 @@ func TestAuthService_LoginRejectsWrongPassword(t *testing.T) {
 		},
 	}
 	jwtMgr := auth.NewJWTManager("test-secret-key", 3600, 86400)
-	svc := NewAuthService(repo, jwtMgr, &config.Config{JWT: config.JWTConfig{AccessTokenTTL: 3600}}, nil)
+	svc := NewAuthService(repo, jwtMgr, &config.Config{JWT: config.JWTConfig{AccessTokenTTL: 3600}}, nil, nil)
 
 	_, err = svc.Login(context.Background(), &dto.LoginRequest{Username: "admin", Password: "bad-pass"}, nil)
 	require.Error(t, err)
@@ -169,7 +169,7 @@ func TestAuthService_EnsureSuperAdminRejectsDisabled(t *testing.T) {
 			1: {ID: 1, Name: constant.RoleSuperAdmin},
 		},
 	}
-	svc := NewAuthService(repo, nil, nil, nil)
+	svc := NewAuthService(repo, nil, nil, nil, nil)
 	_, _, err := svc.EnsureSuperAdmin(context.Background(), 1)
 	require.Error(t, err)
 	code, ok := errcode.As(err)

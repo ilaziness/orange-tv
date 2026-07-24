@@ -18,7 +18,7 @@ func TestFetchListUsesListMode(t *testing.T) {
 	}))
 	t.Cleanup(srv.Close)
 
-	f := NewFetcher()
+	f := NewFetcher(nil)
 	body, err := f.FetchList(t.Context(), srv.URL+"/api.php/provide/vod/?ac=detail&pg=2&h=24", "k1", 1, "today")
 	require.NoError(t, err)
 	require.Contains(t, string(body), `"class"`)
@@ -43,7 +43,7 @@ func TestFetchDetailUsesDetailMode(t *testing.T) {
 	}))
 	t.Cleanup(srv.Close)
 
-	f := NewFetcher()
+	f := NewFetcher(nil)
 	_, err := f.FetchDetail(t.Context(), srv.URL+"/api.php/provide/vod/", "", []int64{101, 202, 303})
 	require.NoError(t, err)
 	require.Equal(t, "detail", gotAC)

@@ -33,13 +33,16 @@ func NewEngine(
 	playRepo repository.PlayRepository,
 	log *zap.Logger,
 ) *Engine {
+	if log == nil {
+		log = zap.NewNop()
+	}
 	return &Engine{
 		collectRepo:  collectRepo,
 		videoRepo:    videoRepo,
 		categoryRepo: categoryRepo,
 		metaRepo:     metaRepo,
 		playRepo:     playRepo,
-		fetcher:      NewFetcher(),
+		fetcher:      NewFetcher(log),
 		log:          log,
 	}
 }
@@ -65,6 +68,7 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRang
 
 	maps, err := e.collectRepo.ListCategories(ctx, int64(source.ID))
 	if err != nil {
+		e.log.Error("collect: list categories failed", zap.Int64("source_id", int64(source.ID)), zap.Error(err))
 		res.HasError = true
 		res.Message = err.Error()
 		return res
@@ -90,12 +94,14 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRang
 		}
 		body, err := e.fetcher.FetchList(ctx, source.CollectURL, source.APIKey, pageNo, dataRange)
 		if err != nil {
+			e.log.Error("collect: fetch list failed", zap.Int64("source_id", int64(source.ID)), zap.Int("page", pageNo), zap.Error(err))
 			res.HasError = true
 			res.Message = fmt.Sprintf("拉取列表第%d页失败: %v", pageNo, err)
 			return res
 		}
 		listPage, err := ParseAppleCMSList(body)
 		if err != nil {
+			e.log.Error("collect: parse list failed", zap.Int64("source_id", int64(source.ID)), zap.Int("page", pageNo), zap.Error(err))
 			res.HasError = true
 			res.Message = fmt.Sprintf("解析列表第%d页失败: %v", pageNo, err)
 			return res
@@ -146,12 +152,14 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRang
 
 		body, err := e.fetcher.FetchDetail(ctx, source.CollectURL, source.APIKey, batch)
 		if err != nil {
+			e.log.Error("collect: fetch detail failed", zap.Int64("source_id", int64(source.ID)), zap.Int("batch_start", i), zap.Int("batch_end", end), zap.Error(err))
 			res.HasError = true
 			res.Message = fmt.Sprintf("拉取详情失败(batch %d-%d): %v", i, end, err)
 			return res
 		}
 		page, err := ParseAppleCMSDetail(body)
 		if err != nil {
+			e.log.Error("collect: parse detail failed", zap.Int64("source_id", int64(source.ID)), zap.Int("batch_start", i), zap.Int("batch_end", end), zap.Error(err))
 			res.HasError = true
 			res.Message = fmt.Sprintf("解析详情失败(batch %d-%d): %v", i, end, err)
 			return res
@@ -175,20 +183,18 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRang
 			}
 
 			if err := e.upsertItem(ctx, source, catMap, item); err != nil {
-				if e.log != nil {
-					e.log.Warn("collect item failed",
-						zap.Int64("source_id", int64(source.ID)),
-						zap.String("title", item.Title),
-						zap.Error(err),
-					)
-				}
+				e.log.Warn("collect item failed",
+					zap.Int64("source_id", int64(source.ID)),
+					zap.String("title", item.Title),
+					zap.Error(err),
+				)
 				continue
 			}
 			pageCollected++
 		}
 
 		if logID > 0 && pageCollected > 0 {
-			if err := e.collectRepo.IncrementLogCount(ctx, logID, pageCollected); err != nil && e.log != nil {
+			if err := e.collectRepo.IncrementLogCount(ctx, logID, pageCollected); err != nil {
 				e.log.Warn("increment log count failed", zap.Error(err))
 			}
 		}

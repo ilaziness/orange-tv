@@ -10,6 +10,7 @@ import (
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
+	"go.uber.org/zap"
 )
 
 // LiveService manages live channels for admin.
@@ -23,11 +24,15 @@ type LiveService interface {
 
 type liveService struct {
 	repo repository.LiveRepository
+	log  *zap.Logger
 }
 
 // NewLiveService creates a LiveService.
-func NewLiveService(repo repository.LiveRepository) LiveService {
-	return &liveService{repo: repo}
+func NewLiveService(repo repository.LiveRepository, log *zap.Logger) LiveService {
+	if log == nil {
+		log = zap.NewNop()
+	}
+	return &liveService{repo: repo, log: log}
 }
 
 func (s *liveService) List(ctx context.Context, req *admindto.LiveListRequest) ([]shareddto.LiveChannelItem, int, error) {
@@ -39,6 +44,7 @@ func (s *liveService) List(ctx context.Context, req *admindto.LiveListRequest) (
 		Limit:    req.GetLimit(),
 	})
 	if err != nil {
+		s.log.Error("live: list failed", zap.Error(err))
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return mapLiveItems(items, true), total, nil
@@ -72,6 +78,7 @@ func (s *liveService) Create(ctx context.Context, req *admindto.CreateLiveReques
 		Status:      status,
 	}
 	if err := s.repo.Create(ctx, item); err != nil {
+		s.log.Error("live: create failed", zap.String("name", name), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	out := toLiveItem(item, true)
@@ -81,6 +88,7 @@ func (s *liveService) Create(ctx context.Context, req *admindto.CreateLiveReques
 func (s *liveService) Update(ctx context.Context, id int64, req *admindto.UpdateLiveRequest) (*shareddto.LiveChannelItem, error) {
 	item, err := s.repo.GetByID(ctx, id)
 	if err != nil {
+		s.log.Error("live: get by id failed", zap.Int64("live_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if item == nil {
@@ -121,6 +129,7 @@ func (s *liveService) Update(ctx context.Context, id int64, req *admindto.Update
 		item.Status = *req.Status
 	}
 	if err := s.repo.Update(ctx, item); err != nil {
+		s.log.Error("live: update failed", zap.Int64("live_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	out := toLiveItem(item, true)
@@ -130,12 +139,14 @@ func (s *liveService) Update(ctx context.Context, id int64, req *admindto.Update
 func (s *liveService) Delete(ctx context.Context, id int64) error {
 	item, err := s.repo.GetByID(ctx, id)
 	if err != nil {
+		s.log.Error("live: get by id for delete failed", zap.Int64("live_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if item == nil {
 		return errcode.LiveChannelNotFound
 	}
 	if err := s.repo.Delete(ctx, id); err != nil {
+		s.log.Error("live: delete failed", zap.Int64("live_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return nil
@@ -173,11 +184,13 @@ func (s *liveService) SyncFromSource(ctx context.Context) (*shareddto.LiveSyncRe
 	fetcher := &defaultLiveSourceFetcher{url: liveSourceURL}
 	entries, err := fetcher.Fetch(ctx)
 	if err != nil {
+		s.log.Error("live: fetch from source failed", zap.String("url", liveSourceURL), zap.Error(err))
 		return nil, errcode.WithMessage(errcode.LiveSyncFailed, err.Error())
 	}
 
 	existing, err := s.repo.ListAll(ctx)
 	if err != nil {
+		s.log.Error("live: list all for sync failed", zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 
@@ -197,6 +210,7 @@ func (s *liveService) SyncFromSource(ctx context.Context) (*shareddto.LiveSyncRe
 			item.StreamURL = entry.StreamURL
 			item.SortOrder = entry.SortOrder
 			if err := s.repo.Update(ctx, item); err != nil {
+				s.log.Error("live: sync update failed", zap.String("name", entry.Name), zap.Error(err))
 				return nil, errcode.Wrap(errcode.DatabaseError, err)
 			}
 		} else {
@@ -217,10 +231,12 @@ func (s *liveService) SyncFromSource(ctx context.Context) (*shareddto.LiveSyncRe
 	}
 
 	if err := s.repo.BatchCreate(ctx, toCreate); err != nil {
+		s.log.Error("live: sync batch create failed", zap.Int("count", len(toCreate)), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 
 	if err := s.repo.DeleteByIDs(ctx, toDeleteIDs); err != nil {
+		s.log.Error("live: sync delete by ids failed", zap.Int("count", len(toDeleteIDs)), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 

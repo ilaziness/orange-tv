@@ -74,6 +74,9 @@ func NewCollectService(
 	if c == nil {
 		c = cache.NewNopCache()
 	}
+	if log == nil {
+		log = zap.NewNop()
+	}
 	return &collectService{
 		repo:         repo,
 		playRepo:     playRepo,
@@ -93,6 +96,7 @@ func (s *collectService) ListSources(ctx context.Context, req *admindto.CollectS
 		Limit:  req.GetLimit(),
 	})
 	if err != nil {
+		s.log.Error("collect: list sources failed", zap.Error(err))
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	// batch query play source names
@@ -134,6 +138,7 @@ func (s *collectService) CreateSource(ctx context.Context, req *admindto.CreateC
 		DataRange:       strings.TrimSpace(req.DataRange),
 	}
 	if err := s.repo.CreateSource(ctx, m); err != nil {
+		s.log.Error("collect: create source failed", zap.String("name", m.Name), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	out := toCollectSource(m)
@@ -148,6 +153,7 @@ func (s *collectService) CreateSource(ctx context.Context, req *admindto.CreateC
 func (s *collectService) UpdateSource(ctx context.Context, id int64, req *admindto.UpdateCollectSourceRequest) (*shareddto.CollectSourceItem, error) {
 	m, err := s.repo.GetSource(ctx, id)
 	if err != nil {
+		s.log.Error("collect: get source failed", zap.Int64("source_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if m == nil {
@@ -190,6 +196,7 @@ func (s *collectService) UpdateSource(ctx context.Context, id int64, req *admind
 		return nil, err
 	}
 	if err := s.repo.UpdateSource(ctx, m); err != nil {
+		s.log.Error("collect: update source failed", zap.Int64("source_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	out := toCollectSource(m)
@@ -204,6 +211,7 @@ func (s *collectService) UpdateSource(ctx context.Context, id int64, req *admind
 func (s *collectService) DeleteSource(ctx context.Context, id int64) error {
 	m, err := s.repo.GetSource(ctx, id)
 	if err != nil {
+		s.log.Error("collect: get source for delete failed", zap.Int64("source_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if m == nil {
@@ -211,6 +219,7 @@ func (s *collectService) DeleteSource(ctx context.Context, id int64) error {
 	}
 	s.stopJob(id)
 	if err := s.repo.SoftDeleteSource(ctx, id); err != nil {
+		s.log.Error("collect: delete source failed", zap.Int64("source_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return s.ReloadScheduler(ctx)
@@ -222,6 +231,7 @@ func (s *collectService) ListCategories(ctx context.Context, sourceID int64) ([]
 	}
 	items, err := s.repo.ListCategories(ctx, sourceID)
 	if err != nil {
+		s.log.Error("collect: list categories failed", zap.Int64("source_id", sourceID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	out := make([]shareddto.CollectCategoryMapItem, 0, len(items))
@@ -252,6 +262,7 @@ func (s *collectService) SetCategories(ctx context.Context, sourceID int64, req 
 		seen[in.ExternalCategoryID] = true
 		cat, err := s.categoryRepo.GetByID(ctx, int64(in.CategoryID))
 		if err != nil {
+			s.log.Error("collect: get category by id failed", zap.Uint64("category_id", in.CategoryID), zap.Error(err))
 			return nil, errcode.Wrap(errcode.DatabaseError, err)
 		}
 		if cat == nil {
@@ -263,6 +274,7 @@ func (s *collectService) SetCategories(ctx context.Context, sourceID int64, req 
 		})
 	}
 	if err := s.repo.ReplaceCategories(ctx, sourceID, rows); err != nil {
+		s.log.Error("collect: replace categories failed", zap.Int64("source_id", sourceID), zap.Int("count", len(rows)), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return s.ListCategories(ctx, sourceID)
@@ -305,6 +317,7 @@ func (s *collectService) ListLogs(ctx context.Context, req *admindto.CollectLogL
 		Limit:    req.GetLimit(),
 	})
 	if err != nil {
+		s.log.Error("collect: list logs failed", zap.Uint64("source_id", req.SourceID), zap.Error(err))
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	// batch query source names
@@ -350,7 +363,7 @@ func (s *collectService) runJob(ctx context.Context, source *model.CollectSource
 		SourceID: source.ID,
 		Status:   constant.CollectLogRunning,
 	}
-	if err := s.repo.CreateLog(context.Background(), logRow); err != nil && s.log != nil {
+	if err := s.repo.CreateLog(context.Background(), logRow); err != nil {
 		s.log.Error("create collect log failed", zap.Error(err))
 	}
 
@@ -367,13 +380,11 @@ func (s *collectService) runJob(ctx context.Context, source *model.CollectSource
 		_ = s.repo.UpdateLog(context.Background(), logRow)
 	}
 	_ = s.repo.TouchLastCollect(context.Background(), int64(source.ID), time.Now())
-	if s.log != nil {
-		s.log.Info("collect finished",
-			zap.Int64("source_id", int64(source.ID)),
-			zap.Uint8("status", logRow.Status),
-			zap.Int("collected", res.CollectCount),
-		)
-	}
+	s.log.Info("collect finished",
+		zap.Int64("source_id", int64(source.ID)),
+		zap.Uint8("status", logRow.Status),
+		zap.Int("collected", res.CollectCount),
+	)
 	if res.CollectCount > 0 {
 		_ = s.cache.Clear(context.Background())
 	}
@@ -425,6 +436,7 @@ func (s *collectService) ReloadScheduler(ctx context.Context) error {
 
 	sources, err := s.repo.ListEnabledCronSources(ctx)
 	if err != nil {
+		s.log.Error("collect: list enabled cron sources failed", zap.Error(err))
 		return err
 	}
 	parser := collectCronParser()
@@ -435,9 +447,7 @@ func (s *collectService) ReloadScheduler(ctx context.Context) error {
 			continue
 		}
 		if _, err := parser.Parse(expr); err != nil {
-			if s.log != nil {
-				s.log.Warn("skip invalid cron", zap.Int64("source_id", int64(src.ID)), zap.Error(err))
-			}
+			s.log.Warn("skip invalid cron", zap.Int64("source_id", int64(src.ID)), zap.Error(err))
 			continue
 		}
 		sourceID := src.ID
@@ -448,9 +458,7 @@ func (s *collectService) ReloadScheduler(ctx context.Context) error {
 		})
 		if err != nil {
 			s.mu.Unlock()
-			if s.log != nil {
-				s.log.Warn("add cron failed", zap.Int64("source_id", int64(sourceID)), zap.Error(err))
-			}
+			s.log.Warn("add cron failed", zap.Int64("source_id", int64(sourceID)), zap.Error(err))
 			continue
 		}
 		s.cronIDs[int64(sourceID)] = entryID
@@ -467,6 +475,7 @@ func (s *collectService) validateCollectPrecondition(ctx context.Context, source
 	}
 	maps, err := s.repo.ListCategories(ctx, int64(source.ID))
 	if err != nil {
+		s.log.Error("collect: list categories for precondition failed", zap.Int64("source_id", int64(source.ID)), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if len(maps) == 0 {
@@ -477,6 +486,7 @@ func (s *collectService) validateCollectPrecondition(ctx context.Context, source
 	}
 	playSrc, err := s.playRepo.GetSource(ctx, int64(source.PlaySourceID))
 	if err != nil {
+		s.log.Error("collect: get play source for precondition failed", zap.Uint64("play_source_id", source.PlaySourceID), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if playSrc == nil {
@@ -504,6 +514,7 @@ func (s *collectService) validateSourceInput(ctx context.Context, typ uint8, col
 	}
 	src, err := s.playRepo.GetSource(ctx, int64(playSourceID))
 	if err != nil {
+		s.log.Error("collect: get play source for validation failed", zap.Uint64("play_source_id", playSourceID), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if src == nil {
@@ -515,6 +526,7 @@ func (s *collectService) validateSourceInput(ctx context.Context, typ uint8, col
 func (s *collectService) requireSource(ctx context.Context, id int64) (*model.CollectSources, error) {
 	m, err := s.repo.GetSource(ctx, id)
 	if err != nil {
+		s.log.Error("collect: get source failed", zap.Int64("source_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if m == nil {
@@ -551,13 +563,15 @@ func (s *collectService) FetchRemoteCategories(ctx context.Context, sourceID int
 		return nil, errcode.CollectSourceNotAppleCMS
 	}
 	// Apple CMS class is returned on ac=list; use FetchList with dataRange="all" to get classes.
-	fetcher := collect.NewFetcher()
+	fetcher := collect.NewFetcher(s.log)
 	body, err := fetcher.FetchList(ctx, source.CollectURL, source.APIKey, 1, "all")
 	if err != nil {
+		s.log.Error("collect: fetch remote categories failed", zap.Int64("source_id", sourceID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.CollectFetchFailed, err)
 	}
 	listPage, err := collect.ParseAppleCMSList(body)
 	if err != nil {
+		s.log.Error("collect: parse remote categories failed", zap.Int64("source_id", sourceID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.CollectParseFailed, err)
 	}
 	items := make([]admindto.RemoteCategoryItem, 0, len(listPage.Classes))
@@ -591,6 +605,7 @@ func (s *collectService) EnableSchedule(ctx context.Context, sourceID int64) err
 	}
 	source.ScheduleEnabled = 1
 	if err := s.repo.UpdateSource(ctx, source); err != nil {
+		s.log.Error("collect: enable schedule failed", zap.Int64("source_id", sourceID), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return s.ReloadScheduler(ctx)
@@ -603,6 +618,7 @@ func (s *collectService) DisableSchedule(ctx context.Context, sourceID int64) er
 	}
 	source.ScheduleEnabled = 0
 	if err := s.repo.UpdateSource(ctx, source); err != nil {
+		s.log.Error("collect: disable schedule failed", zap.Int64("source_id", sourceID), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return s.ReloadScheduler(ctx)

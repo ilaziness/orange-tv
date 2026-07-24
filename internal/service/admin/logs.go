@@ -8,6 +8,7 @@ import (
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
+	"go.uber.org/zap"
 )
 
 // LogService queries login / system logs for admin.
@@ -18,11 +19,15 @@ type LogService interface {
 
 type logService struct {
 	repo repository.LogRepository
+	log  *zap.Logger
 }
 
 // NewLogService creates a LogService.
-func NewLogService(repo repository.LogRepository) LogService {
-	return &logService{repo: repo}
+func NewLogService(repo repository.LogRepository, log *zap.Logger) LogService {
+	if log == nil {
+		log = zap.NewNop()
+	}
+	return &logService{repo: repo, log: log}
 }
 
 func (s *logService) ListSystemLogs(ctx context.Context, req *admindto.SystemLogListRequest) ([]admindto.SystemLogItem, int, error) {
@@ -43,6 +48,7 @@ func (s *logService) ListSystemLogs(ctx context.Context, req *admindto.SystemLog
 		Limit:     req.GetLimit(),
 	})
 	if err != nil {
+		s.log.Error("logs: list system logs failed", zap.Error(err))
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	out := make([]admindto.SystemLogItem, 0, len(items))
@@ -70,6 +76,7 @@ func (s *logService) ListLoginLogs(ctx context.Context, req *admindto.LoginLogLi
 		Limit:     req.GetLimit(),
 	})
 	if err != nil {
+		s.log.Error("logs: list login logs failed", zap.Error(err))
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	out := make([]admindto.LoginLogItem, 0, len(items))

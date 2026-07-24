@@ -12,6 +12,7 @@ import (
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
+	"go.uber.org/zap"
 )
 
 // UserService handles client user auth, favorites, history, comments.
@@ -44,6 +45,7 @@ type userService struct {
 	videoRepo repository.VideoRepository
 	jwtMgr    *auth.JWTManager
 	accessTTL int
+	log       *zap.Logger
 }
 
 // NewUserService creates a client UserService.
@@ -53,9 +55,13 @@ func NewUserService(
 	videoRepo repository.VideoRepository,
 	jwtMgr *auth.JWTManager,
 	accessTTL int,
+	log *zap.Logger,
 ) UserService {
 	if accessTTL <= 0 {
 		accessTTL = 7200
+	}
+	if log == nil {
+		log = zap.NewNop()
 	}
 	return &userService{
 		adminRepo: adminRepo,
@@ -63,6 +69,7 @@ func NewUserService(
 		videoRepo: videoRepo,
 		jwtMgr:    jwtMgr,
 		accessTTL: accessTTL,
+		log:       log,
 	}
 }
 
@@ -72,6 +79,7 @@ func (s *userService) Register(ctx context.Context, req *clientdto.RegisterReque
 	username := strings.TrimSpace(req.Username)
 	exists, err := s.adminRepo.ExistsUserUsername(ctx, username)
 	if err != nil {
+		s.log.Error("client user: check username exists failed", zap.String("username", username), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if exists {
@@ -79,6 +87,7 @@ func (s *userService) Register(ctx context.Context, req *clientdto.RegisterReque
 	}
 	hash, err := crypto.HashPassword(req.Password)
 	if err != nil {
+		s.log.Error("client user: hash password for register failed", zap.String("username", username), zap.Error(err))
 		return nil, errcode.Wrap(errcode.InternalError, err)
 	}
 	u := &model.Users{
@@ -88,6 +97,7 @@ func (s *userService) Register(ctx context.Context, req *clientdto.RegisterReque
 		Status:   constant.StatusEnabled,
 	}
 	if err := s.adminRepo.CreateUser(ctx, u); err != nil {
+		s.log.Error("client user: create user failed", zap.String("username", username), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return toUserProfile(u), nil
@@ -100,6 +110,7 @@ func (s *userService) Login(ctx context.Context, req *clientdto.LoginRequest, ip
 	username := strings.TrimSpace(req.Username)
 	u, err := s.adminRepo.GetUserByUsername(ctx, username)
 	if err != nil {
+		s.log.Error("client user: get user by username for login failed", zap.String("username", username), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	userID := int64(0)
@@ -130,6 +141,7 @@ func (s *userService) Login(ctx context.Context, req *clientdto.LoginRequest, ip
 	}
 	token, err := s.jwtMgr.GenerateAccessTokenFor(int64(u.ID), auth.SubjectUser)
 	if err != nil {
+		s.log.Error("client user: generate access token failed", zap.Int64("user_id", int64(u.ID)), zap.Error(err))
 		return nil, errcode.Wrap(errcode.InternalError, err)
 	}
 	now := time.Now()
@@ -147,6 +159,7 @@ func (s *userService) Login(ctx context.Context, req *clientdto.LoginRequest, ip
 func (s *userService) Profile(ctx context.Context, userID int64) (*clientdto.Profile, error) {
 	u, err := s.adminRepo.GetUserByID(ctx, userID)
 	if err != nil {
+		s.log.Error("client user: get profile failed", zap.Int64("user_id", userID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if u == nil {
@@ -160,6 +173,7 @@ func (s *userService) Profile(ctx context.Context, userID int64) (*clientdto.Pro
 func (s *userService) ListFavorites(ctx context.Context, userID int64, req *clientdto.FavoriteListRequest) ([]clientdto.FavoriteItem, int, error) {
 	favs, total, err := s.userRepo.ListFavorites(ctx, userID, req.GetOffset(), req.GetPageSize())
 	if err != nil {
+		s.log.Error("client user: list favorites failed", zap.Int64("user_id", userID), zap.Error(err))
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	out := make([]clientdto.FavoriteItem, 0, len(favs))
@@ -183,6 +197,7 @@ func (s *userService) ListFavorites(ctx context.Context, userID int64, req *clie
 func (s *userService) AddFavorite(ctx context.Context, userID, videoID int64) error {
 	v, err := s.videoRepo.GetByID(ctx, uint64(videoID))
 	if err != nil {
+		s.log.Error("client user: get video for add favorite failed", zap.Int64("video_id", videoID), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if v == nil {
@@ -190,6 +205,7 @@ func (s *userService) AddFavorite(ctx context.Context, userID, videoID int64) er
 	}
 	existing, err := s.userRepo.GetFavorite(ctx, userID, videoID)
 	if err != nil {
+		s.log.Error("client user: get favorite failed", zap.Int64("user_id", userID), zap.Int64("video_id", videoID), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if existing != nil {
@@ -204,6 +220,7 @@ func (s *userService) AddFavorite(ctx context.Context, userID, videoID int64) er
 func (s *userService) RemoveFavorite(ctx context.Context, userID, videoID int64) error {
 	existing, err := s.userRepo.GetFavorite(ctx, userID, videoID)
 	if err != nil {
+		s.log.Error("client user: get favorite for remove failed", zap.Int64("user_id", userID), zap.Int64("video_id", videoID), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if existing == nil {
@@ -217,6 +234,7 @@ func (s *userService) RemoveFavorite(ctx context.Context, userID, videoID int64)
 func (s *userService) ListHistory(ctx context.Context, userID int64, req *clientdto.HistoryListRequest) ([]clientdto.HistoryItem, int, error) {
 	items, total, err := s.userRepo.ListHistory(ctx, userID, req.GetOffset(), req.GetPageSize())
 	if err != nil {
+		s.log.Error("client user: list history failed", zap.Int64("user_id", userID), zap.Error(err))
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	out := make([]clientdto.HistoryItem, 0, len(items))
@@ -242,6 +260,7 @@ func (s *userService) ListHistory(ctx context.Context, userID int64, req *client
 func (s *userService) UpsertHistory(ctx context.Context, userID int64, req *clientdto.UpsertHistoryRequest) error {
 	v, err := s.videoRepo.GetByID(ctx, req.VideoID)
 	if err != nil {
+		s.log.Error("client user: get video for upsert history failed", zap.Uint64("video_id", req.VideoID), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if v == nil {
@@ -272,6 +291,7 @@ func (s *userService) ClearHistory(ctx context.Context, userID int64) error {
 func (s *userService) ListComments(ctx context.Context, videoID int64, req *clientdto.CommentListRequest) ([]clientdto.CommentItem, int, error) {
 	comments, total, err := s.userRepo.ListComments(ctx, videoID, req.GetOffset(), req.GetPageSize())
 	if err != nil {
+		s.log.Error("client user: list comments failed", zap.Int64("video_id", videoID), zap.Error(err))
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	out := make([]clientdto.CommentItem, 0, len(comments))
@@ -298,6 +318,7 @@ func (s *userService) ListComments(ctx context.Context, videoID int64, req *clie
 func (s *userService) CreateComment(ctx context.Context, userID int64, req *clientdto.CreateCommentRequest) (*clientdto.CommentItem, error) {
 	v, err := s.videoRepo.GetByID(ctx, req.VideoID)
 	if err != nil {
+		s.log.Error("client user: get video for create comment failed", zap.Uint64("video_id", req.VideoID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if v == nil {
@@ -314,6 +335,7 @@ func (s *userService) CreateComment(ctx context.Context, userID int64, req *clie
 		Status:   1,
 	}
 	if err := s.userRepo.CreateComment(ctx, c); err != nil {
+		s.log.Error("client user: create comment failed", zap.Uint64("video_id", req.VideoID), zap.Int64("user_id", userID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	item := &clientdto.CommentItem{
@@ -335,6 +357,7 @@ func (s *userService) CreateComment(ctx context.Context, userID int64, req *clie
 func (s *userService) DeleteComment(ctx context.Context, userID, commentID int64) error {
 	c, err := s.userRepo.GetComment(ctx, commentID)
 	if err != nil {
+		s.log.Error("client user: get comment for delete failed", zap.Int64("comment_id", commentID), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if c == nil {

@@ -102,7 +102,7 @@ func (f *fakeCategoryRepo) ListIDs(ctx context.Context) ([]model.Categories, err
 func TestCategoryService_CreateRejectsDuplicateName(t *testing.T) {
 	repo := newFakeCategoryRepo()
 	repo.items[1] = &model.Categories{ID: 1, Name: "电影", Status: 1}
-	svc := NewCategoryService(repo, nil)
+	svc := NewCategoryService(repo, nil, nil)
 
 	_, err := svc.Create(context.Background(), &dto.CreateCategoryRequest{Name: "电影"})
 	require.Error(t, err)
@@ -115,7 +115,7 @@ func TestCategoryService_DeleteRejectsWhenHasVideos(t *testing.T) {
 	repo := newFakeCategoryRepo()
 	repo.items[1] = &model.Categories{ID: 1, Name: "电影", Status: 1}
 	repo.videos[1] = 2
-	svc := NewCategoryService(repo, nil)
+	svc := NewCategoryService(repo, nil, nil)
 
 	err := svc.Delete(context.Background(), 1)
 	require.Error(t, err)
@@ -128,7 +128,7 @@ func TestCategoryService_UpdateRejectsCycle(t *testing.T) {
 	repo := newFakeCategoryRepo()
 	repo.items[1] = &model.Categories{ID: 1, Name: "电影", ParentID: 0, Status: 1}
 	repo.items[2] = &model.Categories{ID: 2, Name: "动作", ParentID: 1, Status: 1}
-	svc := NewCategoryService(repo, nil)
+	svc := NewCategoryService(repo, nil, nil)
 
 	parent := uint64(2)
 	_, err := svc.Update(context.Background(), 1, &dto.UpdateCategoryRequest{ParentID: &parent})
@@ -142,7 +142,7 @@ func TestCategoryService_ListTree(t *testing.T) {
 	repo := newFakeCategoryRepo()
 	repo.items[1] = &model.Categories{ID: 1, Name: "电影", ParentID: 0, Status: 1}
 	repo.items[2] = &model.Categories{ID: 2, Name: "动作", ParentID: 1, Status: 1}
-	svc := NewCategoryService(repo, nil)
+	svc := NewCategoryService(repo, nil, nil)
 
 	tree, err := svc.ListTree(context.Background(), true)
 	require.NoError(t, err)

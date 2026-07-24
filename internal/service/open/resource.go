@@ -15,6 +15,7 @@ import (
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
 	adminsvc "github.com/ilaziness/orange-tv/internal/service/admin"
+	"go.uber.org/zap"
 )
 
 const openListCacheTTL = 2 * time.Minute
@@ -35,6 +36,7 @@ type resourceService struct {
 	playRepo  repository.PlayRepository
 	catRepo   repository.CategoryRepository
 	cache     cache.Cache
+	log       *zap.Logger
 }
 
 // NewResourceService creates a ResourceService.
@@ -45,19 +47,24 @@ func NewResourceService(
 	playRepo repository.PlayRepository,
 	catRepo repository.CategoryRepository,
 	c cache.Cache,
+	log *zap.Logger,
 ) ResourceService {
 	if c == nil {
 		c = cache.NewNopCache()
 	}
+	if log == nil {
+		log = zap.NewNop()
+	}
 	return &resourceService{
 		settings: settings, videoRepo: videoRepo, metaRepo: metaRepo,
-		playRepo: playRepo, catRepo: catRepo, cache: c,
+		playRepo: playRepo, catRepo: catRepo, cache: c, log: log,
 	}
 }
 
 func (s *resourceService) Authorize(ctx context.Context, providedKey string) (*adminsvc.ResourceConfig, error) {
 	cfg, err := s.settings.ResourceConfig(ctx)
 	if err != nil {
+		s.log.Error("open resource: get resource config failed", zap.Error(err))
 		return nil, err
 	}
 	if !cfg.EnableThirdPartyCollect {
@@ -97,6 +104,7 @@ func (s *resourceService) ListVideos(ctx context.Context, page, pageSize int, fo
 		Limit:      pageSize,
 	})
 	if err != nil {
+		s.log.Error("open resource: list videos failed", zap.Int("page", page), zap.Int("page_size", pageSize), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	totalPages := 0
@@ -189,6 +197,7 @@ func (s *resourceService) ListCategories(ctx context.Context) ([]shareddto.Categ
 	}
 	items, err := s.catRepo.List(ctx, true)
 	if err != nil {
+		s.log.Error("open resource: list categories failed", zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	tree := buildCategoryTree(items)
@@ -207,6 +216,7 @@ type detailBundle struct {
 func (s *resourceService) loadDetail(ctx context.Context, id int64) (*detailBundle, error) {
 	video, err := s.videoRepo.GetByID(ctx, uint64(id))
 	if err != nil {
+		s.log.Error("open resource: load detail get video failed", zap.Int64("video_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if video == nil || video.PublishStatus != constant.PublishStatusOnline {
@@ -214,14 +224,17 @@ func (s *resourceService) loadDetail(ctx context.Context, id int64) (*detailBund
 	}
 	directorIDs, err := s.videoRepo.ListDirectorIDs(ctx, uint64(id))
 	if err != nil {
+		s.log.Error("open resource: load detail list director ids failed", zap.Int64("video_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	directors, err := s.metaRepo.GetDirectorsByIDs(ctx, directorIDs)
 	if err != nil {
+		s.log.Error("open resource: load detail get directors failed", zap.Int64("video_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	actorRels, err := s.videoRepo.ListActorRels(ctx, uint64(id))
 	if err != nil {
+		s.log.Error("open resource: load detail list actor rels failed", zap.Int64("video_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	actorIDs := make([]uint64, 0, len(actorRels))
@@ -230,6 +243,7 @@ func (s *resourceService) loadDetail(ctx context.Context, id int64) (*detailBund
 	}
 	actors, err := s.metaRepo.GetActorsByIDs(ctx, actorIDs)
 	if err != nil {
+		s.log.Error("open resource: load detail get actors failed", zap.Int64("video_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	actorName := map[uint64]string{}
@@ -242,18 +256,22 @@ func (s *resourceService) loadDetail(ctx context.Context, id int64) (*detailBund
 	}
 	tagIDs, err := s.videoRepo.ListTagIDs(ctx, uint64(id))
 	if err != nil {
+		s.log.Error("open resource: load detail list tag ids failed", zap.Int64("video_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	tags, err := s.metaRepo.GetTagsByIDs(ctx, tagIDs)
 	if err != nil {
+		s.log.Error("open resource: load detail get tags failed", zap.Int64("video_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	episodes, err := s.playRepo.ListEpisodesByVideo(ctx, int64(id), true)
 	if err != nil {
+		s.log.Error("open resource: load detail list episodes failed", zap.Int64("video_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	sources, err := s.playRepo.ListSources(ctx)
 	if err != nil {
+		s.log.Error("open resource: load detail list sources failed", zap.Int64("video_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	sourceMap := map[uint64]model.PlaySources{}
