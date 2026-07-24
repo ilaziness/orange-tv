@@ -129,7 +129,7 @@ func (s *collectService) CreateSource(ctx context.Context, req *admindto.CreateC
 		APIKey:          strings.TrimSpace(req.APIKey),
 		CronExpr:        strings.TrimSpace(req.CronExpr),
 		PlaySourceID:    req.PlaySourceID,
-		Status:          uint8(constant.StatusDisabled),
+		Status:          constant.StatusDisabled,
 		ScheduleEnabled: 0,
 		DataRange:       strings.TrimSpace(req.DataRange),
 	}
@@ -348,7 +348,7 @@ func (s *collectService) runJob(ctx context.Context, source *model.CollectSource
 	start := time.Now()
 	logRow := &model.CollectLogs{
 		SourceID: source.ID,
-		Status:   uint8(constant.CollectLogRunning),
+		Status:   constant.CollectLogRunning,
 	}
 	if err := s.repo.CreateLog(context.Background(), logRow); err != nil && s.log != nil {
 		s.log.Error("create collect log failed", zap.Error(err))
@@ -358,9 +358,9 @@ func (s *collectService) runJob(ctx context.Context, source *model.CollectSource
 
 	dur := uint32(time.Since(start).Seconds())
 	if res.HasError {
-		logRow.Status = uint8(constant.CollectLogFailed)
+		logRow.Status = constant.CollectLogFailed
 	} else {
-		logRow.Status = uint8(constant.CollectLogCompleted)
+		logRow.Status = constant.CollectLogCompleted
 	}
 	logRow.DurationSec = dur
 	if logRow.ID > 0 {
@@ -462,7 +462,7 @@ func (s *collectService) ReloadScheduler(ctx context.Context) error {
 // validateCollectPrecondition checks that a source is ready for collection.
 // Called before launching the goroutine so errors are returned to the user.
 func (s *collectService) validateCollectPrecondition(ctx context.Context, source *model.CollectSources) error {
-	if source.Type != uint8(constant.CollectTypeAppleCMS) {
+	if source.Type != constant.CollectTypeAppleCMS {
 		return errcode.CollectDefaultNotSupported
 	}
 	maps, err := s.repo.ListCategories(ctx, int64(source.ID))
@@ -486,7 +486,7 @@ func (s *collectService) validateCollectPrecondition(ctx context.Context, source
 }
 
 func (s *collectService) validateSourceInput(ctx context.Context, typ uint8, collectURL, cronExpr string, playSourceID uint64) error {
-	if typ != uint8(constant.CollectTypeDefault) && typ != uint8(constant.CollectTypeAppleCMS) {
+	if typ != constant.CollectTypeDefault && typ != constant.CollectTypeAppleCMS {
 		return errcode.WithMessage(errcode.ParamError, "采集源类型无效")
 	}
 	u := strings.TrimSpace(collectURL)
@@ -547,7 +547,7 @@ func (s *collectService) FetchRemoteCategories(ctx context.Context, sourceID int
 	if err != nil {
 		return nil, err
 	}
-	if source.Type != uint8(constant.CollectTypeAppleCMS) {
+	if source.Type != constant.CollectTypeAppleCMS {
 		return nil, errcode.CollectSourceNotAppleCMS
 	}
 	// Apple CMS class is returned on ac=list (and bare list URL), not on ac=detail.

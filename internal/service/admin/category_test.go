@@ -29,7 +29,7 @@ func (f *fakeCategoryRepo) List(ctx context.Context, onlyEnabled bool) ([]model.
 		if item.DeletedAt != nil {
 			continue
 		}
-		if onlyEnabled && item.Status != uint8(constant.StatusEnabled) {
+		if onlyEnabled && item.Status != constant.StatusEnabled {
 			continue
 		}
 		out = append(out, *item)

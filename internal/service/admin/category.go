@@ -64,7 +64,7 @@ func (s *categoryService) Create(ctx context.Context, req *dto.CreateCategoryReq
 		}
 	}
 
-	status := uint8(constant.StatusEnabled)
+	status := constant.StatusEnabled
 	if req.Status != nil {
 		status = *req.Status
 	}

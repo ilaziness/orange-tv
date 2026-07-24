@@ -110,7 +110,7 @@ func (s *videoService) Related(ctx context.Context, id int64, limit int) ([]shar
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	if video == nil || video.PublishStatus != uint8(constant.PublishStatusOnline) {
+	if video == nil || video.PublishStatus != constant.PublishStatusOnline {
 		return nil, errcode.VideoNotFound
 	}
 	// practical related: same category first (skip if category unset), then same region fill
@@ -168,7 +168,7 @@ func (s *videoService) Get(ctx context.Context, id int64) (*shareddto.VideoDetai
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	if video == nil || video.PublishStatus != uint8(constant.PublishStatusOnline) {
+	if video == nil || video.PublishStatus != constant.PublishStatusOnline {
 		return nil, errcode.VideoNotFound
 	}
 
@@ -214,7 +214,7 @@ func (s *videoService) Get(ctx context.Context, id int64) (*shareddto.VideoDetai
 	}
 	sourceMap := map[uint64]model.PlaySources{}
 	for _, src := range sources {
-		if src.Status != uint8(constant.StatusEnabled) {
+		if src.Status != constant.StatusEnabled {
 			continue
 		}
 		sourceMap[src.ID] = src

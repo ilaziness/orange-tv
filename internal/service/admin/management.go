@@ -94,13 +94,13 @@ func (s *managementService) Dashboard(ctx context.Context) (*dto.DashboardRespon
 	}
 	resp.TodayVideos = int64(todayVideos)
 
-	onlineVideos, err := s.videoRepo.CountVideosByStatus(ctx, uint8(constant.PublishStatusOnline))
+	onlineVideos, err := s.videoRepo.CountVideosByStatus(ctx, constant.PublishStatusOnline)
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	resp.OnlineVideos = int64(onlineVideos)
 
-	offlineVideos, err := s.videoRepo.CountVideosByStatus(ctx, uint8(constant.PublishStatusOffline))
+	offlineVideos, err := s.videoRepo.CountVideosByStatus(ctx, constant.PublishStatusOffline)
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
@@ -151,7 +151,7 @@ func (s *managementService) Dashboard(ctx context.Context) (*dto.DashboardRespon
 // ===== A2: Batch video ops =====
 
 func (s *managementService) BatchUpdatePublishStatus(ctx context.Context, req *dto.BatchVideoRequest) (*dto.BatchVideoResponse, error) {
-	status := uint8(constant.PublishStatusOffline)
+	status := constant.PublishStatusOffline
 	if req.Status != nil {
 		status = *req.Status
 	}
@@ -224,7 +224,7 @@ func (s *managementService) CreateAdmin(ctx context.Context, req *dto.CreateAdmi
 	if err != nil {
 		return nil, errcode.Wrap(errcode.InternalError, err)
 	}
-	status := uint8(constant.StatusEnabled)
+	status := constant.StatusEnabled
 	if req.Status != nil {
 		status = *req.Status
 	}
@@ -539,7 +539,7 @@ func (s *managementService) ListBanners(ctx context.Context, offset, limit int) 
 }
 
 func (s *managementService) CreateBanner(ctx context.Context, req *dto.CreateBannerRequest) (*dto.BannerItem, error) {
-	status := uint8(constant.StatusEnabled)
+	status := constant.StatusEnabled
 	if req.Status != nil {
 		status = *req.Status
 	}

@@ -124,7 +124,7 @@ func TestAuthService_LoginSuccess(t *testing.T) {
 	require.NoError(t, err)
 	repo := &fakeAdminRepo{
 		admins: map[uint64]*model.Admins{
-			1: {ID: 1, Username: "admin", Password: hash, GroupID: 1, Status: uint8(constant.StatusEnabled)},
+			1: {ID: 1, Username: "admin", Password: hash, GroupID: 1, Status: constant.StatusEnabled},
 		},
 		groups: map[uint64]*model.UserGroups{
 			1: {ID: 1, Name: constant.RoleSuperAdmin},
@@ -144,7 +144,7 @@ func TestAuthService_LoginRejectsWrongPassword(t *testing.T) {
 	require.NoError(t, err)
 	repo := &fakeAdminRepo{
 		admins: map[uint64]*model.Admins{
-			1: {ID: 1, Username: "admin", Password: hash, GroupID: 1, Status: uint8(constant.StatusEnabled)},
+			1: {ID: 1, Username: "admin", Password: hash, GroupID: 1, Status: constant.StatusEnabled},
 		},
 		groups: map[uint64]*model.UserGroups{
 			1: {ID: 1, Name: constant.RoleSuperAdmin},
@@ -163,7 +163,7 @@ func TestAuthService_LoginRejectsWrongPassword(t *testing.T) {
 func TestAuthService_EnsureSuperAdminRejectsDisabled(t *testing.T) {
 	repo := &fakeAdminRepo{
 		admins: map[uint64]*model.Admins{
-			1: {ID: 1, Username: "admin", GroupID: 1, Status: uint8(constant.StatusDisabled)},
+			1: {ID: 1, Username: "admin", GroupID: 1, Status: constant.StatusDisabled},
 		},
 		groups: map[uint64]*model.UserGroups{
 			1: {ID: 1, Name: constant.RoleSuperAdmin},

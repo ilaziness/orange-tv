@@ -24,7 +24,7 @@ func NewRecorder(repo repository.LogRepository, logger *zap.Logger) *Recorder {
 }
 
 // Login records an admin/user login attempt.
-func (r *Recorder) Login(ctx context.Context, userType int8, userID int64, username, ip, ua string, success bool) {
+func (r *Recorder) Login(ctx context.Context, userType uint8, userID int64, username, ip, ua string, success bool) {
 	if r == nil || r.repo == nil {
 		return
 	}
@@ -34,12 +34,12 @@ func (r *Recorder) Login(ctx context.Context, userType int8, userID int64, usern
 	}
 	now := time.Now()
 	m := &model.LoginLogs{
-		UserType:  uint8(userType),
+		UserType:  userType,
 		UserID:    uint64(userID),
 		Username:  strings.TrimSpace(username),
 		IPAddress: trimIP(ip),
 		UserAgent: trimUA(ua),
-		Status:    uint8(status),
+		Status:    status,
 		CreatedAt: &now,
 	}
 	if err := r.repo.CreateLoginLog(ctx, m); err != nil && r.logger != nil {
@@ -55,7 +55,7 @@ func (r *Recorder) AdminAction(ctx context.Context, adminID int64, module, actio
 	now := time.Now()
 	c := content
 	m := &model.SystemLogs{
-		Level:     uint8(constant.SystemLogLevelInfo),
+		Level:     constant.SystemLogLevelInfo,
 		Module:    strings.TrimSpace(module),
 		Action:    strings.TrimSpace(action),
 		AdminID:   uint64(adminID),
@@ -76,7 +76,7 @@ func (r *Recorder) Warning(ctx context.Context, module, action, content, ip stri
 	now := time.Now()
 	c := content
 	m := &model.SystemLogs{
-		Level:     uint8(constant.SystemLogLevelWarning),
+		Level:     constant.SystemLogLevelWarning,
 		Module:    strings.TrimSpace(module),
 		Action:    strings.TrimSpace(action),
 		AdminID:   0,

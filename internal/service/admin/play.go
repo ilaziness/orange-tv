@@ -58,7 +58,7 @@ func (s *playService) CreateSource(ctx context.Context, req *dto.CreatePlaySourc
 	if exists {
 		return nil, errcode.PlaySourceNameExists
 	}
-	status := uint8(constant.StatusEnabled)
+	status := constant.StatusEnabled
 	if req.Status != nil {
 		status = *req.Status
 	}
@@ -142,7 +142,7 @@ func (s *playService) CreateEpisode(ctx context.Context, req *dto.CreatePlayEpis
 	if err := s.validateEpisodeRefs(ctx, int64(req.VideoID), int64(req.SourceID)); err != nil {
 		return nil, err
 	}
-	status := uint8(constant.StatusEnabled)
+	status := constant.StatusEnabled
 	if req.Status != nil {
 		status = *req.Status
 	}

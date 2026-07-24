@@ -112,25 +112,6 @@ const (
 	LogOutputBoth = "both"
 )
 
-// Status constants for enable/disable fields.
-const (
-	StatusDisabled int8 = 0
-	StatusEnabled  int8 = 1
-)
-
-// Publish status for videos.
-const (
-	PublishStatusOffline int8 = 0
-	PublishStatusOnline  int8 = 1
-)
-
-// Serial status for videos.
-const (
-	SerialStatusOngoing  int8 = 1
-	SerialStatusFinished int8 = 2
-	SerialStatusUpcoming int8 = 3
-)
-
 // Auth / RBAC constants for phase 2.
 const (
 	// RoleSuperAdmin is the only preset role in phase 2.
@@ -146,19 +127,6 @@ const (
 	PlayFormatMP4  = "mp4"
 	PlayFormatDASH = "dash"
 	PlayFormatFLV  = "flv"
-)
-
-// Collect source formats (collect_sources.type).
-const (
-	CollectTypeDefault  int8 = 1 // system JSON format
-	CollectTypeAppleCMS int8 = 2 // 苹果 CMS
-)
-
-// Collect log status (collect_logs.status).
-const (
-	CollectLogCompleted int8 = 1
-	CollectLogRunning   int8 = 2
-	CollectLogFailed    int8 = 3
 )
 
 // System setting keys.
@@ -186,29 +154,4 @@ const (
 const (
 	APIOutputDefault  = "default"   // 系统默认/自有 JSON 格式
 	APIOutputAppleCMS = "apple_cms" // 苹果 CMS 兼容
-)
-
-// Login log user types / status.
-const (
-	LoginUserTypeAdmin int8 = 1
-	LoginUserTypeUser  int8 = 2
-
-	LoginStatusSuccess int8 = 1
-	LoginStatusFailed  int8 = 2
-)
-
-// System log levels.
-const (
-	SystemLogLevelInfo     int8 = 1
-	SystemLogLevelWarning  int8 = 2
-	SystemLogLevelError    int8 = 3
-	SystemLogLevelCritical int8 = 4
-)
-
-// Setting type values (system_settings.setting_type).
-const (
-	SettingTypeString  int8 = 1
-	SettingTypeNumber  int8 = 2
-	SettingTypeBoolean int8 = 3
-	SettingTypeJSON    int8 = 4
 )

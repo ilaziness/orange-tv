@@ -18,7 +18,7 @@ type SettingsRepository interface {
 	GetByKey(ctx context.Context, key string) (*model.SystemSettings, error)
 	GetByKeys(ctx context.Context, keys []string) (map[string]model.SystemSettings, error)
 	// Upsert sets value for key; creates row when missing.
-	Upsert(ctx context.Context, key, value string, settingType int8, description string) error
+	Upsert(ctx context.Context, key, value string, settingType uint8, description string) error
 	// UpsertMany upserts multiple keys in a transaction.
 	UpsertMany(ctx context.Context, items []SettingUpsert) error
 }
@@ -27,7 +27,7 @@ type SettingsRepository interface {
 type SettingUpsert struct {
 	Key         string
 	Value       string
-	SettingType int8
+	SettingType uint8
 	Description string
 }
 
@@ -77,7 +77,7 @@ func (r *settingsRepo) GetByKeys(ctx context.Context, keys []string) (map[string
 	return out, nil
 }
 
-func (r *settingsRepo) Upsert(ctx context.Context, key, value string, settingType int8, description string) error {
+func (r *settingsRepo) Upsert(ctx context.Context, key, value string, settingType uint8, description string) error {
 	return r.UpsertMany(ctx, []SettingUpsert{{
 		Key: key, Value: value, SettingType: settingType, Description: description,
 	}})
@@ -97,7 +97,7 @@ func (r *settingsRepo) UpsertMany(ctx context.Context, items []SettingUpsert) er
 				row := &model.SystemSettings{
 					SettingKey:   it.Key,
 					SettingValue: &val,
-					SettingType:  uint8(it.SettingType),
+					SettingType:  it.SettingType,
 					Description:  it.Description,
 					CreatedAt:    &now,
 					UpdatedAt:    &now,
@@ -113,7 +113,7 @@ func (r *settingsRepo) UpsertMany(ctx context.Context, items []SettingUpsert) er
 			val := it.Value
 			existing.SettingValue = &val
 			if it.SettingType > 0 {
-				existing.SettingType = uint8(it.SettingType)
+				existing.SettingType = it.SettingType
 			}
 			if it.Description != "" {
 				existing.Description = it.Description

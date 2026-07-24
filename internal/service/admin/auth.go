@@ -75,7 +75,7 @@ func (s *authService) Login(ctx context.Context, req *dto.LoginRequest, meta *Lo
 		recordFail(0, username)
 		return nil, errcode.InvalidCredentials
 	}
-	if admin.Status != uint8(constant.StatusEnabled) {
+	if admin.Status != constant.StatusEnabled {
 		recordFail(int64(admin.ID), username)
 		return nil, errcode.AdminDisabled
 	}
@@ -130,7 +130,7 @@ func (s *authService) EnsureSuperAdmin(ctx context.Context, adminID int64) (*mod
 	if admin == nil {
 		return nil, nil, errcode.AuthFailed
 	}
-	if admin.Status != uint8(constant.StatusEnabled) {
+	if admin.Status != constant.StatusEnabled {
 		return nil, nil, errcode.AdminDisabled
 	}
 	group, err := s.adminRepo.GetGroupByID(ctx, int64(admin.GroupID))
@@ -189,7 +189,7 @@ func CreateAdmin(ctx context.Context, adminRepo repository.AdminRepository, user
 		Password: hash,
 		Email:    strings.TrimSpace(email),
 		GroupID:  group.ID,
-		Status:   uint8(constant.StatusEnabled),
+		Status:   constant.StatusEnabled,
 	}
 	if err := adminRepo.Create(ctx, admin); err != nil {
 		return nil, err

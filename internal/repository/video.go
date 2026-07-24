@@ -76,7 +76,7 @@ func (r *videoRepo) List(ctx context.Context, f VideoListFilter) ([]model.Videos
 	var items []model.Videos
 	q := r.db.NewSelect().Model(&items).Where("deleted_at IS NULL")
 	if f.OnlyOnline {
-		q = q.Where("publish_status = ?", uint8(constant.PublishStatusOnline))
+		q = q.Where("publish_status = ?", constant.PublishStatusOnline)
 	}
 	if f.PublishStatus != nil {
 		q = q.Where("publish_status = ?", *f.PublishStatus)

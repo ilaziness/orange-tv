@@ -39,7 +39,7 @@ type UserFeatureRepository interface {
 	ListUserLoginLogs(ctx context.Context, userID int64, offset, limit int) ([]model.UserLoginLogs, int, error)
 
 	// Banners
-	ListBanners(ctx context.Context, status *int8) ([]model.Banners, error)
+	ListBanners(ctx context.Context, status *uint8) ([]model.Banners, error)
 	ListAllBanners(ctx context.Context, offset, limit int) ([]model.Banners, int, error)
 	GetBanner(ctx context.Context, id int64) (*model.Banners, error)
 	CreateBanner(ctx context.Context, b *model.Banners) error
@@ -275,7 +275,7 @@ func (r *userFeatureRepo) ListUserLoginLogs(ctx context.Context, userID int64, o
 
 // ===== Banners =====
 
-func (r *userFeatureRepo) ListBanners(ctx context.Context, status *int8) ([]model.Banners, error) {
+func (r *userFeatureRepo) ListBanners(ctx context.Context, status *uint8) ([]model.Banners, error) {
 	items := make([]model.Banners, 0, 20)
 	q := r.db.NewSelect().Model(&items)
 	if status != nil {

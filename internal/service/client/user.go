@@ -85,7 +85,7 @@ func (s *userService) Register(ctx context.Context, req *clientdto.RegisterReque
 		Username: username,
 		Password: hash,
 		Email:    strings.TrimSpace(req.Email),
-		Status:   uint8(constant.StatusEnabled),
+		Status:   constant.StatusEnabled,
 	}
 	if err := s.adminRepo.CreateUser(ctx, u); err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
@@ -120,7 +120,7 @@ func (s *userService) Login(ctx context.Context, req *clientdto.LoginRequest, ip
 		recordLog(false, "用户不存在")
 		return nil, errcode.InvalidCredentials
 	}
-	if u.Status != uint8(constant.StatusEnabled) {
+	if u.Status != constant.StatusEnabled {
 		recordLog(false, "账号已禁用")
 		return nil, errcode.UserDisabled
 	}

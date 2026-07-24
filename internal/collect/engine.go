@@ -71,7 +71,7 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRang
 		catMap[int64(m.ExternalCategoryID)] = int64(m.CategoryID)
 	}
 
-	isApple := source.Type == uint8(constant.CollectTypeAppleCMS)
+	isApple := source.Type == constant.CollectTypeAppleCMS
 	pageNo := 1
 	maxPages := 50
 	cutoffTime := dataRangeCutoff(dataRange)
@@ -256,7 +256,7 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 			}
 			existing.CategoryID = uint64(categoryID)
 			if existing.PublishStatus == 0 {
-				existing.PublishStatus = uint8(constant.PublishStatusOnline)
+				existing.PublishStatus = constant.PublishStatusOnline
 			}
 			if err := vRepo.Update(ctx, existing); err != nil {
 				return err
@@ -272,8 +272,8 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 				Subtitle:      item.Subtitle,
 				Description:   descPtr,
 				CategoryID:    uint64(categoryID),
-				PublishStatus: uint8(constant.PublishStatusOnline),
-				SerialStatus:  uint8(constant.SerialStatusFinished),
+				PublishStatus: constant.PublishStatusOnline,
+				SerialStatus:  constant.SerialStatusFinished,
 				CoverImage:    item.Cover,
 				PosterImage:   firstNonEmpty(item.Poster, item.Cover),
 				Year:          uint32(item.Year),
@@ -325,7 +325,7 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 				existingEp.PlayURL = ep.URL
 				existingEp.Quality = ep.Quality
 				existingEp.Format = format
-				existingEp.Status = uint8(constant.StatusEnabled)
+				existingEp.Status = constant.StatusEnabled
 				if existingEp.DeletedAt != nil {
 					if err := pRepo.RestoreAndUpdateEpisode(ctx, existingEp); err != nil {
 						return err
@@ -345,7 +345,7 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 				PlayURL:       ep.URL,
 				Quality:       ep.Quality,
 				Format:        format,
-				Status:        uint8(constant.StatusEnabled),
+				Status:        constant.StatusEnabled,
 			}
 			if err := pRepo.CreateEpisode(ctx, m); err != nil {
 				return err

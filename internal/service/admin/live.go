@@ -53,7 +53,7 @@ func (s *liveService) Create(ctx context.Context, req *admindto.CreateLiveReques
 	if streamURL == "" {
 		return nil, errcode.WithMessage(errcode.ParamError, "直播流地址不能为空")
 	}
-	status := uint8(constant.StatusEnabled)
+	status := constant.StatusEnabled
 	if req.Status != nil {
 		status = *req.Status
 	}
@@ -205,7 +205,7 @@ func (s *liveService) SyncFromSource(ctx context.Context) (*shareddto.LiveSyncRe
 				Category:  entry.Category,
 				StreamURL: entry.StreamURL,
 				SortOrder: entry.SortOrder,
-				Status:    uint8(constant.StatusEnabled),
+				Status:    constant.StatusEnabled,
 			})
 		}
 	}

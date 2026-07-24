@@ -89,11 +89,11 @@ func (s *videoService) Create(ctx context.Context, req *dto.CreateVideoRequest) 
 		return nil, err
 	}
 
-	publish := uint8(constant.PublishStatusOffline)
+	publish := constant.PublishStatusOffline
 	if req.PublishStatus != nil {
 		publish = *req.PublishStatus
 	}
-	serial := uint8(constant.SerialStatusOngoing)
+	serial := constant.SerialStatusOngoing
 	if req.SerialStatus != nil {
 		serial = *req.SerialStatus
 	}
@@ -304,7 +304,7 @@ func (s *videoService) getDetail(ctx context.Context, id int64, clientOnly bool)
 	if video == nil {
 		return nil, errcode.VideoNotFound
 	}
-	if clientOnly && video.PublishStatus != uint8(constant.PublishStatusOnline) {
+	if clientOnly && video.PublishStatus != constant.PublishStatusOnline {
 		return nil, errcode.VideoNotFound
 	}
 
@@ -351,7 +351,7 @@ func (s *videoService) getDetail(ctx context.Context, id int64, clientOnly bool)
 	}
 	sourceMap := map[uint64]model.PlaySources{}
 	for _, src := range sources {
-		if clientOnly && src.Status != uint8(constant.StatusEnabled) {
+		if clientOnly && src.Status != constant.StatusEnabled {
 			continue
 		}
 		sourceMap[src.ID] = src

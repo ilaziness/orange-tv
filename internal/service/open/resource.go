@@ -209,7 +209,7 @@ func (s *resourceService) loadDetail(ctx context.Context, id int64) (*detailBund
 	if err != nil {
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	if video == nil || video.PublishStatus != uint8(constant.PublishStatusOnline) {
+	if video == nil || video.PublishStatus != constant.PublishStatusOnline {
 		return nil, errcode.VideoNotFound
 	}
 	directorIDs, err := s.videoRepo.ListDirectorIDs(ctx, uint64(id))
@@ -258,7 +258,7 @@ func (s *resourceService) loadDetail(ctx context.Context, id int64) (*detailBund
 	}
 	sourceMap := map[uint64]model.PlaySources{}
 	for _, src := range sources {
-		if src.Status != uint8(constant.StatusEnabled) {
+		if src.Status != constant.StatusEnabled {
 			continue
 		}
 		sourceMap[src.ID] = src
