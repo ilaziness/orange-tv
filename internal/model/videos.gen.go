@@ -24,6 +24,8 @@ type Videos struct {
 	// 分类ID
 	// Relation: category_id -> Categories(ID)
 	CategoryID uint64 `bun:"category_id,notnull" json:"category_id"`
+	// 父分类ID，方便大分类筛选，0表示无父分类
+	ParentCategoryID uint64 `bun:"parent_category_id,notnull" json:"parent_category_id"`
 	// 上下架状态：1上架 0下架
 	PublishStatus uint8 `bun:"publish_status,notnull" json:"publish_status"`
 	// 连载状态：1连载中 2已完结 3即将上线

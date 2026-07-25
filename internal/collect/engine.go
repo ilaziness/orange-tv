@@ -81,6 +81,18 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRang
 		catMap[int64(m.ExternalCategoryID)] = int64(m.CategoryID)
 	}
 
+	cats, err := e.categoryRepo.List(ctx, false)
+	if err != nil {
+		e.log.Error("collect: list all categories for parent map failed", zap.Int64("source_id", int64(source.ID)), zap.Error(err))
+		res.HasError = true
+		res.Message = err.Error()
+		return res
+	}
+	parentMap := map[uint64]uint64{}
+	for _, c := range cats {
+		parentMap[c.ID] = c.ParentID
+	}
+
 	cutoffTime := dataRangeCutoff(dataRange)
 
 	// Phase 1: collect all vod_ids from list pages
@@ -182,7 +194,7 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRang
 				}
 			}
 
-			if err := e.upsertItem(ctx, source, catMap, item); err != nil {
+			if err := e.upsertItem(ctx, source, catMap, parentMap, item); err != nil {
 				e.log.Warn("collect item failed",
 					zap.Int64("source_id", int64(source.ID)),
 					zap.String("title", item.Title),
@@ -245,7 +257,7 @@ func isVodTimeBefore(vodTime string, cutoff *time.Time) bool {
 	return t.Before(*cutoff)
 }
 
-func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, catMap map[int64]int64, item Item) error {
+func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, catMap map[int64]int64, parentMap map[uint64]uint64, item Item) error {
 	if item.ExternalCategoryID <= 0 {
 		return fmt.Errorf("外部分类ID无效")
 	}
@@ -304,9 +316,6 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 			if item.Cover != "" {
 				existing.CoverImage = item.Cover
 			}
-			if item.Poster != "" {
-				existing.PosterImage = item.Poster
-			}
 			if item.Year > 0 {
 				existing.Year = uint32(item.Year)
 			}
@@ -329,6 +338,7 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 				existing.SerialStatus = serialStatus
 			}
 			existing.CategoryID = uint64(categoryID)
+			existing.ParentCategoryID = parentMap[uint64(categoryID)]
 			if existing.PublishStatus == 0 {
 				existing.PublishStatus = constant.PublishStatusOnline
 			}
@@ -342,21 +352,22 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 				descPtr = &desc
 			}
 			v := &model.Videos{
-				Title:           item.Title,
-				Subtitle:        item.Subtitle,
-				Description:     descPtr,
-				CategoryID:      uint64(categoryID),
-				PublishStatus:   constant.PublishStatusOnline,
-				SerialStatus:    serialStatus,
-				CoverImage:      item.Cover,
-				PosterImage:     firstNonEmpty(item.Poster, item.Cover),
-				Year:            uint32(item.Year),
-				Region:          item.Region,
-				Language:        item.Language,
-				Duration:        uint32(item.Duration),
-				Rating:          item.Rating,
-				ReleaseDate:     parseReleaseDate(item.ReleaseDate),
-				CollectSourceID: uint64(source.ID),
+				Title:            item.Title,
+				Subtitle:         item.Subtitle,
+				Description:      descPtr,
+				CategoryID:       uint64(categoryID),
+				ParentCategoryID: parentMap[uint64(categoryID)],
+				PublishStatus:    constant.PublishStatusOnline,
+				SerialStatus:     serialStatus,
+				CoverImage:       item.Cover,
+				PosterImage:      "",
+				Year:             uint32(item.Year),
+				Region:           item.Region,
+				Language:         item.Language,
+				Duration:         uint32(item.Duration),
+				Rating:           item.Rating,
+				ReleaseDate:      parseReleaseDate(item.ReleaseDate),
+				CollectSourceID:  uint64(source.ID),
 			}
 			if v.SerialStatus == 0 {
 				v.SerialStatus = constant.SerialStatusFinished
