@@ -38,7 +38,7 @@ const contentMenus = [
   { to: '/content/directors', label: '导演管理', icon: Clapperboard },
   { to: '/content/actors', label: '演员管理', icon: Drama },
   { to: '/content/tags', label: '标签管理', icon: Tag },
-  { to: '/content/banners', label: 'Banner', icon: Image },
+  { to: '/content/banners', label: '首页Banner', icon: Image },
 ]
 
 const userMenus = [

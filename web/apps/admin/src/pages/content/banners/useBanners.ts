@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type * as React from 'react'
 import { z } from 'zod'
 import { adminApi, errorMessage } from '@/lib/api'
 import type { BannerItem } from '@orange-tv/shared'
 import { toast } from 'sonner'
+
+const PAGE_SIZE = 20
 
 const bannerSchema = z.object({
   title: z.string().min(1, '标题不能为空'),
@@ -14,47 +16,98 @@ const bannerSchema = z.object({
   status: z.union([z.string(), z.number()]).transform((v) => Number(v)),
 })
 
-const emptyForm = { title: '', cover: '', link: '', video_id: '0', sort: '0', status: '1' }
+const emptyForm = { title: '', cover: '', link: '', video_id: '', sort: '', status: '' }
 
-export type BannerForm = typeof emptyForm
+export type BannerFormType = typeof emptyForm
 
 export function useBanners() {
   const [list, setList] = useState<BannerItem[]>([])
   const [total, setTotal] = useState(0)
-  const [error, setError] = useState('')
-  const [showCreate, setShowCreate] = useState(false)
-  const [form, setForm] = useState(emptyForm)
+  const [page, setPage] = useState(1)
+  const [loading, setLoading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingId, setEditingId] = useState(0)
+  const [form, setForm] = useState<BannerFormType>(emptyForm)
+  const [selectedVideo, setSelectedVideo] = useState<{ id: number; title: string } | null>(null)
+  const [videoPickerOpen, setVideoPickerOpen] = useState(false)
   const [deleteId, setDeleteId] = useState<number | null>(null)
+  const pageRef = useRef(page)
 
-  async function load() {
-    setError('')
+  useEffect(() => { pageRef.current = page }, [page])
+
+  const load = useCallback(async (p = pageRef.current) => {
+    setLoading(true)
     try {
-      const res = await adminApi.listBanners({ page_size: 100 })
+      const res = await adminApi.listBanners({ page: p, page_size: PAGE_SIZE })
       setList(res.data.list || [])
-      setTotal(res.data.total)
+      setTotal(res.data.total || 0)
+      setPage(p)
     } catch (err) {
-      setError(errorMessage(err))
+      toast.error(errorMessage(err))
+    } finally {
+      setLoading(false)
     }
+  }, [])
+
+  useEffect(() => { void load(1) }, [load])
+
+  function openCreate() {
+    setEditingId(0)
+    setForm(emptyForm)
+    setSelectedVideo(null)
+    setDialogOpen(true)
   }
 
-  useEffect(() => { void load() }, [])
+  function openEdit(banner: BannerItem) {
+    setEditingId(banner.id)
+    setForm({
+      title: banner.title,
+      cover: banner.cover,
+      link: banner.link,
+      video_id: String(banner.video_id || ''),
+      sort: String(banner.sort || ''),
+      status: String(banner.status),
+    })
+    setSelectedVideo(banner.video_id ? { id: banner.video_id, title: '' } : null)
+    setDialogOpen(true)
+  }
 
-  async function onCreate(e: React.SyntheticEvent<HTMLFormElement>) {
+  async function onSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
-    setError('')
-    const result = bannerSchema.safeParse(form)
+    if (submitting) return
+
+    const formToValidate = {
+      ...form,
+      video_id: form.video_id || (selectedVideo?.id ?? 0),
+    }
+    const result = bannerSchema.safeParse(formToValidate)
     if (!result.success) {
-      setError(result.error.issues[0]?.message || '表单校验失败')
+      toast.error(result.error.issues[0]?.message || '表单校验失败')
       return
     }
+
+    const submitData = {
+      ...result.data,
+      status: result.data.status || 1,
+    }
+
+    setSubmitting(true)
     try {
-      await adminApi.createBanner(result.data)
-      toast.success('Banner 已创建')
-      setShowCreate(false)
-      setForm(emptyForm)
-      await load()
+      if (editingId) {
+        await adminApi.updateBanner(editingId, submitData)
+        toast.success('更新成功')
+      } else {
+        await adminApi.createBanner(submitData)
+        toast.success('创建成功')
+      }
+      setDialogOpen(false)
+      await load(editingId ? page : 1)
     } catch (err) {
-      setError(errorMessage(err))
+      toast.error(errorMessage(err))
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -62,7 +115,7 @@ export function useBanners() {
     try {
       await adminApi.updateBanner(b.id, { status: b.status === 1 ? 0 : 1 })
       toast.success(b.status === 1 ? '已禁用' : '已启用')
-      await load()
+      await load(page)
     } catch (err) {
       toast.error(errorMessage(err))
     }
@@ -70,29 +123,46 @@ export function useBanners() {
 
   async function confirmDelete() {
     if (deleteId === null) return
+    setDeleting(true)
     try {
       await adminApi.deleteBanner(deleteId)
       toast.success('Banner 已删除')
-      await load()
+      await load(page)
     } catch (err) {
       toast.error(errorMessage(err))
     } finally {
+      setDeleting(false)
       setDeleteId(null)
     }
   }
 
+  const hasNext = page * PAGE_SIZE < total
+
   return {
     list,
     total,
-    error,
-    showCreate,
-    setShowCreate,
+    page,
+    loading,
+    submitting,
+    deleting,
+    dialogOpen,
+    setDialogOpen,
+    editingId,
     form,
     setForm,
+    selectedVideo,
+    setSelectedVideo,
+    videoPickerOpen,
+    setVideoPickerOpen,
     deleteId,
     setDeleteId,
-    onCreate,
+    hasNext,
+    openCreate,
+    openEdit,
+    onSubmit,
     onToggle,
     confirmDelete,
+    load,
+    pageSize: PAGE_SIZE,
   }
 }

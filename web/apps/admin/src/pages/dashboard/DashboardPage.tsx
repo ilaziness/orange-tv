@@ -52,7 +52,7 @@ export default function DashboardPage() {
     { to: '/system/log', label: '系统日志', icon: ScrollText },
     { to: '/user/admins', label: '管理员', icon: ShieldCheck },
     { to: '/user/users', label: '用户', icon: Users },
-    { to: '/content/banners', label: 'Banner', icon: Image },
+    { to: '/content/banners', label: '首页Banner', icon: Image },
   ]
 
   return (

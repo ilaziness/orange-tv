@@ -1,7 +1,7 @@
 import { useBanners } from './useBanners'
-import { BannerForm } from './BannerForm'
+import { BannerFormDialog } from './BannerForm'
 import { BannerList } from './BannerList'
-import { PageContainer, ConfirmDialog } from '@/components/shared'
+import { PageContainer, ConfirmDialog, Pagination } from '@/components/shared'
 import {
   Card,
   CardAction,
@@ -9,59 +9,128 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
+import { Spinner } from '@/components/ui/spinner'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from '@/components/ui/empty'
+import { Plus, RefreshCw } from 'lucide-react'
 
 export default function BannersPage() {
   const {
     list,
     total,
-    error,
-    showCreate,
-    setShowCreate,
+    page,
+    loading,
+    submitting,
+    deleting,
+    dialogOpen,
+    setDialogOpen,
+    editingId,
     form,
     setForm,
+    selectedVideo,
+    setSelectedVideo,
+    videoPickerOpen,
+    setVideoPickerOpen,
     deleteId,
     setDeleteId,
-    onCreate,
+    hasNext,
+    openCreate,
+    openEdit,
+    onSubmit,
     onToggle,
     confirmDelete,
+    load,
+    pageSize,
   } = useBanners()
 
   return (
     <PageContainer>
       <Card>
         <CardHeader>
-          <CardTitle>Banner 管理</CardTitle>
+          <CardTitle>首页Banner</CardTitle>
           <CardAction>
-            <Button size="sm" onClick={() => setShowCreate(!showCreate)}>
-              <Plus data-icon="inline-start" />
-              新增 Banner
-            </Button>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={() => void load(page)} disabled={loading}>
+                {loading ? <Spinner data-icon="inline-start" /> : <RefreshCw data-icon="inline-start" />}
+                刷新
+              </Button>
+              <Button size="sm" onClick={openCreate}>
+                <Plus data-icon="inline-start" />
+                新增 Banner
+              </Button>
+            </div>
           </CardAction>
         </CardHeader>
         <CardContent>
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertTitle>出错了</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
+          {loading && list.length === 0 ? (
+            <div className="flex flex-col gap-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
+            </div>
+          ) : list.length > 0 ? (
+            <>
+              <div className="relative rounded-md border">
+                {loading && (
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50">
+                    <Spinner />
+                  </div>
+                )}
+                <BannerList list={list} onEdit={openEdit} onToggle={onToggle} onDelete={setDeleteId} />
+              </div>
+              <Pagination
+                page={page}
+                total={total}
+                pageSize={pageSize}
+                hasNext={hasNext}
+                loading={loading}
+                onFirst={() => void load(1)}
+                onPrev={() => void load(page - 1)}
+                onNext={() => void load(page + 1)}
+                onLast={() => void load(Math.ceil(total / pageSize))}
+              />
+            </>
+          ) : (
+            <Empty className="py-8">
+              <EmptyHeader>
+                <EmptyTitle>暂无数据</EmptyTitle>
+                <EmptyDescription>点击右上角「新增 Banner」添加第一条数据</EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           )}
-          {showCreate && (
-            <BannerForm form={form} setForm={setForm} onSubmit={onCreate} />
-          )}
-          <p className="mb-2 text-sm text-muted-foreground">共 {total} 条</p>
-          <BannerList list={list} onToggle={onToggle} onDelete={setDeleteId} />
         </CardContent>
       </Card>
 
+      <BannerFormDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        editingId={editingId}
+        form={form}
+        setForm={setForm}
+        submitting={submitting}
+        onSubmit={onSubmit}
+        selectedVideo={selectedVideo}
+        onPickVideo={(video) => {
+          if (video.id === 0) {
+            setSelectedVideo(null)
+            setForm((prev) => ({ ...prev, video_id: '' }))
+          } else {
+            setSelectedVideo(video)
+            setForm((prev) => ({ ...prev, video_id: String(video.id) }))
+          }
+        }}
+        videoPickerOpen={videoPickerOpen}
+        setVideoPickerOpen={setVideoPickerOpen}
+      />
+
       <ConfirmDialog
         open={deleteId !== null}
-        onOpenChange={(open) => { if (!open) setDeleteId(null) }}
+        onOpenChange={(open) => { if (!open && !deleting) setDeleteId(null) }}
         title="删除 Banner"
         description="确认删除该 Banner？此操作不可撤销。"
         destructive
+        loading={deleting}
         onConfirm={confirmDelete}
       />
     </PageContainer>
