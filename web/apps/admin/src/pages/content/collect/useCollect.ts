@@ -36,6 +36,16 @@ export function formatCronFriendly(expr: string): string {
   const { minute, hour } = parseCronExpr(expr)
   if (!hour) return '未设置'
   const m = minute.padStart(2, '0')
+
+  if (hour === '*') {
+    return `每小时 ${m}分`
+  }
+
+  const stepMatch = hour.match(/^\*\/(\d+)$/)
+  if (stepMatch) {
+    return `每${stepMatch[1]}小时 ${m}分`
+  }
+
   const hours = hour.split(',').map((h) => h.trim()).filter(Boolean)
   if (hours.length === 0) return '未设置'
   const times = hours.map((h) => `${h.padStart(2, '0')}:${m}`)
