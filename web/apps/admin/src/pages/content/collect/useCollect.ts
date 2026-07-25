@@ -100,6 +100,7 @@ export function useCollect() {
   const [savingCategories, setSavingCategories] = useState(false)
   const [collecting, setCollecting] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [logsLoading, setLogsLoading] = useState(false)
   const [schedulingId, setSchedulingId] = useState<number | null>(null)
 
   // dialog states
@@ -139,10 +140,13 @@ export function useCollect() {
   }, [fetchSources])
 
   const loadLogs = useCallback(async (page: number) => {
+    setLogsLoading(true)
     try {
       await fetchLogs(page)
     } catch (err) {
       toast.error(errorMessage(err))
+    } finally {
+      setLogsLoading(false)
     }
   }, [fetchLogs])
 
@@ -346,6 +350,7 @@ export function useCollect() {
     savingCategories,
     collecting,
     deleting,
+    logsLoading,
     schedulingId,
     formOpen,
     setFormOpen,

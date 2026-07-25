@@ -53,6 +53,7 @@ export default function CollectPage() {
     savingCategories,
     collecting,
     deleting,
+    logsLoading,
     schedulingId,
     formOpen,
     setFormOpen,
@@ -215,6 +216,12 @@ export default function CollectPage() {
       <Card>
         <CardHeader>
           <CardTitle>采集日志</CardTitle>
+          <CardAction>
+            <Button size="sm" variant="outline" onClick={() => void loadLogs(logsPage)} disabled={logsLoading}>
+              {logsLoading ? <Spinner data-icon="inline-start" /> : <RefreshCw data-icon="inline-start" />}
+              刷新
+            </Button>
+          </CardAction>
         </CardHeader>
         <CardContent>
           {logs.length > 0 ? (
