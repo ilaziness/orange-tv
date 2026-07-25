@@ -169,8 +169,6 @@ func (r *videoRepo) BatchCreate(ctx context.Context, videos []*model.Videos) err
 }
 
 func (r *videoRepo) Update(ctx context.Context, v *model.Videos) error {
-	now := time.Now()
-	v.UpdatedAt = &now
 	_, err := r.db.NewUpdate().Model(v).WherePK().Where("deleted_at IS NULL").Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("update video: %w", err)

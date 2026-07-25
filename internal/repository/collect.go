@@ -115,8 +115,6 @@ func (r *collectRepo) CreateSource(ctx context.Context, m *model.CollectSources)
 }
 
 func (r *collectRepo) UpdateSource(ctx context.Context, m *model.CollectSources) error {
-	now := time.Now()
-	m.UpdatedAt = &now
 	_, err := r.db.NewUpdate().Model(m).
 		Column("name", "type", "collect_url", "api_key", "cron_expr", "play_source_id", "status", "schedule_enabled", "data_range", "updated_at").
 		WherePK().

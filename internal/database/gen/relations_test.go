@@ -200,14 +200,14 @@ func TestGenerateModels_generatesLogicalRelationsWithoutForeignKeys(t *testing.T
 	})
 	require.NoError(t, err)
 
-	videos, err := os.ReadFile(filepath.Join(outputDir, "videos.go"))
+	videos, err := os.ReadFile(filepath.Join(outputDir, "videos.gen.go"))
 	require.NoError(t, err)
 	// gofmt may align struct fields; match on relation tag content.
 	assert.Contains(t, string(videos), `bun:"rel:belongs-to,join:category_id=id"`)
 	assert.Contains(t, string(videos), "Category")
 	assert.Contains(t, string(videos), "*Categories")
 
-	categories, err := os.ReadFile(filepath.Join(outputDir, "categories.go"))
+	categories, err := os.ReadFile(filepath.Join(outputDir, "categories.gen.go"))
 	require.NoError(t, err)
 	assert.Contains(t, string(categories), `bun:"rel:has-many,join:id=category_id"`)
 	assert.Contains(t, string(categories), "Videos")
@@ -262,8 +262,8 @@ func TestGenerateModels_expandsTablesToIncludeRelationEndpoints(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	_, err = os.Stat(filepath.Join(outputDir, "videos.go"))
+	_, err = os.Stat(filepath.Join(outputDir, "videos.gen.go"))
 	require.NoError(t, err)
-	_, err = os.Stat(filepath.Join(outputDir, "categories.go"))
+	_, err = os.Stat(filepath.Join(outputDir, "categories.gen.go"))
 	require.NoError(t, err)
 }

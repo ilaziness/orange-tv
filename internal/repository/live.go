@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/ilaziness/orange-tv/internal/database"
 	"github.com/ilaziness/orange-tv/internal/model"
@@ -95,8 +94,6 @@ func (r *liveRepo) Create(ctx context.Context, m *model.LiveChannels) error {
 }
 
 func (r *liveRepo) Update(ctx context.Context, m *model.LiveChannels) error {
-	now := time.Now()
-	m.UpdatedAt = &now
 	_, err := r.db.NewUpdate().Model(m).
 		Column("name", "category", "stream_url", "logo", "description", "sort_order", "status", "updated_at").
 		WherePK().

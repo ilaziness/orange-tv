@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/ilaziness/orange-tv/internal/database"
 	"github.com/ilaziness/orange-tv/internal/model"
@@ -88,7 +87,6 @@ func (r *settingsRepo) UpsertMany(ctx context.Context, items []SettingUpsert) er
 		return nil
 	}
 	return r.db.RunInTx(ctx, nil, func(ctx context.Context, tx bun.Tx) error {
-		now := time.Now()
 		for _, it := range items {
 			existing := new(model.SystemSettings)
 			err := tx.NewSelect().Model(existing).Where("setting_key = ?", it.Key).Scan(ctx)
@@ -99,8 +97,6 @@ func (r *settingsRepo) UpsertMany(ctx context.Context, items []SettingUpsert) er
 					SettingValue: &val,
 					SettingType:  it.SettingType,
 					Description:  it.Description,
-					CreatedAt:    &now,
-					UpdatedAt:    &now,
 				}
 				if _, err := tx.NewInsert().Model(row).Exec(ctx); err != nil {
 					return fmt.Errorf("insert setting %s: %w", it.Key, err)
@@ -118,7 +114,6 @@ func (r *settingsRepo) UpsertMany(ctx context.Context, items []SettingUpsert) er
 			if it.Description != "" {
 				existing.Description = it.Description
 			}
-			existing.UpdatedAt = &now
 			if _, err := tx.NewUpdate().Model(existing).
 				Column("setting_value", "setting_type", "description", "updated_at").
 				WherePK().

@@ -84,8 +84,6 @@ func (r *categoryRepo) Create(ctx context.Context, c *model.Categories) error {
 }
 
 func (r *categoryRepo) Update(ctx context.Context, c *model.Categories) error {
-	now := time.Now()
-	c.UpdatedAt = &now
 	_, err := r.db.NewUpdate().Model(c).
 		WherePK().
 		Where("deleted_at IS NULL").

@@ -133,8 +133,6 @@ func (r *metadataRepo) CreateDirector(ctx context.Context, m *model.Directors) e
 }
 
 func (r *metadataRepo) UpdateDirector(ctx context.Context, m *model.Directors) error {
-	now := time.Now()
-	m.UpdatedAt = &now
 	_, err := r.db.NewUpdate().Model(m).WherePK().Where("deleted_at IS NULL").Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("update director: %w", err)
@@ -242,8 +240,6 @@ func (r *metadataRepo) CreateActor(ctx context.Context, m *model.Actors) error {
 }
 
 func (r *metadataRepo) UpdateActor(ctx context.Context, m *model.Actors) error {
-	now := time.Now()
-	m.UpdatedAt = &now
 	_, err := r.db.NewUpdate().Model(m).WherePK().Where("deleted_at IS NULL").Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("update actor: %w", err)
@@ -350,8 +346,6 @@ func (r *metadataRepo) CreateTag(ctx context.Context, m *model.Tags) error {
 }
 
 func (r *metadataRepo) UpdateTag(ctx context.Context, m *model.Tags) error {
-	now := time.Now()
-	m.UpdatedAt = &now
 	_, err := r.db.NewUpdate().Model(m).WherePK().Where("deleted_at IS NULL").Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("update tag: %w", err)

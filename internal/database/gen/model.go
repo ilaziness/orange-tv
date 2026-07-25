@@ -175,7 +175,7 @@ func generateModel(ctx context.Context, db *database.DB, driver, tableName strin
 		return fmt.Errorf("format generated code: %w", err)
 	}
 
-	filename := filepath.Join(opts.OutputDir, strings.ToLower(tableName)+".go")
+	filename := filepath.Join(opts.OutputDir, strings.ToLower(tableName)+".gen.go")
 	if err := os.WriteFile(filename, formatted, 0o644); err != nil {
 		return err
 	}

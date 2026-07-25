@@ -4,7 +4,6 @@ package audit
 import (
 	"context"
 	"strings"
-	"time"
 
 	"github.com/ilaziness/orange-tv/internal/constant"
 	"github.com/ilaziness/orange-tv/internal/model"
@@ -32,7 +31,6 @@ func (r *Recorder) Login(ctx context.Context, userType uint8, userID int64, user
 	if !success {
 		status = constant.LoginStatusFailed
 	}
-	now := time.Now()
 	m := &model.LoginLogs{
 		UserType:  userType,
 		UserID:    uint64(userID),
@@ -40,7 +38,6 @@ func (r *Recorder) Login(ctx context.Context, userType uint8, userID int64, user
 		IPAddress: trimIP(ip),
 		UserAgent: trimUA(ua),
 		Status:    status,
-		CreatedAt: &now,
 	}
 	if err := r.repo.CreateLoginLog(ctx, m); err != nil && r.logger != nil {
 		r.logger.Warn("record login log failed", zap.Error(err))
@@ -52,7 +49,6 @@ func (r *Recorder) AdminAction(ctx context.Context, adminID int64, module, actio
 	if r == nil || r.repo == nil {
 		return
 	}
-	now := time.Now()
 	c := content
 	m := &model.SystemLogs{
 		Level:     constant.SystemLogLevelInfo,
@@ -61,7 +57,6 @@ func (r *Recorder) AdminAction(ctx context.Context, adminID int64, module, actio
 		AdminID:   uint64(adminID),
 		Content:   &c,
 		IPAddress: trimIP(ip),
-		CreatedAt: &now,
 	}
 	if err := r.repo.CreateSystemLog(ctx, m); err != nil && r.logger != nil {
 		r.logger.Warn("record system log failed", zap.Error(err))
@@ -73,7 +68,6 @@ func (r *Recorder) Warning(ctx context.Context, module, action, content, ip stri
 	if r == nil || r.repo == nil {
 		return
 	}
-	now := time.Now()
 	c := content
 	m := &model.SystemLogs{
 		Level:     constant.SystemLogLevelWarning,
@@ -82,7 +76,6 @@ func (r *Recorder) Warning(ctx context.Context, module, action, content, ip stri
 		AdminID:   0,
 		Content:   &c,
 		IPAddress: trimIP(ip),
-		CreatedAt: &now,
 	}
 	if err := r.repo.CreateSystemLog(ctx, m); err != nil && r.logger != nil {
 		r.logger.Warn("record system warning log failed", zap.Error(err))

@@ -318,8 +318,6 @@ func (r *userFeatureRepo) CreateBanner(ctx context.Context, b *model.Banners) er
 }
 
 func (r *userFeatureRepo) UpdateBanner(ctx context.Context, b *model.Banners) error {
-	now := time.Now()
-	b.UpdatedAt = now
 	_, err := r.db.NewUpdate().Model(b).WherePK().Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("update banner: %w", err)

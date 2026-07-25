@@ -101,8 +101,6 @@ func (r *playRepo) CreateSource(ctx context.Context, m *model.PlaySources) error
 }
 
 func (r *playRepo) UpdateSource(ctx context.Context, m *model.PlaySources) error {
-	now := time.Now()
-	m.UpdatedAt = &now
 	_, err := r.db.NewUpdate().Model(m).WherePK().Where("deleted_at IS NULL").Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("update play source: %w", err)
@@ -221,8 +219,6 @@ func (r *playRepo) CreateEpisode(ctx context.Context, m *model.PlayEpisodes) err
 }
 
 func (r *playRepo) UpdateEpisode(ctx context.Context, m *model.PlayEpisodes) error {
-	now := time.Now()
-	m.UpdatedAt = &now
 	_, err := r.db.NewUpdate().Model(m).WherePK().Where("deleted_at IS NULL").Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("update play episode: %w", err)
@@ -232,7 +228,6 @@ func (r *playRepo) UpdateEpisode(ctx context.Context, m *model.PlayEpisodes) err
 
 func (r *playRepo) RestoreAndUpdateEpisode(ctx context.Context, m *model.PlayEpisodes) error {
 	now := time.Now()
-	m.UpdatedAt = &now
 	m.DeletedAt = nil
 	// Explicitly clear deleted_at (nil pointer can be omitted by ORM zero handling).
 	_, err := r.db.NewUpdate().Model(m).

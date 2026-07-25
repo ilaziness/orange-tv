@@ -200,8 +200,6 @@ func (r *adminRepo) ListAdmins(ctx context.Context, f AdminListFilter) ([]model.
 }
 
 func (r *adminRepo) UpdateAdmin(ctx context.Context, admin *model.Admins) error {
-	now := time.Now()
-	admin.UpdatedAt = &now
 	_, err := r.db.NewUpdate().Model(admin).
 		WherePK().
 		Where("deleted_at IS NULL").
@@ -265,8 +263,6 @@ func (r *adminRepo) CreateGroup(ctx context.Context, g *model.UserGroups) error 
 }
 
 func (r *adminRepo) UpdateGroup(ctx context.Context, g *model.UserGroups) error {
-	now := time.Now()
-	g.UpdatedAt = &now
 	_, err := r.db.NewUpdate().Model(g).
 		WherePK().
 		Where("deleted_at IS NULL").
@@ -363,8 +359,6 @@ func (r *adminRepo) CreateUser(ctx context.Context, u *model.Users) error {
 }
 
 func (r *adminRepo) UpdateUser(ctx context.Context, u *model.Users) error {
-	now := time.Now()
-	u.UpdatedAt = &now
 	_, err := r.db.NewUpdate().Model(u).
 		WherePK().
 		Where("deleted_at IS NULL").
