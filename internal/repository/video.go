@@ -23,6 +23,9 @@ type VideoListFilter struct {
 	Region        string
 	Language      string
 	Sort          string
+	DirectorID    uint64
+	ActorID       uint64
+	TagID         uint64
 	OnlyOnline    bool
 	Offset        int
 	Limit         int
@@ -101,6 +104,15 @@ func (r *videoRepo) List(ctx context.Context, f VideoListFilter) ([]model.Videos
 				WhereOr("subtitle LIKE ?", like).
 				WhereOr("description LIKE ?", like)
 		})
+	}
+	if f.DirectorID > 0 {
+		q = q.Where("id IN (SELECT video_id FROM video_directors WHERE director_id = ?)", f.DirectorID)
+	}
+	if f.ActorID > 0 {
+		q = q.Where("id IN (SELECT video_id FROM video_actors WHERE actor_id = ?)", f.ActorID)
+	}
+	if f.TagID > 0 {
+		q = q.Where("id IN (SELECT video_id FROM video_tags WHERE tag_id = ?)", f.TagID)
 	}
 
 	total, err := q.Count(ctx)

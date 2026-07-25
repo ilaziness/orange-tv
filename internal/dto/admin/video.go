@@ -12,6 +12,9 @@ type VideoListRequest struct {
 	Region        string `form:"region"`
 	Language      string `form:"language"`
 	Sort          string `form:"sort"`
+	DirectorID    uint64 `form:"director_id"`
+	ActorID       uint64 `form:"actor_id"`
+	TagID         uint64 `form:"tag_id"`
 }
 
 // CreateVideoRequest creates a video with associations.

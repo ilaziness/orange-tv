@@ -1,12 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { adminApi, errorMessage } from '@/lib/api'
 import type { VideoListItem } from '@orange-tv/shared'
 import { toast } from 'sonner'
 
 export function useVideos() {
+  const [searchParams] = useSearchParams()
+  const directorId = searchParams.get('director_id')
+  const actorId = searchParams.get('actor_id')
+  const tagId = searchParams.get('tag_id')
+
   const [items, setItems] = useState<VideoListItem[]>([])
   const [keyword, setKeyword] = useState('')
-  const [error, setError] = useState('')
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [selected, setSelected] = useState<Set<number>>(new Set())
@@ -24,20 +29,26 @@ export function useVideos() {
   useEffect(() => { pageRef.current = page }, [page])
 
   const load = useCallback(async (p = pageRef.current) => {
-    setError('')
     setLoading(true)
     try {
-      const res = await adminApi.listVideos({ keyword: keywordRef.current, page: p, page_size: 20 })
+      const res = await adminApi.listVideos({
+        keyword: keywordRef.current,
+        page: p,
+        page_size: 20,
+        director_id: directorId ? Number(directorId) : undefined,
+        actor_id: actorId ? Number(actorId) : undefined,
+        tag_id: tagId ? Number(tagId) : undefined,
+      })
       setItems(res.data.list || [])
       setTotal(res.data.total || 0)
       setPage(res.data.page || p)
       setSelected(new Set())
     } catch (err) {
-      setError(errorMessage(err))
+      toast.error(errorMessage(err))
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [directorId, actorId, tagId])
 
   useEffect(() => { void load(1) }, [load])
 
@@ -112,7 +123,6 @@ export function useVideos() {
     items,
     keyword,
     setKeyword,
-    error,
     page,
     total,
     selected,
@@ -132,5 +142,8 @@ export function useVideos() {
     confirmBatch,
     confirmDelete,
     togglePublish,
+    directorId,
+    actorId,
+    tagId,
   }
 }

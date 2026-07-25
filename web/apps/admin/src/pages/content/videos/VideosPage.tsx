@@ -11,9 +11,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
+import { Plus, X } from 'lucide-react'
 import { Link } from 'react-router'
 
 export default function VideosPage() {
@@ -21,7 +21,6 @@ export default function VideosPage() {
     items,
     keyword,
     setKeyword,
-    error,
     page,
     total,
     selected,
@@ -41,6 +40,9 @@ export default function VideosPage() {
     confirmBatch,
     confirmDelete,
     togglePublish,
+    directorId,
+    actorId,
+    tagId,
   } = useVideos()
 
   return (
@@ -56,11 +58,28 @@ export default function VideosPage() {
           </CardAction>
         </CardHeader>
         <CardContent>
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertTitle>出错了</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
+          {(directorId || actorId || tagId) && (
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              <span className="text-sm text-muted-foreground">筛选条件：</span>
+              {directorId && (
+                <Badge variant="secondary" render={<Link to="/content/videos" />}>
+                  导演 #{directorId}
+                  <X data-icon="inline-end" />
+                </Badge>
+              )}
+              {actorId && (
+                <Badge variant="secondary" render={<Link to="/content/videos" />}>
+                  演员 #{actorId}
+                  <X data-icon="inline-end" />
+                </Badge>
+              )}
+              {tagId && (
+                <Badge variant="secondary" render={<Link to="/content/videos" />}>
+                  标签 #{tagId}
+                  <X data-icon="inline-end" />
+                </Badge>
+              )}
+            </div>
           )}
           <VideoFilter
             keyword={keyword}

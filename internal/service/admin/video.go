@@ -69,6 +69,9 @@ func (s *videoService) List(ctx context.Context, req *dto.VideoListRequest) ([]s
 		Region:        strings.TrimSpace(req.Region),
 		Language:      strings.TrimSpace(req.Language),
 		Sort:          req.Sort,
+		DirectorID:    req.DirectorID,
+		ActorID:       req.ActorID,
+		TagID:         req.TagID,
 		Offset:        req.GetOffset(),
 		Limit:         req.GetLimit(),
 	})

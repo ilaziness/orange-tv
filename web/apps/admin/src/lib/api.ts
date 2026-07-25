@@ -75,27 +75,42 @@ export const adminApi = {
     withAuth((token) => apiPut(ADMIN_API_BASE, `/videos/${id}`, body, { token })),
   deleteVideo: (id: number) => withAuth((token) => apiDelete(ADMIN_API_BASE, `/videos/${id}`, { token })),
 
-  listDirectors: (keyword = '') =>
+  listDirectors: (query?: { keyword?: string; page?: number; page_size?: number }) =>
     withAuth((token) =>
-      apiGet<PageData<NamedItem>>(ADMIN_API_BASE, '/directors', { token, query: { keyword, page_size: 100 } }),
+      apiGet<PageData<NamedItem>>(ADMIN_API_BASE, '/directors', {
+        token,
+        query: { keyword: query?.keyword ?? '', page: query?.page ?? 1, page_size: query?.page_size ?? 100 },
+      }),
     ),
   createDirector: (name: string) =>
     withAuth((token) => apiPost<NamedItem>(ADMIN_API_BASE, '/directors', { name }, { token })),
+  updateDirector: (id: number, name: string) =>
+    withAuth((token) => apiPut<NamedItem>(ADMIN_API_BASE, `/directors/${id}`, { name }, { token })),
   deleteDirector: (id: number) => withAuth((token) => apiDelete(ADMIN_API_BASE, `/directors/${id}`, { token })),
 
-  listActors: (keyword = '') =>
+  listActors: (query?: { keyword?: string; page?: number; page_size?: number }) =>
     withAuth((token) =>
-      apiGet<PageData<NamedItem>>(ADMIN_API_BASE, '/actors', { token, query: { keyword, page_size: 100 } }),
+      apiGet<PageData<NamedItem>>(ADMIN_API_BASE, '/actors', {
+        token,
+        query: { keyword: query?.keyword ?? '', page: query?.page ?? 1, page_size: query?.page_size ?? 100 },
+      }),
     ),
   createActor: (name: string) =>
     withAuth((token) => apiPost<NamedItem>(ADMIN_API_BASE, '/actors', { name }, { token })),
+  updateActor: (id: number, name: string) =>
+    withAuth((token) => apiPut<NamedItem>(ADMIN_API_BASE, `/actors/${id}`, { name }, { token })),
   deleteActor: (id: number) => withAuth((token) => apiDelete(ADMIN_API_BASE, `/actors/${id}`, { token })),
 
-  listTags: (keyword = '') =>
+  listTags: (query?: { keyword?: string; page?: number; page_size?: number }) =>
     withAuth((token) =>
-      apiGet<PageData<NamedItem>>(ADMIN_API_BASE, '/tags', { token, query: { keyword, page_size: 100 } }),
+      apiGet<PageData<NamedItem>>(ADMIN_API_BASE, '/tags', {
+        token,
+        query: { keyword: query?.keyword ?? '', page: query?.page ?? 1, page_size: query?.page_size ?? 100 },
+      }),
     ),
   createTag: (name: string) => withAuth((token) => apiPost<NamedItem>(ADMIN_API_BASE, '/tags', { name }, { token })),
+  updateTag: (id: number, name: string) =>
+    withAuth((token) => apiPut<NamedItem>(ADMIN_API_BASE, `/tags/${id}`, { name }, { token })),
   deleteTag: (id: number) => withAuth((token) => apiDelete(ADMIN_API_BASE, `/tags/${id}`, { token })),
 
   listPlaySources: () =>

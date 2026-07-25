@@ -9,7 +9,8 @@ http:
 log:
   level: debug
   format: console
-  output: stdout
+  output: both
+  filename: logs/app.log
 
 # Database configuration (MySQL for development)
 database:
