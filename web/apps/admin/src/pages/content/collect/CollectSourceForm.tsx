@@ -106,7 +106,7 @@ export function CollectSourceForm({
               <FieldLabel htmlFor="collect_url">采集地址<RequiredMark /></FieldLabel>
               <Input
                 id="collect_url"
-                placeholder="如 https://example.com/api.php/provide/vod/from/m3u8/at/json/"
+                placeholder="数据列表接口，如 https://example.com/api.php/provide/vod/from/m3u8/at/json/"
                 value={form.collect_url}
                 onChange={(e) => setForm((prev) => ({ ...prev, collect_url: e.target.value }))}
                 required

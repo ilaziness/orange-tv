@@ -61,7 +61,7 @@ const emptyForm = {
   cron_minute: '0',
   cron_hour: '',
   play_source_id: '0',
-  data_range: 'all',
+  data_range: 'today',
 }
 
 export type CollectForm = typeof emptyForm
@@ -111,7 +111,7 @@ export function useCollect() {
   const [categorySourceId, setCategorySourceId] = useState(0)
   const [collectOpen, setCollectOpen] = useState(false)
   const [collectSourceId, setCollectSourceId] = useState(0)
-  const [collectDataRange, setCollectDataRange] = useState('all')
+  const [collectDataRange, setCollectDataRange] = useState('today')
   const [deleteId, setDeleteId] = useState<number | null>(null)
 
   const fetchSources = useCallback(async (page: number) => {
@@ -190,7 +190,7 @@ export function useCollect() {
       cron_minute: minute,
       cron_hour: hour,
       play_source_id: String(item.play_source_id),
-      data_range: item.data_range || 'all',
+      data_range: item.data_range || 'today',
     })
     setFormOpen(true)
   }
@@ -311,7 +311,7 @@ export function useCollect() {
   function openCollectNow(sourceId: number) {
     const source = sources.find((s) => s.id === sourceId)
     setCollectSourceId(sourceId)
-    setCollectDataRange(source?.data_range || 'all')
+    setCollectDataRange(source?.data_range || 'today')
     setCollectOpen(true)
   }
 
