@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router'
-import { clientApi, errorMessage, setToken } from '@/lib/api'
+import { clientApi, errorMessage } from '@/lib/api'
+import { useAuthStore } from '@/store/auth'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,6 +16,8 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const navigate = useNavigate()
+  const setToken = useAuthStore((s) => s.setToken)
+  const loadProfile = useAuthStore((s) => s.loadProfile)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -23,6 +26,7 @@ export default function LoginPage() {
     try {
       const res = await clientApi.login(username, password)
       setToken(res.data.access_token)
+      await loadProfile()
       navigate('/')
     } catch (err) {
       setError(errorMessage(err))
@@ -69,7 +73,7 @@ export default function LoginPage() {
                 />
               </Field>
               <Button type="submit" disabled={submitting} className="w-full">
-                {submitting ? <Spinner className="size-4" /> : null}
+                {submitting ? <Spinner data-icon="inline-start" /> : null}
                 登录
               </Button>
             </FieldGroup>

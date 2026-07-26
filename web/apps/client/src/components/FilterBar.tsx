@@ -1,6 +1,7 @@
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -35,9 +36,11 @@ export function FilterBar({ year, region, language, sort, onChange }: FilterBarP
           <SelectValue placeholder="全部年份" />
         </SelectTrigger>
         <SelectContent>
-          {Array.from({ length: 50 }, (_, i) => currentYear - i).map((y) => (
-            <SelectItem key={y} value={String(y)}>{y}</SelectItem>
-          ))}
+          <SelectGroup>
+            {Array.from({ length: 50 }, (_, i) => currentYear - i).map((y) => (
+              <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+            ))}
+          </SelectGroup>
         </SelectContent>
       </Select>
 
@@ -49,9 +52,11 @@ export function FilterBar({ year, region, language, sort, onChange }: FilterBarP
           <SelectValue placeholder="全部地区" />
         </SelectTrigger>
         <SelectContent>
-          {REGIONS.map((r) => (
-            <SelectItem key={r} value={r}>{r}</SelectItem>
-          ))}
+          <SelectGroup>
+            {REGIONS.map((r) => (
+              <SelectItem key={r} value={r}>{r}</SelectItem>
+            ))}
+          </SelectGroup>
         </SelectContent>
       </Select>
 
@@ -63,9 +68,11 @@ export function FilterBar({ year, region, language, sort, onChange }: FilterBarP
           <SelectValue placeholder="全部语言" />
         </SelectTrigger>
         <SelectContent>
-          {LANGUAGES.map((l) => (
-            <SelectItem key={l} value={l}>{l}</SelectItem>
-          ))}
+          <SelectGroup>
+            {LANGUAGES.map((l) => (
+              <SelectItem key={l} value={l}>{l}</SelectItem>
+            ))}
+          </SelectGroup>
         </SelectContent>
       </Select>
 
@@ -74,12 +81,16 @@ export function FilterBar({ year, region, language, sort, onChange }: FilterBarP
         onValueChange={(v) => onChange({ sort: v })}
       >
         <SelectTrigger className="w-32">
-          <SelectValue />
+          <SelectValue>
+            {(value: string) => SORTS.find((s) => s.value === value)?.label || '排序'}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          {SORTS.map((s) => (
-            <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-          ))}
+          <SelectGroup>
+            {SORTS.map((s) => (
+              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+            ))}
+          </SelectGroup>
         </SelectContent>
       </Select>
     </div>

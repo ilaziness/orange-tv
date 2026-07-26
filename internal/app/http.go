@@ -61,7 +61,7 @@ func (a *App) wireHTTP() error {
 	adminMgmtSvc := adminsvc.NewManagementService(adminRepo, videoRepo, userFeatureRepo, recorder, a.log)
 
 	clientCategorySvc := clientsvc.NewCategoryService(categoryRepo, a.cache, a.log)
-	clientVideoSvc := clientsvc.NewVideoService(videoRepo, metaRepo, playRepo, a.cache, a.log)
+	clientVideoSvc := clientsvc.NewVideoService(videoRepo, categoryRepo, metaRepo, playRepo, a.cache, a.log)
 	clientLiveSvc := clientsvc.NewLiveService(liveRepo, a.log)
 	clientUserSvc := clientsvc.NewUserService(adminRepo, userFeatureRepo, videoRepo, a.jwtMgr, a.cfg.JWT.AccessTokenTTL, a.log)
 	clientBannerSvc := clientsvc.NewBannerService(userFeatureRepo, a.log)

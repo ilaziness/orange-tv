@@ -11,6 +11,7 @@ import {
   type HistoryItem,
   type LiveChannel,
   type PageData,
+  type PublicSiteInfo,
   type UserLoginResult,
   type UserProfile,
   type VideoDetail,
@@ -47,6 +48,7 @@ export const clientApi = {
     apiGet<PageData<LiveChannel>>(CLIENT_API_BASE, '/live', { query }),
   liveChannelDetail: (id: number) => apiGet<LiveChannel>(CLIENT_API_BASE, `/live/${id}`),
   banners: () => apiGet<ClientBanner[]>(CLIENT_API_BASE, '/banners'),
+  site: () => apiGet<PublicSiteInfo>(CLIENT_API_BASE, '/site'),
 
   // User auth (C5)
   register: (username: string, password: string, email?: string) =>

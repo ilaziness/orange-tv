@@ -6,7 +6,7 @@ import { RequireAuth } from '@/components/auth/RequireAuth'
 import { Spinner } from '@/components/ui/spinner'
 
 const HomePage = lazy(() => import('@/pages/home/HomePage'))
-const CategoryPage = lazy(() => import('@/pages/category/CategoryPage'))
+const VideosPage = lazy(() => import('@/pages/videos/VideosPage'))
 const VideoDetailPage = lazy(() => import('@/pages/video/VideoDetailPage'))
 const PlayPage = lazy(() => import('@/pages/video/PlayPage'))
 const LivePage = lazy(() => import('@/pages/live/LivePage'))
@@ -35,7 +35,7 @@ export function AppRoutes() {
     <Routes>
       <Route element={<ClientLayout />}>
         <Route path="/" element={<Lazy><HomePage /></Lazy>} />
-        <Route path="/category" element={<Lazy><CategoryPage /></Lazy>} />
+        <Route path="/videos" element={<Lazy><VideosPage /></Lazy>} />
         <Route path="/video/:id" element={<Lazy><VideoDetailPage /></Lazy>} />
         <Route path="/play/:id" element={<Lazy><PlayPage /></Lazy>} />
         <Route path="/play/:id/:sourceIdx" element={<Lazy><PlayPage /></Lazy>} />

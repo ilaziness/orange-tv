@@ -1,18 +1,30 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, Outlet, useNavigate } from 'react-router'
+import type { Category } from '@orange-tv/shared'
 import { useAuth } from '@/hooks/useAuth'
+import { useSite } from '@/hooks/useSite'
+import { clientApi } from '@/lib/api'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { InputGroup, InputGroupInput, InputGroupAddon } from '@/components/ui/input-group'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import {
   Sheet,
   SheetContent,
@@ -20,51 +32,150 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
-import { SearchIcon, MenuIcon, LogOutIcon, HeartIcon, HistoryIcon, UserIcon } from 'lucide-react'
-
-const NAV_LINKS = [
-  { to: '/', label: '首页' },
-  { to: '/category', label: '分类' },
-  { to: '/live', label: '直播' },
-]
+import {
+  SearchIcon,
+  MenuIcon,
+  LogOutIcon,
+  HeartIcon,
+  HistoryIcon,
+  UserIcon,
+  ChevronDownIcon,
+  FilmIcon,
+} from 'lucide-react'
 
 export function ClientLayout() {
   const [keyword, setKeyword] = useState('')
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [categories, setCategories] = useState<Category[]>([])
+  const [categoriesLoading, setCategoriesLoading] = useState(false)
   const navigate = useNavigate()
   const { profile, logout } = useAuth()
+  const { site } = useSite()
+
+  useEffect(() => {
+    if (!categories.length && !categoriesLoading) {
+      setCategoriesLoading(true)
+      clientApi
+        .categories()
+        .then((res) => setCategories(res.data || []))
+        .catch(() => undefined)
+        .finally(() => setCategoriesLoading(false))
+    }
+  }, [categories.length, categoriesLoading])
+
+  const roots = categories
+    .slice()
+    .sort((a, b) => a.sort_order - b.sort_order)
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (keyword.trim()) {
-      navigate(`/category?keyword=${encodeURIComponent(keyword.trim())}`)
+      navigate(`/videos?keyword=${encodeURIComponent(keyword.trim())}`)
       setMobileOpen(false)
     }
   }
 
-  const renderNavLinks = () => (
-    <>
-      {NAV_LINKS.map((link) => (
-        <Button key={link.to} variant="ghost" size="sm" nativeButton={false} render={<Link to={link.to} />}>
-          {link.label}
-        </Button>
-      ))}
-    </>
+  const renderLogo = () => (
+    <Link to="/" className="flex items-center gap-2">
+      {site.logo ? (
+        <img
+          src={site.logo}
+          alt={site.name}
+          className="h-7 w-auto"
+          onError={(e) => {
+            ;(e.currentTarget as HTMLImageElement).style.display = 'none'
+          }}
+        />
+      ) : null}
+      <span className="text-base font-bold">{site.name}</span>
+    </Link>
   )
 
   const renderSearch = () => (
-    <form className="flex gap-2" onSubmit={handleSearch}>
-      <Input
-        placeholder="搜索影视"
-        value={keyword}
-        onChange={(e) => setKeyword(e.target.value)}
-        className="w-40"
-      />
-      <Button type="submit" size="icon" variant="ghost">
-        <SearchIcon />
-        <span className="sr-only">搜索</span>
-      </Button>
+    <form onSubmit={handleSearch}>
+      <InputGroup className="w-48">
+        <InputGroupInput
+          placeholder="搜索影视"
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+        />
+        <InputGroupAddon align="inline-end">
+          <Button type="submit" size="icon-sm" variant="ghost">
+            <SearchIcon data-icon="inline-start" />
+            <span className="sr-only">搜索</span>
+          </Button>
+        </InputGroupAddon>
+      </InputGroup>
     </form>
+  )
+
+  const renderCategoryPopover = () => (
+    <Popover>
+      <PopoverTrigger
+        render={
+          <Button variant="ghost" size="sm">
+            分类
+            <ChevronDownIcon data-icon="inline-end" />
+          </Button>
+        }
+      />
+      <PopoverContent align="start" side="bottom" className="w-80 p-4">
+        {categoriesLoading ? (
+          <div className="flex flex-col gap-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-6 w-full" />
+            ))}
+          </div>
+        ) : !roots.length ? (
+          <p className="text-sm text-muted-foreground">暂无分类</p>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {roots.map((root) => {
+              const subs = (root.children || []).slice().sort((a, b) => a.sort_order - b.sort_order)
+              return (
+                <div key={root.id} className="flex flex-col gap-1.5">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="justify-start px-2 font-medium"
+                    nativeButton={false}
+                    render={<Link to={`/videos?category_id=${root.id}`} />}
+                  >
+                    {root.name}
+                  </Button>
+                  {subs.length ? (
+                    <div className="flex flex-wrap gap-1.5 pl-3">
+                      {subs.map((sub) => (
+                        <Badge
+                          key={sub.id}
+                          variant="secondary"
+                          className="cursor-pointer"
+                          render={<Link to={`/videos?category_id=${sub.id}`} />}
+                        >
+                          {sub.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
+  )
+
+  const renderNavLinks = () => (
+    <>
+      <Button variant="ghost" size="sm" nativeButton={false} render={<Link to="/" />}>
+        首页
+      </Button>
+      {renderCategoryPopover()}
+      <Button variant="ghost" size="sm" nativeButton={false} render={<Link to="/live" />}>
+        直播
+      </Button>
+    </>
   )
 
   const renderUserMenu = () => {
@@ -82,19 +193,19 @@ export function ClientLayout() {
             }
           />
           <DropdownMenuContent align="end">
-            <div className="px-2 py-1.5 text-sm">
-              <p className="font-medium">{profile.username || profile.email}</p>
-            </div>
-            <Separator />
-            <DropdownMenuItem render={<Link to="/favorites" />}>
-              <HeartIcon data-icon="inline-start" />
-              我的收藏
-            </DropdownMenuItem>
-            <DropdownMenuItem render={<Link to="/history" />}>
-              <HistoryIcon data-icon="inline-start" />
-              观看历史
-            </DropdownMenuItem>
-            <Separator />
+            <DropdownMenuLabel>{profile.username || profile.email}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem render={<Link to="/favorites" />}>
+                <HeartIcon data-icon="inline-start" />
+                我的收藏
+              </DropdownMenuItem>
+              <DropdownMenuItem render={<Link to="/history" />}>
+                <HistoryIcon data-icon="inline-start" />
+                观看历史
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => {
                 logout()
@@ -125,21 +236,14 @@ export function ClientLayout() {
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4">
-          <Link to="/" className="flex items-center gap-2">
-            <Badge variant="default" className="text-base font-bold">
-              ORANGE TV
-            </Badge>
-          </Link>
+          {renderLogo()}
 
           <nav className="hidden items-center gap-1 md:flex">
             {renderNavLinks()}
           </nav>
 
-          <div className="hidden flex-1 items-center justify-center md:flex">
-            {renderSearch()}
-          </div>
-
           <div className="ml-auto flex items-center gap-2">
+            <div className="hidden md:flex">{renderSearch()}</div>
             <ThemeToggle />
             <div className="hidden md:block">
               {renderUserMenu()}
@@ -162,18 +266,33 @@ export function ClientLayout() {
                   {renderSearch()}
                   <Separator />
                   <div className="flex flex-col gap-2">
-                    {NAV_LINKS.map((link) => (
-                      <Button
-                        key={link.to}
-                        variant="ghost"
-                        className="justify-start"
-                        nativeButton={false}
-                        render={<Link to={link.to} />}
-                        onClick={() => setMobileOpen(false)}
-                      >
-                        {link.label}
-                      </Button>
-                    ))}
+                    <Button
+                      variant="ghost"
+                      className="justify-start"
+                      nativeButton={false}
+                      render={<Link to="/" />}
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      首页
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="justify-start"
+                      nativeButton={false}
+                      render={<Link to="/videos" />}
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      分类
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="justify-start"
+                      nativeButton={false}
+                      render={<Link to="/live" />}
+                      onClick={() => setMobileOpen(false)}
+                    >
+                      直播
+                    </Button>
                   </div>
                   <Separator />
                   {profile ? (
@@ -227,6 +346,19 @@ export function ClientLayout() {
       <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6">
         <Outlet />
       </main>
+
+      <footer className="border-t border-border py-6">
+        <div className="mx-auto flex max-w-7xl flex-col items-center gap-1 px-4 text-center text-sm text-muted-foreground">
+          {site.copyright ? <p>{site.copyright}</p> : null}
+          {site.icp ? <p>{site.icp}</p> : null}
+          {!site.copyright && !site.icp ? (
+            <p className="flex items-center gap-1">
+              <FilmIcon className="size-4" />
+              {site.name}
+            </p>
+          ) : null}
+        </div>
+      </footer>
     </div>
   )
 }

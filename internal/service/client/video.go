@@ -25,11 +25,12 @@ type VideoService interface {
 }
 
 type videoService struct {
-	videoRepo repository.VideoRepository
-	metaRepo  repository.MetadataRepository
-	playRepo  repository.PlayRepository
-	cache     cache.Cache
-	log       *zap.Logger
+	videoRepo    repository.VideoRepository
+	categoryRepo repository.CategoryRepository
+	metaRepo     repository.MetadataRepository
+	playRepo     repository.PlayRepository
+	cache        cache.Cache
+	log          *zap.Logger
 }
 
 type videoListCacheEntry struct {
@@ -40,6 +41,7 @@ type videoListCacheEntry struct {
 // NewVideoService creates a client VideoService.
 func NewVideoService(
 	videoRepo repository.VideoRepository,
+	categoryRepo repository.CategoryRepository,
 	metaRepo repository.MetadataRepository,
 	playRepo repository.PlayRepository,
 	c cache.Cache,
@@ -51,7 +53,32 @@ func NewVideoService(
 	if log == nil {
 		log = zap.NewNop()
 	}
-	return &videoService{videoRepo: videoRepo, metaRepo: metaRepo, playRepo: playRepo, cache: c, log: log}
+	return &videoService{videoRepo: videoRepo, categoryRepo: categoryRepo, metaRepo: metaRepo, playRepo: playRepo, cache: c, log: log}
+}
+
+// expandCategoryIDs collects the given category ID and all its descendant IDs.
+func (s *videoService) expandCategoryIDs(ctx context.Context, categoryID uint64) ([]uint64, error) {
+	if categoryID == 0 {
+		return nil, nil
+	}
+	items, err := s.categoryRepo.List(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+	byParent := make(map[uint64][]uint64)
+	for _, c := range items {
+		byParent[c.ParentID] = append(byParent[c.ParentID], c.ID)
+	}
+	ids := []uint64{categoryID}
+	var collect func(pid uint64)
+	collect = func(pid uint64) {
+		for _, cid := range byParent[pid] {
+			ids = append(ids, cid)
+			collect(cid)
+		}
+	}
+	collect(categoryID)
+	return ids, nil
 }
 
 func (s *videoService) List(ctx context.Context, req *clientdto.VideoListRequest) ([]shareddto.VideoListItem, int, error) {
@@ -67,15 +94,21 @@ func (s *videoService) List(ctx context.Context, req *clientdto.VideoListRequest
 		}
 	}
 
+	categoryIDs, err := s.expandCategoryIDs(ctx, req.CategoryID)
+	if err != nil {
+		s.log.Error("client video: expand category ids failed", zap.Error(err))
+		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
+	}
+
 	items, total, err := s.videoRepo.List(ctx, repository.VideoListFilter{
-		CategoryID: req.CategoryID,
-		Year:       req.Year,
-		Region:     strings.TrimSpace(req.Region),
-		Language:   strings.TrimSpace(req.Language),
-		Sort:       req.Sort,
-		OnlyOnline: true,
-		Offset:     req.GetOffset(),
-		Limit:      req.GetLimit(),
+		CategoryIDs: categoryIDs,
+		Year:        req.Year,
+		Region:      strings.TrimSpace(req.Region),
+		Language:    strings.TrimSpace(req.Language),
+		Sort:        req.Sort,
+		OnlyOnline:  true,
+		Offset:      req.GetOffset(),
+		Limit:       req.GetLimit(),
 	})
 	if err != nil {
 		s.log.Error("client video: list failed", zap.Error(err))
@@ -89,16 +122,22 @@ func (s *videoService) List(ctx context.Context, req *clientdto.VideoListRequest
 }
 
 func (s *videoService) Search(ctx context.Context, req *clientdto.SearchRequest) ([]shareddto.VideoListItem, int, error) {
+	categoryIDs, err := s.expandCategoryIDs(ctx, req.CategoryID)
+	if err != nil {
+		s.log.Error("client video: expand category ids failed", zap.Error(err))
+		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
+	}
+
 	items, total, err := s.videoRepo.List(ctx, repository.VideoListFilter{
-		Keyword:    strings.TrimSpace(req.Keyword),
-		CategoryID: req.CategoryID,
-		Year:       req.Year,
-		Region:     strings.TrimSpace(req.Region),
-		Language:   strings.TrimSpace(req.Language),
-		Sort:       req.Sort,
-		OnlyOnline: true,
-		Offset:     req.GetOffset(),
-		Limit:      req.GetLimit(),
+		Keyword:     strings.TrimSpace(req.Keyword),
+		CategoryIDs: categoryIDs,
+		Year:        req.Year,
+		Region:      strings.TrimSpace(req.Region),
+		Language:    strings.TrimSpace(req.Language),
+		Sort:        req.Sort,
+		OnlyOnline:  true,
+		Offset:      req.GetOffset(),
+		Limit:       req.GetLimit(),
 	})
 	if err != nil {
 		s.log.Error("client video: search failed", zap.Error(err))

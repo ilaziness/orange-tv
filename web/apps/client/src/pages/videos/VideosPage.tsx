@@ -9,7 +9,9 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { AlertCircleIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
 
-export default function CategoryPage() {
+const PAGE_SIZE = 24
+
+export default function VideosPage() {
   const [params, setParams] = useSearchParams()
   const [categories, setCategories] = useState<Category[]>([])
   const [videos, setVideos] = useState<VideoListItem[]>([])
@@ -42,7 +44,7 @@ export default function CategoryPage() {
             })
           : await clientApi.videos({
               page,
-              page_size: 24,
+              page_size: PAGE_SIZE,
               category_id: categoryId || undefined,
               year: year || undefined,
               region: region || undefined,
@@ -59,9 +61,6 @@ export default function CategoryPage() {
     })()
   }, [categoryId, year, region, language, sort, keyword, page])
 
-  const roots = categories.filter((c) => !c.parent_id || c.parent_id === 0)
-  const subCategories = categories.filter((c) => c.parent_id === categoryId)
-
   const updateParams = (updates: Record<string, string | number | null>) => {
     const newParams = new URLSearchParams(params)
     Object.entries(updates).forEach(([k, v]) => {
@@ -72,42 +71,61 @@ export default function CategoryPage() {
     setParams(newParams)
   }
 
+  // categories 是树结构（roots with children）
+  const roots = categories
+  const currentRoot = roots.find((c) => c.id === categoryId)
+  const currentSub = roots.flatMap((r) => r.children || []).find((c) => c.id === categoryId)
+  const currentCategory = currentRoot || currentSub || null
+  // 当前选中分类的父级（用于显示二级分类按钮）
+  const parentOfCurrent = currentSub ? roots.find((r) => r.id === currentSub.parent_id) : null
+  const subCategoriesToShow = currentRoot?.children || (parentOfCurrent?.children || [])
+
+  const title = keyword
+    ? `搜索：${keyword}`
+    : currentCategory
+      ? currentCategory.name
+      : '影视列表'
+
   return (
     <div className="flex flex-col gap-6">
-      <h2 className="text-lg font-semibold">分类浏览</h2>
+      <h2 className="text-lg font-semibold">{title}</h2>
 
-      <div className="flex flex-wrap gap-2">
-        <Button
-          variant={!categoryId ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => updateParams({ category_id: null })}
-        >
-          全部
-        </Button>
-        {roots.map((c) => (
-          <Button
-            key={c.id}
-            variant={categoryId === c.id ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => updateParams({ category_id: c.id })}
-          >
-            {c.name}
-          </Button>
-        ))}
-      </div>
-
-      {subCategories.length ? (
-        <div className="flex flex-wrap gap-2">
-          {subCategories.map((c) => (
+      {/* 分类筛选按钮：仅在非搜索模式下显示 */}
+      {!keyword ? (
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
-              key={c.id}
-              variant={categoryId === c.id ? 'default' : 'outline'}
+              variant={!categoryId ? 'default' : 'outline'}
               size="sm"
-              onClick={() => updateParams({ category_id: c.id })}
+              onClick={() => updateParams({ category_id: null })}
             >
-              {c.name}
+              全部
             </Button>
-          ))}
+            {roots.map((c) => (
+              <Button
+                key={c.id}
+                variant={categoryId === c.id ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => updateParams({ category_id: c.id })}
+              >
+                {c.name}
+              </Button>
+            ))}
+          </div>
+          {subCategoriesToShow.length ? (
+            <div className="flex flex-wrap gap-2">
+              {subCategoriesToShow.map((c) => (
+                <Button
+                  key={c.id}
+                  variant={categoryId === c.id ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => updateParams({ category_id: c.id })}
+                >
+                  {c.name}
+                </Button>
+              ))}
+            </div>
+          ) : null}
         </div>
       ) : null}
 
@@ -140,7 +158,7 @@ export default function CategoryPage() {
         <VideoGrid items={videos} />
       )}
 
-      {total > 24 ? (
+      {total > PAGE_SIZE ? (
         <div className="flex items-center justify-center gap-4">
           <Button
             variant="outline"
@@ -155,7 +173,7 @@ export default function CategoryPage() {
           <Button
             variant="outline"
             size="sm"
-            disabled={page * 24 >= total}
+            disabled={page * PAGE_SIZE >= total}
             onClick={() => updateParams({ page: page + 1 })}
           >
             下一页

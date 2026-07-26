@@ -18,6 +18,7 @@ import (
 type VideoListFilter struct {
 	Keyword       string
 	CategoryID    uint64
+	CategoryIDs   []uint64
 	PublishStatus *uint8
 	Year          uint32
 	Region        string
@@ -87,6 +88,9 @@ func (r *videoRepo) List(ctx context.Context, f VideoListFilter) ([]model.Videos
 	}
 	if f.CategoryID > 0 {
 		q = q.Where("category_id = ?", f.CategoryID)
+	}
+	if len(f.CategoryIDs) > 0 {
+		q = q.Where("category_id IN (?)", bun.In(f.CategoryIDs))
 	}
 	if f.Year > 0 {
 		q = q.Where("year = ?", f.Year)
