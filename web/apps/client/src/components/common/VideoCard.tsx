@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router'
 import type { VideoListItem } from '@orange-tv/shared'
 import { Card } from '@/components/ui/card'
@@ -5,16 +6,22 @@ import { Badge } from '@/components/ui/badge'
 import { FilmIcon } from 'lucide-react'
 
 export function VideoCard({ item }: { item: VideoListItem }) {
+  const [error, setError] = useState(false)
+  const hasCover = item.cover && !error
   return (
     <Link to={`/video/${item.id}`} className="cursor-pointer">
       <Card className="overflow-hidden pt-0 transition-all hover:ring-primary/40 hover:transition-all">
-        <div
-          className="relative flex aspect-[2/3] w-full items-center justify-center bg-muted bg-cover bg-center"
-          style={item.cover ? { backgroundImage: `url(${item.cover})` } : undefined}
-        >
-          {!item.cover ? (
+        <div className="relative flex aspect-[2/3] w-full items-center justify-center bg-muted">
+          {hasCover ? (
+            <img
+              src={item.cover}
+              alt={item.title}
+              className="absolute inset-0 h-full w-full object-cover"
+              onError={() => setError(true)}
+            />
+          ) : (
             <FilmIcon className="size-10 text-muted-foreground/40" />
-          ) : null}
+          )}
           {item.rating ? (
             <div className="absolute top-0 left-0 flex p-2">
               <Badge variant="default" className="bg-black/65 text-white">

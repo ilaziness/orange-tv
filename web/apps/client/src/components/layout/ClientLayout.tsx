@@ -7,7 +7,6 @@ import { clientApi } from '@/lib/api'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { Button } from '@/components/ui/button'
 import { InputGroup, InputGroupInput, InputGroupAddon } from '@/components/ui/input-group'
-import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -48,6 +47,7 @@ export function ClientLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
   const [categoriesLoading, setCategoriesLoading] = useState(false)
+  const [categoryOpen, setCategoryOpen] = useState(false)
   const navigate = useNavigate()
   const { profile, logout } = useAuth()
   const { site } = useSite()
@@ -110,7 +110,7 @@ export function ClientLayout() {
   )
 
   const renderCategoryPopover = () => (
-    <Popover>
+    <Popover open={categoryOpen} onOpenChange={(open) => setCategoryOpen(open)}>
       <PopoverTrigger
         render={
           <Button variant="ghost" size="sm">
@@ -134,26 +134,24 @@ export function ClientLayout() {
               const subs = (root.children || []).slice().sort((a, b) => a.sort_order - b.sort_order)
               return (
                 <div key={root.id} className="flex flex-col gap-1.5">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="justify-start px-2 font-medium"
-                    nativeButton={false}
-                    render={<Link to={`/videos?category_id=${root.id}`} />}
+                  <Link
+                    to={`/videos?category_id=${root.id}`}
+                    onClick={() => setCategoryOpen(false)}
+                    className="text-sm font-semibold text-foreground hover:text-primary transition-colors"
                   >
                     {root.name}
-                  </Button>
+                  </Link>
                   {subs.length ? (
-                    <div className="flex flex-wrap gap-1.5 pl-3">
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 pl-3">
                       {subs.map((sub) => (
-                        <Badge
+                        <Link
                           key={sub.id}
-                          variant="secondary"
-                          className="cursor-pointer"
-                          render={<Link to={`/videos?category_id=${sub.id}`} />}
+                          to={`/videos?category_id=${sub.id}`}
+                          onClick={() => setCategoryOpen(false)}
+                          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                         >
                           {sub.name}
-                        </Badge>
+                        </Link>
                       ))}
                     </div>
                   ) : null}
@@ -193,9 +191,8 @@ export function ClientLayout() {
             }
           />
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>{profile.username || profile.email}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
             <DropdownMenuGroup>
+              <DropdownMenuLabel>{profile.username || profile.email}</DropdownMenuLabel>
               <DropdownMenuItem render={<Link to="/favorites" />}>
                 <HeartIcon data-icon="inline-start" />
                 我的收藏
@@ -206,15 +203,17 @@ export function ClientLayout() {
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onClick={() => {
-                logout()
-                navigate('/')
-              }}
-            >
-              <LogOutIcon data-icon="inline-start" />
-              退出
-            </DropdownMenuItem>
+            <DropdownMenuGroup>
+              <DropdownMenuItem
+                onClick={() => {
+                  logout()
+                  navigate('/')
+                }}
+              >
+                <LogOutIcon data-icon="inline-start" />
+                退出
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
       )

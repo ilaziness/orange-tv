@@ -31,6 +31,17 @@ func JWTAuth(manager *auth.JWTManager, skipPaths ...string) gin.HandlerFunc {
 		fullPath := c.FullPath()
 		reqPath := c.Request.URL.Path
 		if pathSkipped(fullPath, reqPath, skipPaths) {
+			// 公开路径：如携带合法 Token，解析并写入 claims，供业务层读取但不强制认证
+			authHeader := c.GetHeader("Authorization")
+			if authHeader != "" {
+				parts := strings.SplitN(authHeader, " ", 2)
+				if len(parts) == 2 && strings.EqualFold(parts[0], "Bearer") {
+					claims, err := manager.ParseToken(parts[1])
+					if err == nil {
+						c.Set(ClaimsKey, claims)
+					}
+				}
+			}
 			c.Next()
 			return
 		}

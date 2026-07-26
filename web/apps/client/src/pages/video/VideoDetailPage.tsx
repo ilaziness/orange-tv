@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Skeleton } from '@/components/ui/skeleton'
-import { AlertCircleIcon, PlayIcon } from 'lucide-react'
+import { AlertCircleIcon, FilmIcon, PlayIcon } from 'lucide-react'
 
 export default function VideoDetailPage() {
   const { id } = useParams()
@@ -20,6 +20,7 @@ export default function VideoDetailPage() {
   const [comments, setComments] = useState<CommentItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [posterError, setPosterError] = useState(false)
 
   const loadComments = () => {
     if (!id) return
@@ -86,10 +87,18 @@ export default function VideoDetailPage() {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-6 md:flex-row">
-        <div
-          className="aspect-[2/3] w-40 shrink-0 rounded-xl bg-cover bg-center shadow-lg md:w-56"
-          style={detail.poster ? { backgroundImage: `url(${detail.poster})` } : undefined}
-        />
+        <div className="relative flex aspect-[2/3] w-40 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-muted shadow-lg md:w-56">
+          {detail.poster && !posterError ? (
+            <img
+              src={detail.poster}
+              alt={detail.title}
+              className="absolute inset-0 h-full w-full object-cover"
+              onError={() => setPosterError(true)}
+            />
+          ) : (
+            <FilmIcon className="size-16 text-muted-foreground/40" />
+          )}
+        </div>
         <div className="flex flex-1 flex-col gap-3">
           <h1 className="text-2xl font-bold tracking-tight">{detail.title}</h1>
           {detail.subtitle ? (
