@@ -8,7 +8,6 @@ http:
 
 log:
   level: debug
-  format: console
   output: both
   filename: logs/app.log
 

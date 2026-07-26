@@ -15,7 +15,6 @@ import (
 func (a *App) wireInfra() error {
 	err := logger.Init(logger.Config{
 		Level:      a.cfg.Log.Level,
-		Format:     a.cfg.Log.Format,
 		Output:     a.cfg.Log.Output,
 		Filename:   a.cfg.Log.Filename,
 		MaxSize:    a.cfg.Log.MaxSize,

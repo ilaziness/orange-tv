@@ -8,7 +8,6 @@ http:
 
 log:
   level: info
-  format: json
   output: both
   filename: /var/log/orange-tv/app.log
   max_size: 100

@@ -22,7 +22,6 @@ http:
 # Logging configuration
 log:
   level: debug
-  format: console
   output: stdout
   filename: logs/app.log
   max_size: 100

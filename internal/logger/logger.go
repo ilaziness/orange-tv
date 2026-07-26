@@ -11,10 +11,12 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
+// DefaultFilename is the default log file path.
+const DefaultFilename = "logs/app.log"
+
 // Config represents logger configuration.
 type Config struct {
 	Level      string
-	Format     string
 	Output     string
 	Filename   string
 	MaxSize    int
@@ -66,26 +68,24 @@ func New(cfg Config) (*Logger, error) {
 		EncodeCaller:   zapcore.ShortCallerEncoder,
 	}
 
-	// Create encoder based on format
-	var encoder zapcore.Encoder
-	if strings.ToLower(cfg.Format) == constant.LogFormatConsole {
-		encoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-		encoder = zapcore.NewConsoleEncoder(encoderConfig)
-	} else {
-		encoder = zapcore.NewJSONEncoder(encoderConfig)
-	}
+	// Stdout uses console encoder (human-friendly, colored);
+	// file uses JSON encoder (machine-parseable, friendly for log files).
+	stdoutEncoderConfig := encoderConfig
+	stdoutEncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	stdoutEncoder := zapcore.NewConsoleEncoder(stdoutEncoderConfig)
+	fileEncoder := zapcore.NewJSONEncoder(encoderConfig)
 
 	// Create writers based on output
 	var cores []zapcore.Core
 
 	switch strings.ToLower(cfg.Output) {
 	case constant.LogOutputFile:
-		cores = append(cores, createFileCore(cfg, encoder, level))
+		cores = append(cores, createFileCore(cfg, fileEncoder, level))
 	case constant.LogOutputBoth:
-		cores = append(cores, createFileCore(cfg, encoder, level))
-		cores = append(cores, createStdoutCore(encoder, level))
+		cores = append(cores, createFileCore(cfg, fileEncoder, level))
+		cores = append(cores, createStdoutCore(stdoutEncoder, level))
 	default: // constant.LogOutputStdout
-		cores = append(cores, createStdoutCore(encoder, level))
+		cores = append(cores, createStdoutCore(stdoutEncoder, level))
 	}
 
 	// Create core

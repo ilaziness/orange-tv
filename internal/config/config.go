@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ilaziness/orange-tv/internal/constant"
+	"github.com/ilaziness/orange-tv/internal/logger"
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
@@ -72,7 +73,6 @@ func (c HTTPConfig) GetShutdownTimeout() time.Duration {
 // LogConfig 日志配置。
 type LogConfig struct {
 	Level      string `mapstructure:"level"`       // 日志级别，枚举（大小写不敏感）：debug | info | warn | error
-	Format     string `mapstructure:"format"`      // 输出格式，枚举（大小写不敏感）：json | console
 	Output     string `mapstructure:"output"`      // 输出目标，枚举（大小写不敏感）：stdout | file | both
 	Filename   string `mapstructure:"filename"`    // 日志文件路径（output 为 file/both 时必填）
 	MaxSize    int    `mapstructure:"max_size"`    // 单文件最大体积（MB）
@@ -369,9 +369,8 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("http.shutdown_timeout", 30)
 
 	v.SetDefault("log.level", constant.DefaultLogLevel)
-	v.SetDefault("log.format", constant.DefaultLogFormat)
 	v.SetDefault("log.output", "stdout")
-	v.SetDefault("log.filename", "logs/app.log")
+	v.SetDefault("log.filename", logger.DefaultFilename)
 	v.SetDefault("log.max_size", 100)
 	v.SetDefault("log.max_backups", 30)
 	v.SetDefault("log.max_age", 7)

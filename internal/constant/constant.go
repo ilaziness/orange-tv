@@ -14,9 +14,6 @@ const (
 
 	// DefaultLogLevel is the default log level
 	DefaultLogLevel = "info"
-
-	// DefaultLogFormat is the default log format
-	DefaultLogFormat = "json"
 )
 
 // Error code constants
@@ -89,15 +86,6 @@ const (
 
 	// LogLevelError represents error log level
 	LogLevelError = "error"
-)
-
-// Log format constants
-const (
-	// LogFormatJSON represents JSON log format
-	LogFormatJSON = "json"
-
-	// LogFormatConsole represents console log format
-	LogFormatConsole = "console"
 )
 
 // Log output constants

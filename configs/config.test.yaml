@@ -9,7 +9,6 @@ http:
 
 log:
   level: warn
-  format: json
   output: stdout
 
 # Database configuration (SQLite for tests)

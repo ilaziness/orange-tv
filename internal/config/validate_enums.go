@@ -39,9 +39,6 @@ func (c *Config) validateEnums() error {
 	if err := validateOneOfFold("log.level", c.Log.Level, constant.LogLevelDebug, constant.LogLevelInfo, constant.LogLevelWarn, constant.LogLevelError); err != nil {
 		return err
 	}
-	if err := validateOneOfFold("log.format", c.Log.Format, constant.LogFormatJSON, constant.LogFormatConsole); err != nil {
-		return err
-	}
 	if err := validateOneOfFold("log.output", c.Log.Output, constant.LogOutputStdout, constant.LogOutputFile, constant.LogOutputBoth); err != nil {
 		return err
 	}

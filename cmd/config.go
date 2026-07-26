@@ -70,7 +70,6 @@ func runConfigShow(cmd *cobra.Command, args []string) error {
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Logging:")
 	fmt.Fprintf(out, "  Level: %s\n", cfg.Log.Level)
-	fmt.Fprintf(out, "  Format: %s\n", cfg.Log.Format)
 	fmt.Fprintf(out, "  Output: %s\n", cfg.Log.Output)
 	if cfg.Log.Output == "file" || cfg.Log.Output == "both" {
 		fmt.Fprintf(out, "  Filename: %s\n", cfg.Log.Filename)

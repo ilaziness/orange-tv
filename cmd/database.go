@@ -11,7 +11,6 @@ import (
 func newLoggerFromConfig(cfg *config.Config) (*logger.Logger, error) {
 	logInst, err := logger.New(logger.Config{
 		Level:      cfg.Log.Level,
-		Format:     cfg.Log.Format,
 		Output:     cfg.Log.Output,
 		Filename:   cfg.Log.Filename,
 		MaxSize:    cfg.Log.MaxSize,

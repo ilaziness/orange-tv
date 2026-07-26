@@ -14,7 +14,7 @@ import (
 func testSQLiteConfig(t *testing.T) *config.Config {
 	return &config.Config{
 		App: config.AppConfig{Name: "test", Version: "1.0", Env: "test"},
-		Log: config.LogConfig{Level: "error", Format: "json", Output: "stdout"},
+		Log: config.LogConfig{Level: "error", Output: "stdout"},
 		Database: config.DatabaseConfig{
 			Driver:   "sqlite",
 			Database: filepath.Join(t.TempDir(), "test.db"),

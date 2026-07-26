@@ -74,7 +74,6 @@ func TestConfigValidate(t *testing.T) {
 
 		// 枚举校验
 		{"invalid app env", Config{App: AppConfig{Name: "app", Env: "staging"}, HTTP: HTTPConfig{Port: 8080}, Database: DatabaseConfig{Driver: "mysql", Host: "localhost", Database: "testdb"}}, true, "app.env must be one of: dev, prod, test"},
-		{"invalid log format", Config{App: AppConfig{Name: "app"}, HTTP: HTTPConfig{Port: 8080}, Database: DatabaseConfig{Driver: "mysql", Host: "localhost", Database: "testdb"}, Log: LogConfig{Format: "yaml"}}, true, "log.format must be one of: json, console"},
 		{"invalid log output", Config{App: AppConfig{Name: "app"}, HTTP: HTTPConfig{Port: 8080}, Database: DatabaseConfig{Driver: "mysql", Host: "localhost", Database: "testdb"}, Log: LogConfig{Output: "stderr"}}, true, "log.output must be one of: stdout, file, both"},
 		{"log output file missing filename", Config{App: AppConfig{Name: "app"}, HTTP: HTTPConfig{Port: 8080}, Database: DatabaseConfig{Driver: "mysql", Host: "localhost", Database: "testdb"}, Log: LogConfig{Output: "file"}}, true, "log.filename is required when log.output is file or both"},
 		{"invalid database driver", Config{App: AppConfig{Name: "app"}, HTTP: HTTPConfig{Port: 8080}, Database: DatabaseConfig{Driver: "oracle", Host: "localhost", Database: "test.db"}}, true, "database.driver must be one of: mysql, postgres, postgresql, sqlite"},
