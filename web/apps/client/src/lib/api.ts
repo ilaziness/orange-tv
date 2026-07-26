@@ -47,6 +47,8 @@ export const clientApi = {
   live: (query?: Record<string, string | number | undefined>) =>
     apiGet<PageData<LiveChannel>>(CLIENT_API_BASE, '/live', { query }),
   liveChannelDetail: (id: number) => apiGet<LiveChannel>(CLIENT_API_BASE, `/live/${id}`),
+  // liveStreamUrl 返回直播流的代理播放地址，前端不接触真实 stream_url。
+  liveStreamUrl: (id: number) => `${CLIENT_API_BASE}/live/play/${id}`,
   banners: () => apiGet<ClientBanner[]>(CLIENT_API_BASE, '/banners'),
   site: () => apiGet<PublicSiteInfo>(CLIENT_API_BASE, '/site'),
 

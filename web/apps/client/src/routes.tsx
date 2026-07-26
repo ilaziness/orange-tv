@@ -10,7 +10,6 @@ const VideosPage = lazy(() => import('@/pages/videos/VideosPage'))
 const VideoDetailPage = lazy(() => import('@/pages/video/VideoDetailPage'))
 const PlayPage = lazy(() => import('@/pages/video/PlayPage'))
 const LivePage = lazy(() => import('@/pages/live/LivePage'))
-const LivePlayPage = lazy(() => import('@/pages/live/LivePlayPage'))
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
 const RegisterPage = lazy(() => import('@/pages/auth/RegisterPage'))
 const FavoritesPage = lazy(() => import('@/pages/user/FavoritesPage'))
@@ -40,7 +39,6 @@ export function AppRoutes() {
         <Route path="/play/:id" element={<Lazy><PlayPage /></Lazy>} />
         <Route path="/play/:id/:sourceIdx" element={<Lazy><PlayPage /></Lazy>} />
         <Route path="/live" element={<Lazy><LivePage /></Lazy>} />
-        <Route path="/play/live/:id" element={<Lazy><LivePlayPage /></Lazy>} />
         <Route path="/login" element={<Lazy><LoginPage /></Lazy>} />
         <Route path="/register" element={<Lazy><RegisterPage /></Lazy>} />
         <Route element={<RequireAuth />}>

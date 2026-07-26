@@ -53,7 +53,7 @@ func (a *App) wireHTTP() error {
 	adminMetaSvc := adminsvc.NewMetadataService(metaRepo, a.log)
 	adminPlaySvc := adminsvc.NewPlayService(playRepo, videoRepo, a.log)
 	adminVideoSvc := adminsvc.NewVideoService(videoRepo, categoryRepo, metaRepo, playRepo, a.cache, a.log)
-	adminLiveSvc := adminsvc.NewLiveService(liveRepo, a.log)
+	adminLiveSvc := adminsvc.NewLiveService(liveRepo, a.cache, a.log)
 	collectEngine := collect.NewEngine(collectRepo, videoRepo, categoryRepo, metaRepo, playRepo, a.log)
 	adminCollectSvc := adminsvc.NewCollectService(collectRepo, playRepo, categoryRepo, collectEngine, a.log, a.cache)
 	adminSettingsSvc := adminsvc.NewSettingsService(settingsRepo, a.cache, a.log)
@@ -62,7 +62,8 @@ func (a *App) wireHTTP() error {
 
 	clientCategorySvc := clientsvc.NewCategoryService(categoryRepo, a.cache, a.log)
 	clientVideoSvc := clientsvc.NewVideoService(videoRepo, categoryRepo, metaRepo, playRepo, a.cache, a.log)
-	clientLiveSvc := clientsvc.NewLiveService(liveRepo, a.log)
+	clientLiveSvc := clientsvc.NewLiveService(liveRepo, a.cache, a.log)
+	clientLiveProxySvc := clientsvc.NewLiveProxyService(clientLiveSvc, a.log)
 	clientUserSvc := clientsvc.NewUserService(adminRepo, userFeatureRepo, videoRepo, a.jwtMgr, a.cfg.JWT.AccessTokenTTL, a.log)
 	clientBannerSvc := clientsvc.NewBannerService(userFeatureRepo, a.log)
 
@@ -82,7 +83,7 @@ func (a *App) wireHTTP() error {
 
 	handlers.ClientCategory = clienthandler.NewCategoryHandler(clientCategorySvc)
 	handlers.ClientVideo = clienthandler.NewVideoHandler(clientVideoSvc)
-	handlers.ClientLive = clienthandler.NewLiveHandler(clientLiveSvc)
+	handlers.ClientLive = clienthandler.NewLiveHandler(clientLiveSvc, clientLiveProxySvc)
 	handlers.ClientSite = clienthandler.NewSiteHandler(adminSettingsSvc)
 	handlers.ClientUser = clienthandler.NewUserHandler(clientUserSvc)
 	handlers.ClientBanner = clienthandler.NewBannerHandler(clientBannerSvc)

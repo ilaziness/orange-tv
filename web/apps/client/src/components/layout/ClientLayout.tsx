@@ -166,12 +166,9 @@ export function ClientLayout() {
 
   const renderNavLinks = () => (
     <>
-      <Button variant="ghost" size="sm" nativeButton={false} render={<Link to="/" />}>
-        首页
-      </Button>
       {renderCategoryPopover()}
       <Button variant="ghost" size="sm" nativeButton={false} render={<Link to="/live" />}>
-        直播
+        电视
       </Button>
     </>
   )
@@ -269,15 +266,6 @@ export function ClientLayout() {
                       variant="ghost"
                       className="justify-start"
                       nativeButton={false}
-                      render={<Link to="/" />}
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      首页
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="justify-start"
-                      nativeButton={false}
                       render={<Link to="/videos" />}
                       onClick={() => setMobileOpen(false)}
                     >
@@ -290,7 +278,7 @@ export function ClientLayout() {
                       render={<Link to="/live" />}
                       onClick={() => setMobileOpen(false)}
                     >
-                      直播
+                      电视
                     </Button>
                   </div>
                   <Separator />

@@ -4,6 +4,7 @@ package testutil
 import (
 	"context"
 
+	"github.com/gin-gonic/gin"
 	shareddto "github.com/ilaziness/orange-tv/internal/dto"
 	admindto "github.com/ilaziness/orange-tv/internal/dto/admin"
 	clientdto "github.com/ilaziness/orange-tv/internal/dto/client"
@@ -237,6 +238,18 @@ func (s clientLiveSvc) List(ctx context.Context, req *clientdto.LiveListRequest)
 	return nil, 0, nil
 }
 
+func (s clientLiveSvc) GetStreamURL(ctx context.Context, id int64) (string, error) {
+	return "", nil
+}
+
+func (s clientLiveSvc) AllowedStreamDomains(ctx context.Context) (map[string]struct{}, error) {
+	return nil, nil
+}
+
+type clientLiveProxySvc struct{}
+
+func (s clientLiveProxySvc) Proxy(c *gin.Context, channelID int64, segURL string) error { return nil }
+
 type openResourceSvc struct{}
 
 func (s openResourceSvc) Authorize(ctx context.Context, providedKey string) (*adminsvc.ResourceConfig, error) {
@@ -359,6 +372,7 @@ func NewBusinessHandlers() BusinessHandlers {
 	mgmt := adminMgmtSvc{}
 	userSvc := clientUserSvc{}
 	bannerSvc := clientBannerSvc{}
+	clientLiveSvc := clientLiveSvc{}
 	return BusinessHandlers{
 		AuthService:    auth,
 		AdminAuth:      adminhandler.NewAuthHandler(auth),
@@ -373,7 +387,7 @@ func NewBusinessHandlers() BusinessHandlers {
 		AdminMgmt:      adminhandler.NewManagementHandler(mgmt),
 		ClientCategory: clienthandler.NewCategoryHandler(clientCategorySvc{}),
 		ClientVideo:    clienthandler.NewVideoHandler(clientVideoSvc{}),
-		ClientLive:     clienthandler.NewLiveHandler(clientLiveSvc{}),
+		ClientLive:     clienthandler.NewLiveHandler(clientLiveSvc, clientLiveProxySvc{}),
 		ClientSite:     clienthandler.NewSiteHandler(adminSettingsSvc{}),
 		ClientUser:     clienthandler.NewUserHandler(userSvc),
 		ClientBanner:   clienthandler.NewBannerHandler(bannerSvc),
