@@ -57,7 +57,7 @@ func (a *App) wireHTTP() error {
 	collectEngine := collect.NewEngine(collectRepo, videoRepo, categoryRepo, metaRepo, playRepo, a.log)
 	adminCollectSvc := adminsvc.NewCollectService(collectRepo, playRepo, categoryRepo, collectEngine, a.log, a.cache)
 	adminSettingsSvc := adminsvc.NewSettingsService(settingsRepo, a.cache, a.log)
-	adminLogSvc := adminsvc.NewLogService(logRepo, a.log)
+	adminLogSvc := adminsvc.NewLogService(logRepo, a.log, a.cfg.Log.Filename)
 	adminMgmtSvc := adminsvc.NewManagementService(adminRepo, videoRepo, userFeatureRepo, recorder, a.log)
 
 	clientCategorySvc := clientsvc.NewCategoryService(categoryRepo, a.cache, a.log)

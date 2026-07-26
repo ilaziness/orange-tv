@@ -15,6 +15,7 @@ import {
   type DashboardData,
   type LiveChannel,
   type LiveSyncResult,
+  type AppLogListResponse,
   type LoginLogItem,
   type LoginResult,
   type NamedItem,
@@ -173,6 +174,8 @@ export const adminApi = {
     withAuth((token) => apiGet<PageData<SystemLogItem>>(ADMIN_API_BASE, '/system-logs', { token, query })),
   listLoginLogs: (query?: Record<string, string | number | undefined>) =>
     withAuth((token) => apiGet<PageData<LoginLogItem>>(ADMIN_API_BASE, '/login-logs', { token, query })),
+  listAppLogs: (query?: Record<string, string | number | undefined>) =>
+    withAuth((token) => apiGet<AppLogListResponse>(ADMIN_API_BASE, '/app-logs', { token, query })),
 
   // Phase 5: Dashboard, batch, admin/user/group/banner management
   dashboard: () => withAuth((token) => apiGet<DashboardData>(ADMIN_API_BASE, '/dashboard', { token })),

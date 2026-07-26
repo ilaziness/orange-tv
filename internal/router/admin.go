@@ -135,4 +135,5 @@ func registerAdminSystemRoutes(v1 *gin.RouterGroup, h *Handlers) {
 
 	v1.GET("/system-logs", h.AdminLog.ListSystemLogs)
 	v1.GET("/login-logs", h.AdminLog.ListLoginLogs)
+	v1.GET("/app-logs", h.AdminLog.ListAppLogs)
 }

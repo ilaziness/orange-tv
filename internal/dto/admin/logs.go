@@ -46,3 +46,37 @@ type LoginLogItem struct {
 	Status    uint8  `json:"status"`
 	CreatedAt string `json:"created_at"`
 }
+
+// AppLogListRequest reads the zap log file from the end backwards.
+type AppLogListRequest struct {
+	// Offset is the byte offset from the end of file; 0 means start from the last byte.
+	Offset int64 `form:"offset"`
+	// Limit is the max number of log lines to return (default 50, max 200).
+	Limit int `form:"limit" validate:"omitempty,min=1,max=200"`
+}
+
+// GetLimit returns a sanitized limit value.
+func (r *AppLogListRequest) GetLimit() int {
+	if r == nil || r.Limit <= 0 {
+		return 50
+	}
+	if r.Limit > 200 {
+		return 200
+	}
+	return r.Limit
+}
+
+// AppLogItem is one parsed zap log line.
+type AppLogItem struct {
+	Time   string         `json:"time"`
+	Level  string         `json:"level"`
+	Msg    string         `json:"msg"`
+	Fields map[string]any `json:"fields,omitempty"`
+}
+
+// AppLogListResponse is the paginated response for app log reading.
+type AppLogListResponse struct {
+	List       []AppLogItem `json:"list"`
+	HasMore    bool         `json:"has_more"`
+	NextOffset int64        `json:"next_offset"`
+}

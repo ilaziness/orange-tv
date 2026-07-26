@@ -46,3 +46,16 @@ func (h *LogHandler) ListLoginLogs(c *gin.Context) {
 	page, size := req.GetPage(), req.GetLimit()
 	response.SuccessPage(c, items, int64(total), page, size, req.GetTotalPages(total))
 }
+
+func (h *LogHandler) ListAppLogs(c *gin.Context) {
+	var req admindto.AppLogListRequest
+	if !httphandler.BindQuery(c, &req) {
+		return
+	}
+	resp, err := h.svc.ListAppLogs(c.Request.Context(), &req)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	response.Success(c, resp)
+}

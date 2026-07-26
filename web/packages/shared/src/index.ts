@@ -320,6 +320,19 @@ export type LoginLogItem = {
   created_at: string
 }
 
+export type AppLogItem = {
+  time: string
+  level: string
+  msg: string
+  fields?: Record<string, unknown>
+}
+
+export type AppLogListResponse = {
+  list: AppLogItem[]
+  has_more: boolean
+  next_offset: number
+}
+
 // ===== Phase 5 types =====
 
 export type DashboardData = {

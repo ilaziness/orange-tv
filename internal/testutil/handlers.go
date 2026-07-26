@@ -206,6 +206,9 @@ func (s adminLogSvc) ListSystemLogs(ctx context.Context, req *admindto.SystemLog
 func (s adminLogSvc) ListLoginLogs(ctx context.Context, req *admindto.LoginLogListRequest) ([]admindto.LoginLogItem, int, error) {
 	return nil, 0, nil
 }
+func (s adminLogSvc) ListAppLogs(ctx context.Context, req *admindto.AppLogListRequest) (*admindto.AppLogListResponse, error) {
+	return &admindto.AppLogListResponse{List: []admindto.AppLogItem{}, HasMore: false}, nil
+}
 
 type clientCategorySvc struct{}
 
