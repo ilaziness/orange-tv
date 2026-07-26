@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Plus, X } from 'lucide-react'
 import { Link } from 'react-router'
+import { DEFAULT_PAGE_SIZE } from '@/lib/constants'
 
 export default function VideosPage() {
   const {
@@ -108,12 +109,13 @@ export default function VideosPage() {
           <Pagination
             page={page}
             total={total}
+            pageSize={DEFAULT_PAGE_SIZE}
             loading={loading}
-            hasNext={page * 20 < total}
+            hasNext={page * DEFAULT_PAGE_SIZE < total}
             onFirst={() => void load(1)}
             onPrev={() => void load(page - 1)}
             onNext={() => void load(page + 1)}
-            onLast={() => void load(Math.ceil(total / 20))}
+            onLast={() => void load(Math.ceil(total / DEFAULT_PAGE_SIZE))}
           />
         </CardContent>
       </Card>

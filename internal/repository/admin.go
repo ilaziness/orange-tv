@@ -163,6 +163,7 @@ func (r *adminRepo) UpdateLastLogin(ctx context.Context, id int64, at time.Time)
 func (r *adminRepo) ExistsUsername(ctx context.Context, username string) (bool, error) {
 	exists, err := r.db.NewSelect().Model((*model.Admins)(nil)).
 		Where("username = ?", username).
+		Where("deleted_at IS NULL").
 		Exists(ctx)
 	if err != nil {
 		return false, fmt.Errorf("check admin username: %w", err)

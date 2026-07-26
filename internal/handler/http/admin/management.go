@@ -203,6 +203,19 @@ func (h *ManagementHandler) ListUsers(c *gin.Context) {
 	response.SuccessPage(c, list, int64(total), req.GetPage(), req.GetPageSize(), req.GetTotalPages(total))
 }
 
+func (h *ManagementHandler) CreateUser(c *gin.Context) {
+	var req admindto.CreateUserRequest
+	if !httphandler.BindAndValidate(c, &req) {
+		return
+	}
+	item, err := h.svc.CreateUser(c.Request.Context(), &req)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	response.Success(c, item)
+}
+
 func (h *ManagementHandler) UpdateUser(c *gin.Context) {
 	var uri shareddto.IDURI
 	if !httphandler.BindURI(c, &uri) {

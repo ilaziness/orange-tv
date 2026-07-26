@@ -2,6 +2,7 @@ package admin
 
 import (
 	"context"
+	"net/mail"
 	"strings"
 	"time"
 
@@ -39,6 +40,7 @@ type ManagementService interface {
 
 	// A5: Regular user CRUD
 	ListUsers(ctx context.Context, req *dto.UserListRequest) ([]dto.UserItem, int, error)
+	CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*dto.UserItem, error)
 	UpdateUser(ctx context.Context, id int64, req *dto.UpdateUserRequest) (*dto.UserItem, error)
 	ResetUserPassword(ctx context.Context, id int64, req *dto.ResetUserPasswordRequest) error
 	DeleteUser(ctx context.Context, id int64) error
@@ -283,8 +285,25 @@ func (s *managementService) UpdateAdmin(ctx context.Context, id int64, req *dto.
 	if admin == nil {
 		return nil, errcode.AdminNotFound
 	}
-	if req.Email != "" {
-		admin.Email = strings.TrimSpace(req.Email)
+	if username := strings.TrimSpace(req.Username); username != "" && username != admin.Username {
+		exists, err := s.adminRepo.ExistsUsernameExcludeID(ctx, username, id)
+		if err != nil {
+			s.log.Error("management: check admin username exists for update failed", zap.String("username", username), zap.Int64("admin_id", id), zap.Error(err))
+			return nil, errcode.Wrap(errcode.DatabaseError, err)
+		}
+		if exists {
+			return nil, errcode.AdminAlreadyExists
+		}
+		admin.Username = username
+	}
+	if req.Email != nil {
+		email := strings.TrimSpace(*req.Email)
+		if email != "" {
+			if _, err := mail.ParseAddress(email); err != nil {
+				return nil, errcode.WithMessage(errcode.ParamError, "邮箱格式不正确")
+			}
+		}
+		admin.Email = email
 	}
 	if req.Avatar != "" {
 		admin.Avatar = strings.TrimSpace(req.Avatar)
@@ -495,6 +514,47 @@ func (s *managementService) ListUsers(ctx context.Context, req *dto.UserListRequ
 	return out, total, nil
 }
 
+func (s *managementService) CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*dto.UserItem, error) {
+	username := strings.TrimSpace(req.Username)
+	exists, err := s.adminRepo.ExistsUserUsername(ctx, username)
+	if err != nil {
+		s.log.Error("management: check user username exists failed", zap.String("username", username), zap.Error(err))
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	if exists {
+		return nil, errcode.UserAlreadyExists
+	}
+	hash, err := crypto.HashPassword(req.Password)
+	if err != nil {
+		s.log.Error("management: hash password for create user failed", zap.String("username", username), zap.Error(err))
+		return nil, errcode.Wrap(errcode.InternalError, err)
+	}
+	status := constant.StatusEnabled
+	if req.Status != nil {
+		status = *req.Status
+	}
+	u := &model.Users{
+		Username: username,
+		Password: hash,
+		Email:    strings.TrimSpace(req.Email),
+		Avatar:   strings.TrimSpace(req.Avatar),
+		Status:   status,
+	}
+	if err := s.adminRepo.CreateUser(ctx, u); err != nil {
+		s.log.Error("management: create user failed", zap.String("username", username), zap.Error(err))
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	return &dto.UserItem{
+		ID:          u.ID,
+		Username:    u.Username,
+		Email:       u.Email,
+		Avatar:      u.Avatar,
+		Status:      u.Status,
+		LastLoginAt: formatTimePtr(u.LastLoginAt),
+		CreatedAt:   formatTimePtr(u.CreatedAt),
+	}, nil
+}
+
 func (s *managementService) UpdateUser(ctx context.Context, id int64, req *dto.UpdateUserRequest) (*dto.UserItem, error) {
 	u, err := s.adminRepo.GetUserByID(ctx, id)
 	if err != nil {
@@ -504,8 +564,25 @@ func (s *managementService) UpdateUser(ctx context.Context, id int64, req *dto.U
 	if u == nil {
 		return nil, errcode.UserNotFound
 	}
-	if req.Email != "" {
-		u.Email = strings.TrimSpace(req.Email)
+	if username := strings.TrimSpace(req.Username); username != "" && username != u.Username {
+		exists, err := s.adminRepo.ExistsUserUsernameExcludeID(ctx, username, id)
+		if err != nil {
+			s.log.Error("management: check user username exists for update failed", zap.String("username", username), zap.Int64("user_id", id), zap.Error(err))
+			return nil, errcode.Wrap(errcode.DatabaseError, err)
+		}
+		if exists {
+			return nil, errcode.UserAlreadyExists
+		}
+		u.Username = username
+	}
+	if req.Email != nil {
+		email := strings.TrimSpace(*req.Email)
+		if email != "" {
+			if _, err := mail.ParseAddress(email); err != nil {
+				return nil, errcode.WithMessage(errcode.ParamError, "邮箱格式不正确")
+			}
+		}
+		u.Email = email
 	}
 	if req.Avatar != "" {
 		u.Avatar = strings.TrimSpace(req.Avatar)
@@ -673,6 +750,6 @@ func formatTimePtr(t *time.Time) *string {
 	if t == nil || t.IsZero() {
 		return nil
 	}
-	s := t.Format(time.RFC3339)
+	s := t.Format(time.DateTime)
 	return &s
 }

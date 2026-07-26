@@ -7,10 +7,11 @@ const pwdSchema = z.string().min(6, '密码至少 6 位')
 interface PasswordResetDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  loading?: boolean
   onConfirm: (password: string) => void
 }
 
-export function PasswordResetDialog({ open, onOpenChange, onConfirm }: PasswordResetDialogProps) {
+export function PasswordResetDialog({ open, onOpenChange, loading = false, onConfirm }: PasswordResetDialogProps) {
   function handleConfirm(pwd: string) {
     const result = pwdSchema.safeParse(pwd)
     if (!result.success) {
@@ -29,6 +30,8 @@ export function PasswordResetDialog({ open, onOpenChange, onConfirm }: PasswordR
       label="新密码"
       placeholder="请输入新密码"
       confirmText="重置"
+      type="password"
+      loading={loading}
       onConfirm={handleConfirm}
     />
   )

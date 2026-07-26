@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router'
 import { adminApi, errorMessage } from '@/lib/api'
 import type { VideoListItem } from '@orange-tv/shared'
 import { toast } from 'sonner'
+import { DEFAULT_PAGE_SIZE } from '@/lib/constants'
 
 export function useVideos() {
   const [searchParams] = useSearchParams()
@@ -34,7 +35,7 @@ export function useVideos() {
       const res = await adminApi.listVideos({
         keyword: keywordRef.current,
         page: p,
-        page_size: 20,
+        page_size: DEFAULT_PAGE_SIZE,
         director_id: directorId ? Number(directorId) : undefined,
         actor_id: actorId ? Number(actorId) : undefined,
         tag_id: tagId ? Number(tagId) : undefined,

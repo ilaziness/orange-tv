@@ -288,6 +288,9 @@ func (s adminMgmtSvc) DeleteGroup(ctx context.Context, id int64) error { return 
 func (s adminMgmtSvc) ListUsers(ctx context.Context, req *admindto.UserListRequest) ([]admindto.UserItem, int, error) {
 	return nil, 0, nil
 }
+func (s adminMgmtSvc) CreateUser(ctx context.Context, req *admindto.CreateUserRequest) (*admindto.UserItem, error) {
+	return &admindto.UserItem{}, nil
+}
 func (s adminMgmtSvc) UpdateUser(ctx context.Context, id int64, req *admindto.UpdateUserRequest) (*admindto.UserItem, error) {
 	return &admindto.UserItem{ID: uint64(id)}, nil
 }

@@ -4,8 +4,7 @@ import { z } from 'zod'
 import { adminApi, errorMessage } from '@/lib/api'
 import type { BannerItem } from '@orange-tv/shared'
 import { toast } from 'sonner'
-
-const PAGE_SIZE = 20
+import { DEFAULT_PAGE_SIZE } from '@/lib/constants'
 
 const bannerSchema = z.object({
   title: z.string().min(1, '标题不能为空'),
@@ -40,7 +39,7 @@ export function useBanners() {
   const load = useCallback(async (p = pageRef.current) => {
     setLoading(true)
     try {
-      const res = await adminApi.listBanners({ page: p, page_size: PAGE_SIZE })
+      const res = await adminApi.listBanners({ page: p, page_size: DEFAULT_PAGE_SIZE })
       setList(res.data.list || [])
       setTotal(res.data.total || 0)
       setPage(p)
@@ -136,7 +135,7 @@ export function useBanners() {
     }
   }
 
-  const hasNext = page * PAGE_SIZE < total
+  const hasNext = page * DEFAULT_PAGE_SIZE < total
 
   return {
     list,
@@ -163,6 +162,6 @@ export function useBanners() {
     onToggle,
     confirmDelete,
     load,
-    pageSize: PAGE_SIZE,
+    pageSize: DEFAULT_PAGE_SIZE,
   }
 }

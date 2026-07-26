@@ -1,8 +1,8 @@
 import { useAdmins } from './useAdmins'
-import { AdminCreateForm } from './AdminCreateForm'
+import { AdminFormDialog } from './AdminFormDialog'
 import { AdminTable } from './AdminTable'
 import { PasswordResetDialog } from '@/pages/user/_components/PasswordResetDialog'
-import { PageContainer, ConfirmDialog } from '@/components/shared'
+import { PageContainer, ConfirmDialog, Pagination } from '@/components/shared'
 import {
   Card,
   CardAction,
@@ -10,30 +10,44 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from '@/components/ui/empty'
+import { Plus, Search, RefreshCw } from 'lucide-react'
+import { Spinner } from '@/components/ui/spinner'
+import { DEFAULT_PAGE_SIZE } from '@/lib/constants'
 
 export default function AdminsPage() {
   const {
     list,
     total,
+    page,
     keyword,
     setKeyword,
-    error,
-    showCreate,
-    setShowCreate,
-    form,
-    setForm,
+    loading,
+    submitting,
+    deleting,
+    resetting,
     groups,
-    setQueryKey,
+    dialogOpen,
+    closeDialog,
+    editId,
+    createForm,
+    setCreateForm,
+    editForm,
+    setEditForm,
     deleteId,
     setDeleteId,
     resetId,
     setResetId,
-    onCreate,
+    hasNext,
+    openCreate,
+    openEdit,
+    onSubmit,
     confirmResetPwd,
     confirmDelete,
+    load,
   } = useAdmins()
 
   return (
@@ -42,46 +56,97 @@ export default function AdminsPage() {
         <CardHeader>
           <CardTitle>管理员管理</CardTitle>
           <CardAction>
-            <Button size="sm" onClick={() => setShowCreate(!showCreate)}>
-              <Plus data-icon="inline-start" />
-              新增管理员
-            </Button>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={() => void load(page)} disabled={loading}>
+                {loading ? <Spinner data-icon="inline-start" /> : <RefreshCw data-icon="inline-start" />}
+                刷新
+              </Button>
+              <Button size="sm" onClick={openCreate}>
+                <Plus data-icon="inline-start" />
+                新增管理员
+              </Button>
+            </div>
           </CardAction>
         </CardHeader>
         <CardContent>
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertTitle>出错了</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
+          <div className="mb-4 flex gap-2">
+            <Input
+              placeholder="用户名/邮箱"
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              className="max-w-xs"
+              onKeyDown={(e) => { if (e.key === 'Enter') void load(1) }}
+            />
+            <Button variant="outline" size="sm" onClick={() => void load(1)} disabled={loading}>
+              {loading ? <Spinner data-icon="inline-start" /> : <Search data-icon="inline-start" />}
+              查询
+            </Button>
+          </div>
+          {loading && list.length === 0 ? (
+            <div className="flex flex-col gap-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
+            </div>
+          ) : list.length > 0 ? (
+            <>
+              <AdminTable
+                list={list}
+                loading={loading}
+                onEdit={openEdit}
+                onReset={setResetId}
+                onDelete={setDeleteId}
+              />
+              <Pagination
+                page={page}
+                total={total}
+                pageSize={DEFAULT_PAGE_SIZE}
+                hasNext={hasNext}
+                loading={loading}
+                onFirst={() => void load(1)}
+                onPrev={() => void load(page - 1)}
+                onNext={() => void load(page + 1)}
+                onLast={() => void load(Math.ceil(total / DEFAULT_PAGE_SIZE))}
+              />
+            </>
+          ) : (
+            <Empty className="py-8">
+              <EmptyHeader>
+                <EmptyTitle>暂无数据</EmptyTitle>
+                <EmptyDescription>点击右上角「新增管理员」添加第一条数据</EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           )}
-          {showCreate && (
-            <AdminCreateForm form={form} setForm={setForm} groups={groups} onSubmit={onCreate} />
-          )}
-          <AdminTable
-            list={list}
-            total={total}
-            keyword={keyword}
-            setKeyword={setKeyword}
-            setQueryKey={setQueryKey}
-            onReset={setResetId}
-            onDelete={setDeleteId}
-          />
         </CardContent>
       </Card>
 
+      <AdminFormDialog
+        open={dialogOpen}
+        onOpenChange={closeDialog}
+        editId={editId}
+        groups={groups}
+        createForm={createForm}
+        setCreateForm={setCreateForm}
+        editForm={editForm}
+        setEditForm={setEditForm}
+        submitting={submitting}
+        onSubmit={onSubmit}
+      />
+
       <ConfirmDialog
         open={deleteId !== null}
-        onOpenChange={(open) => { if (!open) setDeleteId(null) }}
+        onOpenChange={(open) => { if (!open && !deleting) setDeleteId(null) }}
         title="删除管理员"
         description="确认删除该管理员？此操作不可撤销。"
         destructive
+        loading={deleting}
         onConfirm={confirmDelete}
       />
 
       <PasswordResetDialog
         open={resetId !== null}
-        onOpenChange={(open) => { if (!open) setResetId(null) }}
+        onOpenChange={(open) => { if (!open && !resetting) setResetId(null) }}
+        loading={resetting}
         onConfirm={confirmResetPwd}
       />
     </PageContainer>

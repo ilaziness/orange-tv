@@ -199,6 +199,8 @@ export const adminApi = {
 
   listUsers: (query?: Record<string, string | number | undefined>) =>
     withAuth((token) => apiGet<PageData<UserItem>>(ADMIN_API_BASE, '/users', { token, query })),
+  createUser: (body: unknown) =>
+    withAuth((token) => apiPost<UserItem>(ADMIN_API_BASE, '/users', body, { token })),
   updateUser: (id: number, body: unknown) =>
     withAuth((token) => apiPut(ADMIN_API_BASE, `/users/${id}`, body, { token })),
   deleteUser: (id: number) => withAuth((token) => apiDelete(ADMIN_API_BASE, `/users/${id}`, { token })),

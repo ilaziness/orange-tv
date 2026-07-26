@@ -107,6 +107,7 @@ func registerAdminUserRoutes(v1 *gin.RouterGroup, h *Handlers) {
 
 	// Regular users (A5)
 	v1.GET("/users", h.AdminMgmt.ListUsers)
+	v1.POST("/users", h.AdminMgmt.CreateUser)
 	v1.PUT("/users/:id", h.AdminMgmt.UpdateUser)
 	v1.DELETE("/users/:id", h.AdminMgmt.DeleteUser)
 	v1.PUT("/users/:id/password", h.AdminMgmt.ResetUserPassword)

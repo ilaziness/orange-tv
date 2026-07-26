@@ -9,12 +9,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Textarea } from '@/components/ui/textarea'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Spinner } from '@/components/ui/spinner'
 import { Save } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -31,12 +31,11 @@ export default function SiteSettingsPage() {
   const [form, setForm] = useState({
     name: '', logo: '', copyright: '', icp: '', seo_keywords: '', description: '',
   })
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
-  async function load() {
-    setLoading(true)
-    setError('')
+  async function load(opts?: { silent?: boolean }) {
+    if (!opts?.silent) setLoading(true)
     try {
       const res = await adminApi.getSettings()
       const site = res.data.site
@@ -49,9 +48,9 @@ export default function SiteSettingsPage() {
         description: site.description || '',
       })
     } catch (err) {
-      setError(errorMessage(err))
+      toast.error(errorMessage(err))
     } finally {
-      setLoading(false)
+      if (!opts?.silent) setLoading(false)
     }
   }
 
@@ -59,18 +58,21 @@ export default function SiteSettingsPage() {
 
   async function save(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
-    setError('')
+    if (submitting) return
     const result = siteSettingsSchema.safeParse(form)
     if (!result.success) {
-      setError(result.error.issues[0]?.message || '表单校验失败')
+      toast.error(result.error.issues[0]?.message || '表单校验失败')
       return
     }
+    setSubmitting(true)
     try {
       await adminApi.updateSettings({ site: result.data })
       toast.success('设置已保存')
-      await load()
+      await load({ silent: true })
     } catch (err) {
-      setError(errorMessage(err))
+      toast.error(errorMessage(err))
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -81,12 +83,6 @@ export default function SiteSettingsPage() {
           <CardTitle>站点设置</CardTitle>
         </CardHeader>
         <CardContent>
-          {error && (
-            <Alert variant="destructive" className="mb-4">
-              <AlertTitle>出错了</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
           {loading ? (
             <div className="flex flex-col gap-4">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -96,35 +92,35 @@ export default function SiteSettingsPage() {
           ) : (
             <form onSubmit={save} className="flex flex-col gap-4">
               <FieldGroup>
-                <Field>
+                <Field data-disabled={submitting ? true : undefined}>
                   <FieldLabel htmlFor="name">站点名称</FieldLabel>
-                  <Input id="name" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} />
+                  <Input id="name" placeholder="请输入站点名称" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} disabled={submitting} />
                 </Field>
-                <Field>
+                <Field data-disabled={submitting ? true : undefined}>
                   <FieldLabel htmlFor="logo">Logo URL</FieldLabel>
-                  <Input id="logo" value={form.logo} onChange={(e) => setForm((prev) => ({ ...prev, logo: e.target.value }))} />
+                  <Input id="logo" placeholder="请输入 Logo 图片地址（可选）" value={form.logo} onChange={(e) => setForm((prev) => ({ ...prev, logo: e.target.value }))} disabled={submitting} />
                 </Field>
-                <Field>
+                <Field data-disabled={submitting ? true : undefined}>
                   <FieldLabel htmlFor="copyright">版权信息</FieldLabel>
-                  <Input id="copyright" value={form.copyright} onChange={(e) => setForm((prev) => ({ ...prev, copyright: e.target.value }))} />
+                  <Input id="copyright" placeholder="请输入版权信息，如 © 2024 YourSite" value={form.copyright} onChange={(e) => setForm((prev) => ({ ...prev, copyright: e.target.value }))} disabled={submitting} />
                 </Field>
-                <Field>
+                <Field data-disabled={submitting ? true : undefined}>
                   <FieldLabel htmlFor="icp">备案号</FieldLabel>
-                  <Input id="icp" value={form.icp} onChange={(e) => setForm((prev) => ({ ...prev, icp: e.target.value }))} />
+                  <Input id="icp" placeholder="请输入 ICP 备案号（可选）" value={form.icp} onChange={(e) => setForm((prev) => ({ ...prev, icp: e.target.value }))} disabled={submitting} />
                 </Field>
-                <Field>
+                <Field data-disabled={submitting ? true : undefined}>
                   <FieldLabel htmlFor="seo_keywords">SEO 关键词</FieldLabel>
-                  <Input id="seo_keywords" value={form.seo_keywords} onChange={(e) => setForm((prev) => ({ ...prev, seo_keywords: e.target.value }))} />
+                  <Input id="seo_keywords" placeholder="请输入 SEO 关键词，逗号分隔" value={form.seo_keywords} onChange={(e) => setForm((prev) => ({ ...prev, seo_keywords: e.target.value }))} disabled={submitting} />
                 </Field>
-                <Field>
+                <Field data-disabled={submitting ? true : undefined}>
                   <FieldLabel htmlFor="description">站点描述</FieldLabel>
-                  <Textarea id="description" rows={3} value={form.description} onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))} />
+                  <Textarea id="description" rows={3} placeholder="请输入站点描述（可选）" value={form.description} onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))} disabled={submitting} />
                 </Field>
               </FieldGroup>
               <div className="flex justify-end">
-                <Button type="submit">
-                  <Save data-icon="inline-start" />
-                  保存
+                <Button type="submit" disabled={submitting}>
+                  {submitting ? <Spinner data-icon="inline-start" /> : <Save data-icon="inline-start" />}
+                  {submitting ? '保存中...' : '保存'}
                 </Button>
               </div>
             </form>

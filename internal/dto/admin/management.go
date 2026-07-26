@@ -67,10 +67,11 @@ type CreateAdminRequest struct {
 
 // UpdateAdminRequest updates an admin.
 type UpdateAdminRequest struct {
-	Email   string  `json:"email" validate:"omitempty,email,max=128"`
-	Avatar  string  `json:"avatar" validate:"omitempty,max=500"`
-	GroupID *uint64 `json:"group_id" validate:"omitempty,min=1"`
-	Status  *uint8  `json:"status" validate:"omitempty,oneof=0 1"`
+	Username string  `json:"username" validate:"omitempty,min=3,max=50"`
+	Email    *string `json:"email" validate:"omitempty,max=128"`
+	Avatar   string  `json:"avatar" validate:"omitempty,max=500"`
+	GroupID  *uint64 `json:"group_id" validate:"omitempty,min=1"`
+	Status   *uint8  `json:"status" validate:"omitempty,oneof=0 1"`
 }
 
 // ResetAdminPasswordRequest resets admin password.
@@ -129,11 +130,21 @@ type UserItem struct {
 	CreatedAt   *string `json:"created_at"`
 }
 
+// CreateUserRequest creates a new regular user.
+type CreateUserRequest struct {
+	Username string `json:"username" validate:"required,min=3,max=50"`
+	Password string `json:"password" validate:"required,min=6,max=72"`
+	Email    string `json:"email" validate:"omitempty,email,max=128"`
+	Avatar   string `json:"avatar" validate:"omitempty,max=500"`
+	Status   *uint8 `json:"status" validate:"omitempty,oneof=0 1"`
+}
+
 // UpdateUserRequest updates a regular user.
 type UpdateUserRequest struct {
-	Email  string `json:"email" validate:"omitempty,email,max:128"`
-	Avatar string `json:"avatar" validate:"omitempty,max:500"`
-	Status *uint8 `json:"status" validate:"omitempty,oneof=0 1"`
+	Username string  `json:"username" validate:"omitempty,min=3,max=50"`
+	Email    *string `json:"email" validate:"omitempty,max=128"`
+	Avatar   string  `json:"avatar" validate:"omitempty,max=500"`
+	Status   *uint8  `json:"status" validate:"omitempty,oneof=0 1"`
 }
 
 // ResetUserPasswordRequest resets user password.
@@ -168,7 +179,7 @@ type CreateBannerRequest struct {
 type UpdateBannerRequest struct {
 	Title   string  `json:"title" validate:"omitempty,min=1,max=128"`
 	Cover   string  `json:"cover" validate:"omitempty,max=500"`
-	Link    string  `json:"link" validate:"omitempty,max:500"`
+	Link    string  `json:"link" validate:"omitempty,max=500"`
 	VideoID *uint64 `json:"video_id" validate:"omitempty,min=1"`
 	Sort    *uint32 `json:"sort" validate:"omitempty,min=0"`
 	Status  *uint8  `json:"status" validate:"omitempty,oneof=0 1"`

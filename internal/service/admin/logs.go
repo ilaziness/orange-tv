@@ -117,10 +117,10 @@ func toLoginLogItem(m *model.LoginLogs) admindto.LoginLogItem {
 }
 
 func formatTime(t *time.Time) string {
-	if t == nil {
+	if t == nil || t.IsZero() {
 		return ""
 	}
-	return t.Format(time.RFC3339)
+	return t.Format(time.DateTime)
 }
 
 func parseTimeRange(start, end string) (*time.Time, *time.Time, error) {

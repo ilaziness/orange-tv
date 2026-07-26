@@ -5,6 +5,7 @@ import { adminApi, errorMessage } from '@/lib/api'
 import { flattenCategories } from '@/lib/categories'
 import type { Category, CollectCategoryMap, CollectLog, CollectSource, PlaySource, RemoteCategory } from '@orange-tv/shared'
 import { toast } from 'sonner'
+import { DEFAULT_PAGE_SIZE } from '@/lib/constants'
 
 /**
  * parseCronExpr parses a cron expression like "0 8 * * *" or "30 6,18 * * *"
@@ -94,13 +95,13 @@ export function useCollect() {
   const [sources, setSources] = useState<CollectSource[]>([])
   const [sourcesTotal, setSourcesTotal] = useState(0)
   const [sourcesPage, setSourcesPage] = useState(1)
-  const [sourcesPageSize] = useState(20)
+  const [sourcesPageSize] = useState(DEFAULT_PAGE_SIZE)
   const [playSources, setPlaySources] = useState<PlaySource[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [logs, setLogs] = useState<CollectLog[]>([])
   const [logsTotal, setLogsTotal] = useState(0)
   const [logsPage, setLogsPage] = useState(1)
-  const [logsPageSize] = useState(20)
+  const [logsPageSize] = useState(DEFAULT_PAGE_SIZE)
   const [maps, setMaps] = useState<CollectCategoryMap[]>([])
   const [remoteCategories, setRemoteCategories] = useState<RemoteCategory[]>([])
   const [formError, setFormError] = useState('')

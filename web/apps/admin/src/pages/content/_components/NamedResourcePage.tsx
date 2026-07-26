@@ -27,9 +27,9 @@ import {
 } from '@/components/ui/table'
 import { Search, Plus, Pencil, Film, Trash2, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
+import { DEFAULT_PAGE_SIZE } from '@/lib/constants'
 
 const nameSchema = z.string().trim().min(1, '请输入名称')
-const PAGE_SIZE = 20
 
 type ResourceType = 'director' | 'actor' | 'tag'
 
@@ -72,7 +72,7 @@ export function NamedResourcePage({
   const load = useCallback(async (p = pageRef.current, k = keywordRef.current) => {
     setLoading(true)
     try {
-      const res = await listRef.current({ keyword: k, page: p, page_size: PAGE_SIZE })
+      const res = await listRef.current({ keyword: k, page: p, page_size: DEFAULT_PAGE_SIZE })
       setItems(res.data.list || [])
       setTotal(res.data.total || 0)
       setPage(p)
@@ -144,7 +144,7 @@ export function NamedResourcePage({
     }
   }
 
-  const hasNext = page * PAGE_SIZE < total
+  const hasNext = page * DEFAULT_PAGE_SIZE < total
 
   return (
     <PageContainer>
@@ -233,13 +233,13 @@ export function NamedResourcePage({
               <Pagination
                 page={page}
                 total={total}
-                pageSize={PAGE_SIZE}
+                pageSize={DEFAULT_PAGE_SIZE}
                 hasNext={hasNext}
                 loading={loading}
                 onFirst={() => void load(1)}
                 onPrev={() => void load(page - 1)}
                 onNext={() => void load(page + 1)}
-                onLast={() => void load(Math.ceil(total / PAGE_SIZE))}
+                onLast={() => void load(Math.ceil(total / DEFAULT_PAGE_SIZE))}
               />
             </>
           ) : (

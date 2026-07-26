@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type HTMLInputTypeAttribute } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -10,6 +10,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field, FieldLabel } from '@/components/ui/field'
+import { Spinner } from '@/components/ui/spinner'
 
 interface PromptDialogProps {
   open: boolean
@@ -20,6 +21,8 @@ interface PromptDialogProps {
   placeholder?: string
   confirmText?: string
   cancelText?: string
+  type?: HTMLInputTypeAttribute
+  loading?: boolean
   onConfirm: (value: string) => void
 }
 
@@ -32,6 +35,8 @@ export function PromptDialog({
   placeholder,
   confirmText = '确认',
   cancelText = '取消',
+  type = 'text',
+  loading = false,
   onConfirm,
 }: PromptDialogProps) {
   const [value, setValue] = useState('')
@@ -41,33 +46,40 @@ export function PromptDialog({
   }, [open])
 
   function handleConfirm() {
+    if (loading) return
     onConfirm(value)
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={open} onOpenChange={(v) => { if (!loading) onOpenChange(v) }}>
+      <DialogContent className="sm:max-w-md" showCloseButton={!loading}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
-        <Field>
+        <Field data-disabled={loading ? true : undefined}>
           {label && <FieldLabel htmlFor="prompt-input">{label}</FieldLabel>}
           <Input
             id="prompt-input"
+            type={type}
             value={value}
             placeholder={placeholder}
             onChange={(e) => setValue(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleConfirm()
             }}
+            disabled={loading}
+            autoFocus
           />
         </Field>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
             {cancelText}
           </Button>
-          <Button onClick={handleConfirm}>{confirmText}</Button>
+          <Button onClick={handleConfirm} disabled={loading}>
+            {loading && <Spinner data-icon="inline-start" />}
+            {loading ? '处理中...' : confirmText}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

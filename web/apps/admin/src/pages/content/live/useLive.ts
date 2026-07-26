@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { adminApi, errorMessage } from '@/lib/api'
 import type { LiveChannel } from '@orange-tv/shared'
 import { toast } from 'sonner'
+import { DEFAULT_PAGE_SIZE } from '@/lib/constants'
 
 const liveSchema = z.object({
   name: z.string().min(1, '频道名称不能为空'),
@@ -41,7 +42,7 @@ export function useLive() {
     setLoading(true)
     setError('')
     try {
-      const res = await adminApi.listLive({ page: p, page_size: 20 })
+      const res = await adminApi.listLive({ page: p, page_size: DEFAULT_PAGE_SIZE })
       setList(res.data.list || [])
       setTotal(res.data.total || 0)
       setPage(res.data.page || p)
