@@ -11,6 +11,7 @@ import (
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
+	"github.com/ilaziness/orange-tv/internal/utils"
 	"go.uber.org/zap"
 )
 
@@ -45,7 +46,7 @@ func (s *categoryService) ListTree(ctx context.Context, onlyEnabled bool) ([]sha
 		s.log.Error("category: list failed", zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	return buildCategoryTree(items), nil
+	return utils.BuildCategoryTree(items), nil
 }
 
 func (s *categoryService) Create(ctx context.Context, req *dto.CreateCategoryRequest) (*shareddto.CategoryResponse, error) {
@@ -201,40 +202,6 @@ func toCategoryDTO(item *model.Categories) *shareddto.CategoryResponse {
 		SortOrder: item.SortOrder,
 		Status:    item.Status,
 	}
-}
-
-func buildCategoryTree(items []model.Categories) []shareddto.CategoryResponse {
-	byParent := make(map[uint64][]model.Categories, len(items))
-	for _, item := range items {
-		byParent[item.ParentID] = append(byParent[item.ParentID], item)
-	}
-	var build func(parentID uint64) []shareddto.CategoryResponse
-	build = func(parentID uint64) []shareddto.CategoryResponse {
-		children := byParent[parentID]
-		out := make([]shareddto.CategoryResponse, 0, len(children))
-		for _, c := range children {
-			// ensure JSON always returns [] for empty children, not null
-			childNodes := build(c.ID)
-			if childNodes == nil {
-				childNodes = []shareddto.CategoryResponse{}
-			}
-			node := shareddto.CategoryResponse{
-				ID:        c.ID,
-				Name:      c.Name,
-				ParentID:  c.ParentID,
-				SortOrder: c.SortOrder,
-				Status:    c.Status,
-				Children:  childNodes,
-			}
-			out = append(out, node)
-		}
-		return out
-	}
-	roots := build(0)
-	if roots == nil {
-		return []shareddto.CategoryResponse{}
-	}
-	return roots
 }
 
 func isDescendant(all []model.Categories, ancestorID, nodeID uint64) bool {

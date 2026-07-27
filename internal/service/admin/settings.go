@@ -12,6 +12,7 @@ import (
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
+	"github.com/ilaziness/orange-tv/internal/utils"
 	"go.uber.org/zap"
 )
 
@@ -95,7 +96,7 @@ func (s *settingsService) ResourceConfig(ctx context.Context) (*ResourceConfig, 
 		return nil, err
 	}
 	return &ResourceConfig{
-		SiteMode:                defaultStr(strVal(m, constant.SettingSiteMode), constant.SiteModeVideoSite),
+		SiteMode:                utils.DefaultStr(strVal(m, constant.SettingSiteMode), constant.SiteModeVideoSite),
 		APIOutputFormat:         normalizeAPIOutputFormat(strVal(m, constant.SettingAPIOutputFormat)),
 		EnableThirdPartyCollect: boolVal(m, constant.SettingEnableThirdPartyCollect, true),
 		APIKey:                  strVal(m, constant.SettingResourceAPIKey),
@@ -232,7 +233,7 @@ func mapToAdminSettings(m map[string]model.SystemSettings) *admindto.SettingsRes
 	}
 	return &admindto.SettingsResponse{
 		Site: admindto.SiteSettings{
-			Name:        defaultStr(strVal(m, constant.SettingSiteName), "Orange TV"),
+			Name:        utils.DefaultStr(strVal(m, constant.SettingSiteName), "Orange TV"),
 			Logo:        strVal(m, constant.SettingSiteLogo),
 			Copyright:   strVal(m, constant.SettingSiteCopyright),
 			ICP:         strVal(m, constant.SettingSiteICP),
@@ -240,7 +241,7 @@ func mapToAdminSettings(m map[string]model.SystemSettings) *admindto.SettingsRes
 			Description: strVal(m, constant.SettingSiteDescription),
 		},
 		API: admindto.APISettings{
-			SiteMode:                defaultStr(strVal(m, constant.SettingSiteMode), constant.SiteModeVideoSite),
+			SiteMode:                utils.DefaultStr(strVal(m, constant.SettingSiteMode), constant.SiteModeVideoSite),
 			APIOutputFormat:         normalizeAPIOutputFormat(strVal(m, constant.SettingAPIOutputFormat)),
 			EnableThirdPartyCollect: boolVal(m, constant.SettingEnableThirdPartyCollect, true),
 			ResourceAPIKeySet:       key != "",
@@ -282,11 +283,4 @@ func boolVal(m map[string]model.SystemSettings, key string, def bool) bool {
 		}
 		return def
 	}
-}
-
-func defaultStr(v, def string) string {
-	if strings.TrimSpace(v) == "" {
-		return def
-	}
-	return v
 }

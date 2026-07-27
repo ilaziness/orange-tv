@@ -7,8 +7,8 @@ import (
 	"github.com/ilaziness/orange-tv/internal/cache"
 	shareddto "github.com/ilaziness/orange-tv/internal/dto"
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
-	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
+	"github.com/ilaziness/orange-tv/internal/utils"
 	"go.uber.org/zap"
 )
 
@@ -48,7 +48,7 @@ func (s *categoryService) ListTree(ctx context.Context) ([]shareddto.CategoryRes
 		s.log.Error("client category: list tree failed", zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	tree := buildCategoryTree(items)
+	tree := utils.BuildCategoryTree(items)
 	_ = s.cache.Set(ctx, categoryTreeCacheKey, tree, categoryTreeCacheTTL)
 	return tree, nil
 }
@@ -59,36 +59,4 @@ func InvalidateCategoryCache(ctx context.Context, c cache.Cache) {
 		return
 	}
 	_ = c.Delete(ctx, categoryTreeCacheKey)
-}
-
-func buildCategoryTree(items []model.Categories) []shareddto.CategoryResponse {
-	byParent := make(map[uint64][]model.Categories, len(items))
-	for _, item := range items {
-		byParent[item.ParentID] = append(byParent[item.ParentID], item)
-	}
-	var build func(parentID uint64) []shareddto.CategoryResponse
-	build = func(parentID uint64) []shareddto.CategoryResponse {
-		children := byParent[parentID]
-		out := make([]shareddto.CategoryResponse, 0, len(children))
-		for _, c := range children {
-			childNodes := build(c.ID)
-			if childNodes == nil {
-				childNodes = []shareddto.CategoryResponse{}
-			}
-			out = append(out, shareddto.CategoryResponse{
-				ID:        c.ID,
-				Name:      c.Name,
-				ParentID:  c.ParentID,
-				SortOrder: c.SortOrder,
-				Status:    c.Status,
-				Children:  childNodes,
-			})
-		}
-		return out
-	}
-	roots := build(0)
-	if roots == nil {
-		return []shareddto.CategoryResponse{}
-	}
-	return roots
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/ilaziness/orange-tv/internal/constant"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
+	"github.com/ilaziness/orange-tv/internal/utils"
 	"github.com/uptrace/bun"
 	"go.uber.org/zap"
 )
@@ -538,12 +539,11 @@ func parseReleaseDate(s string) *time.Time {
 	if s == "" {
 		return nil
 	}
-	for _, layout := range []string{"2006-01-02", "2006/01/02", "2006-1-2", time.RFC3339} {
-		if tm, err := time.ParseInLocation(layout, s, time.Local); err == nil {
-			return &tm
-		}
+	tm, err := utils.ParseFlexibleDate(s, []string{"2006-01-02", "2006/01/02", "2006-1-2", time.RFC3339})
+	if err != nil {
+		return nil
 	}
-	return nil
+	return &tm
 }
 
 // parseSerialStatus parses vod_remarks to determine serial status.

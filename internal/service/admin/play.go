@@ -9,6 +9,7 @@ import (
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
+	"github.com/ilaziness/orange-tv/internal/utils"
 	"go.uber.org/zap"
 )
 
@@ -189,7 +190,7 @@ func (s *playService) CreateEpisode(ctx context.Context, req *dto.CreatePlayEpis
 		}
 		m.ID = existing.ID
 		if err := s.playRepo.RestoreAndUpdateEpisode(ctx, m); err != nil {
-			if isDuplicateKey(err) {
+			if utils.IsDuplicateKey(err) {
 				return nil, errcode.PlayEpisodeDuplicate
 			}
 			s.log.Error("play: restore and update episode failed", zap.Uint64("episode_id", m.ID), zap.Error(err))
@@ -200,7 +201,7 @@ func (s *playService) CreateEpisode(ctx context.Context, req *dto.CreatePlayEpis
 	}
 
 	if err := s.playRepo.CreateEpisode(ctx, m); err != nil {
-		if isDuplicateKey(err) {
+		if utils.IsDuplicateKey(err) {
 			return nil, errcode.PlayEpisodeDuplicate
 		}
 		s.log.Error("play: create episode failed", zap.Uint64("video_id", req.VideoID), zap.Uint64("source_id", req.SourceID), zap.Error(err))
@@ -271,7 +272,7 @@ func (s *playService) UpdateEpisode(ctx context.Context, id int64, req *dto.Upda
 		m.Status = *req.Status
 	}
 	if err := s.playRepo.UpdateEpisode(ctx, m); err != nil {
-		if isDuplicateKey(err) {
+		if utils.IsDuplicateKey(err) {
 			return nil, errcode.PlayEpisodeDuplicate
 		}
 		s.log.Error("play: update episode failed", zap.Int64("episode_id", id), zap.Error(err))
@@ -365,12 +366,4 @@ func itoa32(n int32) string {
 		b[i] = '-'
 	}
 	return string(b[i:])
-}
-
-func isDuplicateKey(err error) bool {
-	if err == nil {
-		return false
-	}
-	msg := strings.ToLower(err.Error())
-	return strings.Contains(msg, "duplicate") || strings.Contains(msg, "unique")
 }

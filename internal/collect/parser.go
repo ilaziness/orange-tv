@@ -3,9 +3,10 @@ package collect
 import (
 	"encoding/json"
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/ilaziness/orange-tv/internal/utils"
 )
 
 // ParseDefaultJSON parses the system default collect JSON format.
@@ -66,9 +67,9 @@ func ParseDefaultJSON(body []byte) (*Page, error) {
 			Rating:             row.Rating,
 			ReleaseDate:        strings.TrimSpace(row.ReleaseDate),
 			ExternalCategoryID: row.CategoryID,
-			Directors:          splitNames(row.Directors),
-			Actors:             splitNames(row.Actors),
-			Tags:               splitNames(row.Tags),
+			Directors:          utils.SplitNames(row.Directors),
+			Actors:             utils.SplitNames(row.Actors),
+			Tags:               utils.SplitNames(row.Tags),
 		}
 		if it.Title == "" {
 			continue
@@ -152,9 +153,9 @@ func ParseAppleCMSList(body []byte) (*ListPage, error) {
 	if err := json.Unmarshal(body, &raw); err != nil {
 		return nil, fmt.Errorf("apple cms list unmarshal: %w", err)
 	}
-	page := anyToInt(raw.Page)
-	pageCount := anyToInt(raw.PageCount)
-	total := anyToInt(raw.Total)
+	page := utils.AnyToInt(raw.Page)
+	pageCount := utils.AnyToInt(raw.PageCount)
+	total := utils.AnyToInt(raw.Total)
 	if page < 1 {
 		page = 1
 	}
@@ -171,7 +172,7 @@ func ParseAppleCMSList(body []byte) (*ListPage, error) {
 	vodIDs := make([]int64, 0, len(rows))
 	vodTimes := make([]string, 0, len(rows))
 	for _, row := range rows {
-		vodIDs = append(vodIDs, int64(anyToInt(row.VodID)))
+		vodIDs = append(vodIDs, int64(utils.AnyToInt(row.VodID)))
 		vodTimes = append(vodTimes, strings.TrimSpace(row.VodTime))
 	}
 
@@ -184,9 +185,9 @@ func ParseAppleCMSList(body []byte) (*ListPage, error) {
 	classes := make([]AppleCMSClass, 0, len(classRows))
 	for _, c := range classRows {
 		classes = append(classes, AppleCMSClass{
-			TypeID:   int64(anyToInt(c.TypeID)),
+			TypeID:   int64(utils.AnyToInt(c.TypeID)),
 			TypeName: strings.TrimSpace(c.TypeName),
-			TypePID:  int64(anyToInt(c.TypePID)),
+			TypePID:  int64(utils.AnyToInt(c.TypePID)),
 		})
 	}
 
@@ -207,9 +208,9 @@ func ParseAppleCMSDetail(body []byte) (*Page, error) {
 	if err := json.Unmarshal(body, &raw); err != nil {
 		return nil, fmt.Errorf("apple cms detail unmarshal: %w", err)
 	}
-	page := anyToInt(raw.Page)
-	pageCount := anyToInt(raw.PageCount)
-	total := anyToInt(raw.Total)
+	page := utils.AnyToInt(raw.Page)
+	pageCount := utils.AnyToInt(raw.PageCount)
+	total := utils.AnyToInt(raw.Total)
 	if page < 1 {
 		page = 1
 	}
@@ -229,22 +230,22 @@ func ParseAppleCMSDetail(body []byte) (*Page, error) {
 			continue
 		}
 		it := Item{
-			ExternalID:         anyToString(row.VodID),
+			ExternalID:         utils.AnyToString(row.VodID),
 			Title:              title,
 			Subtitle:           strings.TrimSpace(row.VodSub),
-			Description:        stripHTMLTags(row.Content),
+			Description:        utils.StripHTMLTags(row.Content),
 			Cover:              strings.TrimSpace(row.Pic),
 			Poster:             strings.TrimSpace(row.Pic),
-			Year:               int32(anyToInt(row.VodYear)),
+			Year:               int32(utils.AnyToInt(row.VodYear)),
 			Region:             strings.TrimSpace(row.VodArea),
 			Language:           strings.TrimSpace(row.VodLang),
-			Duration:           int32(anyToInt(row.VodDuration)),
-			Rating:             anyToFloat(row.DoubanScore),
+			Duration:           int32(utils.AnyToInt(row.VodDuration)),
+			Rating:             utils.AnyToFloat(row.DoubanScore),
 			ReleaseDate:        strings.TrimSpace(row.Pubdate),
-			ExternalCategoryID: int64(anyToInt(row.TypeID)),
-			Directors:          splitNames(row.Director),
-			Actors:             splitNames(row.Actor),
-			Tags:               splitNames(row.VodTag, row.Class),
+			ExternalCategoryID: int64(utils.AnyToInt(row.TypeID)),
+			Directors:          utils.SplitNames(row.Director),
+			Actors:             utils.SplitNames(row.Actor),
+			Tags:               utils.SplitNames(row.VodTag, row.Class),
 			Episodes:           parseApplePlayURLs(row.VodPlayURL),
 			VodTime:            strings.TrimSpace(row.VodTime),
 			Remarks:            strings.TrimSpace(row.VodRemarks),
@@ -264,9 +265,9 @@ func ParseAppleCMSDetail(body []byte) (*Page, error) {
 	classes := make([]AppleCMSClass, 0, len(classRows))
 	for _, c := range classRows {
 		classes = append(classes, AppleCMSClass{
-			TypeID:   int64(anyToInt(c.TypeID)),
+			TypeID:   int64(utils.AnyToInt(c.TypeID)),
 			TypeName: strings.TrimSpace(c.TypeName),
-			TypePID:  int64(anyToInt(c.TypePID)),
+			TypePID:  int64(utils.AnyToInt(c.TypePID)),
 		})
 	}
 
@@ -379,36 +380,6 @@ func extractEpisodeNumber(s string) int32 {
 	return int32(n)
 }
 
-func splitNames(parts ...string) []string {
-	out := make([]string, 0)
-	seen := map[string]bool{}
-	for _, s := range parts {
-		s = strings.TrimSpace(s)
-		if s == "" {
-			continue
-		}
-		s = strings.ReplaceAll(s, "，", ",")
-		s = strings.ReplaceAll(s, "、", ",")
-		s = strings.ReplaceAll(s, "/", ",")
-		s = strings.ReplaceAll(s, "|", ",")
-		// split by comma first, then by whitespace for each part
-		commaParts := strings.Split(s, ",")
-		for _, cp := range commaParts {
-			// split each comma-separated part by whitespace to handle space-delimited names
-			spaceParts := strings.Fields(cp)
-			for _, p := range spaceParts {
-				p = strings.TrimSpace(p)
-				if p == "" || seen[p] {
-					continue
-				}
-				seen[p] = true
-				out = append(out, p)
-			}
-		}
-	}
-	return out
-}
-
 func guessFormat(url string) string {
 	u := strings.ToLower(url)
 	switch {
@@ -422,94 +393,5 @@ func guessFormat(url string) string {
 		return "mp4"
 	default:
 		return "hls"
-	}
-}
-
-var htmlTagRegexp = regexp.MustCompile(`<[^>]*>`)
-
-// stripHTMLTags removes HTML tags from s and trims whitespace.
-func stripHTMLTags(s string) string {
-	s = strings.TrimSpace(s)
-	if s == "" {
-		return ""
-	}
-	s = htmlTagRegexp.ReplaceAllString(s, "")
-	return strings.TrimSpace(s)
-}
-
-func firstNonEmpty(vals ...string) string {
-	for _, v := range vals {
-		if strings.TrimSpace(v) != "" && v != "0" {
-			return strings.TrimSpace(v)
-		}
-	}
-	return ""
-}
-
-func anyToInt(v any) int {
-	switch t := v.(type) {
-	case nil:
-		return 0
-	case float64:
-		return int(t)
-	case float32:
-		return int(t)
-	case int:
-		return t
-	case int32:
-		return int(t)
-	case int64:
-		return int(t)
-	case uint:
-		return int(t)
-	case uint32:
-		return int(t)
-	case uint64:
-		return int(t)
-	case json.Number:
-		i, _ := t.Int64()
-		return int(i)
-	case string:
-		i, _ := strconv.Atoi(strings.TrimSpace(t))
-		return i
-	default:
-		s := fmt.Sprint(t)
-		i, _ := strconv.Atoi(strings.TrimSpace(s))
-		return i
-	}
-}
-
-func anyToString(v any) string {
-	switch t := v.(type) {
-	case nil:
-		return ""
-	case string:
-		return strings.TrimSpace(t)
-	case json.Number:
-		return t.String()
-	case float64:
-		if t == float64(int64(t)) {
-			return strconv.FormatInt(int64(t), 10)
-		}
-		return strconv.FormatFloat(t, 'f', -1, 64)
-	default:
-		return strings.TrimSpace(fmt.Sprint(t))
-	}
-}
-
-func anyToFloat(v any) float64 {
-	switch t := v.(type) {
-	case nil:
-		return 0
-	case float64:
-		return t
-	case int:
-		return float64(t)
-	case string:
-		f, _ := strconv.ParseFloat(strings.TrimSpace(t), 64)
-		return f
-	default:
-		f, _ := strconv.ParseFloat(fmt.Sprint(t), 64)
-		return f
 	}
 }

@@ -13,6 +13,7 @@ import (
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
+	"github.com/ilaziness/orange-tv/internal/utils"
 	"github.com/uptrace/bun"
 	"go.uber.org/zap"
 )
@@ -140,13 +141,13 @@ func (s *videoService) Create(ctx context.Context, req *dto.CreateVideoRequest) 
 		if err := txRepo.Create(ctx, video); err != nil {
 			return err
 		}
-		if err := txRepo.ReplaceDirectors(ctx, video.ID, uniqueIDs(req.DirectorIDs)); err != nil {
+		if err := txRepo.ReplaceDirectors(ctx, video.ID, utils.UniqueUint64IDs(req.DirectorIDs)); err != nil {
 			return err
 		}
 		if err := txRepo.ReplaceActors(ctx, video.ID, toActorRels(req.Actors)); err != nil {
 			return err
 		}
-		return txRepo.ReplaceTags(ctx, video.ID, uniqueIDs(req.TagIDs))
+		return txRepo.ReplaceTags(ctx, video.ID, utils.UniqueUint64IDs(req.TagIDs))
 	})
 	if err != nil {
 		s.log.Error("video: create transaction failed", zap.String("title", video.Title), zap.Error(err))
@@ -238,7 +239,7 @@ func (s *videoService) Update(ctx context.Context, id int64, req *dto.UpdateVide
 			return err
 		}
 		if req.DirectorIDs != nil {
-			if err := txRepo.ReplaceDirectors(ctx, uint64(id), uniqueIDs(*req.DirectorIDs)); err != nil {
+			if err := txRepo.ReplaceDirectors(ctx, uint64(id), utils.UniqueUint64IDs(*req.DirectorIDs)); err != nil {
 				return err
 			}
 		}
@@ -248,7 +249,7 @@ func (s *videoService) Update(ctx context.Context, id int64, req *dto.UpdateVide
 			}
 		}
 		if req.TagIDs != nil {
-			if err := txRepo.ReplaceTags(ctx, uint64(id), uniqueIDs(*req.TagIDs)); err != nil {
+			if err := txRepo.ReplaceTags(ctx, uint64(id), utils.UniqueUint64IDs(*req.TagIDs)); err != nil {
 				return err
 			}
 		}
@@ -474,7 +475,7 @@ func (s *videoService) ensureCategory(ctx context.Context, id int64) error {
 }
 
 func (s *videoService) ensureDirectors(ctx context.Context, ids []uint64) error {
-	ids = uniqueIDs(ids)
+	ids = utils.UniqueUint64IDs(ids)
 	if len(ids) == 0 {
 		return nil
 	}
@@ -514,7 +515,7 @@ func (s *videoService) ensureActors(ctx context.Context, actors []dto.VideoActor
 }
 
 func (s *videoService) ensureTags(ctx context.Context, ids []uint64) error {
-	ids = uniqueIDs(ids)
+	ids = utils.UniqueUint64IDs(ids)
 	if len(ids) == 0 {
 		return nil
 	}
@@ -547,33 +548,9 @@ func mapVideoList(items []model.Videos) []shareddto.VideoListItem {
 			SerialStatus:  v.SerialStatus,
 			Duration:      v.Duration,
 			ViewCount:     v.ViewCount,
-			CreatedAt:     derefTimeStr(v.CreatedAt),
-			UpdatedAt:     derefTimeStr(v.UpdatedAt),
+			CreatedAt:     utils.FormatTimeStr(v.CreatedAt),
+			UpdatedAt:     utils.FormatTimeStr(v.UpdatedAt),
 		})
-	}
-	return out
-}
-
-// derefTimeStr safely formats a *time.Time as DateTime string, returning "" for nil/zero.
-func derefTimeStr(t *time.Time) string {
-	if t == nil || t.IsZero() {
-		return ""
-	}
-	return t.Format(time.DateTime)
-}
-
-func uniqueIDs(ids []uint64) []uint64 {
-	seen := make(map[uint64]struct{}, len(ids))
-	out := make([]uint64, 0, len(ids))
-	for _, id := range ids {
-		if id == 0 {
-			continue
-		}
-		if _, ok := seen[id]; ok {
-			continue
-		}
-		seen[id] = struct{}{}
-		out = append(out, id)
 	}
 	return out
 }

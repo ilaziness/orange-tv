@@ -13,6 +13,7 @@ import (
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
+	"github.com/ilaziness/orange-tv/internal/utils"
 	"go.uber.org/zap"
 )
 
@@ -218,8 +219,8 @@ func (s *managementService) ListAdmins(ctx context.Context, req *dto.AdminListRe
 			GroupID:     a.GroupID,
 			GroupName:   groupName,
 			Status:      a.Status,
-			LastLoginAt: formatTimePtr(a.LastLoginAt),
-			CreatedAt:   formatTimePtr(a.CreatedAt),
+			LastLoginAt: utils.FormatTimeStr(a.LastLoginAt),
+			CreatedAt:   utils.FormatTimeStr(a.CreatedAt),
 		})
 	}
 	return out, total, nil
@@ -272,7 +273,7 @@ func (s *managementService) CreateAdmin(ctx context.Context, req *dto.CreateAdmi
 		GroupID:   admin.GroupID,
 		GroupName: group.Name,
 		Status:    admin.Status,
-		CreatedAt: formatTimePtr(admin.CreatedAt),
+		CreatedAt: utils.FormatTimeStr(admin.CreatedAt),
 	}, nil
 }
 
@@ -338,8 +339,8 @@ func (s *managementService) UpdateAdmin(ctx context.Context, id int64, req *dto.
 		GroupID:     admin.GroupID,
 		GroupName:   groupName,
 		Status:      admin.Status,
-		LastLoginAt: formatTimePtr(admin.LastLoginAt),
-		CreatedAt:   formatTimePtr(admin.CreatedAt),
+		LastLoginAt: utils.FormatTimeStr(admin.LastLoginAt),
+		CreatedAt:   utils.FormatTimeStr(admin.CreatedAt),
 	}, nil
 }
 
@@ -400,7 +401,7 @@ func (s *managementService) ListGroups(ctx context.Context, req *dto.UserGroupLi
 			Name:        g.Name,
 			Permissions: g.Permissions,
 			Description: g.Description,
-			CreatedAt:   formatTimePtr(g.CreatedAt),
+			CreatedAt:   utils.FormatTimeStr(g.CreatedAt),
 		})
 	}
 	return out, total, nil
@@ -422,7 +423,7 @@ func (s *managementService) CreateGroup(ctx context.Context, req *dto.CreateUser
 		Name:        g.Name,
 		Permissions: g.Permissions,
 		Description: g.Description,
-		CreatedAt:   formatTimePtr(g.CreatedAt),
+		CreatedAt:   utils.FormatTimeStr(g.CreatedAt),
 	}, nil
 }
 
@@ -462,7 +463,7 @@ func (s *managementService) UpdateGroup(ctx context.Context, id int64, req *dto.
 		Name:        group.Name,
 		Permissions: group.Permissions,
 		Description: group.Description,
-		CreatedAt:   formatTimePtr(group.CreatedAt),
+		CreatedAt:   utils.FormatTimeStr(group.CreatedAt),
 	}, nil
 }
 
@@ -507,8 +508,8 @@ func (s *managementService) ListUsers(ctx context.Context, req *dto.UserListRequ
 			Email:       u.Email,
 			Avatar:      u.Avatar,
 			Status:      u.Status,
-			LastLoginAt: formatTimePtr(u.LastLoginAt),
-			CreatedAt:   formatTimePtr(u.CreatedAt),
+			LastLoginAt: utils.FormatTimeStr(u.LastLoginAt),
+			CreatedAt:   utils.FormatTimeStr(u.CreatedAt),
 		})
 	}
 	return out, total, nil
@@ -550,8 +551,8 @@ func (s *managementService) CreateUser(ctx context.Context, req *dto.CreateUserR
 		Email:       u.Email,
 		Avatar:      u.Avatar,
 		Status:      u.Status,
-		LastLoginAt: formatTimePtr(u.LastLoginAt),
-		CreatedAt:   formatTimePtr(u.CreatedAt),
+		LastLoginAt: utils.FormatTimeStr(u.LastLoginAt),
+		CreatedAt:   utils.FormatTimeStr(u.CreatedAt),
 	}, nil
 }
 
@@ -600,8 +601,8 @@ func (s *managementService) UpdateUser(ctx context.Context, id int64, req *dto.U
 		Email:       u.Email,
 		Avatar:      u.Avatar,
 		Status:      u.Status,
-		LastLoginAt: formatTimePtr(u.LastLoginAt),
-		CreatedAt:   formatTimePtr(u.CreatedAt),
+		LastLoginAt: utils.FormatTimeStr(u.LastLoginAt),
+		CreatedAt:   utils.FormatTimeStr(u.CreatedAt),
 	}, nil
 }
 
@@ -744,12 +745,4 @@ func toBannerItem(b *model.Banners) *dto.BannerItem {
 		Sort:    b.Sort,
 		Status:  b.Status,
 	}
-}
-
-func formatTimePtr(t *time.Time) *string {
-	if t == nil || t.IsZero() {
-		return nil
-	}
-	s := t.Format(time.DateTime)
-	return &s
 }

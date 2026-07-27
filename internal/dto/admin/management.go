@@ -44,15 +44,15 @@ type AdminListRequest struct {
 
 // AdminItem is the admin list item.
 type AdminItem struct {
-	ID          uint64  `json:"id"`
-	Username    string  `json:"username"`
-	Email       string  `json:"email"`
-	Avatar      string  `json:"avatar"`
-	GroupID     uint64  `json:"group_id"`
-	GroupName   string  `json:"group_name"`
-	Status      uint8   `json:"status"`
-	LastLoginAt *string `json:"last_login_at"`
-	CreatedAt   *string `json:"created_at"`
+	ID          uint64 `json:"id"`
+	Username    string `json:"username"`
+	Email       string `json:"email"`
+	Avatar      string `json:"avatar"`
+	GroupID     uint64 `json:"group_id"`
+	GroupName   string `json:"group_name"`
+	Status      uint8  `json:"status"`
+	LastLoginAt string `json:"last_login_at"`
+	CreatedAt   string `json:"created_at"`
 }
 
 // CreateAdminRequest creates a new admin.
@@ -93,7 +93,7 @@ type UserGroupItem struct {
 	Name        string  `json:"name"`
 	Permissions *string `json:"permissions"`
 	Description string  `json:"description"`
-	CreatedAt   *string `json:"created_at"`
+	CreatedAt   string  `json:"created_at"`
 }
 
 // CreateUserGroupRequest creates a user group.
@@ -121,13 +121,13 @@ type UserListRequest struct {
 
 // UserItem is the user list item.
 type UserItem struct {
-	ID          uint64  `json:"id"`
-	Username    string  `json:"username"`
-	Email       string  `json:"email"`
-	Avatar      string  `json:"avatar"`
-	Status      uint8   `json:"status"`
-	LastLoginAt *string `json:"last_login_at"`
-	CreatedAt   *string `json:"created_at"`
+	ID          uint64 `json:"id"`
+	Username    string `json:"username"`
+	Email       string `json:"email"`
+	Avatar      string `json:"avatar"`
+	Status      uint8  `json:"status"`
+	LastLoginAt string `json:"last_login_at"`
+	CreatedAt   string `json:"created_at"`
 }
 
 // CreateUserRequest creates a new regular user.

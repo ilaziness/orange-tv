@@ -21,6 +21,7 @@ import (
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
+	"github.com/ilaziness/orange-tv/internal/utils"
 	"github.com/uptrace/bun"
 	"go.uber.org/zap"
 )
@@ -343,10 +344,10 @@ func (d *mysqlDumper) dumpTable(ctx context.Context, w io.Writer, table string) 
 		return nil
 	}
 
-	quotedTable := quoteMySQL(table)
+	quotedTable := utils.QuoteMySQL(table)
 	colNames := make([]string, len(cols))
 	for i, c := range cols {
-		colNames[i] = quoteMySQL(c.name)
+		colNames[i] = utils.QuoteMySQL(c.name)
 	}
 
 	batchSize := 500
@@ -387,7 +388,7 @@ func (d *mysqlDumper) listColumns(ctx context.Context, table string) ([]columnIn
 	for i, r := range raw {
 		cols[i] = columnInfo{
 			name:     r.Name,
-			isBinary: isMySQLBinaryType(r.DataType),
+			isBinary: utils.IsMySQLBinaryType(r.DataType),
 		}
 	}
 	return cols, nil
@@ -431,14 +432,6 @@ func (d *mysqlDumper) writeInsertRows(w io.Writer, table string, colNames []stri
 	return count, rows.Err()
 }
 
-func isMySQLBinaryType(dataType string) bool {
-	switch strings.ToLower(dataType) {
-	case "binary", "varbinary", "blob", "tinyblob", "mediumblob", "longblob":
-		return true
-	}
-	return false
-}
-
 func formatMySQLValue(v any, col columnInfo) string {
 	if v == nil {
 		return "NULL"
@@ -448,9 +441,9 @@ func formatMySQLValue(v any, col columnInfo) string {
 		if col.isBinary {
 			return "0x" + hex.EncodeToString(val)
 		}
-		return "'" + escapeMySQLString(string(val)) + "'"
+		return "'" + utils.EscapeMySQLString(string(val)) + "'"
 	case string:
-		return "'" + escapeMySQLString(val) + "'"
+		return "'" + utils.EscapeMySQLString(val) + "'"
 	case bool:
 		if val {
 			return "1"
@@ -483,25 +476,8 @@ func formatMySQLValue(v any, col columnInfo) string {
 	case float32:
 		return strconv.FormatFloat(float64(val), 'g', -1, 32)
 	default:
-		return "'" + escapeMySQLString(fmt.Sprint(val)) + "'"
+		return "'" + utils.EscapeMySQLString(fmt.Sprint(val)) + "'"
 	}
-}
-
-func escapeMySQLString(s string) string {
-	replacer := strings.NewReplacer(
-		"\\", "\\\\",
-		"'", "\\'",
-		"\x00", "\\0",
-		"\n", "\\n",
-		"\r", "\\r",
-		"\t", "\\t",
-		"\b", "\\b",
-	)
-	return replacer.Replace(s)
-}
-
-func quoteMySQL(name string) string {
-	return "`" + strings.ReplaceAll(name, "`", "``") + "`"
 }
 
 func (d *pgDumper) listTables(ctx context.Context) ([]string, error) {
@@ -533,10 +509,10 @@ func (d *pgDumper) dumpTable(ctx context.Context, w io.Writer, table string) err
 		return nil
 	}
 
-	quotedTable := quotePG(table)
+	quotedTable := utils.QuotePG(table)
 	colNames := make([]string, len(cols))
 	for i, c := range cols {
-		colNames[i] = quotePG(c.name)
+		colNames[i] = utils.QuotePG(c.name)
 	}
 
 	batchSize := 500
@@ -632,9 +608,9 @@ func formatPGValue(v any, col columnInfo) string {
 		if col.isBinary {
 			return "'\\x" + hex.EncodeToString(val) + "'::bytea"
 		}
-		return "'" + escapePGString(string(val)) + "'"
+		return "'" + utils.EscapePGString(string(val)) + "'"
 	case string:
-		return "'" + escapePGString(val) + "'"
+		return "'" + utils.EscapePGString(val) + "'"
 	case bool:
 		return strconv.FormatBool(val)
 	case time.Time:
@@ -664,14 +640,6 @@ func formatPGValue(v any, col columnInfo) string {
 	case float32:
 		return strconv.FormatFloat(float64(val), 'g', -1, 32)
 	default:
-		return "'" + escapePGString(fmt.Sprint(val)) + "'"
+		return "'" + utils.EscapePGString(fmt.Sprint(val)) + "'"
 	}
-}
-
-func escapePGString(s string) string {
-	return strings.ReplaceAll(s, "'", "''")
-}
-
-func quotePG(name string) string {
-	return `"` + strings.ReplaceAll(name, `"`, `""`) + `"`
 }

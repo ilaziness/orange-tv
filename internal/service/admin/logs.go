@@ -12,6 +12,7 @@ import (
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
+	"github.com/ilaziness/orange-tv/internal/utils"
 	"go.uber.org/zap"
 )
 
@@ -237,9 +238,9 @@ func parseAppLogLine(line []byte) (admindto.AppLogItem, bool) {
 	}
 
 	item := admindto.AppLogItem{
-		Time:  formatLogTime(extractString(raw, "time")),
-		Level: extractString(raw, "level"),
-		Msg:   extractString(raw, "msg"),
+		Time:  formatLogTime(utils.ExtractString(raw, "time")),
+		Level: utils.ExtractString(raw, "level"),
+		Msg:   utils.ExtractString(raw, "msg"),
 	}
 
 	// Remove known keys; remaining go into Fields.
@@ -252,29 +253,6 @@ func parseAppLogLine(line []byte) (admindto.AppLogItem, bool) {
 	}
 
 	return item, true
-}
-
-func extractString(m map[string]any, key string) string {
-	if v, ok := m[key]; ok {
-		if s, ok := v.(string); ok {
-			return s
-		}
-	}
-	return ""
-}
-
-func formatLogTime(s string) string {
-	if s == "" {
-		return ""
-	}
-	t, err := time.Parse(time.RFC3339Nano, s)
-	if err != nil {
-		t, err = time.Parse(time.RFC3339, s)
-		if err != nil {
-			return s
-		}
-	}
-	return t.Local().Format(time.DateTime)
 }
 
 func toSystemLogItem(m *model.SystemLogs) admindto.SystemLogItem {
@@ -290,7 +268,7 @@ func toSystemLogItem(m *model.SystemLogs) admindto.SystemLogItem {
 		AdminID:   m.AdminID,
 		Content:   content,
 		IPAddress: m.IPAddress,
-		CreatedAt: formatTime(m.CreatedAt),
+		CreatedAt: utils.FormatTimeStr(m.CreatedAt),
 	}
 }
 
@@ -303,28 +281,21 @@ func toLoginLogItem(m *model.LoginLogs) admindto.LoginLogItem {
 		IPAddress: m.IPAddress,
 		UserAgent: m.UserAgent,
 		Status:    m.Status,
-		CreatedAt: formatTime(m.CreatedAt),
+		CreatedAt: utils.FormatTimeStr(m.CreatedAt),
 	}
-}
-
-func formatTime(t *time.Time) string {
-	if t == nil || t.IsZero() {
-		return ""
-	}
-	return t.Format(time.DateTime)
 }
 
 func parseTimeRange(start, end string) (*time.Time, *time.Time, error) {
 	var sPtr, ePtr *time.Time
 	if start != "" {
-		t, err := parseFlexibleTime(start)
+		t, err := utils.ParseFlexibleDate(start, []string{time.RFC3339, "2006-01-02 15:04:05", "2006-01-02"})
 		if err != nil {
 			return nil, nil, err
 		}
 		sPtr = &t
 	}
 	if end != "" {
-		t, err := parseFlexibleTime(end)
+		t, err := utils.ParseFlexibleDate(end, []string{time.RFC3339, "2006-01-02 15:04:05", "2006-01-02"})
 		if err != nil {
 			return nil, nil, err
 		}
@@ -333,19 +304,16 @@ func parseTimeRange(start, end string) (*time.Time, *time.Time, error) {
 	return sPtr, ePtr, nil
 }
 
-func parseFlexibleTime(v string) (time.Time, error) {
-	layouts := []string{
-		time.RFC3339,
-		"2006-01-02 15:04:05",
-		"2006-01-02",
+func formatLogTime(s string) string {
+	if s == "" {
+		return ""
 	}
-	var last error
-	for _, layout := range layouts {
-		t, err := time.ParseInLocation(layout, v, time.Local)
-		if err == nil {
-			return t, nil
+	t, err := time.Parse(time.RFC3339Nano, s)
+	if err != nil {
+		t, err = time.Parse(time.RFC3339, s)
+		if err != nil {
+			return s
 		}
-		last = err
 	}
-	return time.Time{}, last
+	return t.Local().Format(time.DateTime)
 }

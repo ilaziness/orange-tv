@@ -91,24 +91,6 @@ func TestParseAppleCMSDetailNumericIDs(t *testing.T) {
 	require.Equal(t, int64(29), page.Classes[0].TypeID)
 }
 
-func TestStripHTMLTags(t *testing.T) {
-	require.Equal(t, "纯文本", stripHTMLTags("<p>纯文本</p>"))
-	require.Equal(t, "多行文本", stripHTMLTags("<div>多行<br>文本</div>"))
-	require.Equal(t, "", stripHTMLTags(""))
-	require.Equal(t, "无标签", stripHTMLTags("无标签"))
-}
-
-func TestSplitNamesWithSpaces(t *testing.T) {
-	result := splitNames("演员A 演员B,演员C")
-	require.Equal(t, []string{"演员A", "演员B", "演员C"}, result)
-
-	result = splitNames("演员A　演员B")
-	require.Equal(t, []string{"演员A", "演员B"}, result)
-
-	result = splitNames("演员A,演员B、演员C/演员D")
-	require.Equal(t, []string{"演员A", "演员B", "演员C", "演员D"}, result)
-}
-
 func TestParseApplePlayURLsM3u8Only(t *testing.T) {
 	// group without m3u8 should be skipped entirely
 	eps := parseApplePlayURLs("第1集$http://a.mp4#第2集$http://b.mp4$$$第1集$http://a.m3u8#第2集$http://b.m3u8")
