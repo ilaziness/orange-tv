@@ -2,6 +2,15 @@ import { create } from 'zustand'
 import type { PublicSiteInfo } from '@orange-tv/shared'
 import { clientApi } from '@/lib/api'
 
+const DEFAULT_AD = {
+  enabled: false,
+  type: '',
+  url: '',
+  link: '',
+  duration: 0,
+  skipable: false,
+}
+
 const DEFAULT_SITE: PublicSiteInfo = {
   name: 'Orange TV',
   logo: '/logo.svg',
@@ -9,6 +18,7 @@ const DEFAULT_SITE: PublicSiteInfo = {
   icp: '',
   seo_keywords: '',
   description: '',
+  ad: DEFAULT_AD,
 }
 
 interface SiteState {
@@ -33,6 +43,7 @@ export const useSiteStore = create<SiteState>((set, get) => ({
           icp: data?.icp || '',
           seo_keywords: data?.seo_keywords || '',
           description: data?.description || '',
+          ad: data?.ad || DEFAULT_AD,
         },
         loaded: true,
       })

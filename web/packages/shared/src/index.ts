@@ -284,9 +284,19 @@ export type APISettings = {
   resource_api_key_masked?: string
 }
 
+export type AdSettings = {
+  enabled: boolean
+  type: string
+  url: string
+  link: string
+  duration: number
+  skipable: boolean
+}
+
 export type SystemSettings = {
   site: SiteSettings
   api: APISettings
+  ad: AdSettings
 }
 
 export type PublicSiteInfo = {
@@ -296,6 +306,7 @@ export type PublicSiteInfo = {
   icp: string
   seo_keywords: string
   description: string
+  ad: AdSettings
 }
 
 export type SystemLogItem = {

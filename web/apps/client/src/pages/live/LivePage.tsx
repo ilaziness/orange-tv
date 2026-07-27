@@ -204,7 +204,7 @@ export default function LivePage() {
         {selectedChannel ? (
           <>
             <div className="overflow-hidden rounded-xl border border-border">
-              <VideoPlayer src={clientApi.liveStreamUrl(selectedChannel.id)} />
+              <VideoPlayer src={clientApi.liveStreamUrl(selectedChannel.id)} format="hls" />
             </div>
             <div className="flex flex-col gap-2">
               <h1 className="text-xl font-bold">{selectedChannel.name}</h1>

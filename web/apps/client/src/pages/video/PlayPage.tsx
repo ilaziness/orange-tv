@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import type { VideoDetail } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
+import { useSiteStore } from '@/store/site'
 import { VideoPlayer } from '@/components/Player'
 import { EpisodeList } from '@/components/EpisodeList'
 import { Button } from '@/components/ui/button'
@@ -13,6 +14,7 @@ import { AlertCircleIcon } from 'lucide-react'
 export default function PlayPage() {
   const { id, sourceIdx } = useParams()
   const navigate = useNavigate()
+  const site = useSiteStore((s) => s.site)
   const [detail, setDetail] = useState<VideoDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -87,7 +89,7 @@ export default function PlayPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="overflow-hidden rounded-xl border border-border">
-        <VideoPlayer src={source.url} format={source.format} />
+        <VideoPlayer src={source.url} format={source.format} adConfig={site.ad.enabled ? site.ad : null} />
       </div>
 
       <div className="flex flex-col gap-3">

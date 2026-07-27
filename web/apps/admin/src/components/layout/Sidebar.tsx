@@ -28,6 +28,7 @@ import {
   User2,
   LogIn,
   Database,
+  Megaphone,
 } from 'lucide-react'
 
 const contentMenus = [
@@ -52,6 +53,7 @@ const userMenus = [
 const systemMenus = [
   { to: '/system/site', label: '站点设置', icon: Globe },
   { to: '/system/api', label: 'API配置', icon: Settings },
+  { to: '/system/ad', label: '视频广告', icon: Megaphone },
   { to: '/system/log', label: '系统日志', icon: ScrollText },
   { to: '/system/data-management', label: '数据管理', icon: Database },
 ]

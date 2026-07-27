@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react'
-import videojs from 'video.js'
-import type Player from 'video.js/dist/types/player'
-import 'video.js/dist/video-js.css'
+import Artplayer from 'artplayer'
+import Hls from 'hls.js'
+import artplayerPluginHlsControl from 'artplayer-plugin-hls-control'
+import type { AdSettings } from '@orange-tv/shared'
 
 type Props = {
   src: string
@@ -9,55 +10,158 @@ type Props = {
   poster?: string
   autoplay?: boolean
   storageKey?: string
+  adConfig?: AdSettings | null
 }
 
-function mimeFromFormat(format?: string, src?: string): string {
+function isHlsSrc(format?: string, src?: string): boolean {
   const f = (format || '').toLowerCase()
   const u = (src || '').toLowerCase()
-  if (f === 'mp4' || u.includes('.mp4')) return 'video/mp4'
-  if (f === 'dash' || u.includes('.mpd')) return 'application/dash+xml'
-  if (f === 'flv' || u.includes('.flv')) return 'video/x-flv'
-  return 'application/x-mpegURL'
+  return f === 'hls' || u.includes('.m3u8')
 }
 
-export function VideoPlayer({ src, format, poster, autoplay = true, storageKey }: Props) {
-  const videoRef = useRef<HTMLDivElement | null>(null)
-  const playerRef = useRef<Player | null>(null)
+function escapeAttr(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+}
+
+function buildAdLayer(adConfig: AdSettings) {
+  const url = escapeAttr(adConfig.url)
+  const link = escapeAttr(adConfig.link)
+  const adHTML = adConfig.type === 'image'
+    ? `<img src="${url}" style="width:100%;height:100%;object-fit:contain" />`
+    : adConfig.type === 'video'
+      ? `<video src="${url}" autoplay muted playsinline style="width:100%;height:100%;object-fit:contain" />`
+      : `<iframe src="${url}" style="width:100%;height:100%;border:0" allowfullscreen></iframe>`
+
+  const skipBtn = adConfig.skipable
+    ? `<div class="ad-skip-btn" style="position:absolute;bottom:12px;right:12px;padding:6px 16px;background:rgba(0,0,0,0.7);color:#fff;border-radius:4px;cursor:pointer;font-size:14px">跳过广告</div>`
+    : ''
+
+  const linkHTML = link
+    ? `<a href="${link}" target="_blank" rel="noopener noreferrer" style="position:absolute;inset:0;display:block;z-index:1"></a>`
+    : ''
+
+  return {
+    name: 'loadingAd',
+    html: `<div style="position:absolute;inset:0;background:#000;display:flex;align-items:center;justify-content:center">${linkHTML}${adHTML}${skipBtn}</div>`,
+    style: {
+      position: 'absolute' as const,
+      inset: '0',
+      zIndex: '10',
+    },
+  }
+}
+
+export function VideoPlayer({ src, format, poster, autoplay = true, storageKey, adConfig }: Props) {
+  const containerRef = useRef<HTMLDivElement | null>(null)
+
+  // Serialize adConfig to a stable string so the effect doesn't re-run on object identity changes
+  const adConfigKey = adConfig ? JSON.stringify(adConfig) : ''
 
   useEffect(() => {
-    const el = videoRef.current
+    const el = containerRef.current
     if (!el || !src) return
 
-    // video.js expects a <video> element it can own; create one under the container
-    const videoEl = document.createElement('video')
-    videoEl.className = 'video-js vjs-big-play-centered'
-    videoEl.setAttribute('playsinline', 'true')
+    // Clear any leftover DOM from a previous instance (StrictMode remount or re-render)
     el.innerHTML = ''
-    el.appendChild(videoEl)
 
-    const player = videojs(videoEl, {
-      controls: true,
+    const hlsRef: { current: Hls | null } = { current: null }
+
+    // Parse adConfig back from the serialized string
+    const ad: AdSettings | null = adConfigKey ? JSON.parse(adConfigKey) : null
+
+    const layers: NonNullable<Artplayer['option']['layers']> = []
+    if (ad?.enabled && ad.url) {
+      layers.push(buildAdLayer(ad) as NonNullable<Artplayer['option']['layers']>[number])
+    }
+
+    const art = new Artplayer({
+      container: el,
+      url: src,
+      type: isHlsSrc(format, src) ? 'm3u8' : '',
+      poster: poster || '',
       autoplay,
-      preload: 'auto',
-      fluid: true,
-      poster,
-      sources: [{ src, type: mimeFromFormat(format, src) }],
+      playsInline: true,
+      autoSize: false,
+      autoMini: false,
+      loop: false,
+      muted: false,
+      pip: true,
+      fullscreen: true,
+      fullscreenWeb: true,
+      setting: true,
+      hotkey: true,
+      layers,
+      customType: {
+        m3u8: (video: HTMLVideoElement, url: string) => {
+          if (Hls.isSupported()) {
+            const hls = new Hls()
+            hls.loadSource(url)
+            hls.attachMedia(video)
+            hlsRef.current = hls
+          } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = url
+          }
+        },
+      },
+      plugins: [
+        artplayerPluginHlsControl({
+          quality: { control: true, setting: true },
+        }),
+      ],
     })
-    playerRef.current = player
 
+    // Remove ad layer when video is ready
+    let adTimeoutId: ReturnType<typeof setTimeout> | null = null
+    if (ad?.enabled && ad.url) {
+      const removeAd = () => {
+        if (adTimeoutId) {
+          clearTimeout(adTimeoutId)
+          adTimeoutId = null
+        }
+        if (art.layers?.loadingAd) {
+          art.layers.loadingAd.remove()
+        }
+      }
+      art.once('video:canplay', removeAd)
+      art.once('video:playing', removeAd)
+
+      // Auto-remove after duration
+      if (ad.duration > 0) {
+        adTimeoutId = setTimeout(() => {
+          adTimeoutId = null
+          if (art.layers?.loadingAd) {
+            removeAd()
+          }
+        }, ad.duration * 1000)
+      }
+
+      // Skip button click handler
+      art.on('ready', () => {
+        const skipBtn = el.querySelector('.ad-skip-btn')
+        if (skipBtn) {
+          skipBtn.addEventListener('click', (e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            removeAd()
+          })
+        }
+      })
+    }
+
+    // Playback progress memory
     if (storageKey) {
       const saved = Number(localStorage.getItem(storageKey) || 0)
       if (saved > 0) {
-        player.ready(() => {
+        art.on('ready', () => {
           try {
-            player.currentTime(saved)
+            art.currentTime = saved
           } catch {
             // ignore
           }
         })
       }
-      player.on('timeupdate', () => {
-        const t = player.currentTime()
+      art.on('video:timeupdate', () => {
+        const t = art.currentTime
         if (typeof t === 'number' && t > 1) {
           localStorage.setItem(storageKey, String(Math.floor(t)))
         }
@@ -65,13 +169,25 @@ export function VideoPlayer({ src, format, poster, autoplay = true, storageKey }
     }
 
     return () => {
-      if (playerRef.current && !playerRef.current.isDisposed()) {
-        playerRef.current.dispose()
+      if (adTimeoutId) {
+        clearTimeout(adTimeoutId)
+        adTimeoutId = null
       }
-      playerRef.current = null
-      if (el) el.innerHTML = ''
+      if (hlsRef.current) {
+        hlsRef.current.destroy()
+        hlsRef.current = null
+      }
+      // Use the local `art` variable, not artRef.current, to ensure we destroy
+      // the exact instance created in this effect run (StrictMode double-invoke safe)
+      if (art) {
+        try { art.pause() } catch { /* ignore */ }
+        try { art.video?.pause() } catch { /* ignore */ }
+        try { art.video?.removeAttribute('src') } catch { /* ignore */ }
+        try { art.video?.load() } catch { /* ignore */ }
+        art.destroy(true) // true = remove DOM element completely
+      }
     }
-  }, [src, format, poster, storageKey, autoplay])
+  }, [src, format, poster, storageKey, autoplay, adConfigKey])
 
   if (!src) {
     return (
@@ -81,9 +197,5 @@ export function VideoPlayer({ src, format, poster, autoplay = true, storageKey }
     )
   }
 
-  return (
-    <div data-vjs-player>
-      <div ref={videoRef} />
-    </div>
-  )
+  return <div ref={containerRef} className="w-full" style={{ aspectRatio: '16 / 9' }} />
 }

@@ -4,6 +4,7 @@ package admin
 type SettingsResponse struct {
 	Site SiteSettings `json:"site"`
 	API  APISettings  `json:"api"`
+	Ad   AdSettings   `json:"ad"`
 }
 
 // SiteSettings holds public site branding fields.
@@ -26,11 +27,12 @@ type APISettings struct {
 	ResourceAPIKeyMasked    string `json:"resource_api_key_masked,omitempty"`
 }
 
-// UpdateSettingsRequest updates site + API settings.
+// UpdateSettingsRequest updates site + API + ad settings.
 // Empty ResourceAPIKey means "do not change".
 type UpdateSettingsRequest struct {
 	Site *UpdateSiteSettings `json:"site"`
 	API  *UpdateAPISettings  `json:"api"`
+	Ad   *UpdateAdSettings   `json:"ad"`
 }
 
 // UpdateSiteSettings updates public site fields (all optional).
@@ -52,12 +54,43 @@ type UpdateAPISettings struct {
 	ResourceAPIKey *string `json:"resource_api_key" validate:"omitempty,max=255"`
 }
 
+// AdSettings holds video loading ad configuration.
+type AdSettings struct {
+	Enabled  bool   `json:"enabled"`
+	Type     string `json:"type"`
+	URL      string `json:"url"`
+	Link     string `json:"link"`
+	Duration int    `json:"duration"`
+	Skipable bool   `json:"skipable"`
+}
+
+// UpdateAdSettings updates video ad fields (all optional).
+type UpdateAdSettings struct {
+	Enabled  *bool   `json:"enabled"`
+	Type     *string `json:"type" validate:"omitempty,oneof=image video html"`
+	URL      *string `json:"url" validate:"omitempty,max=500"`
+	Link     *string `json:"link" validate:"omitempty,max=500"`
+	Duration *int    `json:"duration" validate:"omitempty,min=1,max=300"`
+	Skipable *bool   `json:"skipable"`
+}
+
+// PublicAdSettings is safe public ad info for the client.
+type PublicAdSettings struct {
+	Enabled  bool   `json:"enabled"`
+	Type     string `json:"type"`
+	URL      string `json:"url"`
+	Link     string `json:"link"`
+	Duration int    `json:"duration"`
+	Skipable bool   `json:"skipable"`
+}
+
 // PublicSiteResponse is safe public site info for the client.
 type PublicSiteResponse struct {
-	Name        string `json:"name"`
-	Logo        string `json:"logo"`
-	Copyright   string `json:"copyright"`
-	ICP         string `json:"icp"`
-	SEOKeywords string `json:"seo_keywords"`
-	Description string `json:"description"`
+	Name        string           `json:"name"`
+	Logo        string           `json:"logo"`
+	Copyright   string           `json:"copyright"`
+	ICP         string           `json:"icp"`
+	SEOKeywords string           `json:"seo_keywords"`
+	Description string           `json:"description"`
+	Ad          PublicAdSettings `json:"ad"`
 }

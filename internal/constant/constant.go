@@ -129,6 +129,12 @@ const (
 	SettingSiteSEOKeywords         = "site_seo_keywords"
 	SettingSiteDescription         = "site_description"
 	SettingResourceAPIKey          = "resource_api_key"
+	SettingVideoAdEnabled          = "video_ad_enabled"
+	SettingVideoAdType             = "video_ad_type"
+	SettingVideoAdUrl              = "video_ad_url"
+	SettingVideoAdLink             = "video_ad_link"
+	SettingVideoAdDuration         = "video_ad_duration"
+	SettingVideoAdSkipable         = "video_ad_skipable"
 )
 
 // Site mode values.
@@ -142,4 +148,11 @@ const (
 const (
 	APIOutputDefault  = "default"   // 系统默认/自有 JSON 格式
 	APIOutputAppleCMS = "apple_cms" // 苹果 CMS 兼容
+)
+
+// Video ad type values.
+const (
+	VideoAdTypeImage = "image"
+	VideoAdTypeVideo = "video"
+	VideoAdTypeHTML  = "html"
 )

@@ -82,6 +82,14 @@ func (s *settingsService) GetPublic(ctx context.Context) (*admindto.PublicSiteRe
 		ICP:         strVal(m, constant.SettingSiteICP),
 		SEOKeywords: strVal(m, constant.SettingSiteSEOKeywords),
 		Description: strVal(m, constant.SettingSiteDescription),
+		Ad: admindto.PublicAdSettings{
+			Enabled:  boolVal(m, constant.SettingVideoAdEnabled, false),
+			Type:     strVal(m, constant.SettingVideoAdType),
+			URL:      strVal(m, constant.SettingVideoAdUrl),
+			Link:     strVal(m, constant.SettingVideoAdLink),
+			Duration: intVal(m, constant.SettingVideoAdDuration, 5),
+			Skipable: boolVal(m, constant.SettingVideoAdSkipable, true),
+		},
 	}
 	if pub.Name == "" {
 		pub.Name = "Orange TV"
@@ -104,10 +112,10 @@ func (s *settingsService) ResourceConfig(ctx context.Context) (*ResourceConfig, 
 }
 
 func (s *settingsService) Update(ctx context.Context, req *admindto.UpdateSettingsRequest) (*admindto.SettingsResponse, error) {
-	if req == nil || (req.Site == nil && req.API == nil) {
+	if req == nil || (req.Site == nil && req.API == nil && req.Ad == nil) {
 		return nil, errcode.WithMessage(errcode.ParamError, "无更新内容")
 	}
-	upserts := make([]repository.SettingUpsert, 0, 12)
+	upserts := make([]repository.SettingUpsert, 0, 18)
 	if req.Site != nil {
 		site := req.Site
 		if site.Name != nil {
@@ -190,6 +198,57 @@ func (s *settingsService) Update(ctx context.Context, req *admindto.UpdateSettin
 			}
 		}
 	}
+	if req.Ad != nil {
+		ad := req.Ad
+		if ad.Enabled != nil {
+			v := "0"
+			if *ad.Enabled {
+				v = "1"
+			}
+			upserts = append(upserts, repository.SettingUpsert{
+				Key: constant.SettingVideoAdEnabled, Value: v,
+				SettingType: constant.SettingTypeBoolean, Description: "是否启用视频广告",
+			})
+		}
+		if ad.Type != nil {
+			t := strings.TrimSpace(*ad.Type)
+			if t != constant.VideoAdTypeImage && t != constant.VideoAdTypeVideo && t != constant.VideoAdTypeHTML {
+				return nil, errcode.WithMessage(errcode.SettingInvalid, "广告类型无效，仅支持 image / video / html")
+			}
+			upserts = append(upserts, repository.SettingUpsert{
+				Key: constant.SettingVideoAdType, Value: t,
+				SettingType: constant.SettingTypeString, Description: "视频广告类型",
+			})
+		}
+		if ad.URL != nil {
+			upserts = append(upserts, repository.SettingUpsert{
+				Key: constant.SettingVideoAdUrl, Value: strings.TrimSpace(*ad.URL),
+				SettingType: constant.SettingTypeString, Description: "视频广告素材 URL",
+			})
+		}
+		if ad.Link != nil {
+			upserts = append(upserts, repository.SettingUpsert{
+				Key: constant.SettingVideoAdLink, Value: strings.TrimSpace(*ad.Link),
+				SettingType: constant.SettingTypeString, Description: "视频广告点击跳转链接",
+			})
+		}
+		if ad.Duration != nil {
+			upserts = append(upserts, repository.SettingUpsert{
+				Key: constant.SettingVideoAdDuration, Value: strconv.Itoa(*ad.Duration),
+				SettingType: constant.SettingTypeNumber, Description: "视频广告展示时长（秒）",
+			})
+		}
+		if ad.Skipable != nil {
+			v := "0"
+			if *ad.Skipable {
+				v = "1"
+			}
+			upserts = append(upserts, repository.SettingUpsert{
+				Key: constant.SettingVideoAdSkipable, Value: v,
+				SettingType: constant.SettingTypeBoolean, Description: "视频广告是否可跳过",
+			})
+		}
+	}
 	if len(upserts) == 0 {
 		return nil, errcode.WithMessage(errcode.ParamError, "无更新内容")
 	}
@@ -247,6 +306,14 @@ func mapToAdminSettings(m map[string]model.SystemSettings) *admindto.SettingsRes
 			ResourceAPIKeySet:       key != "",
 			ResourceAPIKeyMasked:    masked,
 		},
+		Ad: admindto.AdSettings{
+			Enabled:  boolVal(m, constant.SettingVideoAdEnabled, false),
+			Type:     strVal(m, constant.SettingVideoAdType),
+			URL:      strVal(m, constant.SettingVideoAdUrl),
+			Link:     strVal(m, constant.SettingVideoAdLink),
+			Duration: intVal(m, constant.SettingVideoAdDuration, 5),
+			Skipable: boolVal(m, constant.SettingVideoAdSkipable, true),
+		},
 	}
 }
 
@@ -265,6 +332,18 @@ func strVal(m map[string]model.SystemSettings, key string) string {
 		return ""
 	}
 	return *it.SettingValue
+}
+
+func intVal(m map[string]model.SystemSettings, key string, def int) int {
+	v := strings.TrimSpace(strVal(m, key))
+	if v == "" {
+		return def
+	}
+	n, err := strconv.Atoi(v)
+	if err != nil {
+		return def
+	}
+	return n
 }
 
 func boolVal(m map[string]model.SystemSettings, key string, def bool) bool {
