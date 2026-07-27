@@ -30,6 +30,7 @@ func applyBusinessHandlers(h *Handlers, b testutil.BusinessHandlers) {
 	h.AdminSettings = b.AdminSettings
 	h.AdminLog = b.AdminLog
 	h.AdminMgmt = b.AdminMgmt
+	h.AdminData = b.AdminData
 	h.ClientCategory = b.ClientCategory
 	h.ClientVideo = b.ClientVideo
 	h.ClientLive = b.ClientLive

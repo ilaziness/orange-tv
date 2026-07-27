@@ -443,3 +443,11 @@ export type CommentItem = {
   like_count: number
   created_at: string
 }
+
+export type BatchUpdatePreviewResult = {
+  matched_rows: number
+}
+
+export type BatchUpdateExecuteResult = {
+  updated_rows: number
+}

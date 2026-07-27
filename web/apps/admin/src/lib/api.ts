@@ -16,6 +16,8 @@ import {
   type LiveChannel,
   type LiveSyncResult,
   type AppLogListResponse,
+  type BatchUpdateExecuteResult,
+  type BatchUpdatePreviewResult,
   type LoginLogItem,
   type LoginResult,
   type NamedItem,
@@ -54,6 +56,28 @@ async function withAuth<T>(fn: (token: string | null) => Promise<T>): Promise<T>
     }
     throw err
   }
+}
+
+export async function downloadBackup(native = false): Promise<Response> {
+  const token = getToken()
+  const qs = native ? '?native=1' : ''
+  const res = await fetch(`${ADMIN_API_BASE}/data/backup${qs}`, {
+    headers: {
+      Accept: 'application/sql',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  })
+  if (!res.ok) {
+    let message = `HTTP ${res.status}`
+    try {
+      const payload = await res.json()
+      if (payload.message) message = payload.message
+    } catch {
+      // ignore
+    }
+    throw new ApiError(message, res.status, res.status)
+  }
+  return res
 }
 
 export const adminApi = {
@@ -218,6 +242,11 @@ export const adminApi = {
   updateBanner: (id: number, body: unknown) =>
     withAuth((token) => apiPut(ADMIN_API_BASE, `/banners/${id}`, body, { token })),
   deleteBanner: (id: number) => withAuth((token) => apiDelete(ADMIN_API_BASE, `/banners/${id}`, { token })),
+
+  batchUpdatePreview: (body: { target: string; old_value: string }) =>
+    withAuth((token) => apiPost<BatchUpdatePreviewResult>(ADMIN_API_BASE, '/data/batch-update/preview', body, { token })),
+  batchUpdateExecute: (body: { target: string; old_value: string; new_value: string }) =>
+    withAuth((token) => apiPost<BatchUpdateExecuteResult>(ADMIN_API_BASE, '/data/batch-update/execute', body, { token })),
 }
 
 export function errorMessage(err: unknown): string {

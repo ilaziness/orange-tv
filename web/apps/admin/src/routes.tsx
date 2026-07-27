@@ -24,6 +24,7 @@ const LoginLogsPage = lazy(() => import('@/pages/user/loginLogs/LoginLogsPage'))
 const SiteSettingsPage = lazy(() => import('@/pages/system/site/SiteSettingsPage'))
 const APISettingsPage = lazy(() => import('@/pages/system/api/APISettingsPage'))
 const SystemLogPage = lazy(() => import('@/pages/system/log/SystemLogPage'))
+const DataManagementPage = lazy(() => import('@/pages/system/datamgmt/DataManagementPage'))
 
 function Lazy({ children }: { children: ReactNode }) {
   return (
@@ -62,6 +63,7 @@ export function AppRoutes() {
           <Route path="/system/site" element={<Lazy><SiteSettingsPage /></Lazy>} />
           <Route path="/system/api" element={<Lazy><APISettingsPage /></Lazy>} />
           <Route path="/system/log" element={<Lazy><SystemLogPage /></Lazy>} />
+          <Route path="/system/data-management" element={<Lazy><DataManagementPage /></Lazy>} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

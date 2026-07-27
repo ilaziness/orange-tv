@@ -27,6 +27,7 @@ import {
   ScrollText,
   User2,
   LogIn,
+  Database,
 } from 'lucide-react'
 
 const contentMenus = [
@@ -52,6 +53,7 @@ const systemMenus = [
   { to: '/system/site', label: '站点设置', icon: Globe },
   { to: '/system/api', label: 'API配置', icon: Settings },
   { to: '/system/log', label: '系统日志', icon: ScrollText },
+  { to: '/system/data-management', label: '数据管理', icon: Database },
 ]
 
 export function AppSidebar() {
@@ -125,7 +127,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>系统设置</SidebarGroupLabel>
+          <SidebarGroupLabel>系统管理</SidebarGroupLabel>
           <SidebarMenu>
             {systemMenus.map((item) => (
               <SidebarMenuItem key={item.to}>

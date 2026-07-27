@@ -59,6 +59,7 @@ func (a *App) wireHTTP() error {
 	adminSettingsSvc := adminsvc.NewSettingsService(settingsRepo, a.cache, a.log)
 	adminLogSvc := adminsvc.NewLogService(logRepo, a.log, a.cfg.Log.Filename)
 	adminMgmtSvc := adminsvc.NewManagementService(adminRepo, videoRepo, userFeatureRepo, recorder, a.log)
+	adminDataSvc := adminsvc.NewDataService(a.db, a.cfg, logRepo, a.log)
 
 	clientCategorySvc := clientsvc.NewCategoryService(categoryRepo, a.cache, a.log)
 	clientVideoSvc := clientsvc.NewVideoService(videoRepo, categoryRepo, metaRepo, playRepo, a.cache, a.log)
@@ -80,6 +81,7 @@ func (a *App) wireHTTP() error {
 	handlers.AdminSettings = adminhandler.NewSettingsHandler(adminSettingsSvc, recorder)
 	handlers.AdminLog = adminhandler.NewLogHandler(adminLogSvc)
 	handlers.AdminMgmt = adminhandler.NewManagementHandler(adminMgmtSvc)
+	handlers.AdminData = adminhandler.NewDataHandler(adminDataSvc)
 
 	handlers.ClientCategory = clienthandler.NewCategoryHandler(clientCategorySvc)
 	handlers.ClientVideo = clienthandler.NewVideoHandler(clientVideoSvc)

@@ -3,6 +3,7 @@ package testutil
 
 import (
 	"context"
+	"io"
 
 	"github.com/gin-gonic/gin"
 	shareddto "github.com/ilaziness/orange-tv/internal/dto"
@@ -28,6 +29,7 @@ type BusinessHandlers struct {
 	AdminSettings  *adminhandler.SettingsHandler
 	AdminLog       *adminhandler.LogHandler
 	AdminMgmt      *adminhandler.ManagementHandler
+	AdminData      *adminhandler.DataHandler
 	ClientCategory *clienthandler.CategoryHandler
 	ClientVideo    *clienthandler.VideoHandler
 	ClientLive     *clienthandler.LiveHandler
@@ -267,6 +269,16 @@ func (s openResourceSvc) ListCategories(ctx context.Context) ([]shareddto.Catego
 
 // ===== Phase 5 stubs =====
 
+type adminDataSvc struct{}
+
+func (s adminDataSvc) Backup(ctx context.Context, w io.Writer, useNative bool) error { return nil }
+func (s adminDataSvc) BatchUpdatePreview(ctx context.Context, req *admindto.BatchUpdatePreviewRequest) (int64, error) {
+	return 0, nil
+}
+func (s adminDataSvc) BatchUpdateExecute(ctx context.Context, req *admindto.BatchUpdateExecuteRequest, adminID int64, ip string) (int64, error) {
+	return 0, nil
+}
+
 type adminMgmtSvc struct{}
 
 func (s adminMgmtSvc) Dashboard(ctx context.Context) (*admindto.DashboardResponse, error) {
@@ -385,6 +397,7 @@ func NewBusinessHandlers() BusinessHandlers {
 		AdminSettings:  adminhandler.NewSettingsHandler(adminSettingsSvc{}, nil),
 		AdminLog:       adminhandler.NewLogHandler(adminLogSvc{}),
 		AdminMgmt:      adminhandler.NewManagementHandler(mgmt),
+		AdminData:      adminhandler.NewDataHandler(adminDataSvc{}),
 		ClientCategory: clienthandler.NewCategoryHandler(clientCategorySvc{}),
 		ClientVideo:    clienthandler.NewVideoHandler(clientVideoSvc{}),
 		ClientLive:     clienthandler.NewLiveHandler(clientLiveSvc, clientLiveProxySvc{}),

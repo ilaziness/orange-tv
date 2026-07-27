@@ -26,6 +26,7 @@ type Handlers struct {
 	AdminSettings *adminhandler.SettingsHandler
 	AdminLog      *adminhandler.LogHandler
 	AdminMgmt     *adminhandler.ManagementHandler
+	AdminData     *adminhandler.DataHandler
 	AuthService   adminsvc.AuthService
 
 	// Client surface
@@ -89,6 +90,7 @@ func (h *Handlers) validateForRoutes() error {
 		{"admin settings handler", h.AdminSettings != nil},
 		{"admin log handler", h.AdminLog != nil},
 		{"admin management handler", h.AdminMgmt != nil},
+		{"admin data handler", h.AdminData != nil},
 		{"client category handler", h.ClientCategory != nil},
 		{"client video handler", h.ClientVideo != nil},
 		{"client live handler", h.ClientLive != nil},

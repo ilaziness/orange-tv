@@ -136,4 +136,9 @@ func registerAdminSystemRoutes(v1 *gin.RouterGroup, h *Handlers) {
 	v1.GET("/system-logs", h.AdminLog.ListSystemLogs)
 	v1.GET("/login-logs", h.AdminLog.ListLoginLogs)
 	v1.GET("/app-logs", h.AdminLog.ListAppLogs)
+
+	// data management
+	v1.GET("/data/backup", h.AdminData.Backup)
+	v1.POST("/data/batch-update/preview", h.AdminData.BatchUpdatePreview)
+	v1.POST("/data/batch-update/execute", h.AdminData.BatchUpdateExecute)
 }
