@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 
+	"github.com/ilaziness/orange-tv/internal/cache"
 	"github.com/ilaziness/orange-tv/internal/constant"
 	shareddto "github.com/ilaziness/orange-tv/internal/dto"
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
@@ -15,11 +15,8 @@ import (
 	"github.com/ilaziness/orange-tv/internal/repository"
 	adminsvc "github.com/ilaziness/orange-tv/internal/service/admin"
 	"github.com/ilaziness/orange-tv/internal/utils"
-	"github.com/ilaziness/orange-tv/pkg/cache"
 	"go.uber.org/zap"
 )
-
-const openListCacheTTL = 2 * time.Minute
 
 // ResourceService serves third-party resource-station APIs.
 type ResourceService interface {
@@ -36,7 +33,7 @@ type resourceService struct {
 	metaRepo  repository.MetadataRepository
 	playRepo  repository.PlayRepository
 	catRepo   repository.CategoryRepository
-	cache     cache.Cache
+	cache     *cache.Manager
 	log       *zap.Logger
 }
 
@@ -47,12 +44,9 @@ func NewResourceService(
 	metaRepo repository.MetadataRepository,
 	playRepo repository.PlayRepository,
 	catRepo repository.CategoryRepository,
-	c cache.Cache,
+	c *cache.Manager,
 	log *zap.Logger,
 ) ResourceService {
-	if c == nil {
-		c = cache.NewNopCache()
-	}
 	if log == nil {
 		log = zap.NewNop()
 	}
@@ -93,8 +87,8 @@ func (s *resourceService) ListVideos(ctx context.Context, page, pageSize int, fo
 	if nerr != nil {
 		return nil, nerr
 	}
-	cacheKey := fmt.Sprintf("open:videos:list:%s:%d:%d", format, page, pageSize)
-	if v, err := s.cache.Get(ctx, cacheKey); err == nil && v != nil {
+	cacheKey := cache.OpenVideoListKey(format, page, pageSize)
+	if v, err := s.cache.GetOpenVideoList(ctx, cacheKey); err == nil && v != nil {
 		return v, nil
 	}
 
@@ -149,7 +143,7 @@ func (s *resourceService) ListVideos(ctx context.Context, page, pageSize int, fo
 			},
 		}
 	}
-	_ = s.cache.Set(ctx, cacheKey, out, openListCacheTTL)
+	_ = s.cache.SetOpenVideoList(ctx, cacheKey, out)
 	return out, nil
 }
 
@@ -161,8 +155,8 @@ func (s *resourceService) GetVideo(ctx context.Context, id int64, format string)
 	if nerr != nil {
 		return nil, nerr
 	}
-	cacheKey := fmt.Sprintf("open:videos:detail:%s:%d", format, id)
-	if v, err := s.cache.Get(ctx, cacheKey); err == nil && v != nil {
+	cacheKey := cache.OpenVideoDetailKey(format, id)
+	if v, err := s.cache.GetOpenVideoDetail(ctx, cacheKey); err == nil && v != nil {
 		return v, nil
 	}
 
@@ -185,16 +179,13 @@ func (s *resourceService) GetVideo(ctx context.Context, id int64, format string)
 			"data":    mapDefaultDetail(detail),
 		}
 	}
-	_ = s.cache.Set(ctx, cacheKey, out, openListCacheTTL)
+	_ = s.cache.SetOpenVideoDetail(ctx, cacheKey, out)
 	return out, nil
 }
 
 func (s *resourceService) ListCategories(ctx context.Context) ([]shareddto.CategoryResponse, error) {
-	cacheKey := "open:categories"
-	if v, err := s.cache.Get(ctx, cacheKey); err == nil {
-		if tree, ok := v.([]shareddto.CategoryResponse); ok {
-			return tree, nil
-		}
+	if tree, err := s.cache.GetOpenCategories(ctx); err == nil && tree != nil {
+		return tree, nil
 	}
 	items, err := s.catRepo.List(ctx, true)
 	if err != nil {
@@ -202,7 +193,7 @@ func (s *resourceService) ListCategories(ctx context.Context) ([]shareddto.Categ
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	tree := utils.BuildCategoryTree(items)
-	_ = s.cache.Set(ctx, cacheKey, tree, 5*time.Minute)
+	_ = s.cache.SetOpenCategories(ctx, tree)
 	return tree, nil
 }
 

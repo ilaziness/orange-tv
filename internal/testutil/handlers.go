@@ -199,7 +199,6 @@ func (s adminSettingsSvc) GetPublic(ctx context.Context) (*admindto.PublicSiteRe
 func (s adminSettingsSvc) ResourceConfig(ctx context.Context) (*adminsvc.ResourceConfig, error) {
 	return &adminsvc.ResourceConfig{SiteMode: "video_site", APIOutputFormat: "default", EnableThirdPartyCollect: true}, nil
 }
-func (s adminSettingsSvc) InvalidateCache(ctx context.Context) {}
 
 type adminLogSvc struct{}
 

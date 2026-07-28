@@ -2,17 +2,15 @@ package client
 
 import (
 	"context"
-	"fmt"
 	"strings"
-	"time"
 
+	"github.com/ilaziness/orange-tv/internal/cache"
 	"github.com/ilaziness/orange-tv/internal/constant"
 	shareddto "github.com/ilaziness/orange-tv/internal/dto"
 	clientdto "github.com/ilaziness/orange-tv/internal/dto/client"
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
-	"github.com/ilaziness/orange-tv/pkg/cache"
 	"go.uber.org/zap"
 )
 
@@ -29,13 +27,8 @@ type videoService struct {
 	categoryRepo repository.CategoryRepository
 	metaRepo     repository.MetadataRepository
 	playRepo     repository.PlayRepository
-	cache        cache.Cache
+	cache        *cache.Manager
 	log          *zap.Logger
-}
-
-type videoListCacheEntry struct {
-	Items []shareddto.VideoListItem
-	Total int
 }
 
 // NewVideoService creates a client VideoService.
@@ -44,12 +37,9 @@ func NewVideoService(
 	categoryRepo repository.CategoryRepository,
 	metaRepo repository.MetadataRepository,
 	playRepo repository.PlayRepository,
-	c cache.Cache,
+	c *cache.Manager,
 	log *zap.Logger,
 ) VideoService {
-	if c == nil {
-		c = cache.NewNopCache()
-	}
 	if log == nil {
 		log = zap.NewNop()
 	}
@@ -86,11 +76,9 @@ func (s *videoService) List(ctx context.Context, req *clientdto.VideoListRequest
 	cacheable := strings.TrimSpace(req.Region) == "" && strings.TrimSpace(req.Language) == "" && req.Year == 0
 	cacheKey := ""
 	if cacheable {
-		cacheKey = fmt.Sprintf("video:list:%d:%s:%d:%d", req.CategoryID, req.Sort, req.GetPage(), req.GetLimit())
-		if v, err := s.cache.Get(ctx, cacheKey); err == nil {
-			if e, ok := v.(*videoListCacheEntry); ok && e != nil {
-				return e.Items, e.Total, nil
-			}
+		cacheKey = cache.VideoListKey(req.CategoryID, req.Sort, req.GetPage(), req.GetLimit())
+		if e, err := s.cache.GetVideoListClient(ctx, cacheKey); err == nil && e != nil {
+			return e.Items, e.Total, nil
 		}
 	}
 
@@ -116,7 +104,7 @@ func (s *videoService) List(ctx context.Context, req *clientdto.VideoListRequest
 	}
 	out := mapVideoList(items)
 	if cacheKey != "" {
-		_ = s.cache.Set(ctx, cacheKey, &videoListCacheEntry{Items: out, Total: total}, 2*time.Minute)
+		_ = s.cache.SetVideoListClient(ctx, cacheKey, &cache.VideoListCacheEntry{Items: out, Total: total})
 	}
 	return out, total, nil
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/ilaziness/orange-tv/internal/cache"
 	"github.com/ilaziness/orange-tv/internal/constant"
 	shareddto "github.com/ilaziness/orange-tv/internal/dto"
 	dto "github.com/ilaziness/orange-tv/internal/dto/admin"
@@ -11,7 +12,6 @@ import (
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
 	"github.com/ilaziness/orange-tv/internal/utils"
-	"github.com/ilaziness/orange-tv/pkg/cache"
 	"go.uber.org/zap"
 )
 
@@ -25,15 +25,12 @@ type CategoryService interface {
 
 type categoryService struct {
 	repo  repository.CategoryRepository
-	cache cache.Cache
+	cache *cache.Manager
 	log   *zap.Logger
 }
 
 // NewCategoryService creates a CategoryService.
-func NewCategoryService(repo repository.CategoryRepository, c cache.Cache, log *zap.Logger) CategoryService {
-	if c == nil {
-		c = cache.NewNopCache()
-	}
+func NewCategoryService(repo repository.CategoryRepository, c *cache.Manager, log *zap.Logger) CategoryService {
 	if log == nil {
 		log = zap.NewNop()
 	}
@@ -87,7 +84,7 @@ func (s *categoryService) Create(ctx context.Context, req *dto.CreateCategoryReq
 		s.log.Error("category: create failed", zap.String("name", name), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	s.invalidateCaches(ctx)
+	s.cache.InvalidateCategory(ctx)
 	return toCategoryDTO(item), nil
 }
 
@@ -152,7 +149,7 @@ func (s *categoryService) Update(ctx context.Context, id int64, req *dto.UpdateC
 		s.log.Error("category: update failed", zap.Int64("category_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	s.invalidateCaches(ctx)
+	s.cache.InvalidateCategory(ctx)
 	return toCategoryDTO(item), nil
 }
 
@@ -185,13 +182,8 @@ func (s *categoryService) Delete(ctx context.Context, id int64) error {
 		s.log.Error("category: soft delete failed", zap.Int64("category_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
-	s.invalidateCaches(ctx)
+	s.cache.InvalidateCategory(ctx)
 	return nil
-}
-
-func (s *categoryService) invalidateCaches(ctx context.Context) {
-	_ = s.cache.Delete(ctx, "category:tree:client")
-	_ = s.cache.Delete(ctx, "open:categories")
 }
 
 func toCategoryDTO(item *model.Categories) *shareddto.CategoryResponse {

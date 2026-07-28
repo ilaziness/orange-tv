@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/ilaziness/orange-tv/internal/auth"
+	internalcache "github.com/ilaziness/orange-tv/internal/cache"
 	"github.com/ilaziness/orange-tv/internal/event"
 	"github.com/ilaziness/orange-tv/internal/logger"
 	"github.com/ilaziness/orange-tv/internal/metrics"
@@ -65,7 +66,7 @@ func (a *App) wireInfra() error {
 	if err != nil {
 		return err
 	}
-	a.cache = c
+	a.cache = internalcache.NewManager(c)
 	a.addHook(Hook{
 		Name:   "cache",
 		OnStop: func(ctx context.Context) error { return a.cache.Close() },

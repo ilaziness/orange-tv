@@ -4,20 +4,14 @@ import (
 	"context"
 	"net/url"
 	"strings"
-	"time"
 
+	"github.com/ilaziness/orange-tv/internal/cache"
 	shareddto "github.com/ilaziness/orange-tv/internal/dto"
 	clientdto "github.com/ilaziness/orange-tv/internal/dto/client"
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
-	"github.com/ilaziness/orange-tv/pkg/cache"
 	"go.uber.org/zap"
-)
-
-const (
-	liveListCacheKey = "live:list:client"
-	liveCacheTTL     = 5 * time.Minute
 )
 
 // LiveService provides public live channel queries.
@@ -30,15 +24,12 @@ type LiveService interface {
 
 type liveService struct {
 	repo  repository.LiveRepository
-	cache cache.Cache
+	cache *cache.Manager
 	log   *zap.Logger
 }
 
 // NewLiveService creates a client LiveService.
-func NewLiveService(repo repository.LiveRepository, c cache.Cache, log *zap.Logger) LiveService {
-	if c == nil {
-		c = cache.NewNopCache()
-	}
+func NewLiveService(repo repository.LiveRepository, c *cache.Manager, log *zap.Logger) LiveService {
 	if log == nil {
 		log = zap.NewNop()
 	}
@@ -48,10 +39,8 @@ func NewLiveService(repo repository.LiveRepository, c cache.Cache, log *zap.Logg
 // List 返回所有在线直播频道，前端按 category 自行分组展示。
 // stream_url 不返回给前端，前端通过 /live/play/:id 代理播放。
 func (s *liveService) List(ctx context.Context, req *clientdto.LiveListRequest) ([]shareddto.LiveChannelItem, int, error) {
-	if v, err := s.cache.Get(ctx, liveListCacheKey); err == nil {
-		if items, ok := v.([]shareddto.LiveChannelItem); ok {
-			return filterByCategory(items, strings.TrimSpace(req.Category)), len(items), nil
-		}
+	if items, err := s.cache.GetLiveListClient(ctx); err == nil && items != nil {
+		return filterByCategory(items, strings.TrimSpace(req.Category)), len(items), nil
 	}
 	items, err := s.repo.ListAll(ctx)
 	if err != nil {
@@ -66,7 +55,7 @@ func (s *liveService) List(ctx context.Context, req *clientdto.LiveListRequest) 
 		}
 		out = append(out, toPublicLiveItem(m))
 	}
-	_ = s.cache.Set(ctx, liveListCacheKey, out, liveCacheTTL)
+	_ = s.cache.SetLiveListClient(ctx, out)
 	return filterByCategory(out, strings.TrimSpace(req.Category)), len(out), nil
 }
 

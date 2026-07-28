@@ -2,10 +2,10 @@ package admin
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"time"
 
+	"github.com/ilaziness/orange-tv/internal/cache"
 	"github.com/ilaziness/orange-tv/internal/constant"
 	shareddto "github.com/ilaziness/orange-tv/internal/dto"
 	dto "github.com/ilaziness/orange-tv/internal/dto/admin"
@@ -13,7 +13,6 @@ import (
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
 	"github.com/ilaziness/orange-tv/internal/utils"
-	"github.com/ilaziness/orange-tv/pkg/cache"
 	"github.com/uptrace/bun"
 	"go.uber.org/zap"
 )
@@ -32,7 +31,7 @@ type videoService struct {
 	categoryRepo repository.CategoryRepository
 	metaRepo     repository.MetadataRepository
 	playRepo     repository.PlayRepository
-	cache        cache.Cache
+	cache        *cache.Manager
 	log          *zap.Logger
 }
 
@@ -42,12 +41,9 @@ func NewVideoService(
 	categoryRepo repository.CategoryRepository,
 	metaRepo repository.MetadataRepository,
 	playRepo repository.PlayRepository,
-	c cache.Cache,
+	c *cache.Manager,
 	log *zap.Logger,
 ) VideoService {
-	if c == nil {
-		c = cache.NewNopCache()
-	}
 	if log == nil {
 		log = zap.NewNop()
 	}
@@ -153,7 +149,7 @@ func (s *videoService) Create(ctx context.Context, req *dto.CreateVideoRequest) 
 		s.log.Error("video: create transaction failed", zap.String("title", video.Title), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	s.invalidateListCaches(ctx, int64(video.ID))
+	s.cache.InvalidateVideo(ctx, int64(video.ID))
 	return s.getDetail(ctx, int64(video.ID), false)
 }
 
@@ -259,7 +255,7 @@ func (s *videoService) Update(ctx context.Context, id int64, req *dto.UpdateVide
 		s.log.Error("video: update transaction failed", zap.Int64("video_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	s.invalidateListCaches(ctx, id)
+	s.cache.InvalidateVideo(ctx, id)
 	return s.getDetail(ctx, id, false)
 }
 
@@ -290,27 +286,8 @@ func (s *videoService) Delete(ctx context.Context, id int64) error {
 		s.log.Error("video: delete transaction failed", zap.Int64("video_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
-	s.invalidateListCaches(ctx, id)
+	s.cache.InvalidateVideo(ctx, id)
 	return nil
-}
-
-func (s *videoService) invalidateListCaches(ctx context.Context, videoID int64) {
-	// Best-effort: common homepage / default page keys + open list keys.
-	// Full prefix delete is not available on all cache drivers.
-	for _, sort := range []string{"", "id_desc", "rating_desc", "view_count_desc", "created_at_desc"} {
-		for _, page := range []int{1, 2} {
-			for _, limit := range []int{12, 20, 24} {
-				_ = s.cache.Delete(ctx, fmt.Sprintf("video:list:0:%s:%d:%d", sort, page, limit))
-				_ = s.cache.Delete(ctx, fmt.Sprintf("open:videos:list:default:%d:%d", page, limit))
-				_ = s.cache.Delete(ctx, fmt.Sprintf("open:videos:list:apple_cms:%d:%d", page, limit))
-			}
-		}
-	}
-	_ = s.cache.Delete(ctx, "open:categories")
-	if videoID > 0 {
-		_ = s.cache.Delete(ctx, fmt.Sprintf("open:videos:detail:default:%d", videoID))
-		_ = s.cache.Delete(ctx, fmt.Sprintf("open:videos:detail:apple_cms:%d", videoID))
-	}
 }
 
 func (s *videoService) getDetail(ctx context.Context, id int64, clientOnly bool) (*shareddto.VideoDetailResponse, error) {

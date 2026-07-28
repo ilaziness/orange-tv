@@ -4,22 +4,15 @@ import (
 	"context"
 	"strconv"
 	"strings"
-	"time"
 
+	"github.com/ilaziness/orange-tv/internal/cache"
 	"github.com/ilaziness/orange-tv/internal/constant"
 	admindto "github.com/ilaziness/orange-tv/internal/dto/admin"
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
 	"github.com/ilaziness/orange-tv/internal/utils"
-	"github.com/ilaziness/orange-tv/pkg/cache"
 	"go.uber.org/zap"
-)
-
-const (
-	cacheKeySettingsAll    = "settings:all"
-	cacheKeySettingsPublic = "settings:public"
-	settingsCacheTTL       = 5 * time.Minute
 )
 
 // SettingsService manages system settings.
@@ -29,7 +22,6 @@ type SettingsService interface {
 	GetPublic(ctx context.Context) (*admindto.PublicSiteResponse, error)
 	// ResourceConfig is used by open API for access control / format.
 	ResourceConfig(ctx context.Context) (*ResourceConfig, error)
-	InvalidateCache(ctx context.Context)
 }
 
 // ResourceConfig is runtime resource-station config.
@@ -42,15 +34,12 @@ type ResourceConfig struct {
 
 type settingsService struct {
 	repo  repository.SettingsRepository
-	cache cache.Cache
+	cache *cache.Manager
 	log   *zap.Logger
 }
 
 // NewSettingsService creates a SettingsService.
-func NewSettingsService(repo repository.SettingsRepository, c cache.Cache, log *zap.Logger) SettingsService {
-	if c == nil {
-		c = cache.NewNopCache()
-	}
+func NewSettingsService(repo repository.SettingsRepository, c *cache.Manager, log *zap.Logger) SettingsService {
 	if log == nil {
 		log = zap.NewNop()
 	}
@@ -66,10 +55,8 @@ func (s *settingsService) Get(ctx context.Context) (*admindto.SettingsResponse, 
 }
 
 func (s *settingsService) GetPublic(ctx context.Context) (*admindto.PublicSiteResponse, error) {
-	if v, err := s.cache.Get(ctx, cacheKeySettingsPublic); err == nil {
-		if p, ok := v.(*admindto.PublicSiteResponse); ok && p != nil {
-			return p, nil
-		}
+	if p, err := s.cache.GetSettingsPublic(ctx); err == nil && p != nil {
+		return p, nil
 	}
 	m, err := s.loadMap(ctx)
 	if err != nil {
@@ -94,7 +81,7 @@ func (s *settingsService) GetPublic(ctx context.Context) (*admindto.PublicSiteRe
 	if pub.Name == "" {
 		pub.Name = "Orange TV"
 	}
-	_ = s.cache.Set(ctx, cacheKeySettingsPublic, pub, settingsCacheTTL)
+	_ = s.cache.SetSettingsPublic(ctx, pub)
 	return pub, nil
 }
 
@@ -256,20 +243,13 @@ func (s *settingsService) Update(ctx context.Context, req *admindto.UpdateSettin
 		s.log.Error("settings: upsert many failed", zap.Int("count", len(upserts)), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	s.InvalidateCache(ctx)
+	s.cache.InvalidateSettings(ctx)
 	return s.Get(ctx)
 }
 
-func (s *settingsService) InvalidateCache(ctx context.Context) {
-	_ = s.cache.Delete(ctx, cacheKeySettingsAll)
-	_ = s.cache.Delete(ctx, cacheKeySettingsPublic)
-}
-
 func (s *settingsService) loadMap(ctx context.Context) (map[string]model.SystemSettings, error) {
-	if v, err := s.cache.Get(ctx, cacheKeySettingsAll); err == nil {
-		if m, ok := v.(map[string]model.SystemSettings); ok && m != nil {
-			return m, nil
-		}
+	if m, err := s.cache.GetSettingsAll(ctx); err == nil && m != nil {
+		return m, nil
 	}
 	items, err := s.repo.ListAll(ctx)
 	if err != nil {
@@ -280,7 +260,7 @@ func (s *settingsService) loadMap(ctx context.Context) (map[string]model.SystemS
 	for _, it := range items {
 		m[it.SettingKey] = it
 	}
-	_ = s.cache.Set(ctx, cacheKeySettingsAll, m, settingsCacheTTL)
+	_ = s.cache.SetSettingsAll(ctx, m)
 	return m, nil
 }
 

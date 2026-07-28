@@ -2,18 +2,14 @@ package client
 
 import (
 	"context"
-	"time"
 
+	"github.com/ilaziness/orange-tv/internal/cache"
 	shareddto "github.com/ilaziness/orange-tv/internal/dto"
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/repository"
 	"github.com/ilaziness/orange-tv/internal/utils"
-	"github.com/ilaziness/orange-tv/pkg/cache"
 	"go.uber.org/zap"
 )
-
-const categoryTreeCacheKey = "category:tree:client"
-const categoryTreeCacheTTL = 5 * time.Minute
 
 // CategoryService provides client category queries.
 type CategoryService interface {
@@ -22,15 +18,12 @@ type CategoryService interface {
 
 type categoryService struct {
 	repo  repository.CategoryRepository
-	cache cache.Cache
+	cache *cache.Manager
 	log   *zap.Logger
 }
 
 // NewCategoryService creates a client CategoryService.
-func NewCategoryService(repo repository.CategoryRepository, c cache.Cache, log *zap.Logger) CategoryService {
-	if c == nil {
-		c = cache.NewNopCache()
-	}
+func NewCategoryService(repo repository.CategoryRepository, c *cache.Manager, log *zap.Logger) CategoryService {
 	if log == nil {
 		log = zap.NewNop()
 	}
@@ -38,10 +31,8 @@ func NewCategoryService(repo repository.CategoryRepository, c cache.Cache, log *
 }
 
 func (s *categoryService) ListTree(ctx context.Context) ([]shareddto.CategoryResponse, error) {
-	if v, err := s.cache.Get(ctx, categoryTreeCacheKey); err == nil {
-		if tree, ok := v.([]shareddto.CategoryResponse); ok {
-			return tree, nil
-		}
+	if tree, err := s.cache.GetCategoryTreeClient(ctx); err == nil && tree != nil {
+		return tree, nil
 	}
 	items, err := s.repo.List(ctx, true)
 	if err != nil {
@@ -49,14 +40,6 @@ func (s *categoryService) ListTree(ctx context.Context) ([]shareddto.CategoryRes
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	tree := utils.BuildCategoryTree(items)
-	_ = s.cache.Set(ctx, categoryTreeCacheKey, tree, categoryTreeCacheTTL)
+	_ = s.cache.SetCategoryTreeClient(ctx, tree)
 	return tree, nil
-}
-
-// InvalidateCategoryCache clears client category tree cache (call after admin category writes).
-func InvalidateCategoryCache(ctx context.Context, c cache.Cache) {
-	if c == nil {
-		return
-	}
-	_ = c.Delete(ctx, categoryTreeCacheKey)
 }

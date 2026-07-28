@@ -4,13 +4,13 @@ import (
 	"context"
 	"strings"
 
+	"github.com/ilaziness/orange-tv/internal/cache"
 	"github.com/ilaziness/orange-tv/internal/constant"
 	shareddto "github.com/ilaziness/orange-tv/internal/dto"
 	admindto "github.com/ilaziness/orange-tv/internal/dto/admin"
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
-	"github.com/ilaziness/orange-tv/pkg/cache"
 	"go.uber.org/zap"
 )
 
@@ -25,15 +25,12 @@ type LiveService interface {
 
 type liveService struct {
 	repo  repository.LiveRepository
-	cache cache.Cache
+	cache *cache.Manager
 	log   *zap.Logger
 }
 
 // NewLiveService creates a LiveService.
-func NewLiveService(repo repository.LiveRepository, c cache.Cache, log *zap.Logger) LiveService {
-	if c == nil {
-		c = cache.NewNopCache()
-	}
+func NewLiveService(repo repository.LiveRepository, c *cache.Manager, log *zap.Logger) LiveService {
 	if log == nil {
 		log = zap.NewNop()
 	}
@@ -86,7 +83,7 @@ func (s *liveService) Create(ctx context.Context, req *admindto.CreateLiveReques
 		s.log.Error("live: create failed", zap.String("name", name), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	s.invalidateCache(ctx, item.Category)
+	s.cache.InvalidateLive(ctx)
 	out := toLiveItem(item, true)
 	return &out, nil
 }
@@ -100,7 +97,6 @@ func (s *liveService) Update(ctx context.Context, id int64, req *admindto.Update
 	if item == nil {
 		return nil, errcode.LiveChannelNotFound
 	}
-	oldCategory := item.Category
 	if req.Name != nil {
 		name := strings.TrimSpace(*req.Name)
 		if name == "" {
@@ -139,8 +135,7 @@ func (s *liveService) Update(ctx context.Context, id int64, req *admindto.Update
 		s.log.Error("live: update failed", zap.Int64("live_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	s.invalidateCache(ctx, oldCategory)
-	s.invalidateCache(ctx, item.Category)
+	s.cache.InvalidateLive(ctx)
 	out := toLiveItem(item, true)
 	return &out, nil
 }
@@ -158,14 +153,8 @@ func (s *liveService) Delete(ctx context.Context, id int64) error {
 		s.log.Error("live: delete failed", zap.Int64("live_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
-	s.invalidateCache(ctx, item.Category)
+	s.cache.InvalidateLive(ctx)
 	return nil
-}
-
-// invalidateCache clears client live cache entries affected by a write.
-// 缓存键与 client/live.go 中保持一致，直接调用 cache 接口失效，不跨端 import client 包。
-func (s *liveService) invalidateCache(ctx context.Context, category string) {
-	_ = s.cache.Delete(ctx, "live:list:client")
 }
 
 func mapLiveItems(items []model.LiveChannels, withStatus bool) []shareddto.LiveChannelItem {
@@ -262,8 +251,8 @@ func (s *liveService) SyncFromSource(ctx context.Context) (*shareddto.LiveSyncRe
 		Updated: len(entries) - len(toCreate),
 		Deleted: len(toDeleteIDs),
 	}
-	// 同步会批量增删改，按分类精确失效成本高，直接清空分类列表缓存；
-	// 按分类缓存会在下次访问时按需重建。
-	_ = s.cache.Delete(ctx, "live:categories:client")
+	// 同步会批量增删改，按分类精确失效成本高，直接清空直播列表缓存；
+	// 缓存会在下次访问时按需重建。
+	s.cache.InvalidateLive(ctx)
 	return result, nil
 }

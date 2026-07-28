@@ -26,7 +26,7 @@ API 路径：用户端 `/api/client/v1`、管理端 `/api/admin/v1`、内网 `/a
 
 1. **格式化与检查**：`go fmt ./...`、`go vet ./...` 必须通过
 2. **错误处理**：不忽略 error；向上传递用 `fmt.Errorf("...: %w", err)`
-3. **日志**：使用 `zap.Logger`，禁止 `fmt.Println` / `log.Println`
+3. **日志**：使用 `zap.Logger`，禁止 `fmt.Println` / `log.Println`，关键位置需要添加合适的日志
 4. **错误码**：`internal/errcode`，格式 `{3位模块码}{4位业务码}`（100 通用 / 200 用户 / 300 认证 / 400 内容 / 900 系统）
 5. **依赖注入**：构造函数注入，仅在 `internal/app` 组装，禁止全局变量
 6. **数据库**：必须使用 Bun 官方包（见 [coding-standards.md](docs/agents/coding-standards.md)）
