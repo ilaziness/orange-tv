@@ -130,7 +130,6 @@ export type Category = {
 }
 
 export type NamedItem = { id: number; name: string }
-export type ActorItem = { id: number; name: string; role: string }
 
 export type VideoListItem = {
   id: number
@@ -165,6 +164,23 @@ export type VideoSourceGroup = {
   episodes: VideoSourceEpisode[]
 }
 
+export type VideoDetailEpisode = {
+  episode: number
+  title: string
+}
+
+export type VideoDetailSourceGroup = {
+  id: number
+  name: string
+  episodes: VideoDetailEpisode[]
+}
+
+export type PlayEpisodeResponse = {
+  url: string
+  quality: string
+  format: string
+}
+
 export type VideoDetail = {
   id: number
   title: string
@@ -183,9 +199,31 @@ export type VideoDetail = {
   rating: number
   view_count: number
   directors: NamedItem[]
-  actors: ActorItem[]
+  actors: NamedItem[]
   tags: NamedItem[]
   sources: VideoSourceGroup[]
+}
+
+export type ClientVideoDetail = {
+  id: number
+  title: string
+  subtitle: string
+  description: string
+  category_id: number
+  serial_status: number
+  cover: string
+  poster: string
+  year: number
+  region: string
+  language: string
+  duration: number
+  release_date?: string
+  rating: number
+  view_count: number
+  directors: NamedItem[]
+  actors: NamedItem[]
+  tags: NamedItem[]
+  sources: VideoDetailSourceGroup[]
 }
 
 export type PlaySource = {

@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
-import type { VideoDetail } from '@orange-tv/shared'
+import type { ClientVideoDetail, PlayEpisodeResponse, VideoDetailSourceGroup } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
 import { useSiteStore } from '@/store/site'
 import { VideoPlayer } from '@/components/Player'
-import { EpisodeList } from '@/components/EpisodeList'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
@@ -12,28 +11,36 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { AlertCircleIcon } from 'lucide-react'
 
 export default function PlayPage() {
-  const { id, sourceIdx } = useParams()
+  const { id, sourceId, episodeNumber } = useParams()
   const navigate = useNavigate()
   const ad = useSiteStore((s) => s.ad)
-  const [detail, setDetail] = useState<VideoDetail | null>(null)
+  const [detail, setDetail] = useState<ClientVideoDetail | null>(null)
+  const [episode, setEpisode] = useState<PlayEpisodeResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const sourceIndex = Number(sourceIdx || 0)
+
+  const sourceIdNum = Number(sourceId || 0)
+  const epNum = Number(episodeNumber || 0)
 
   useEffect(() => {
-    if (!id) return
+    if (!id || !sourceId || !episodeNumber) return
     void (async () => {
       setLoading(true)
+      setError('')
       try {
-        const res = await clientApi.video(Number(id))
-        setDetail(res.data || null)
+        const [detailRes, epRes] = await Promise.all([
+          clientApi.video(Number(id)),
+          clientApi.playEpisode(Number(id), Number(sourceId), Number(episodeNumber)),
+        ])
+        setDetail(detailRes.data || null)
+        setEpisode(epRes.data || null)
       } catch (err) {
         setError(errorMessage(err))
       } finally {
         setLoading(false)
       }
     })()
-  }, [id])
+  }, [id, sourceId, episodeNumber])
 
   if (loading) {
     return (
@@ -65,58 +72,59 @@ export default function PlayPage() {
     )
   }
 
-  const sourceGroup = detail.sources?.[sourceIndex]
-  if (!sourceGroup) {
+  if (!episode) {
     return (
       <Empty>
         <EmptyHeader>
-          <EmptyTitle>播放源不存在</EmptyTitle>
-        </EmptyHeader>
-      </Empty>
-    )
-  }
-  const source = sourceGroup.episodes?.[0]
-  if (!source) {
-    return (
-      <Empty>
-        <EmptyHeader>
-          <EmptyTitle>暂无剧集</EmptyTitle>
+          <EmptyTitle>剧集不存在</EmptyTitle>
+          <EmptyDescription>该剧集可能已下架</EmptyDescription>
         </EmptyHeader>
       </Empty>
     )
   }
 
+  const sourceGroup: VideoDetailSourceGroup | undefined = detail.sources?.find(
+    (s) => s.id === sourceIdNum,
+  )
+
   return (
     <div className="flex flex-col gap-6">
-      <div className="overflow-hidden rounded-xl border border-border">
-        <VideoPlayer src={source.url} format={source.format} adConfig={ad.enabled ? ad : null} />
+      <div className="overflow-hidden rounded-xl border">
+        <VideoPlayer src={episode.url} format={episode.format} adConfig={ad.enabled ? ad : null} />
       </div>
 
       <div className="flex flex-col gap-3">
         <h1 className="text-xl font-bold">{detail.title}</h1>
         <p className="text-sm text-muted-foreground">
-          {sourceGroup.name || `播放源 ${sourceIndex + 1}`}
+          {sourceGroup?.name || '播放源'} · 第{epNum}集
         </p>
 
         <div className="flex flex-wrap gap-2">
-          {detail.sources?.map((s, idx) => (
+          {detail.sources?.map((s) => (
             <Button
-              key={idx}
-              variant={idx === sourceIndex ? 'default' : 'outline'}
+              key={s.id}
+              variant={s.id === sourceIdNum ? 'default' : 'outline'}
               size="sm"
-              onClick={() => navigate(`/play/${id}/${idx}`)}
+              onClick={() => navigate(`/play/${id}/${s.id}/${epNum}`)}
             >
-              {s.name || `播放源 ${idx + 1}`}
+              {s.name}
             </Button>
           ))}
         </div>
 
-        {sourceGroup.episodes.length > 1 ? (
-          <EpisodeList
-            source={sourceGroup}
-            currentEpisode={source.episode}
-            onSelect={() => {}}
-          />
+        {sourceGroup && sourceGroup.episodes.length > 1 ? (
+          <div className="flex flex-wrap gap-2">
+            {sourceGroup.episodes.map((ep) => (
+              <Button
+                key={ep.episode}
+                variant={ep.episode === epNum ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => navigate(`/play/${id}/${sourceId}/${ep.episode}`)}
+              >
+                {ep.title || `第${ep.episode}集`}
+              </Button>
+            ))}
+          </div>
         ) : null}
       </div>
     </div>

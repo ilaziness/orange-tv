@@ -61,13 +61,6 @@ type NamedItem struct {
 	Name string `json:"name"`
 }
 
-// ActorItem is actor info with role.
-type ActorItem struct {
-	ID   uint64 `json:"id"`
-	Name string `json:"name"`
-	Role string `json:"role"`
-}
-
 // CategoryResponse is a category tree node.
 type CategoryResponse struct {
 	ID        uint64             `json:"id"`
@@ -98,7 +91,7 @@ type VideoListItem struct {
 	UpdatedAt     string  `json:"updated_at,omitempty"`
 }
 
-// VideoSourceEpisode is one playable episode under a source.
+// VideoSourceEpisode is one playable episode under a source (admin/open API, includes URL).
 type VideoSourceEpisode struct {
 	Episode uint32 `json:"episode"`
 	Title   string `json:"title"`
@@ -107,11 +100,31 @@ type VideoSourceEpisode struct {
 	Format  string `json:"format"`
 }
 
-// VideoSourceGroup groups episodes by play source.
+// VideoSourceGroup groups episodes by play source (admin/open API, includes URL).
 type VideoSourceGroup struct {
 	ID       uint64               `json:"id"`
 	Name     string               `json:"name"`
 	Episodes []VideoSourceEpisode `json:"episodes"`
+}
+
+// VideoDetailEpisode is an episode summary without play URL (client detail API).
+type VideoDetailEpisode struct {
+	Episode uint32 `json:"episode"`
+	Title   string `json:"title"`
+}
+
+// VideoDetailSourceGroup groups episode summaries by play source (client detail API, no URL).
+type VideoDetailSourceGroup struct {
+	ID       uint64               `json:"id"`
+	Name     string               `json:"name"`
+	Episodes []VideoDetailEpisode `json:"episodes"`
+}
+
+// PlayEpisodeResponse is the single-episode play URL response.
+type PlayEpisodeResponse struct {
+	URL     string `json:"url"`
+	Quality string `json:"quality"`
+	Format  string `json:"format"`
 }
 
 // LiveChannelItem is a live channel payload for admin and client.
@@ -188,7 +201,7 @@ type VideoDetailResponse struct {
 	Rating        float64            `json:"rating"`
 	ViewCount     uint32             `json:"view_count"`
 	Directors     []NamedItem        `json:"directors"`
-	Actors        []ActorItem        `json:"actors"`
+	Actors        []NamedItem        `json:"actors"`
 	Tags          []NamedItem        `json:"tags"`
 	Sources       []VideoSourceGroup `json:"sources"`
 }

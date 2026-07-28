@@ -40,7 +40,6 @@ export default function VideoEditPage() {
     setForm,
     toggleDirector,
     toggleActor,
-    updateActorRole,
     toggleTag,
     addEpisode,
     updateEpisode,
@@ -81,7 +80,7 @@ export default function VideoEditPage() {
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
               <VideoBasicForm form={form} setForm={setForm} categories={categories} />
               <DirectorSelector directors={directors} selected={selectedDirectors} onToggle={toggleDirector} />
-              <ActorSelector actors={actors} selected={selectedActors} onToggle={toggleActor} onChangeRole={updateActorRole} />
+              <ActorSelector actors={actors} selected={selectedActors} onToggle={toggleActor} />
               <TagSelector tags={tags} selected={selectedTags} onToggle={toggleTag} />
               <EpisodeManager episodes={episodes} sources={sources} onAdd={addEpisode} onUpdate={updateEpisode} onRemove={removeEpisode} />
               <div className="flex justify-end">

@@ -59,8 +59,7 @@ type UpdateVideoRequest struct {
 	TagIDs        *[]uint64          `json:"tag_ids" validate:"omitempty,dive,min=1"`
 }
 
-// VideoActorInput binds actor and optional role.
+// VideoActorInput binds actor to video.
 type VideoActorInput struct {
 	ActorID uint64 `json:"actor_id" validate:"required,min=1"`
-	Role    string `json:"role" validate:"omitempty,max=100"`
 }

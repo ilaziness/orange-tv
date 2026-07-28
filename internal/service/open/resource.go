@@ -225,7 +225,7 @@ func (s *resourceService) ListCategories(ctx context.Context) ([]shareddto.Categ
 type detailBundle struct {
 	Video     *model.Videos
 	Directors []model.Directors
-	Actors    []shareddto.ActorItem
+	Actors    []shareddto.NamedItem
 	Tags      []model.Tags
 	Sources   []shareddto.VideoSourceGroup
 }
@@ -267,9 +267,9 @@ func (s *resourceService) loadDetail(ctx context.Context, id int64) (*detailBund
 	for _, a := range actors {
 		actorName[a.ID] = a.Name
 	}
-	actorItems := make([]shareddto.ActorItem, 0, len(actorRels))
+	actorItems := make([]shareddto.NamedItem, 0, len(actorRels))
 	for _, rel := range actorRels {
-		actorItems = append(actorItems, shareddto.ActorItem{ID: rel.ActorID, Name: actorName[rel.ActorID], Role: rel.Role})
+		actorItems = append(actorItems, shareddto.NamedItem{ID: rel.ActorID, Name: actorName[rel.ActorID]})
 	}
 	tagIDs, err := s.videoRepo.ListTagIDs(ctx, uint64(id))
 	if err != nil {

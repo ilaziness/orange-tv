@@ -72,3 +72,27 @@ func (h *VideoHandler) Related(c *gin.Context) {
 	}
 	response.Success(c, list)
 }
+
+// GetEpisode returns the play URL for a single episode.
+// @Summary 获取单集播放地址
+// @Description 根据影视ID、播放源ID和集数获取播放地址
+// @Tags client-video
+// @Accept json
+// @Produce json
+// @Param id path int true "影视ID"
+// @Param source_id path int true "播放源ID"
+// @Param episode_number path int true "集数编号"
+// @Success 200 {object} response.Response{data=dto.PlayEpisodeResponse}
+// @Router /api/client/v1/videos/{id}/episodes/{source_id}/{episode_number} [get]
+func (h *VideoHandler) GetEpisode(c *gin.Context) {
+	var uri clientdto.EpisodeURI
+	if !httphandler.BindURI(c, &uri) {
+		return
+	}
+	item, err := h.svc.GetEpisode(c.Request.Context(), uri.ID, uri.SourceID, uri.EpisodeNumber)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	response.Success(c, item)
+}

@@ -56,7 +56,7 @@ export function useVideoEdit() {
   const [tags, setTags] = useState<NamedItem[]>([])
   const [sources, setSources] = useState<PlaySource[]>([])
   const [selectedDirectors, setSelectedDirectors] = useState<number[]>([])
-  const [selectedActors, setSelectedActors] = useState<Array<{ actor_id: number; role: string }>>([])
+  const [selectedActors, setSelectedActors] = useState<number[]>([])
   const [selectedTags, setSelectedTags] = useState<number[]>([])
   const [episodes, setEpisodes] = useState<EpisodeDraft[]>([])
   const [form, setForm] = useState(emptyForm)
@@ -99,7 +99,7 @@ export function useVideoEdit() {
             release_date: d.release_date || '',
           })
           setSelectedDirectors(d.directors.map((x) => x.id))
-          setSelectedActors(d.actors.map((x) => ({ actor_id: x.id, role: x.role })))
+          setSelectedActors(d.actors.map((x) => x.id))
           setSelectedTags(d.tags.map((x) => x.id))
         }
       } catch (err) {
@@ -119,15 +119,7 @@ export function useVideoEdit() {
   }
 
   function toggleActor(id: number) {
-    setSelectedActors((prev) => {
-      const exists = prev.find((x) => x.actor_id === id)
-      if (exists) return prev.filter((x) => x.actor_id !== id)
-      return [...prev, { actor_id: id, role: '' }]
-    })
-  }
-
-  function updateActorRole(id: number, role: string) {
-    setSelectedActors((prev) => prev.map((x) => x.actor_id === id ? { ...x, role } : x))
+    setSelectedActors((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])
   }
 
   function addEpisode() {
@@ -157,7 +149,7 @@ export function useVideoEdit() {
     const body = {
       ...result.data,
       director_ids: selectedDirectors,
-      actors: selectedActors,
+      actors: selectedActors.map((id) => ({ actor_id: id })),
       tag_ids: selectedTags,
     }
     setSubmitting(true)
@@ -213,7 +205,6 @@ export function useVideoEdit() {
     setForm,
     toggleDirector,
     toggleActor,
-    updateActorRole,
     toggleTag,
     addEpisode,
     updateEpisode,

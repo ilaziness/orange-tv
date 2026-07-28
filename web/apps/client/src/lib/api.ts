@@ -6,16 +6,17 @@ import {
   apiPost,
   type Category,
   type ClientBanner,
+  type ClientVideoDetail,
   type CommentItem,
   type FavoriteItem,
   type HistoryItem,
   type LiveChannel,
   type PageData,
+  type PlayEpisodeResponse,
   type SiteSettings,
   type AdSettings,
   type UserLoginResult,
   type UserProfile,
-  type VideoDetail,
   type VideoListItem,
 } from '@orange-tv/shared'
 
@@ -38,7 +39,9 @@ export const clientApi = {
   categories: () => apiGet<Category[]>(CLIENT_API_BASE, '/categories'),
   videos: (query?: Record<string, string | number | undefined>) =>
     apiGet<PageData<VideoListItem>>(CLIENT_API_BASE, '/videos', { query }),
-  video: (id: number) => apiGet<VideoDetail>(CLIENT_API_BASE, `/videos/${id}`),
+  video: (id: number) => apiGet<ClientVideoDetail>(CLIENT_API_BASE, `/videos/${id}`),
+  playEpisode: (id: number, sourceId: number, episode: number) =>
+    apiGet<PlayEpisodeResponse>(CLIENT_API_BASE, `/videos/${id}/episodes/${sourceId}/${episode}`),
   related: (id: number, limit = 12) =>
     apiGet<VideoListItem[]>(CLIENT_API_BASE, `/videos/${id}/related`, { query: { limit } }),
   search: (keyword: string, page = 1, extra?: Record<string, string | number | undefined>) =>

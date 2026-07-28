@@ -18,8 +18,9 @@ import (
 type VideoService interface {
 	List(ctx context.Context, req *clientdto.VideoListRequest) ([]shareddto.VideoListItem, int, error)
 	Search(ctx context.Context, req *clientdto.SearchRequest) ([]shareddto.VideoListItem, int, error)
-	Get(ctx context.Context, id int64) (*shareddto.VideoDetailResponse, error)
+	Get(ctx context.Context, id int64) (*clientdto.ClientVideoDetailResponse, error)
 	Related(ctx context.Context, id int64, limit int) ([]shareddto.VideoListItem, error)
+	GetEpisode(ctx context.Context, videoID, sourceID int64, episodeNumber int32) (*shareddto.PlayEpisodeResponse, error)
 }
 
 type videoService struct {
@@ -201,7 +202,7 @@ func (s *videoService) Related(ctx context.Context, id int64, limit int) ([]shar
 	return mapVideoList(out), nil
 }
 
-func (s *videoService) Get(ctx context.Context, id int64) (*shareddto.VideoDetailResponse, error) {
+func (s *videoService) Get(ctx context.Context, id int64) (*clientdto.ClientVideoDetailResponse, error) {
 	video, err := s.videoRepo.GetByID(ctx, uint64(id))
 	if err != nil {
 		s.log.Error("client video: get by id failed", zap.Int64("video_id", id), zap.Error(err))
@@ -267,7 +268,7 @@ func (s *videoService) Get(ctx context.Context, id int64) (*shareddto.VideoDetai
 		sourceMap[src.ID] = src
 	}
 
-	groups := map[uint64]*shareddto.VideoSourceGroup{}
+	groups := map[uint64]*shareddto.VideoDetailSourceGroup{}
 	order := make([]uint64, 0)
 	for _, ep := range episodes {
 		src, ok := sourceMap[ep.SourceID]
@@ -276,19 +277,16 @@ func (s *videoService) Get(ctx context.Context, id int64) (*shareddto.VideoDetai
 		}
 		g, ok := groups[ep.SourceID]
 		if !ok {
-			g = &shareddto.VideoSourceGroup{ID: src.ID, Name: src.Name, Episodes: []shareddto.VideoSourceEpisode{}}
+			g = &shareddto.VideoDetailSourceGroup{ID: src.ID, Name: src.Name, Episodes: []shareddto.VideoDetailEpisode{}}
 			groups[ep.SourceID] = g
 			order = append(order, ep.SourceID)
 		}
-		g.Episodes = append(g.Episodes, shareddto.VideoSourceEpisode{
+		g.Episodes = append(g.Episodes, shareddto.VideoDetailEpisode{
 			Episode: ep.EpisodeNumber,
 			Title:   ep.Title,
-			URL:     ep.PlayURL,
-			Quality: ep.Quality,
-			Format:  ep.Format,
 		})
 	}
-	sourceGroups := make([]shareddto.VideoSourceGroup, 0, len(order))
+	sourceGroups := make([]shareddto.VideoDetailSourceGroup, 0, len(order))
 	for _, sid := range order {
 		sourceGroups = append(sourceGroups, *groups[sid])
 	}
@@ -297,9 +295,9 @@ func (s *videoService) Get(ctx context.Context, id int64) (*shareddto.VideoDetai
 	for _, d := range directors {
 		dirItems = append(dirItems, shareddto.NamedItem{ID: d.ID, Name: d.Name})
 	}
-	actorItems := make([]shareddto.ActorItem, 0, len(actorRels))
+	actorItems := make([]shareddto.NamedItem, 0, len(actorRels))
 	for _, rel := range actorRels {
-		actorItems = append(actorItems, shareddto.ActorItem{ID: rel.ActorID, Name: actorName[rel.ActorID], Role: rel.Role})
+		actorItems = append(actorItems, shareddto.NamedItem{ID: rel.ActorID, Name: actorName[rel.ActorID]})
 	}
 	tagItems := make([]shareddto.NamedItem, 0, len(tags))
 	for _, tg := range tags {
@@ -313,12 +311,36 @@ func (s *videoService) Get(ctx context.Context, id int64) (*shareddto.VideoDetai
 	if video.ReleaseDate != nil {
 		release = video.ReleaseDate.Format("2006-01-02")
 	}
-	return &shareddto.VideoDetailResponse{
+	return &clientdto.ClientVideoDetailResponse{
 		ID: video.ID, Title: video.Title, Subtitle: video.Subtitle, Description: desc,
 		CategoryID: video.CategoryID, SerialStatus: video.SerialStatus, Cover: video.CoverImage, Poster: video.PosterImage,
 		Year: video.Year, Region: video.Region, Language: video.Language, Duration: video.Duration,
 		ReleaseDate: release, Rating: video.Rating, ViewCount: video.ViewCount,
 		Directors: dirItems, Actors: actorItems, Tags: tagItems, Sources: sourceGroups,
+	}, nil
+}
+
+func (s *videoService) GetEpisode(ctx context.Context, videoID, sourceID int64, episodeNumber int32) (*shareddto.PlayEpisodeResponse, error) {
+	video, err := s.videoRepo.GetByID(ctx, uint64(videoID))
+	if err != nil {
+		s.log.Error("client video: get episode - get video failed", zap.Int64("video_id", videoID), zap.Error(err))
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	if video == nil || video.PublishStatus != constant.PublishStatusOnline {
+		return nil, errcode.VideoNotFound
+	}
+	ep, err := s.playRepo.GetPlayableEpisode(ctx, videoID, sourceID, episodeNumber)
+	if err != nil {
+		s.log.Error("client video: get playable episode failed", zap.Int64("video_id", videoID), zap.Int64("source_id", sourceID), zap.Int32("ep", episodeNumber), zap.Error(err))
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	if ep == nil {
+		return nil, errcode.PlayEpisodeNotFound
+	}
+	return &shareddto.PlayEpisodeResponse{
+		URL:     ep.PlayURL,
+		Quality: ep.Quality,
+		Format:  ep.Format,
 	}, nil
 }
 

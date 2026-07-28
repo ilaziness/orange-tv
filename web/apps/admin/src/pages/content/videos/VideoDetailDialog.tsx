@@ -201,7 +201,7 @@ export function VideoDetailDialog({ open, videoId, onOpenChange }: VideoDetailDi
                     <div>
                       <span className="text-muted-foreground">演员：</span>
                       {detail.actors.length
-                        ? detail.actors.map((a) => `${a.name}${a.role ? `（${a.role}）` : ''}`).join('、')
+                        ? detail.actors.map((a) => a.name).join('、')
                         : '暂无'}
                     </div>
                     <div className="flex flex-wrap items-center gap-1.5">

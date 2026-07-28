@@ -222,11 +222,14 @@ func (s clientVideoSvc) List(ctx context.Context, req *clientdto.VideoListReques
 func (s clientVideoSvc) Search(ctx context.Context, req *clientdto.SearchRequest) ([]shareddto.VideoListItem, int, error) {
 	return nil, 0, nil
 }
-func (s clientVideoSvc) Get(ctx context.Context, id int64) (*shareddto.VideoDetailResponse, error) {
-	return &shareddto.VideoDetailResponse{ID: uint64(id)}, nil
+func (s clientVideoSvc) Get(ctx context.Context, id int64) (*clientdto.ClientVideoDetailResponse, error) {
+	return &clientdto.ClientVideoDetailResponse{ID: uint64(id)}, nil
 }
 func (s clientVideoSvc) Related(ctx context.Context, id int64, limit int) ([]shareddto.VideoListItem, error) {
 	return nil, nil
+}
+func (s clientVideoSvc) GetEpisode(ctx context.Context, videoID, sourceID int64, episodeNumber int32) (*shareddto.PlayEpisodeResponse, error) {
+	return &shareddto.PlayEpisodeResponse{}, nil
 }
 
 type clientLiveSvc struct{}

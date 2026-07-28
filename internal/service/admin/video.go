@@ -390,12 +390,11 @@ func (s *videoService) getDetail(ctx context.Context, id int64, clientOnly bool)
 	for _, d := range directors {
 		dirItems = append(dirItems, shareddto.NamedItem{ID: d.ID, Name: d.Name})
 	}
-	actorItems := make([]shareddto.ActorItem, 0, len(actorRels))
+	actorItems := make([]shareddto.NamedItem, 0, len(actorRels))
 	for _, rel := range actorRels {
-		actorItems = append(actorItems, shareddto.ActorItem{
+		actorItems = append(actorItems, shareddto.NamedItem{
 			ID:   rel.ActorID,
 			Name: actorName[rel.ActorID],
-			Role: rel.Role,
 		})
 	}
 	tagItems := make([]shareddto.NamedItem, 0, len(tags))
@@ -545,7 +544,6 @@ func toActorRels(inputs []dto.VideoActorInput) []model.VideoActors {
 		seen[in.ActorID] = struct{}{}
 		out = append(out, model.VideoActors{
 			ActorID: in.ActorID,
-			Role:    strings.TrimSpace(in.Role),
 		})
 	}
 	return out

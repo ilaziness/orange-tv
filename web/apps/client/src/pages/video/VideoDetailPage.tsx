@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
-import type { CommentItem, VideoDetail, VideoListItem } from '@orange-tv/shared'
+import type { CommentItem, ClientVideoDetail, VideoListItem } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
 import { VideoGrid } from '@/components/common'
 import { CommentSection } from '@/components/CommentSection'
@@ -10,12 +10,12 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Skeleton } from '@/components/ui/skeleton'
-import { AlertCircleIcon, FilmIcon, PlayIcon } from 'lucide-react'
+import { AlertCircleIcon, FilmIcon } from 'lucide-react'
 
 export default function VideoDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const [detail, setDetail] = useState<VideoDetail | null>(null)
+  const [detail, setDetail] = useState<ClientVideoDetail | null>(null)
   const [related, setRelated] = useState<VideoListItem[]>([])
   const [comments, setComments] = useState<CommentItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -84,6 +84,13 @@ export default function VideoDetailPage() {
     )
   }
 
+  const directorText = detail.directors?.length
+    ? detail.directors.map((d) => d.name).join(' / ')
+    : '暂无'
+  const actorText = detail.actors?.length
+    ? detail.actors.map((a) => a.name).join(' / ')
+    : '暂无'
+
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-6 md:flex-row">
@@ -110,6 +117,16 @@ export default function VideoDetailPage() {
             <Badge variant="secondary">{detail.region || '未知'}</Badge>
             <Badge variant="secondary">{detail.language || '未知'}</Badge>
           </div>
+          <div className="flex flex-col gap-1 text-sm">
+            <p>
+              <span className="text-muted-foreground">导演: </span>
+              {directorText}
+            </p>
+            <p>
+              <span className="text-muted-foreground">主演: </span>
+              {actorText}
+            </p>
+          </div>
           <p className="text-sm leading-relaxed">{detail.description || '暂无简介'}</p>
           {detail.tags?.length ? (
             <div className="flex flex-wrap gap-2">
@@ -127,16 +144,23 @@ export default function VideoDetailPage() {
         </CardHeader>
         <CardContent>
           {detail.sources && detail.sources.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {detail.sources.map((source, idx) => (
-                <Button
-                  key={idx}
-                  variant="outline"
-                  onClick={() => navigate(`/play/${id}/${idx}`)}
-                >
-                  <PlayIcon data-icon="inline-start" />
-                  {source.name || `播放源 ${idx + 1}`}
-                </Button>
+            <div className="flex flex-col gap-4">
+              {detail.sources.map((source) => (
+                <div key={source.id} className="flex flex-col gap-2">
+                  <p className="text-sm font-medium">{source.name}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {source.episodes.map((ep) => (
+                      <Button
+                        key={ep.episode}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/play/${id}/${source.id}/${ep.episode}`)}
+                      >
+                        {ep.title || `第${ep.episode}集`}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           ) : (

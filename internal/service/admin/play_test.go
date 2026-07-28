@@ -61,6 +61,15 @@ func (f *fakePlayRepo) GetEpisode(ctx context.Context, id int64) (*model.PlayEpi
 	cp := *ep
 	return &cp, nil
 }
+func (f *fakePlayRepo) GetPlayableEpisode(ctx context.Context, videoID, sourceID int64, episodeNumber int32) (*model.PlayEpisodes, error) {
+	for _, ep := range f.episodes {
+		if ep.VideoID == uint64(videoID) && ep.SourceID == uint64(sourceID) && ep.EpisodeNumber == uint32(episodeNumber) && ep.Status == 1 && ep.DeletedAt == nil {
+			cp := *ep
+			return &cp, nil
+		}
+	}
+	return nil, nil
+}
 func (f *fakePlayRepo) GetEpisodeByKey(ctx context.Context, videoID, sourceID int64, episodeNumber int32) (*model.PlayEpisodes, error) {
 	for _, ep := range f.episodes {
 		if ep.VideoID == uint64(videoID) && ep.SourceID == uint64(sourceID) && ep.EpisodeNumber == uint32(episodeNumber) {
