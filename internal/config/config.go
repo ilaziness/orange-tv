@@ -8,6 +8,7 @@ import (
 
 	"github.com/ilaziness/orange-tv/internal/constant"
 	"github.com/ilaziness/orange-tv/internal/logger"
+	"github.com/ilaziness/orange-tv/pkg/cache"
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
@@ -128,23 +129,10 @@ type RateLimitConfig struct {
 
 // CacheConfig 缓存配置（enabled 为 false 时可忽略其余字段）。
 type CacheConfig struct {
-	Enabled bool              `mapstructure:"enabled"` // 是否启用缓存
-	Driver  string            `mapstructure:"driver"`  // 驱动（enabled 时校验），枚举：memory | redis | multi
-	Memory  MemoryCacheConfig `mapstructure:"memory"`  // 内存缓存参数（driver 为 memory/multi 时使用）
-	Redis   RedisCacheConfig  `mapstructure:"redis"`   // Redis 缓存参数（driver 为 redis/multi 时使用）
-}
-
-// MemoryCacheConfig 内存缓存（Ristretto）参数。
-type MemoryCacheConfig struct {
-	NumCounters int64 `mapstructure:"num_counters"` // 计数器数量，建议为预计键数量的 10 倍
-	MaxCost     int64 `mapstructure:"max_cost"`     // 最大内存成本（字节）
-	BufferItems int64 `mapstructure:"buffer_items"` // 写入缓冲区大小，默认 64
-}
-
-// RedisCacheConfig Redis 缓存参数。
-type RedisCacheConfig struct {
-	KeyPrefix  string `mapstructure:"key_prefix"`  // 键前缀
-	DefaultTTL int    `mapstructure:"default_ttl"` // 默认过期时间（秒）
+	Enabled bool                    `mapstructure:"enabled"` // 是否启用缓存
+	Driver  string                  `mapstructure:"driver"`  // 驱动（enabled 时校验），枚举：memory | redis | multi
+	Memory  cache.MemoryCacheConfig `mapstructure:"memory"`  // 内存缓存参数（driver 为 memory/multi 时使用）
+	Redis   cache.RedisCacheConfig  `mapstructure:"redis"`   // Redis 缓存参数（driver 为 redis/multi 时使用）
 }
 
 // TracingConfig 分布式链路追踪配置（enabled 为 false 时可忽略其余字段）。

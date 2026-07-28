@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ilaziness/orange-tv/internal/cache"
 	"github.com/ilaziness/orange-tv/internal/collect"
 	"github.com/ilaziness/orange-tv/internal/constant"
 	shareddto "github.com/ilaziness/orange-tv/internal/dto"
@@ -16,6 +15,7 @@ import (
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
 	"github.com/ilaziness/orange-tv/internal/utils"
+	"github.com/ilaziness/orange-tv/pkg/cache"
 	"github.com/robfig/cron/v3"
 	"go.uber.org/zap"
 )

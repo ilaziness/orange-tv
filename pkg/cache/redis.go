@@ -6,9 +6,20 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ilaziness/orange-tv/internal/config"
 	"github.com/redis/go-redis/v9"
 )
+
+// RedisOptions Redis 连接参数（与业务配置解耦）
+type RedisOptions struct {
+	Host               string
+	Port               int
+	Password           string
+	DB                 int
+	PoolSize           int
+	MinIdleConns       int
+	IdleTimeout        int // 秒
+	IdleCheckFrequency int // 秒
+}
 
 // RedisCacheConfig Redis缓存配置
 type RedisCacheConfig struct {
@@ -24,14 +35,14 @@ type RedisCache struct {
 }
 
 // NewRedisCache 创建新的Redis缓存实例
-func NewRedisCache(cacheConfig RedisCacheConfig, redisConfig config.RedisConfig) (*RedisCache, error) {
+func NewRedisCache(cacheConfig RedisCacheConfig, opts RedisOptions) (*RedisCache, error) {
 	client := redis.NewClient(&redis.Options{
-		Addr:            fmt.Sprintf("%s:%d", redisConfig.Host, redisConfig.Port),
-		Password:        redisConfig.Password,
-		DB:              redisConfig.DB,
-		PoolSize:        redisConfig.PoolSize,
-		MinIdleConns:    redisConfig.MinIdleConns,
-		ConnMaxIdleTime: time.Duration(redisConfig.IdleTimeout) * time.Second,
+		Addr:            fmt.Sprintf("%s:%d", opts.Host, opts.Port),
+		Password:        opts.Password,
+		DB:              opts.DB,
+		PoolSize:        opts.PoolSize,
+		MinIdleConns:    opts.MinIdleConns,
+		ConnMaxIdleTime: time.Duration(opts.IdleTimeout) * time.Second,
 	})
 
 	// 健康检查

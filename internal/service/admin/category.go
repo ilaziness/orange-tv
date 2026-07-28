@@ -4,7 +4,6 @@ import (
 	"context"
 	"strings"
 
-	"github.com/ilaziness/orange-tv/internal/cache"
 	"github.com/ilaziness/orange-tv/internal/constant"
 	shareddto "github.com/ilaziness/orange-tv/internal/dto"
 	dto "github.com/ilaziness/orange-tv/internal/dto/admin"
@@ -12,6 +11,7 @@ import (
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
 	"github.com/ilaziness/orange-tv/internal/utils"
+	"github.com/ilaziness/orange-tv/pkg/cache"
 	"go.uber.org/zap"
 )
 

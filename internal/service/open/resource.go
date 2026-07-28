@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ilaziness/orange-tv/internal/cache"
 	"github.com/ilaziness/orange-tv/internal/constant"
 	shareddto "github.com/ilaziness/orange-tv/internal/dto"
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
@@ -16,6 +15,7 @@ import (
 	"github.com/ilaziness/orange-tv/internal/repository"
 	adminsvc "github.com/ilaziness/orange-tv/internal/service/admin"
 	"github.com/ilaziness/orange-tv/internal/utils"
+	"github.com/ilaziness/orange-tv/pkg/cache"
 	"go.uber.org/zap"
 )
 

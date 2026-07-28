@@ -3,7 +3,13 @@ package event
 import (
 	"context"
 	"time"
+
+	pkgevent "github.com/ilaziness/orange-tv/pkg/event"
 )
+
+// 重导出核心类型，下游包通过 internal/event 即可使用，无需直接 import pkg/event
+type EventBus = pkgevent.EventBus
+type Event = pkgevent.Event
 
 // 内置事件名称常量
 const (
@@ -33,7 +39,7 @@ type AppStoppedPayload struct {
 
 // PublishAppStarted 发布应用启动事件
 func PublishAppStarted(bus EventBus, version string) error {
-	event := &Event{
+	e := &pkgevent.Event{
 		Name: EventAppStarted,
 		Payload: &AppStartedPayload{
 			StartTime: time.Now(),
@@ -42,12 +48,12 @@ func PublishAppStarted(bus EventBus, version string) error {
 		Timestamp: time.Now(),
 		Context:   context.Background(),
 	}
-	return bus.Publish(context.Background(), event)
+	return bus.Publish(context.Background(), e)
 }
 
 // PublishAppStopped 发布应用停止事件
 func PublishAppStopped(bus EventBus, uptime time.Duration) error {
-	event := &Event{
+	e := &pkgevent.Event{
 		Name: EventAppStopped,
 		Payload: &AppStoppedPayload{
 			StopTime: time.Now(),
@@ -56,5 +62,5 @@ func PublishAppStopped(bus EventBus, uptime time.Duration) error {
 		Timestamp: time.Now(),
 		Context:   context.Background(),
 	}
-	return bus.Publish(context.Background(), event)
+	return bus.Publish(context.Background(), e)
 }

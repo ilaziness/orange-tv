@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ilaziness/orange-tv/internal/cache"
+	"github.com/ilaziness/orange-tv/pkg/cache"
 )
 
 // ExampleMemoryCache 内存缓存基本使用示例
@@ -59,7 +59,7 @@ func ExampleMultiCache() {
 	// 这里为了示例简洁，仅演示 L1 缓存的使用
 	//
 	// 完整的多级缓存配置示例：
-	// redisConfig := config.RedisConfig{
+	// redisOpts := cache.RedisOptions{
 	//     Host:     "localhost",
 	//     Port:     6379,
 	//     Password: "",
@@ -69,7 +69,7 @@ func ExampleMultiCache() {
 	//     KeyPrefix:  "app:",
 	//     DefaultTTL: 10 * time.Minute,
 	// }
-	// l2, _ := cache.NewRedisCache(cacheConfig, redisConfig)
+	// l2, _ := cache.NewRedisCache(cacheConfig, redisOpts)
 	// multiCache := cache.NewMultiCache(l1, l2)
 
 	ctx := context.Background()

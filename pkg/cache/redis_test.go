@@ -7,10 +7,9 @@ import (
 	"time"
 
 	"github.com/alicebob/miniredis/v2"
-	"github.com/ilaziness/orange-tv/internal/config"
 )
 
-func setupTestRedis(t *testing.T) (*miniredis.Miniredis, config.RedisConfig) {
+func setupTestRedis(t *testing.T) (*miniredis.Miniredis, RedisOptions) {
 	t.Helper()
 
 	mr, err := miniredis.Run()
@@ -27,8 +26,7 @@ func setupTestRedis(t *testing.T) (*miniredis.Miniredis, config.RedisConfig) {
 		port = p
 	}
 
-	redisConfig := config.RedisConfig{
-		Enabled:  true,
+	opts := RedisOptions{
 		Host:     mr.Host(),
 		Port:     port,
 		Password: "",
@@ -36,18 +34,18 @@ func setupTestRedis(t *testing.T) (*miniredis.Miniredis, config.RedisConfig) {
 		PoolSize: 10,
 	}
 
-	return mr, redisConfig
+	return mr, opts
 }
 
 func TestRedisCache_SetAndGet(t *testing.T) {
-	_, redisConfig := setupTestRedis(t)
+	_, opts := setupTestRedis(t)
 
 	cacheConfig := RedisCacheConfig{
 		KeyPrefix:  "test:",
 		DefaultTTL: 3600,
 	}
 
-	cache, err := NewRedisCache(cacheConfig, redisConfig)
+	cache, err := NewRedisCache(cacheConfig, opts)
 	if err != nil {
 		t.Fatalf("failed to create redis cache: %v", err)
 	}
@@ -82,14 +80,14 @@ func TestRedisCache_SetAndGet(t *testing.T) {
 }
 
 func TestRedisCache_Delete(t *testing.T) {
-	_, redisConfig := setupTestRedis(t)
+	_, opts := setupTestRedis(t)
 
 	cacheConfig := RedisCacheConfig{
 		KeyPrefix:  "test:",
 		DefaultTTL: 3600,
 	}
 
-	cache, err := NewRedisCache(cacheConfig, redisConfig)
+	cache, err := NewRedisCache(cacheConfig, opts)
 	if err != nil {
 		t.Fatalf("failed to create redis cache: %v", err)
 	}
@@ -117,14 +115,14 @@ func TestRedisCache_Delete(t *testing.T) {
 }
 
 func TestRedisCache_Exists(t *testing.T) {
-	_, redisConfig := setupTestRedis(t)
+	_, opts := setupTestRedis(t)
 
 	cacheConfig := RedisCacheConfig{
 		KeyPrefix:  "test:",
 		DefaultTTL: 3600,
 	}
 
-	cache, err := NewRedisCache(cacheConfig, redisConfig)
+	cache, err := NewRedisCache(cacheConfig, opts)
 	if err != nil {
 		t.Fatalf("failed to create redis cache: %v", err)
 	}
@@ -161,14 +159,14 @@ func TestRedisCache_Exists(t *testing.T) {
 }
 
 func TestRedisCache_KeyPrefix(t *testing.T) {
-	mr, redisConfig := setupTestRedis(t)
+	mr, opts := setupTestRedis(t)
 
 	cacheConfig := RedisCacheConfig{
 		KeyPrefix:  "myprefix:",
 		DefaultTTL: 3600,
 	}
 
-	cache, err := NewRedisCache(cacheConfig, redisConfig)
+	cache, err := NewRedisCache(cacheConfig, opts)
 	if err != nil {
 		t.Fatalf("failed to create redis cache: %v", err)
 	}

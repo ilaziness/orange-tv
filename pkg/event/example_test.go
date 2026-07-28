@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ilaziness/orange-tv/internal/event"
+	"github.com/ilaziness/orange-tv/pkg/event"
 )
 
 // ExampleEventBus 事件总线基本使用示例

@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/ilaziness/orange-tv/internal/auth"
-	"github.com/ilaziness/orange-tv/internal/cache"
 	"github.com/ilaziness/orange-tv/internal/config"
 	"github.com/ilaziness/orange-tv/internal/database"
 	"github.com/ilaziness/orange-tv/internal/event"
@@ -21,6 +20,7 @@ import (
 	"github.com/ilaziness/orange-tv/internal/metrics"
 	"github.com/ilaziness/orange-tv/internal/server"
 	"github.com/ilaziness/orange-tv/internal/tracing"
+	pkgcache "github.com/ilaziness/orange-tv/pkg/cache"
 	"go.uber.org/zap"
 )
 
@@ -31,7 +31,7 @@ type App struct {
 	logger *logger.Logger
 
 	db       *database.DB
-	cache    cache.Cache
+	cache    pkgcache.Cache
 	eventBus event.EventBus
 	tracer   *tracing.Tracer
 	metrics  *metrics.Metrics

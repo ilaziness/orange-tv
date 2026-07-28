@@ -4,11 +4,12 @@ import (
 	"context"
 
 	"github.com/ilaziness/orange-tv/internal/auth"
-	"github.com/ilaziness/orange-tv/internal/cache"
 	"github.com/ilaziness/orange-tv/internal/event"
 	"github.com/ilaziness/orange-tv/internal/logger"
 	"github.com/ilaziness/orange-tv/internal/metrics"
 	"github.com/ilaziness/orange-tv/internal/tracing"
+	pkgcache "github.com/ilaziness/orange-tv/pkg/cache"
+	pkgevent "github.com/ilaziness/orange-tv/pkg/event"
 	"go.uber.org/zap"
 )
 
@@ -44,7 +45,22 @@ func (a *App) wireInfra() error {
 		a.log.Warn("jwt.secret is not configured, using default development secret")
 	}
 
-	cacheFactory := cache.NewCacheFactory(a.cfg)
+	cacheFactory := pkgcache.NewCacheFactory(pkgcache.CacheFactoryOptions{
+		Enabled:    a.cfg.Cache.Enabled,
+		Driver:     a.cfg.Cache.Driver,
+		Memory:     a.cfg.Cache.Memory,
+		RedisCache: a.cfg.Cache.Redis,
+		RedisConn: pkgcache.RedisOptions{
+			Host:               a.cfg.Redis.Host,
+			Port:               a.cfg.Redis.Port,
+			Password:           a.cfg.Redis.Password,
+			DB:                 a.cfg.Redis.DB,
+			PoolSize:           a.cfg.Redis.PoolSize,
+			MinIdleConns:       a.cfg.Redis.MinIdleConns,
+			IdleTimeout:        a.cfg.Redis.IdleTimeout,
+			IdleCheckFrequency: a.cfg.Redis.IdleCheckFrequency,
+		},
+	})
 	c, err := cacheFactory.Create()
 	if err != nil {
 		return err
@@ -55,7 +71,7 @@ func (a *App) wireInfra() error {
 		OnStop: func(ctx context.Context) error { return a.cache.Close() },
 	})
 
-	a.eventBus = event.NewEventBusWithLogger(a.log)
+	a.eventBus = pkgevent.NewEventBusWithLogger(a.log)
 	a.registerBuiltinEventListeners()
 	a.addHook(Hook{
 		Name:   "event_bus",
