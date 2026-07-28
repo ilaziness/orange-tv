@@ -38,7 +38,8 @@ import {
   HeartIcon,
   HistoryIcon,
   UserIcon,
-  ChevronDownIcon,
+  FilterIcon,
+  TvIcon,
   FilmIcon,
 } from 'lucide-react'
 
@@ -113,10 +114,13 @@ export function ClientLayout() {
     <Popover open={categoryOpen} onOpenChange={(open) => setCategoryOpen(open)}>
       <PopoverTrigger
         render={
-          <Button variant="ghost" size="sm">
-            分类
-            <ChevronDownIcon data-icon="inline-end" />
-          </Button>
+          <button
+            type="button"
+            className="flex flex-col items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <FilterIcon className="size-4" />
+            筛选
+          </button>
         }
       />
       <PopoverContent align="start" side="bottom" className="w-80 p-4">
@@ -167,9 +171,13 @@ export function ClientLayout() {
   const renderNavLinks = () => (
     <>
       {renderCategoryPopover()}
-      <Button variant="ghost" size="sm" nativeButton={false} render={<Link to="/live" />}>
+      <Link
+        to="/live"
+        className="flex flex-col items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-primary"
+      >
+        <TvIcon className="size-4" />
         电视
-      </Button>
+      </Link>
     </>
   )
 
@@ -231,10 +239,10 @@ export function ClientLayout() {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
-        <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4">
+        <div className="flex h-14 w-full items-center justify-start gap-4 px-4">
           {renderLogo()}
 
-          <nav className="hidden items-center gap-1 md:flex">
+          <nav className="hidden items-center gap-4 md:flex">
             {renderNavLinks()}
           </nav>
 
@@ -249,7 +257,7 @@ export function ClientLayout() {
               <SheetTrigger
                 render={
                   <Button variant="ghost" size="icon" className="md:hidden">
-                    <MenuIcon />
+                    <MenuIcon data-icon="inline-start" />
                     <span className="sr-only">菜单</span>
                   </Button>
                 }
@@ -262,24 +270,33 @@ export function ClientLayout() {
                   {renderSearch()}
                   <Separator />
                   <div className="flex flex-col gap-2">
-                    <Button
-                      variant="ghost"
-                      className="justify-start"
-                      nativeButton={false}
-                      render={<Link to="/videos" />}
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      分类
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="justify-start"
-                      nativeButton={false}
-                      render={<Link to="/live" />}
-                      onClick={() => setMobileOpen(false)}
-                    >
-                      电视
-                    </Button>
+                    {categoriesLoading ? (
+                      Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-9 w-full" />)
+                    ) : (
+                      <>
+                        <Button
+                          variant="ghost"
+                          className="justify-start"
+                          nativeButton={false}
+                          render={<Link to="/live" />}
+                          onClick={() => setMobileOpen(false)}
+                        >
+                          电视
+                        </Button>
+                        {roots.map((root) => (
+                          <Button
+                            key={root.id}
+                            variant="ghost"
+                            className="justify-start"
+                            nativeButton={false}
+                            render={<Link to={`/videos?category_id=${root.id}`} />}
+                            onClick={() => setMobileOpen(false)}
+                          >
+                            {root.name}
+                          </Button>
+                        ))}
+                      </>
+                    )}
                   </div>
                   <Separator />
                   {profile ? (
@@ -330,12 +347,12 @@ export function ClientLayout() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6">
+      <main className="w-full flex-1 px-4 py-6">
         <Outlet />
       </main>
 
       <footer className="border-t border-border py-6">
-        <div className="mx-auto flex max-w-7xl flex-col items-center gap-1 px-4 text-center text-sm text-muted-foreground">
+        <div className="flex w-full flex-col items-center gap-1 px-4 text-center text-sm text-muted-foreground">
           {site.copyright ? <p>{site.copyright}</p> : null}
           {site.icp ? <p>{site.icp}</p> : null}
           {!site.copyright && !site.icp ? (

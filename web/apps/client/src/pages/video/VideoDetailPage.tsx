@@ -99,7 +99,7 @@ export default function VideoDetailPage() {
             <FilmIcon className="size-16 text-muted-foreground/40" />
           )}
         </div>
-        <div className="flex flex-1 flex-col gap-3">
+        <div className="flex max-w-4xl flex-1 flex-col gap-3">
           <h1 className="text-2xl font-bold tracking-tight">{detail.title}</h1>
           {detail.subtitle ? (
             <p className="text-muted-foreground">{detail.subtitle}</p>
