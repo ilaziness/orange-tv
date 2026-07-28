@@ -1,8 +1,8 @@
 import { create } from 'zustand'
-import type { PublicSiteInfo } from '@orange-tv/shared'
+import type { AdSettings } from '@orange-tv/shared'
 import { clientApi } from '@/lib/api'
 
-const DEFAULT_AD = {
+const DEFAULT_AD: AdSettings = {
   enabled: false,
   type: '',
   url: '',
@@ -11,7 +11,19 @@ const DEFAULT_AD = {
   skipable: false,
 }
 
-const DEFAULT_SITE: PublicSiteInfo = {
+interface SiteState {
+  name: string
+  logo: string
+  copyright: string
+  icp: string
+  seo_keywords: string
+  description: string
+  ad: AdSettings
+  loaded: boolean
+  loadSite: () => Promise<void>
+}
+
+const DEFAULT_SITE: Omit<SiteState, 'loadSite'> = {
   name: 'Orange TV',
   logo: '/logo.svg',
   copyright: '',
@@ -19,36 +31,32 @@ const DEFAULT_SITE: PublicSiteInfo = {
   seo_keywords: '',
   description: '',
   ad: DEFAULT_AD,
-}
-
-interface SiteState {
-  site: PublicSiteInfo
-  loaded: boolean
-  loadSite: () => Promise<void>
+  loaded: false,
 }
 
 export const useSiteStore = create<SiteState>((set, get) => ({
-  site: DEFAULT_SITE,
-  loaded: false,
+  ...DEFAULT_SITE,
   loadSite: async () => {
     if (get().loaded) return
     try {
-      const res = await clientApi.site()
-      const data = res.data
+      const [siteRes, adRes] = await Promise.all([
+        clientApi.siteSettings(),
+        clientApi.adSettings(),
+      ])
+      const site = siteRes.data
+      const ad = adRes.data
       set({
-        site: {
-          name: data?.name || DEFAULT_SITE.name,
-          logo: data?.logo || DEFAULT_SITE.logo,
-          copyright: data?.copyright || '',
-          icp: data?.icp || '',
-          seo_keywords: data?.seo_keywords || '',
-          description: data?.description || '',
-          ad: data?.ad || DEFAULT_AD,
-        },
+        name: site?.name || DEFAULT_SITE.name,
+        logo: site?.logo || DEFAULT_SITE.logo,
+        copyright: site?.copyright || '',
+        icp: site?.icp || '',
+        seo_keywords: site?.seo_keywords || '',
+        description: site?.description || '',
+        ad: ad || DEFAULT_AD,
         loaded: true,
       })
     } catch {
-      set({ site: DEFAULT_SITE, loaded: true })
+      set({ ...DEFAULT_SITE, loaded: true })
     }
   },
 }))

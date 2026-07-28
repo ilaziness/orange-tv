@@ -46,8 +46,8 @@ export default function APISettingsPage() {
   async function load(opts?: { silent?: boolean }) {
     if (!opts?.silent) setLoading(true)
     try {
-      const res = await adminApi.getSettings('api')
-      const api = res.data.api
+      const res = await adminApi.getAPISettings()
+      const api = res.data
       setForm({
         site_mode: api.site_mode || 'video_site',
         api_output_format: api.api_output_format || 'default',
@@ -75,7 +75,8 @@ export default function APISettingsPage() {
     setSubmitting(true)
     try {
       await adminApi.updateSettings({
-        api: {
+        group: 'api',
+        data: {
           site_mode: result.data.site_mode,
           api_output_format: result.data.api_output_format,
           enable_third_party_collect: result.data.enable_third_party_collect,

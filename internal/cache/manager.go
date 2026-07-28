@@ -7,7 +7,6 @@ import (
 
 	"github.com/ilaziness/orange-tv/internal/constant"
 	shareddto "github.com/ilaziness/orange-tv/internal/dto"
-	clientdto "github.com/ilaziness/orange-tv/internal/dto/client"
 	"github.com/ilaziness/orange-tv/internal/model"
 	pkgcache "github.com/ilaziness/orange-tv/pkg/cache"
 )
@@ -146,30 +145,11 @@ func (m *Manager) SetSettingsByGroup(ctx context.Context, group string, settings
 	return m.cache.Set(ctx, SettingsGroupKey(group), settings, TTLSettings)
 }
 
-// GetSettingsPublic 获取公开站点设置缓存。
-func (m *Manager) GetSettingsPublic(ctx context.Context) (*clientdto.PublicSiteResponse, error) {
-	v, err := m.cache.Get(ctx, KeySettingsPublic)
-	if err != nil {
-		return nil, err
-	}
-	pub, ok := v.(*clientdto.PublicSiteResponse)
-	if !ok || pub == nil {
-		return nil, nil
-	}
-	return pub, nil
-}
-
-// SetSettingsPublic 设置公开站点设置缓存。
-func (m *Manager) SetSettingsPublic(ctx context.Context, pub *clientdto.PublicSiteResponse) error {
-	return m.cache.Set(ctx, KeySettingsPublic, pub, TTLSettings)
-}
-
-// InvalidateSettings invalidates all settings caches (per-group + public).
+// InvalidateSettings invalidates all settings caches.
 func (m *Manager) InvalidateSettings(ctx context.Context) {
 	for _, g := range constant.AllSettingGroups() {
 		_ = m.cache.Delete(ctx, SettingsGroupKey(g))
 	}
-	_ = m.cache.Delete(ctx, KeySettingsPublic)
 }
 
 // --- Open API ---

@@ -26,7 +26,10 @@ import {
   type PlaySource,
   type RemoteCategoryResponse,
   type SystemLogItem,
-  type SystemSettings,
+  type SiteSettings,
+  type APISettings,
+  type AdSettings,
+  type UpdateSettingsRequest,
   type UserGroupItem,
   type UserItem,
   type VideoDetail,
@@ -191,10 +194,14 @@ export const adminApi = {
   listCollectLogs: (query?: Record<string, string | number | undefined>) =>
     withAuth((token) => apiGet<PageData<CollectLog>>(ADMIN_API_BASE, '/collect/logs', { token, query })),
 
-  getSettings: (group: string) =>
-    withAuth((token) => apiGet<SystemSettings>(ADMIN_API_BASE, '/settings', { token, query: { group } })),
-  updateSettings: (body: unknown) =>
-    withAuth((token) => apiPut<SystemSettings>(ADMIN_API_BASE, '/settings', body, { token })),
+  getSiteSettings: () =>
+    withAuth((token) => apiGet<SiteSettings>(ADMIN_API_BASE, '/settings', { token, query: { group: 'site' } })),
+  getAPISettings: () =>
+    withAuth((token) => apiGet<APISettings>(ADMIN_API_BASE, '/settings', { token, query: { group: 'api' } })),
+  getAdSettings: () =>
+    withAuth((token) => apiGet<AdSettings>(ADMIN_API_BASE, '/settings', { token, query: { group: 'ad' } })),
+  updateSettings: (body: UpdateSettingsRequest) =>
+    withAuth((token) => apiPut<Record<string, unknown>>(ADMIN_API_BASE, '/settings', body, { token })),
   listSystemLogs: (query?: Record<string, string | number | undefined>) =>
     withAuth((token) => apiGet<PageData<SystemLogItem>>(ADMIN_API_BASE, '/system-logs', { token, query })),
   listLoginLogs: (query?: Record<string, string | number | undefined>) =>

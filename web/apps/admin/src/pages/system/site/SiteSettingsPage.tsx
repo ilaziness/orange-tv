@@ -37,8 +37,8 @@ export default function SiteSettingsPage() {
   async function load(opts?: { silent?: boolean }) {
     if (!opts?.silent) setLoading(true)
     try {
-      const res = await adminApi.getSettings('site')
-      const site = res.data.site
+      const res = await adminApi.getSiteSettings()
+      const site = res.data
       setForm({
         name: site.name || '',
         logo: site.logo || '',
@@ -66,7 +66,7 @@ export default function SiteSettingsPage() {
     }
     setSubmitting(true)
     try {
-      await adminApi.updateSettings({ site: result.data })
+      await adminApi.updateSettings({ group: 'site', data: result.data })
       toast.success('设置已保存')
       await load({ silent: true })
     } catch (err) {

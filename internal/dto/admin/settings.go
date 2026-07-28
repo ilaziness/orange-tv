@@ -1,14 +1,6 @@
 package admin
 
-// SettingsResponse is the structured system settings payload for admin.
-// When Group is non-empty, only the corresponding group's fields are populated.
-// When Group is empty (e.g. Update response), all updated group fields are populated.
-type SettingsResponse struct {
-	Group string       `json:"group,omitempty"`
-	Site  SiteSettings `json:"site"`
-	API   APISettings  `json:"api"`
-	Ad    AdSettings   `json:"ad"`
-}
+import "encoding/json"
 
 // SiteSettings holds public site branding fields.
 type SiteSettings struct {
@@ -30,12 +22,11 @@ type APISettings struct {
 	ResourceAPIKeyMasked    string `json:"resource_api_key_masked,omitempty"`
 }
 
-// UpdateSettingsRequest updates site + API + ad settings.
-// Empty ResourceAPIKey means "do not change".
+// UpdateSettingsRequest updates settings for a single group.
+// Data is the group-specific key-value JSON payload.
 type UpdateSettingsRequest struct {
-	Site *UpdateSiteSettings `json:"site"`
-	API  *UpdateAPISettings  `json:"api"`
-	Ad   *UpdateAdSettings   `json:"ad"`
+	Group string          `json:"group" validate:"required,oneof=site api ad"`
+	Data  json.RawMessage `json:"data" validate:"required"`
 }
 
 // UpdateSiteSettings updates public site fields (all optional).

@@ -3,6 +3,7 @@ package testutil
 
 import (
 	"context"
+	"encoding/json"
 	"io"
 
 	"github.com/gin-gonic/gin"
@@ -188,11 +189,11 @@ func (s adminCollectSvc) StopScheduler(ctx context.Context) error   { return nil
 
 type adminSettingsSvc struct{}
 
-func (s adminSettingsSvc) Get(ctx context.Context, group string) (*admindto.SettingsResponse, error) {
-	return &admindto.SettingsResponse{Group: group}, nil
+func (s adminSettingsSvc) Get(ctx context.Context, group string) (any, error) {
+	return map[string]any{}, nil
 }
-func (s adminSettingsSvc) Update(ctx context.Context, req *admindto.UpdateSettingsRequest) (*admindto.SettingsResponse, error) {
-	return &admindto.SettingsResponse{}, nil
+func (s adminSettingsSvc) Update(ctx context.Context, group string, data json.RawMessage) (any, error) {
+	return map[string]any{}, nil
 }
 
 type adminLogSvc struct{}
@@ -248,14 +249,8 @@ func (s clientLiveProxySvc) Proxy(c *gin.Context, channelID int64, segURL string
 
 type clientSettingsSvc struct{}
 
-func (s clientSettingsSvc) GetByGroup(ctx context.Context, group string) (*clientdto.SettingsResponse, error) {
-	return &clientdto.SettingsResponse{Group: group}, nil
-}
-func (s clientSettingsSvc) GetAll(ctx context.Context) (*clientdto.SettingsResponse, error) {
-	return &clientdto.SettingsResponse{}, nil
-}
-func (s clientSettingsSvc) GetPublic(ctx context.Context) (*clientdto.PublicSiteResponse, error) {
-	return &clientdto.PublicSiteResponse{Name: "Orange TV"}, nil
+func (s clientSettingsSvc) GetByGroup(ctx context.Context, group string) (any, error) {
+	return map[string]any{}, nil
 }
 
 type openResourceSvc struct{}

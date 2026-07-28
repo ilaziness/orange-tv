@@ -293,27 +293,9 @@ export type AdSettings = {
   skipable: boolean
 }
 
-export type SystemSettings = {
-  group?: string
-  site: SiteSettings
-  api: APISettings
-  ad: AdSettings
-}
-
-export type PublicSiteInfo = {
-  name: string
-  logo: string
-  copyright: string
-  icp: string
-  seo_keywords: string
-  description: string
-  ad: AdSettings
-}
-
-export type ClientSettings = {
-  group?: string
-  site: SiteSettings
-  ad: AdSettings
+export type UpdateSettingsRequest = {
+  group: string
+  data: Record<string, unknown>
 }
 
 export type SystemLogItem = {

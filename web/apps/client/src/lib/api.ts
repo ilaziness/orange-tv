@@ -6,13 +6,13 @@ import {
   apiPost,
   type Category,
   type ClientBanner,
-  type ClientSettings,
   type CommentItem,
   type FavoriteItem,
   type HistoryItem,
   type LiveChannel,
   type PageData,
-  type PublicSiteInfo,
+  type SiteSettings,
+  type AdSettings,
   type UserLoginResult,
   type UserProfile,
   type VideoDetail,
@@ -51,9 +51,8 @@ export const clientApi = {
   // liveStreamUrl 返回直播流的代理播放地址，前端不接触真实 stream_url。
   liveStreamUrl: (id: number) => `${CLIENT_API_BASE}/live/play/${id}`,
   banners: () => apiGet<ClientBanner[]>(CLIENT_API_BASE, '/banners'),
-  site: () => apiGet<PublicSiteInfo>(CLIENT_API_BASE, '/site'),
-  settings: (group?: string) =>
-    apiGet<ClientSettings>(CLIENT_API_BASE, '/settings', { query: group ? { group } : undefined }),
+  siteSettings: () => apiGet<SiteSettings>(CLIENT_API_BASE, '/settings', { query: { group: 'site' } }),
+  adSettings: () => apiGet<AdSettings>(CLIENT_API_BASE, '/settings', { query: { group: 'ad' } }),
 
   // User auth (C5)
   register: (username: string, password: string, email?: string) =>

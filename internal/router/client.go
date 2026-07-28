@@ -21,7 +21,6 @@ func registerClientContentRoutes(v1 *gin.RouterGroup, h *Handlers) {
 
 	v1.GET("/live", h.ClientLive.List)
 	v1.GET("/live/play/:id", h.ClientLive.Play)
-	v1.GET("/site", h.ClientSite.Public)
 	v1.GET("/settings", h.ClientSite.GetSettings)
 	v1.GET("/banners", h.ClientBanner.List)
 

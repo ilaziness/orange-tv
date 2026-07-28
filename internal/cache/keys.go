@@ -17,7 +17,6 @@ const (
 
 	// Settings (per-group cache)
 	KeyTplSettingsGroup = "settings:group:%s"
-	KeySettingsPublic   = "settings:public"
 	TTLSettings         = 5 * time.Minute
 
 	// Open - 分类

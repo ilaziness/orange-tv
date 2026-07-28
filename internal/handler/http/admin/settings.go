@@ -22,6 +22,15 @@ func NewSettingsHandler(svc adminsvc.SettingsService, recorder *audit.Recorder) 
 	return &SettingsHandler{svc: svc, audit: recorder}
 }
 
+// GetSettings godoc
+// @Summary 获取系统设置
+// @Description 按分组获取系统设置（site/api/ad）
+// @Tags 系统设置
+// @Accept json
+// @Produce json
+// @Param group query string true "设置分组 (site/api/ad)"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/settings [get]
 func (h *SettingsHandler) Get(c *gin.Context) {
 	group := c.Query("group")
 	if group == "" {
@@ -36,12 +45,21 @@ func (h *SettingsHandler) Get(c *gin.Context) {
 	response.Success(c, resp)
 }
 
+// UpdateSettings godoc
+// @Summary 更新系统设置
+// @Description 按分组更新系统设置，data 为对应分组的 key-value JSON
+// @Tags 系统设置
+// @Accept json
+// @Produce json
+// @Param body body admindto.UpdateSettingsRequest true "更新设置请求"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/settings [put]
 func (h *SettingsHandler) Update(c *gin.Context) {
 	var req admindto.UpdateSettingsRequest
 	if !httphandler.BindAndValidate(c, &req) {
 		return
 	}
-	resp, err := h.svc.Update(c.Request.Context(), &req)
+	resp, err := h.svc.Update(c.Request.Context(), req.Group, req.Data)
 	if err != nil {
 		response.Error(c, err)
 		return

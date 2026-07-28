@@ -2,7 +2,10 @@ import { useEffect } from 'react'
 import { useSiteStore } from '@/store/site'
 
 export function useSite() {
-  const site = useSiteStore((s) => s.site)
+  const name = useSiteStore((s) => s.name)
+  const logo = useSiteStore((s) => s.logo)
+  const copyright = useSiteStore((s) => s.copyright)
+  const icp = useSiteStore((s) => s.icp)
   const loaded = useSiteStore((s) => s.loaded)
   const loadSite = useSiteStore((s) => s.loadSite)
 
@@ -13,10 +16,10 @@ export function useSite() {
   }, [loaded, loadSite])
 
   useEffect(() => {
-    if (site.name) {
-      document.title = site.name
+    if (name) {
+      document.title = name
     }
-  }, [site.name])
+  }, [name])
 
-  return { site, loaded }
+  return { site: { name, logo, copyright, icp }, loaded }
 }

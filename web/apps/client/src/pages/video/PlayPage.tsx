@@ -14,7 +14,7 @@ import { AlertCircleIcon } from 'lucide-react'
 export default function PlayPage() {
   const { id, sourceIdx } = useParams()
   const navigate = useNavigate()
-  const site = useSiteStore((s) => s.site)
+  const ad = useSiteStore((s) => s.ad)
   const [detail, setDetail] = useState<VideoDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -89,7 +89,7 @@ export default function PlayPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="overflow-hidden rounded-xl border border-border">
-        <VideoPlayer src={source.url} format={source.format} adConfig={site.ad.enabled ? site.ad : null} />
+        <VideoPlayer src={source.url} format={source.format} adConfig={ad.enabled ? ad : null} />
       </div>
 
       <div className="flex flex-col gap-3">

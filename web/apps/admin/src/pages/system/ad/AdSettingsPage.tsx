@@ -54,8 +54,8 @@ export default function AdSettingsPage() {
   async function load(opts?: { silent?: boolean }) {
     if (!opts?.silent) setLoading(true)
     try {
-      const res = await adminApi.getSettings('ad')
-      const ad = res.data.ad
+      const res = await adminApi.getAdSettings()
+      const ad = res.data
       setForm({
         enabled: !!ad.enabled,
         type: ad.type || 'image',
@@ -88,7 +88,8 @@ export default function AdSettingsPage() {
     setSubmitting(true)
     try {
       await adminApi.updateSettings({
-        ad: {
+        group: 'ad',
+        data: {
           enabled: result.data.enabled,
           type: result.data.type,
           url: result.data.url,
