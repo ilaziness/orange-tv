@@ -36,6 +36,7 @@ API 路径：用户端 `/api/client/v1`、管理端 `/api/admin/v1`、内网 `/a
 9. **可读可维护**：代码应简洁、清晰、易理解，命名准确，控制函数和模块复杂度；以易编写、易测试、易维护为质量目标
 10. **修改后验证**：`make fmt && make vet && make build && make test`（详见 [verification.md](docs/agents/verification.md)）
 11. **外部输入边界验证**：编写业务逻辑时必须验证外部输入（HTTP 参数/Body、TCP/UDP payload、数据库/缓存读取、外部接口返回等）的边界条件（空值、范围、长度、枚举、越界等）；无效输入应返回对应 errcode，禁止未经验证的数据进入后续处理
+12. `internal\service`下面的`admin`，`client`， `open`对应三端不能互相`import`逻辑，如果是需要多端通用使用的写到包`internal\service`下面，然后再具体端的包里面import调用即可
 
 ## 按需查阅
 

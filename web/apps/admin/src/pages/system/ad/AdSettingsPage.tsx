@@ -54,7 +54,7 @@ export default function AdSettingsPage() {
   async function load(opts?: { silent?: boolean }) {
     if (!opts?.silent) setLoading(true)
     try {
-      const res = await adminApi.getSettings()
+      const res = await adminApi.getSettings('ad')
       const ad = res.data.ad
       setForm({
         enabled: !!ad.enabled,

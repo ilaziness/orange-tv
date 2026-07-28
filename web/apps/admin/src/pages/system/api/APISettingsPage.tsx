@@ -46,7 +46,7 @@ export default function APISettingsPage() {
   async function load(opts?: { silent?: boolean }) {
     if (!opts?.silent) setLoading(true)
     try {
-      const res = await adminApi.getSettings()
+      const res = await adminApi.getSettings('api')
       const api = res.data.api
       setForm({
         site_mode: api.site_mode || 'video_site',

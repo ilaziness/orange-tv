@@ -1,10 +1,13 @@
 package admin
 
 // SettingsResponse is the structured system settings payload for admin.
+// When Group is non-empty, only the corresponding group's fields are populated.
+// When Group is empty (e.g. Update response), all updated group fields are populated.
 type SettingsResponse struct {
-	Site SiteSettings `json:"site"`
-	API  APISettings  `json:"api"`
-	Ad   AdSettings   `json:"ad"`
+	Group string       `json:"group,omitempty"`
+	Site  SiteSettings `json:"site"`
+	API   APISettings  `json:"api"`
+	Ad    AdSettings   `json:"ad"`
 }
 
 // SiteSettings holds public site branding fields.
@@ -72,25 +75,4 @@ type UpdateAdSettings struct {
 	Link     *string `json:"link" validate:"omitempty,max=500"`
 	Duration *int    `json:"duration" validate:"omitempty,min=1,max=300"`
 	Skipable *bool   `json:"skipable"`
-}
-
-// PublicAdSettings is safe public ad info for the client.
-type PublicAdSettings struct {
-	Enabled  bool   `json:"enabled"`
-	Type     string `json:"type"`
-	URL      string `json:"url"`
-	Link     string `json:"link"`
-	Duration int    `json:"duration"`
-	Skipable bool   `json:"skipable"`
-}
-
-// PublicSiteResponse is safe public site info for the client.
-type PublicSiteResponse struct {
-	Name        string           `json:"name"`
-	Logo        string           `json:"logo"`
-	Copyright   string           `json:"copyright"`
-	ICP         string           `json:"icp"`
-	SEOKeywords string           `json:"seo_keywords"`
-	Description string           `json:"description"`
-	Ad          PublicAdSettings `json:"ad"`
 }

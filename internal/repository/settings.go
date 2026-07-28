@@ -14,8 +14,12 @@ import (
 // SettingsRepository manages system_settings key-value rows.
 type SettingsRepository interface {
 	ListAll(ctx context.Context) ([]model.SystemSettings, error)
+	ListByGroup(ctx context.Context, group string) ([]model.SystemSettings, error)
+	ListByGroups(ctx context.Context, groups []string) ([]model.SystemSettings, error)
 	GetByKey(ctx context.Context, key string) (*model.SystemSettings, error)
 	GetByKeys(ctx context.Context, keys []string) (map[string]model.SystemSettings, error)
+	GetByGroup(ctx context.Context, group string) (map[string]model.SystemSettings, error)
+	GetByGroups(ctx context.Context, groups []string) (map[string]model.SystemSettings, error)
 	// Upsert sets value for key; creates row when missing.
 	Upsert(ctx context.Context, key, value string, settingType uint8, description string) error
 	// UpsertMany upserts multiple keys in a transaction.
@@ -25,6 +29,7 @@ type SettingsRepository interface {
 // SettingUpsert is one upsert payload.
 type SettingUpsert struct {
 	Key         string
+	Group       string
 	Value       string
 	SettingType uint8
 	Description string
@@ -44,6 +49,27 @@ func (r *settingsRepo) ListAll(ctx context.Context) ([]model.SystemSettings, err
 	err := r.db.NewSelect().Model(&items).Order("setting_key ASC").Scan(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("list settings: %w", err)
+	}
+	return items, nil
+}
+
+func (r *settingsRepo) ListByGroup(ctx context.Context, group string) ([]model.SystemSettings, error) {
+	var items []model.SystemSettings
+	err := r.db.NewSelect().Model(&items).Where("setting_group = ?", group).Order("setting_key ASC").Scan(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list settings by group %s: %w", group, err)
+	}
+	return items, nil
+}
+
+func (r *settingsRepo) ListByGroups(ctx context.Context, groups []string) ([]model.SystemSettings, error) {
+	if len(groups) == 0 {
+		return nil, nil
+	}
+	var items []model.SystemSettings
+	err := r.db.NewSelect().Model(&items).Where("setting_group IN (?)", bun.In(groups)).Order("setting_key ASC").Scan(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list settings by groups: %w", err)
 	}
 	return items, nil
 }
@@ -76,6 +102,30 @@ func (r *settingsRepo) GetByKeys(ctx context.Context, keys []string) (map[string
 	return out, nil
 }
 
+func (r *settingsRepo) GetByGroup(ctx context.Context, group string) (map[string]model.SystemSettings, error) {
+	items, err := r.ListByGroup(ctx, group)
+	if err != nil {
+		return nil, err
+	}
+	out := make(map[string]model.SystemSettings, len(items))
+	for _, it := range items {
+		out[it.SettingKey] = it
+	}
+	return out, nil
+}
+
+func (r *settingsRepo) GetByGroups(ctx context.Context, groups []string) (map[string]model.SystemSettings, error) {
+	items, err := r.ListByGroups(ctx, groups)
+	if err != nil {
+		return nil, err
+	}
+	out := make(map[string]model.SystemSettings, len(items))
+	for _, it := range items {
+		out[it.SettingKey] = it
+	}
+	return out, nil
+}
+
 func (r *settingsRepo) Upsert(ctx context.Context, key, value string, settingType uint8, description string) error {
 	return r.UpsertMany(ctx, []SettingUpsert{{
 		Key: key, Value: value, SettingType: settingType, Description: description,
@@ -94,6 +144,7 @@ func (r *settingsRepo) UpsertMany(ctx context.Context, items []SettingUpsert) er
 				val := it.Value
 				row := &model.SystemSettings{
 					SettingKey:   it.Key,
+					SettingGroup: it.Group,
 					SettingValue: &val,
 					SettingType:  it.SettingType,
 					Description:  it.Description,
@@ -114,8 +165,11 @@ func (r *settingsRepo) UpsertMany(ctx context.Context, items []SettingUpsert) er
 			if it.Description != "" {
 				existing.Description = it.Description
 			}
+			if it.Group != "" {
+				existing.SettingGroup = it.Group
+			}
 			if _, err := tx.NewUpdate().Model(existing).
-				Column("setting_value", "setting_type", "description", "updated_at").
+				Column("setting_value", "setting_type", "description", "setting_group", "updated_at").
 				WherePK().
 				Exec(ctx); err != nil {
 				return fmt.Errorf("update setting %s: %w", it.Key, err)

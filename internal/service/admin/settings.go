@@ -11,25 +11,15 @@ import (
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
+	"github.com/ilaziness/orange-tv/internal/service"
 	"github.com/ilaziness/orange-tv/internal/utils"
 	"go.uber.org/zap"
 )
 
 // SettingsService manages system settings.
 type SettingsService interface {
-	Get(ctx context.Context) (*admindto.SettingsResponse, error)
+	Get(ctx context.Context, group string) (*admindto.SettingsResponse, error)
 	Update(ctx context.Context, req *admindto.UpdateSettingsRequest) (*admindto.SettingsResponse, error)
-	GetPublic(ctx context.Context) (*admindto.PublicSiteResponse, error)
-	// ResourceConfig is used by open API for access control / format.
-	ResourceConfig(ctx context.Context) (*ResourceConfig, error)
-}
-
-// ResourceConfig is runtime resource-station config.
-type ResourceConfig struct {
-	SiteMode                string
-	APIOutputFormat         string
-	EnableThirdPartyCollect bool
-	APIKey                  string
 }
 
 type settingsService struct {
@@ -46,56 +36,24 @@ func NewSettingsService(repo repository.SettingsRepository, c *cache.Manager, lo
 	return &settingsService{repo: repo, cache: c, log: log}
 }
 
-func (s *settingsService) Get(ctx context.Context) (*admindto.SettingsResponse, error) {
-	m, err := s.loadMap(ctx)
+func (s *settingsService) Get(ctx context.Context, group string) (*admindto.SettingsResponse, error) {
+	if !constant.IsValidSettingGroup(group) {
+		return nil, errcode.WithMessage(errcode.ParamError, "无效的设置分组")
+	}
+	m, err := s.loadMapByGroup(ctx, group)
 	if err != nil {
 		return nil, err
 	}
-	return mapToAdminSettings(m), nil
-}
-
-func (s *settingsService) GetPublic(ctx context.Context) (*admindto.PublicSiteResponse, error) {
-	if p, err := s.cache.GetSettingsPublic(ctx); err == nil && p != nil {
-		return p, nil
+	resp := &admindto.SettingsResponse{Group: group}
+	switch group {
+	case constant.SettingGroupSite:
+		resp.Site = mapToSiteSettings(m)
+	case constant.SettingGroupAPI:
+		resp.API = mapToAPISettings(m)
+	case constant.SettingGroupAd:
+		resp.Ad = mapToAdSettings(m)
 	}
-	m, err := s.loadMap(ctx)
-	if err != nil {
-		return nil, err
-	}
-	pub := &admindto.PublicSiteResponse{
-		Name:        strVal(m, constant.SettingSiteName),
-		Logo:        strVal(m, constant.SettingSiteLogo),
-		Copyright:   strVal(m, constant.SettingSiteCopyright),
-		ICP:         strVal(m, constant.SettingSiteICP),
-		SEOKeywords: strVal(m, constant.SettingSiteSEOKeywords),
-		Description: strVal(m, constant.SettingSiteDescription),
-		Ad: admindto.PublicAdSettings{
-			Enabled:  boolVal(m, constant.SettingVideoAdEnabled, false),
-			Type:     strVal(m, constant.SettingVideoAdType),
-			URL:      strVal(m, constant.SettingVideoAdUrl),
-			Link:     strVal(m, constant.SettingVideoAdLink),
-			Duration: intVal(m, constant.SettingVideoAdDuration, 5),
-			Skipable: boolVal(m, constant.SettingVideoAdSkipable, true),
-		},
-	}
-	if pub.Name == "" {
-		pub.Name = "Orange TV"
-	}
-	_ = s.cache.SetSettingsPublic(ctx, pub)
-	return pub, nil
-}
-
-func (s *settingsService) ResourceConfig(ctx context.Context) (*ResourceConfig, error) {
-	m, err := s.loadMap(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return &ResourceConfig{
-		SiteMode:                utils.DefaultStr(strVal(m, constant.SettingSiteMode), constant.SiteModeVideoSite),
-		APIOutputFormat:         normalizeAPIOutputFormat(strVal(m, constant.SettingAPIOutputFormat)),
-		EnableThirdPartyCollect: boolVal(m, constant.SettingEnableThirdPartyCollect, true),
-		APIKey:                  strVal(m, constant.SettingResourceAPIKey),
-	}, nil
+	return resp, nil
 }
 
 func (s *settingsService) Update(ctx context.Context, req *admindto.UpdateSettingsRequest) (*admindto.SettingsResponse, error) {
@@ -107,37 +65,37 @@ func (s *settingsService) Update(ctx context.Context, req *admindto.UpdateSettin
 		site := req.Site
 		if site.Name != nil {
 			upserts = append(upserts, repository.SettingUpsert{
-				Key: constant.SettingSiteName, Value: strings.TrimSpace(*site.Name),
+				Key: constant.SettingSiteName, Group: constant.SettingGroupSite, Value: strings.TrimSpace(*site.Name),
 				SettingType: constant.SettingTypeString, Description: "站点名称",
 			})
 		}
 		if site.Logo != nil {
 			upserts = append(upserts, repository.SettingUpsert{
-				Key: constant.SettingSiteLogo, Value: strings.TrimSpace(*site.Logo),
+				Key: constant.SettingSiteLogo, Group: constant.SettingGroupSite, Value: strings.TrimSpace(*site.Logo),
 				SettingType: constant.SettingTypeString, Description: "站点 Logo URL",
 			})
 		}
 		if site.Copyright != nil {
 			upserts = append(upserts, repository.SettingUpsert{
-				Key: constant.SettingSiteCopyright, Value: strings.TrimSpace(*site.Copyright),
+				Key: constant.SettingSiteCopyright, Group: constant.SettingGroupSite, Value: strings.TrimSpace(*site.Copyright),
 				SettingType: constant.SettingTypeString, Description: "站点版权信息",
 			})
 		}
 		if site.ICP != nil {
 			upserts = append(upserts, repository.SettingUpsert{
-				Key: constant.SettingSiteICP, Value: strings.TrimSpace(*site.ICP),
+				Key: constant.SettingSiteICP, Group: constant.SettingGroupSite, Value: strings.TrimSpace(*site.ICP),
 				SettingType: constant.SettingTypeString, Description: "备案号",
 			})
 		}
 		if site.SEOKeywords != nil {
 			upserts = append(upserts, repository.SettingUpsert{
-				Key: constant.SettingSiteSEOKeywords, Value: strings.TrimSpace(*site.SEOKeywords),
+				Key: constant.SettingSiteSEOKeywords, Group: constant.SettingGroupSite, Value: strings.TrimSpace(*site.SEOKeywords),
 				SettingType: constant.SettingTypeString, Description: "SEO 关键词",
 			})
 		}
 		if site.Description != nil {
 			upserts = append(upserts, repository.SettingUpsert{
-				Key: constant.SettingSiteDescription, Value: strings.TrimSpace(*site.Description),
+				Key: constant.SettingSiteDescription, Group: constant.SettingGroupSite, Value: strings.TrimSpace(*site.Description),
 				SettingType: constant.SettingTypeString, Description: "站点描述",
 			})
 		}
@@ -150,7 +108,7 @@ func (s *settingsService) Update(ctx context.Context, req *admindto.UpdateSettin
 				return nil, errcode.WithMessage(errcode.SettingInvalid, "站点模式无效")
 			}
 			upserts = append(upserts, repository.SettingUpsert{
-				Key: constant.SettingSiteMode, Value: mode,
+				Key: constant.SettingSiteMode, Group: constant.SettingGroupAPI, Value: mode,
 				SettingType: constant.SettingTypeString, Description: "站点模式",
 			})
 		}
@@ -160,7 +118,7 @@ func (s *settingsService) Update(ctx context.Context, req *admindto.UpdateSettin
 				return nil, errcode.WithMessage(errcode.SettingInvalid, "API 输出格式无效，仅支持 default / apple_cms")
 			}
 			upserts = append(upserts, repository.SettingUpsert{
-				Key: constant.SettingAPIOutputFormat, Value: fmtv,
+				Key: constant.SettingAPIOutputFormat, Group: constant.SettingGroupAPI, Value: fmtv,
 				SettingType: constant.SettingTypeString, Description: "API输出格式：default(系统默认) apple_cms(苹果CMS)",
 			})
 		}
@@ -170,7 +128,7 @@ func (s *settingsService) Update(ctx context.Context, req *admindto.UpdateSettin
 				v = "1"
 			}
 			upserts = append(upserts, repository.SettingUpsert{
-				Key: constant.SettingEnableThirdPartyCollect, Value: v,
+				Key: constant.SettingEnableThirdPartyCollect, Group: constant.SettingGroupAPI, Value: v,
 				SettingType: constant.SettingTypeBoolean, Description: "是否允许第三方采集",
 			})
 		}
@@ -179,7 +137,7 @@ func (s *settingsService) Update(ctx context.Context, req *admindto.UpdateSettin
 			// empty / omit-after-trim means leave unchanged (avoid wiping key via masked UI)
 			if key != "" {
 				upserts = append(upserts, repository.SettingUpsert{
-					Key: constant.SettingResourceAPIKey, Value: key,
+					Key: constant.SettingResourceAPIKey, Group: constant.SettingGroupAPI, Value: key,
 					SettingType: constant.SettingTypeString, Description: "资源站 API 访问密钥",
 				})
 			}
@@ -193,7 +151,7 @@ func (s *settingsService) Update(ctx context.Context, req *admindto.UpdateSettin
 				v = "1"
 			}
 			upserts = append(upserts, repository.SettingUpsert{
-				Key: constant.SettingVideoAdEnabled, Value: v,
+				Key: constant.SettingVideoAdEnabled, Group: constant.SettingGroupAd, Value: v,
 				SettingType: constant.SettingTypeBoolean, Description: "是否启用视频广告",
 			})
 		}
@@ -203,25 +161,25 @@ func (s *settingsService) Update(ctx context.Context, req *admindto.UpdateSettin
 				return nil, errcode.WithMessage(errcode.SettingInvalid, "广告类型无效，仅支持 image / video / html")
 			}
 			upserts = append(upserts, repository.SettingUpsert{
-				Key: constant.SettingVideoAdType, Value: t,
+				Key: constant.SettingVideoAdType, Group: constant.SettingGroupAd, Value: t,
 				SettingType: constant.SettingTypeString, Description: "视频广告类型",
 			})
 		}
 		if ad.URL != nil {
 			upserts = append(upserts, repository.SettingUpsert{
-				Key: constant.SettingVideoAdUrl, Value: strings.TrimSpace(*ad.URL),
+				Key: constant.SettingVideoAdUrl, Group: constant.SettingGroupAd, Value: strings.TrimSpace(*ad.URL),
 				SettingType: constant.SettingTypeString, Description: "视频广告素材 URL",
 			})
 		}
 		if ad.Link != nil {
 			upserts = append(upserts, repository.SettingUpsert{
-				Key: constant.SettingVideoAdLink, Value: strings.TrimSpace(*ad.Link),
+				Key: constant.SettingVideoAdLink, Group: constant.SettingGroupAd, Value: strings.TrimSpace(*ad.Link),
 				SettingType: constant.SettingTypeString, Description: "视频广告点击跳转链接",
 			})
 		}
 		if ad.Duration != nil {
 			upserts = append(upserts, repository.SettingUpsert{
-				Key: constant.SettingVideoAdDuration, Value: strconv.Itoa(*ad.Duration),
+				Key: constant.SettingVideoAdDuration, Group: constant.SettingGroupAd, Value: strconv.Itoa(*ad.Duration),
 				SettingType: constant.SettingTypeNumber, Description: "视频广告展示时长（秒）",
 			})
 		}
@@ -231,7 +189,7 @@ func (s *settingsService) Update(ctx context.Context, req *admindto.UpdateSettin
 				v = "1"
 			}
 			upserts = append(upserts, repository.SettingUpsert{
-				Key: constant.SettingVideoAdSkipable, Value: v,
+				Key: constant.SettingVideoAdSkipable, Group: constant.SettingGroupAd, Value: v,
 				SettingType: constant.SettingTypeBoolean, Description: "视频广告是否可跳过",
 			})
 		}
@@ -244,102 +202,79 @@ func (s *settingsService) Update(ctx context.Context, req *admindto.UpdateSettin
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	s.cache.InvalidateSettings(ctx)
-	return s.Get(ctx)
+
+	// Build response with only the updated groups
+	resp := &admindto.SettingsResponse{}
+	if req.Site != nil {
+		m, err := s.loadMapByGroup(ctx, constant.SettingGroupSite)
+		if err != nil {
+			return nil, err
+		}
+		resp.Site = mapToSiteSettings(m)
+	}
+	if req.API != nil {
+		m, err := s.loadMapByGroup(ctx, constant.SettingGroupAPI)
+		if err != nil {
+			return nil, err
+		}
+		resp.API = mapToAPISettings(m)
+	}
+	if req.Ad != nil {
+		m, err := s.loadMapByGroup(ctx, constant.SettingGroupAd)
+		if err != nil {
+			return nil, err
+		}
+		resp.Ad = mapToAdSettings(m)
+	}
+	return resp, nil
 }
 
-func (s *settingsService) loadMap(ctx context.Context) (map[string]model.SystemSettings, error) {
-	if m, err := s.cache.GetSettingsAll(ctx); err == nil && m != nil {
+func (s *settingsService) loadMapByGroup(ctx context.Context, group string) (map[string]model.SystemSettings, error) {
+	if m, err := s.cache.GetSettingsByGroup(ctx, group); err == nil && m != nil {
 		return m, nil
 	}
-	items, err := s.repo.ListAll(ctx)
+	m, err := s.repo.GetByGroup(ctx, group)
 	if err != nil {
-		s.log.Error("settings: list all failed", zap.Error(err))
+		s.log.Error("settings: list by group failed", zap.String("group", group), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	m := make(map[string]model.SystemSettings, len(items))
-	for _, it := range items {
-		m[it.SettingKey] = it
-	}
-	_ = s.cache.SetSettingsAll(ctx, m)
+	_ = s.cache.SetSettingsByGroup(ctx, group, m)
 	return m, nil
 }
 
-func mapToAdminSettings(m map[string]model.SystemSettings) *admindto.SettingsResponse {
-	key := strVal(m, constant.SettingResourceAPIKey)
+func mapToSiteSettings(m map[string]model.SystemSettings) admindto.SiteSettings {
+	return admindto.SiteSettings{
+		Name:        utils.DefaultStr(service.StrVal(m, constant.SettingSiteName), "Orange TV"),
+		Logo:        service.StrVal(m, constant.SettingSiteLogo),
+		Copyright:   service.StrVal(m, constant.SettingSiteCopyright),
+		ICP:         service.StrVal(m, constant.SettingSiteICP),
+		SEOKeywords: service.StrVal(m, constant.SettingSiteSEOKeywords),
+		Description: service.StrVal(m, constant.SettingSiteDescription),
+	}
+}
+
+func mapToAPISettings(m map[string]model.SystemSettings) admindto.APISettings {
+	key := service.StrVal(m, constant.SettingResourceAPIKey)
 	masked := ""
 	if key != "" {
 		masked = "******"
 	}
-	return &admindto.SettingsResponse{
-		Site: admindto.SiteSettings{
-			Name:        utils.DefaultStr(strVal(m, constant.SettingSiteName), "Orange TV"),
-			Logo:        strVal(m, constant.SettingSiteLogo),
-			Copyright:   strVal(m, constant.SettingSiteCopyright),
-			ICP:         strVal(m, constant.SettingSiteICP),
-			SEOKeywords: strVal(m, constant.SettingSiteSEOKeywords),
-			Description: strVal(m, constant.SettingSiteDescription),
-		},
-		API: admindto.APISettings{
-			SiteMode:                utils.DefaultStr(strVal(m, constant.SettingSiteMode), constant.SiteModeVideoSite),
-			APIOutputFormat:         normalizeAPIOutputFormat(strVal(m, constant.SettingAPIOutputFormat)),
-			EnableThirdPartyCollect: boolVal(m, constant.SettingEnableThirdPartyCollect, true),
-			ResourceAPIKeySet:       key != "",
-			ResourceAPIKeyMasked:    masked,
-		},
-		Ad: admindto.AdSettings{
-			Enabled:  boolVal(m, constant.SettingVideoAdEnabled, false),
-			Type:     strVal(m, constant.SettingVideoAdType),
-			URL:      strVal(m, constant.SettingVideoAdUrl),
-			Link:     strVal(m, constant.SettingVideoAdLink),
-			Duration: intVal(m, constant.SettingVideoAdDuration, 5),
-			Skipable: boolVal(m, constant.SettingVideoAdSkipable, true),
-		},
+	return admindto.APISettings{
+		SiteMode:                utils.DefaultStr(service.StrVal(m, constant.SettingSiteMode), constant.SiteModeVideoSite),
+		APIOutputFormat:         service.NormalizeAPIOutputFormat(service.StrVal(m, constant.SettingAPIOutputFormat)),
+		EnableThirdPartyCollect: service.BoolVal(m, constant.SettingEnableThirdPartyCollect, true),
+		ResourceAPIKeySet:       key != "",
+		ResourceAPIKeyMasked:    masked,
 	}
 }
 
-// normalizeAPIOutputFormat returns default or apple_cms only.
-func normalizeAPIOutputFormat(v string) string {
-	v = strings.TrimSpace(strings.ToLower(v))
-	if v == constant.APIOutputAppleCMS {
-		return constant.APIOutputAppleCMS
-	}
-	return constant.APIOutputDefault
-}
-
-func strVal(m map[string]model.SystemSettings, key string) string {
-	it, ok := m[key]
-	if !ok || it.SettingValue == nil {
-		return ""
-	}
-	return *it.SettingValue
-}
-
-func intVal(m map[string]model.SystemSettings, key string, def int) int {
-	v := strings.TrimSpace(strVal(m, key))
-	if v == "" {
-		return def
-	}
-	n, err := strconv.Atoi(v)
-	if err != nil {
-		return def
-	}
-	return n
-}
-
-func boolVal(m map[string]model.SystemSettings, key string, def bool) bool {
-	v := strings.TrimSpace(strVal(m, key))
-	if v == "" {
-		return def
-	}
-	switch strings.ToLower(v) {
-	case "1", "true", "yes", "on":
-		return true
-	case "0", "false", "no", "off":
-		return false
-	default:
-		if n, err := strconv.Atoi(v); err == nil {
-			return n != 0
-		}
-		return def
+func mapToAdSettings(m map[string]model.SystemSettings) admindto.AdSettings {
+	return admindto.AdSettings{
+		Enabled:  service.BoolVal(m, constant.SettingVideoAdEnabled, false),
+		Type:     service.StrVal(m, constant.SettingVideoAdType),
+		URL:      service.StrVal(m, constant.SettingVideoAdUrl),
+		Link:     service.StrVal(m, constant.SettingVideoAdLink),
+		Duration: service.IntVal(m, constant.SettingVideoAdDuration, 5),
+		Skipable: service.BoolVal(m, constant.SettingVideoAdSkipable, true),
 	}
 }

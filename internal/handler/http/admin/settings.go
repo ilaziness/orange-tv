@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/ilaziness/orange-tv/internal/audit"
 	admindto "github.com/ilaziness/orange-tv/internal/dto/admin"
+	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	httphandler "github.com/ilaziness/orange-tv/internal/handler/http"
 	httpmiddleware "github.com/ilaziness/orange-tv/internal/middleware/http"
 	"github.com/ilaziness/orange-tv/internal/response"
@@ -22,7 +23,12 @@ func NewSettingsHandler(svc adminsvc.SettingsService, recorder *audit.Recorder) 
 }
 
 func (h *SettingsHandler) Get(c *gin.Context) {
-	resp, err := h.svc.Get(c.Request.Context())
+	group := c.Query("group")
+	if group == "" {
+		response.Error(c, errcode.WithMessage(errcode.ParamError, "group 参数不能为空"))
+		return
+	}
+	resp, err := h.svc.Get(c.Request.Context(), group)
 	if err != nil {
 		response.Error(c, err)
 		return

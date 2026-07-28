@@ -14,6 +14,7 @@ import (
 	openhandler "github.com/ilaziness/orange-tv/internal/handler/http/open"
 	"github.com/ilaziness/orange-tv/internal/model"
 	adminsvc "github.com/ilaziness/orange-tv/internal/service/admin"
+	opensvc "github.com/ilaziness/orange-tv/internal/service/open"
 )
 
 // BusinessHandlers holds no-op business handlers for route registration tests.
@@ -187,17 +188,11 @@ func (s adminCollectSvc) StopScheduler(ctx context.Context) error   { return nil
 
 type adminSettingsSvc struct{}
 
-func (s adminSettingsSvc) Get(ctx context.Context) (*admindto.SettingsResponse, error) {
-	return &admindto.SettingsResponse{}, nil
+func (s adminSettingsSvc) Get(ctx context.Context, group string) (*admindto.SettingsResponse, error) {
+	return &admindto.SettingsResponse{Group: group}, nil
 }
 func (s adminSettingsSvc) Update(ctx context.Context, req *admindto.UpdateSettingsRequest) (*admindto.SettingsResponse, error) {
 	return &admindto.SettingsResponse{}, nil
-}
-func (s adminSettingsSvc) GetPublic(ctx context.Context) (*admindto.PublicSiteResponse, error) {
-	return &admindto.PublicSiteResponse{Name: "Orange TV"}, nil
-}
-func (s adminSettingsSvc) ResourceConfig(ctx context.Context) (*adminsvc.ResourceConfig, error) {
-	return &adminsvc.ResourceConfig{SiteMode: "video_site", APIOutputFormat: "default", EnableThirdPartyCollect: true}, nil
 }
 
 type adminLogSvc struct{}
@@ -251,10 +246,22 @@ type clientLiveProxySvc struct{}
 
 func (s clientLiveProxySvc) Proxy(c *gin.Context, channelID int64, segURL string) error { return nil }
 
+type clientSettingsSvc struct{}
+
+func (s clientSettingsSvc) GetByGroup(ctx context.Context, group string) (*clientdto.SettingsResponse, error) {
+	return &clientdto.SettingsResponse{Group: group}, nil
+}
+func (s clientSettingsSvc) GetAll(ctx context.Context) (*clientdto.SettingsResponse, error) {
+	return &clientdto.SettingsResponse{}, nil
+}
+func (s clientSettingsSvc) GetPublic(ctx context.Context) (*clientdto.PublicSiteResponse, error) {
+	return &clientdto.PublicSiteResponse{Name: "Orange TV"}, nil
+}
+
 type openResourceSvc struct{}
 
-func (s openResourceSvc) Authorize(ctx context.Context, providedKey string) (*adminsvc.ResourceConfig, error) {
-	return &adminsvc.ResourceConfig{EnableThirdPartyCollect: true, APIOutputFormat: "default"}, nil
+func (s openResourceSvc) Authorize(ctx context.Context, providedKey string) (*opensvc.ResourceConfig, error) {
+	return &opensvc.ResourceConfig{EnableThirdPartyCollect: true, APIOutputFormat: "default"}, nil
 }
 func (s openResourceSvc) ListVideos(ctx context.Context, page, pageSize int, format string) (any, error) {
 	return map[string]any{"code": 200}, nil
@@ -400,7 +407,7 @@ func NewBusinessHandlers() BusinessHandlers {
 		ClientCategory: clienthandler.NewCategoryHandler(clientCategorySvc{}),
 		ClientVideo:    clienthandler.NewVideoHandler(clientVideoSvc{}),
 		ClientLive:     clienthandler.NewLiveHandler(clientLiveSvc, clientLiveProxySvc{}),
-		ClientSite:     clienthandler.NewSiteHandler(adminSettingsSvc{}),
+		ClientSite:     clienthandler.NewSiteHandler(clientSettingsSvc{}),
 		ClientUser:     clienthandler.NewUserHandler(userSvc),
 		ClientBanner:   clienthandler.NewBannerHandler(bannerSvc),
 		OpenResource:   openhandler.NewResourceHandler(openResourceSvc{}),

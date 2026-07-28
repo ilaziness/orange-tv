@@ -37,7 +37,7 @@ export default function SiteSettingsPage() {
   async function load(opts?: { silent?: boolean }) {
     if (!opts?.silent) setLoading(true)
     try {
-      const res = await adminApi.getSettings()
+      const res = await adminApi.getSettings('site')
       const site = res.data.site
       setForm({
         name: site.name || '',

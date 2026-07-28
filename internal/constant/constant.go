@@ -117,42 +117,5 @@ const (
 	PlayFormatFLV  = "flv"
 )
 
-// System setting keys.
-const (
-	SettingSiteMode                = "site_mode"
-	SettingAPIOutputFormat         = "api_output_format"
-	SettingEnableThirdPartyCollect = "enable_third_party_collect"
-	SettingSiteName                = "site_name"
-	SettingSiteLogo                = "site_logo"
-	SettingSiteCopyright           = "site_copyright"
-	SettingSiteICP                 = "site_icp"
-	SettingSiteSEOKeywords         = "site_seo_keywords"
-	SettingSiteDescription         = "site_description"
-	SettingResourceAPIKey          = "resource_api_key"
-	SettingVideoAdEnabled          = "video_ad_enabled"
-	SettingVideoAdType             = "video_ad_type"
-	SettingVideoAdUrl              = "video_ad_url"
-	SettingVideoAdLink             = "video_ad_link"
-	SettingVideoAdDuration         = "video_ad_duration"
-	SettingVideoAdSkipable         = "video_ad_skipable"
-)
-
-// Site mode values.
-const (
-	SiteModeVideoSite    = "video_site"
-	SiteModeResourceSite = "resource_site"
-)
-
-// API output format values for resource open API.
-// Default is the system native format; apple_cms is the only optional alternative.
-const (
-	APIOutputDefault  = "default"   // 系统默认/自有 JSON 格式
-	APIOutputAppleCMS = "apple_cms" // 苹果 CMS 兼容
-)
-
-// Video ad type values.
-const (
-	VideoAdTypeImage = "image"
-	VideoAdTypeVideo = "video"
-	VideoAdTypeHTML  = "html"
-)
+// System setting keys, group constants, and related enum values
+// have been moved to settings.go in this package.

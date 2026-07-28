@@ -294,6 +294,7 @@ export type AdSettings = {
 }
 
 export type SystemSettings = {
+  group?: string
   site: SiteSettings
   api: APISettings
   ad: AdSettings
@@ -306,6 +307,12 @@ export type PublicSiteInfo = {
   icp: string
   seo_keywords: string
   description: string
+  ad: AdSettings
+}
+
+export type ClientSettings = {
+  group?: string
+  site: SiteSettings
   ad: AdSettings
 }
 

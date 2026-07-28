@@ -15,10 +15,10 @@ const (
 	KeyLiveListClient = "live:list:client"
 	TTLLiveList       = 5 * time.Minute
 
-	// Settings
-	KeySettingsAll    = "settings:all"
-	KeySettingsPublic = "settings:public"
-	TTLSettings       = 5 * time.Minute
+	// Settings (per-group cache)
+	KeyTplSettingsGroup = "settings:group:%s"
+	KeySettingsPublic   = "settings:public"
+	TTLSettings         = 5 * time.Minute
 
 	// Open - 分类
 	KeyOpenCategories = "open:categories"
@@ -36,6 +36,11 @@ const (
 	KeyTplVideoList = "video:list:%d:%s:%d:%d"
 	TTLVideoList    = 2 * time.Minute
 )
+
+// SettingsGroupKey generates a per-group settings cache key.
+func SettingsGroupKey(group string) string {
+	return fmt.Sprintf(KeyTplSettingsGroup, group)
+}
 
 // VideoListKey 生成客户端视频列表缓存键。
 func VideoListKey(categoryID uint64, sort string, page, limit int) string {

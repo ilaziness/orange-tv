@@ -5,8 +5,9 @@ package cache
 import (
 	"context"
 
+	"github.com/ilaziness/orange-tv/internal/constant"
 	shareddto "github.com/ilaziness/orange-tv/internal/dto"
-	admindto "github.com/ilaziness/orange-tv/internal/dto/admin"
+	clientdto "github.com/ilaziness/orange-tv/internal/dto/client"
 	"github.com/ilaziness/orange-tv/internal/model"
 	pkgcache "github.com/ilaziness/orange-tv/pkg/cache"
 )
@@ -127,9 +128,9 @@ func (m *Manager) InvalidateVideo(ctx context.Context, videoID int64) {
 
 // --- Settings ---
 
-// GetSettingsAll 获取全部设置缓存。
-func (m *Manager) GetSettingsAll(ctx context.Context) (map[string]model.SystemSettings, error) {
-	v, err := m.cache.Get(ctx, KeySettingsAll)
+// GetSettingsByGroup retrieves cached settings for a single group.
+func (m *Manager) GetSettingsByGroup(ctx context.Context, group string) (map[string]model.SystemSettings, error) {
+	v, err := m.cache.Get(ctx, SettingsGroupKey(group))
 	if err != nil {
 		return nil, err
 	}
@@ -140,18 +141,18 @@ func (m *Manager) GetSettingsAll(ctx context.Context) (map[string]model.SystemSe
 	return settings, nil
 }
 
-// SetSettingsAll 设置全部设置缓存。
-func (m *Manager) SetSettingsAll(ctx context.Context, settings map[string]model.SystemSettings) error {
-	return m.cache.Set(ctx, KeySettingsAll, settings, TTLSettings)
+// SetSettingsByGroup caches settings for a single group.
+func (m *Manager) SetSettingsByGroup(ctx context.Context, group string, settings map[string]model.SystemSettings) error {
+	return m.cache.Set(ctx, SettingsGroupKey(group), settings, TTLSettings)
 }
 
 // GetSettingsPublic 获取公开站点设置缓存。
-func (m *Manager) GetSettingsPublic(ctx context.Context) (*admindto.PublicSiteResponse, error) {
+func (m *Manager) GetSettingsPublic(ctx context.Context) (*clientdto.PublicSiteResponse, error) {
 	v, err := m.cache.Get(ctx, KeySettingsPublic)
 	if err != nil {
 		return nil, err
 	}
-	pub, ok := v.(*admindto.PublicSiteResponse)
+	pub, ok := v.(*clientdto.PublicSiteResponse)
 	if !ok || pub == nil {
 		return nil, nil
 	}
@@ -159,13 +160,15 @@ func (m *Manager) GetSettingsPublic(ctx context.Context) (*admindto.PublicSiteRe
 }
 
 // SetSettingsPublic 设置公开站点设置缓存。
-func (m *Manager) SetSettingsPublic(ctx context.Context, pub *admindto.PublicSiteResponse) error {
+func (m *Manager) SetSettingsPublic(ctx context.Context, pub *clientdto.PublicSiteResponse) error {
 	return m.cache.Set(ctx, KeySettingsPublic, pub, TTLSettings)
 }
 
-// InvalidateSettings 失效设置缓存。
+// InvalidateSettings invalidates all settings caches (per-group + public).
 func (m *Manager) InvalidateSettings(ctx context.Context) {
-	_ = m.cache.Delete(ctx, KeySettingsAll)
+	for _, g := range constant.AllSettingGroups() {
+		_ = m.cache.Delete(ctx, SettingsGroupKey(g))
+	}
 	_ = m.cache.Delete(ctx, KeySettingsPublic)
 }
 

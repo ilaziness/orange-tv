@@ -13,33 +13,41 @@ import (
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
-	adminsvc "github.com/ilaziness/orange-tv/internal/service/admin"
+	"github.com/ilaziness/orange-tv/internal/service"
 	"github.com/ilaziness/orange-tv/internal/utils"
 	"go.uber.org/zap"
 )
 
+// ResourceConfig is runtime resource-station config used by the open API.
+type ResourceConfig struct {
+	SiteMode                string
+	APIOutputFormat         string
+	EnableThirdPartyCollect bool
+	APIKey                  string
+}
+
 // ResourceService serves third-party resource-station APIs.
 type ResourceService interface {
 	// Authorize checks third-party collect switch and optional API key.
-	Authorize(ctx context.Context, providedKey string) (*adminsvc.ResourceConfig, error)
+	Authorize(ctx context.Context, providedKey string) (*ResourceConfig, error)
 	ListVideos(ctx context.Context, page, pageSize int, format string) (any, error)
 	GetVideo(ctx context.Context, id int64, format string) (any, error)
 	ListCategories(ctx context.Context) ([]shareddto.CategoryResponse, error)
 }
 
 type resourceService struct {
-	settings  adminsvc.SettingsService
-	videoRepo repository.VideoRepository
-	metaRepo  repository.MetadataRepository
-	playRepo  repository.PlayRepository
-	catRepo   repository.CategoryRepository
-	cache     *cache.Manager
-	log       *zap.Logger
+	settingsRepo repository.SettingsRepository
+	cache        *cache.Manager
+	videoRepo    repository.VideoRepository
+	metaRepo     repository.MetadataRepository
+	playRepo     repository.PlayRepository
+	catRepo      repository.CategoryRepository
+	log          *zap.Logger
 }
 
 // NewResourceService creates a ResourceService.
 func NewResourceService(
-	settings adminsvc.SettingsService,
+	settingsRepo repository.SettingsRepository,
 	videoRepo repository.VideoRepository,
 	metaRepo repository.MetadataRepository,
 	playRepo repository.PlayRepository,
@@ -51,16 +59,21 @@ func NewResourceService(
 		log = zap.NewNop()
 	}
 	return &resourceService{
-		settings: settings, videoRepo: videoRepo, metaRepo: metaRepo,
+		settingsRepo: settingsRepo, videoRepo: videoRepo, metaRepo: metaRepo,
 		playRepo: playRepo, catRepo: catRepo, cache: c, log: log,
 	}
 }
 
-func (s *resourceService) Authorize(ctx context.Context, providedKey string) (*adminsvc.ResourceConfig, error) {
-	cfg, err := s.settings.ResourceConfig(ctx)
+func (s *resourceService) Authorize(ctx context.Context, providedKey string) (*ResourceConfig, error) {
+	m, err := s.loadAPIConfig(ctx)
 	if err != nil {
-		s.log.Error("open resource: get resource config failed", zap.Error(err))
 		return nil, err
+	}
+	cfg := &ResourceConfig{
+		SiteMode:                utils.DefaultStr(service.StrVal(m, constant.SettingSiteMode), constant.SiteModeVideoSite),
+		APIOutputFormat:         service.NormalizeAPIOutputFormat(service.StrVal(m, constant.SettingAPIOutputFormat)),
+		EnableThirdPartyCollect: service.BoolVal(m, constant.SettingEnableThirdPartyCollect, true),
+		APIKey:                  service.StrVal(m, constant.SettingResourceAPIKey),
 	}
 	if !cfg.EnableThirdPartyCollect {
 		return nil, errcode.ResourceAPIDisabled
@@ -68,12 +81,24 @@ func (s *resourceService) Authorize(ctx context.Context, providedKey string) (*a
 	expected := strings.TrimSpace(cfg.APIKey)
 	if expected != "" {
 		got := strings.TrimSpace(providedKey)
-		// ConstantTimeCompare panics when lengths differ; mismatch is always invalid.
 		if len(got) != len(expected) || subtle.ConstantTimeCompare([]byte(got), []byte(expected)) != 1 {
 			return nil, errcode.ResourceAPIKeyInvalid
 		}
 	}
 	return cfg, nil
+}
+
+func (s *resourceService) loadAPIConfig(ctx context.Context) (map[string]model.SystemSettings, error) {
+	if m, err := s.cache.GetSettingsByGroup(ctx, constant.SettingGroupAPI); err == nil && m != nil {
+		return m, nil
+	}
+	m, err := s.settingsRepo.GetByGroup(ctx, constant.SettingGroupAPI)
+	if err != nil {
+		s.log.Error("open resource: load api config failed", zap.Error(err))
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	_ = s.cache.SetSettingsByGroup(ctx, constant.SettingGroupAPI, m)
+	return m, nil
 }
 
 func (s *resourceService) ListVideos(ctx context.Context, page, pageSize int, format string) (any, error) {

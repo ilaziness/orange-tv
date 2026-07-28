@@ -191,7 +191,8 @@ export const adminApi = {
   listCollectLogs: (query?: Record<string, string | number | undefined>) =>
     withAuth((token) => apiGet<PageData<CollectLog>>(ADMIN_API_BASE, '/collect/logs', { token, query })),
 
-  getSettings: () => withAuth((token) => apiGet<SystemSettings>(ADMIN_API_BASE, '/settings', { token })),
+  getSettings: (group: string) =>
+    withAuth((token) => apiGet<SystemSettings>(ADMIN_API_BASE, '/settings', { token, query: { group } })),
   updateSettings: (body: unknown) =>
     withAuth((token) => apiPut<SystemSettings>(ADMIN_API_BASE, '/settings', body, { token })),
   listSystemLogs: (query?: Record<string, string | number | undefined>) =>

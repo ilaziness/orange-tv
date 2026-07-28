@@ -17,6 +17,8 @@ type SystemSettings struct {
 	ID uint64 `bun:"id,pk,autoincrement" json:"id"`
 	// 设置键
 	SettingKey string `bun:"setting_key,notnull,unique" json:"setting_key"`
+	// 设置分组
+	SettingGroup string `bun:"setting_group,notnull" json:"setting_group"`
 	// 设置值
 	SettingValue *string `bun:"setting_value" json:"setting_value"`
 	// 设置类型：1string 2number 3boolean 4json

@@ -6,6 +6,7 @@ import {
   apiPost,
   type Category,
   type ClientBanner,
+  type ClientSettings,
   type CommentItem,
   type FavoriteItem,
   type HistoryItem,
@@ -51,6 +52,8 @@ export const clientApi = {
   liveStreamUrl: (id: number) => `${CLIENT_API_BASE}/live/play/${id}`,
   banners: () => apiGet<ClientBanner[]>(CLIENT_API_BASE, '/banners'),
   site: () => apiGet<PublicSiteInfo>(CLIENT_API_BASE, '/site'),
+  settings: (group?: string) =>
+    apiGet<ClientSettings>(CLIENT_API_BASE, '/settings', { query: group ? { group } : undefined }),
 
   // User auth (C5)
   register: (username: string, password: string, email?: string) =>
