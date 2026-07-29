@@ -15,11 +15,14 @@ type Props = {
   format?: string
   poster?: string
   autoplay?: boolean
-  storageKey?: string
+  videoId?: number
+  sourceId?: number
+  episode?: number
   adConfig?: AdSettings | null
   playlist?: PlaylistItem[]
   currentEpisode?: number
   onEpisodeChange?: (episode: number) => void
+  onProgress?: (currentTime: number) => void
 }
 
 function isHlsSrc(format?: string, src?: string): boolean {
@@ -149,7 +152,7 @@ function playlistPlugin(option: {
   }
 }
 
-export function VideoPlayer({ src, format, poster, autoplay = true, storageKey, adConfig, playlist, currentEpisode, onEpisodeChange }: Props) {
+export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sourceId, episode, adConfig, playlist, currentEpisode, onEpisodeChange, onProgress }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [playlistVisible, setPlaylistVisible] = useState(true)
 
@@ -158,10 +161,12 @@ export function VideoPlayer({ src, format, poster, autoplay = true, storageKey, 
   const currentEpRef = useRef<number | undefined>(currentEpisode)
   const onChangeRef = useRef<((episode: number) => void) | undefined>(onEpisodeChange)
   const onToggleRef = useRef<() => void>(() => {})
+  const onProgressRef = useRef<((currentTime: number) => void) | undefined>(onProgress)
   playlistRef.current = playlist
   currentEpRef.current = currentEpisode
   onChangeRef.current = onEpisodeChange
   onToggleRef.current = () => setPlaylistVisible(v => !v)
+  onProgressRef.current = onProgress
 
   // Serialize adConfig to a stable string so the effect doesn't re-run on object identity changes
   const adConfigKey = adConfig ? JSON.stringify(adConfig) : ''
@@ -198,6 +203,10 @@ export function VideoPlayer({ src, format, poster, autoplay = true, storageKey, 
       layers.push(buildAdLayer(ad) as NonNullable<Artplayer['option']['layers']>[number])
     }
 
+    const playbackId = videoId != null && sourceId != null && episode != null
+      ? `video_${videoId}_source_${sourceId}_ep_${episode}`
+      : undefined
+
     const art = new Artplayer({
       container: el,
       url: src,
@@ -215,6 +224,8 @@ export function VideoPlayer({ src, format, poster, autoplay = true, storageKey, 
       fullscreenWeb: true,
       setting: false,
       hotkey: true,
+      autoPlayback: !!playbackId,
+      id: playbackId,
       layers,
       customType: {
         m3u8: (video: HTMLVideoElement, url: string) => {
@@ -277,25 +288,18 @@ export function VideoPlayer({ src, format, poster, autoplay = true, storageKey, 
       })
     }
 
-    // Playback progress memory
-    if (storageKey) {
-      const saved = Number(localStorage.getItem(storageKey) || 0)
-      if (saved > 0) {
-        art.on('ready', () => {
-          try {
-            art.currentTime = saved
-          } catch {
-            // ignore
-          }
-        })
+    // Progress callback with 3-second throttle — only record after 10 seconds
+    let lastSavedTime = 0
+    art.on('video:timeupdate', () => {
+      const t = art.currentTime
+      if (typeof t !== 'number') return
+      const fn = onProgressRef.current
+      if (!fn) return
+      if (t > 10 && t - lastSavedTime >= 3) {
+        lastSavedTime = t
+        fn(Math.floor(t))
       }
-      art.on('video:timeupdate', () => {
-        const t = art.currentTime
-        if (typeof t === 'number' && t > 1) {
-          localStorage.setItem(storageKey, String(Math.floor(t)))
-        }
-      })
-    }
+    })
 
     return () => {
       destroyed = true
@@ -326,7 +330,7 @@ export function VideoPlayer({ src, format, poster, autoplay = true, storageKey, 
       // Final safety net: clear any remaining DOM
       el.innerHTML = ''
     }
-  }, [src, format, poster, storageKey, autoplay, adConfigKey])
+  }, [src, format, poster, autoplay, adConfigKey, videoId, sourceId, episode])
 
   // Resize ArtPlayer when sidebar toggles (container width changes)
   useEffect(() => {

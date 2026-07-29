@@ -4,6 +4,7 @@ import type { Category } from '@orange-tv/shared'
 import { useAuth } from '@/hooks/useAuth'
 import { useSite } from '@/hooks/useSite'
 import { clientApi } from '@/lib/api'
+import { getHistory, formatTime, type PlaybackHistoryItem } from '@/lib/playbackHistory'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { Button } from '@/components/ui/button'
 import { InputGroup, InputGroupInput, InputGroupAddon } from '@/components/ui/input-group'
@@ -49,6 +50,8 @@ export function ClientLayout() {
   const [categories, setCategories] = useState<Category[]>([])
   const [categoriesLoading, setCategoriesLoading] = useState(false)
   const [categoryOpen, setCategoryOpen] = useState(false)
+  const [historyOpen, setHistoryOpen] = useState(false)
+  const [historyList, setHistoryList] = useState<PlaybackHistoryItem[]>([])
   const navigate = useNavigate()
   const { profile, logout } = useAuth()
   const { site } = useSite()
@@ -181,6 +184,47 @@ export function ClientLayout() {
     </>
   )
 
+  const renderHistoryPopover = () => (
+    <Popover open={historyOpen} onOpenChange={(open) => {
+      setHistoryOpen(open)
+      if (open) setHistoryList(getHistory())
+    }}>
+      <PopoverTrigger
+        render={
+          <button
+            type="button"
+            className="flex flex-col items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          >
+            <HistoryIcon className="size-4" />
+            历史
+          </button>
+        }
+      />
+      <PopoverContent align="start" side="bottom" className="w-72 p-2">
+        {historyList.length === 0 ? (
+          <p className="py-4 text-center text-sm text-muted-foreground">暂无播放历史</p>
+        ) : (
+          <div className="flex flex-col gap-0.5">
+            {historyList.map((item) => (
+              <button
+                key={`${item.videoId}_${item.sourceId}_${item.episode}`}
+                type="button"
+                className="flex items-center justify-between gap-2 rounded px-3 py-2 text-left text-sm transition-colors hover:bg-accent"
+                onClick={() => {
+                  setHistoryOpen(false)
+                  navigate(`/play/${item.videoId}/${item.sourceId}/${item.episode}`)
+                }}
+              >
+                <span className="truncate">{item.title}</span>
+                <span className="shrink-0 text-xs text-muted-foreground">{formatTime(item.progress)}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
+  )
+
   const renderUserMenu = () => {
     if (profile) {
       return (
@@ -247,13 +291,19 @@ export function ClientLayout() {
           </nav>
 
           <div className="ml-auto flex items-center gap-2">
-            <div className="hidden md:flex">{renderSearch()}</div>
+            <div className="hidden items-center gap-2 md:flex">
+              {renderSearch()}
+              {renderHistoryPopover()}
+            </div>
             <ThemeToggle />
             <div className="hidden md:block">
               {renderUserMenu()}
             </div>
 
-            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <Sheet open={mobileOpen} onOpenChange={(open) => {
+              setMobileOpen(open)
+              if (open) setHistoryList(getHistory())
+            }}>
               <SheetTrigger
                 render={
                   <Button variant="ghost" size="icon" className="md:hidden">
@@ -268,6 +318,27 @@ export function ClientLayout() {
                 </SheetHeader>
                 <div className="flex flex-col gap-4 p-4">
                   {renderSearch()}
+                  <Separator />
+                  <div className="flex flex-col gap-2">
+                    {historyList.length > 0 ? (
+                      historyList.map((item) => (
+                        <Button
+                          key={`${item.videoId}_${item.sourceId}_${item.episode}`}
+                          variant="ghost"
+                          className="justify-between"
+                          onClick={() => {
+                            setMobileOpen(false)
+                            navigate(`/play/${item.videoId}/${item.sourceId}/${item.episode}`)
+                          }}
+                        >
+                          <span className="truncate">{item.title}</span>
+                          <span className="shrink-0 text-xs text-muted-foreground">{formatTime(item.progress)}</span>
+                        </Button>
+                      ))
+                    ) : (
+                      <p className="px-2 py-1 text-sm text-muted-foreground">暂无播放历史</p>
+                    )}
+                  </div>
                   <Separator />
                   <div className="flex flex-col gap-2">
                     {categoriesLoading ? (

@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import type { ClientVideoDetail, PlayEpisodeResponse, VideoDetailSourceGroup } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
 import { useSiteStore } from '@/store/site'
 import { VideoPlayer } from '@/components/Player'
+import { saveHistory } from '@/lib/playbackHistory'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -22,6 +23,19 @@ export default function PlayPage() {
 
   const sourceIdNum = Number(sourceId || 0)
   const epNum = Number(episodeNumber || 0)
+  const videoIdNum = Number(id || 0)
+
+  const handleProgress = useCallback((currentTime: number) => {
+    if (!detail?.title) return
+    saveHistory({
+      videoId: videoIdNum,
+      sourceId: sourceIdNum,
+      episode: epNum,
+      progress: currentTime,
+      title: detail.title,
+      updatedAt: Date.now(),
+    })
+  }, [detail?.title, videoIdNum, sourceIdNum, epNum])
 
   useEffect(() => {
     if (!id || !sourceId || !episodeNumber) return
@@ -98,10 +112,14 @@ export default function PlayPage() {
           <VideoPlayer
             src={episode.url}
             format={episode.format}
+            videoId={videoIdNum}
+            sourceId={sourceIdNum}
+            episode={epNum}
             adConfig={ad.enabled ? ad : null}
             playlist={sourceGroup?.episodes}
             currentEpisode={epNum}
             onEpisodeChange={(ep) => navigate(`/play/${id}/${sourceIdNum}/${ep}`)}
+            onProgress={handleProgress}
           />
         </div>
       </div>
