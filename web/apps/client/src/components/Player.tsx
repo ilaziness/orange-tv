@@ -1,11 +1,14 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Artplayer from 'artplayer'
 import Hls from 'hls.js'
 import artplayerPluginHlsControl from 'artplayer-plugin-hls-control'
 import type { AdSettings } from '@orange-tv/shared'
+import { cn } from '@/lib/utils'
 
 // Disable the built-in right-click context menu globally
 Artplayer.CONTEXTMENU = false
+
+type PlaylistItem = { episode: number; title: string }
 
 type Props = {
   src: string
@@ -14,6 +17,9 @@ type Props = {
   autoplay?: boolean
   storageKey?: string
   adConfig?: AdSettings | null
+  playlist?: PlaylistItem[]
+  currentEpisode?: number
+  onEpisodeChange?: (episode: number) => void
 }
 
 function isHlsSrc(format?: string, src?: string): boolean {
@@ -54,8 +60,108 @@ function buildAdLayer(adConfig: AdSettings) {
   }
 }
 
-export function VideoPlayer({ src, format, poster, autoplay = true, storageKey, adConfig }: Props) {
+const SVG_LIST = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>'
+const SVG_PREV = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>'
+const SVG_NEXT = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>'
+
+function playlistPlugin(option: {
+  playlistRef: React.MutableRefObject<PlaylistItem[] | undefined>
+  currentEpRef: React.MutableRefObject<number | undefined>
+  onChangeRef: React.MutableRefObject<((episode: number) => void) | undefined>
+  onToggleRef: React.MutableRefObject<() => void>
+}) {
+  return (art: Artplayer) => {
+    function getItems(): PlaylistItem[] {
+      return option.playlistRef.current || []
+    }
+
+    function getCurrent(): number {
+      return option.currentEpRef.current || 0
+    }
+
+    function findIndex(): number {
+      const items = getItems()
+      const cur = getCurrent()
+      return items.findIndex((it) => it.episode === cur)
+    }
+
+    function changeTo(episode: number) {
+      const fn = option.onChangeRef.current
+      if (fn) fn(episode)
+    }
+
+    function next() {
+      const items = getItems()
+      const idx = findIndex()
+      if (idx >= 0 && idx < items.length - 1) {
+        changeTo(items[idx + 1].episode)
+      }
+    }
+
+    function prev() {
+      const items = getItems()
+      const idx = findIndex()
+      if (idx > 0) {
+        changeTo(items[idx - 1].episode)
+      }
+    }
+
+    // Prev button
+    art.controls.add({
+      name: 'playlistPrev',
+      position: 'right',
+      html: SVG_PREV,
+      tooltip: '上一集',
+      style: { marginRight: '6px', opacity: '0.85', cursor: 'pointer' },
+      click: prev,
+    })
+
+    // Next button
+    art.controls.add({
+      name: 'playlistNext',
+      position: 'right',
+      html: SVG_NEXT,
+      tooltip: '下一集',
+      style: { marginRight: '6px', opacity: '0.85', cursor: 'pointer' },
+      click: next,
+    })
+
+    // Playlist toggle button — delegates to React state
+    art.controls.add({
+      name: 'playlistToggle',
+      position: 'right',
+      html: SVG_LIST,
+      tooltip: '播放列表',
+      style: { marginRight: '6px', opacity: '0.85', cursor: 'pointer' },
+      click: () => option.onToggleRef.current(),
+    })
+
+    // Auto play next episode on video end
+    art.on('video:ended', () => {
+      next()
+    })
+
+    return {
+      name: 'playlistPlugin',
+      next,
+      prev,
+    }
+  }
+}
+
+export function VideoPlayer({ src, format, poster, autoplay = true, storageKey, adConfig, playlist, currentEpisode, onEpisodeChange }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null)
+  const [playlistVisible, setPlaylistVisible] = useState(true)
+
+  // Refs for playlist data — updated every render, read inside plugin closures
+  const playlistRef = useRef<PlaylistItem[] | undefined>(playlist)
+  const currentEpRef = useRef<number | undefined>(currentEpisode)
+  const onChangeRef = useRef<((episode: number) => void) | undefined>(onEpisodeChange)
+  const onToggleRef = useRef<() => void>(() => {})
+  playlistRef.current = playlist
+  currentEpRef.current = currentEpisode
+  onChangeRef.current = onEpisodeChange
+  onToggleRef.current = () => setPlaylistVisible(v => !v)
 
   // Serialize adConfig to a stable string so the effect doesn't re-run on object identity changes
   const adConfigKey = adConfig ? JSON.stringify(adConfig) : ''
@@ -63,6 +169,21 @@ export function VideoPlayer({ src, format, poster, autoplay = true, storageKey, 
   useEffect(() => {
     const el = containerRef.current
     if (!el || !src) return
+
+    // Guard to prevent the customType callback from creating an HLS instance
+    // after this effect has been cleaned up (race condition with async loading)
+    let destroyed = false
+
+    // Destroy any orphaned Artplayer instances that share this container
+    // (e.g. from a previous cleanup that threw before completing)
+    for (const inst of Artplayer.instances) {
+      if (inst.template?.$container === el) {
+        try { inst.muted = true } catch { /* ignore */ }
+        try { inst.video && (inst.video.muted = true) } catch { /* ignore */ }
+        try { inst.pause() } catch { /* ignore */ }
+        try { inst.destroy(true) } catch { /* ignore */ }
+      }
+    }
 
     // Clear any leftover DOM from a previous instance (StrictMode remount or re-render)
     el.innerHTML = ''
@@ -88,6 +209,7 @@ export function VideoPlayer({ src, format, poster, autoplay = true, storageKey, 
       autoMini: false,
       loop: false,
       muted: false,
+      mutex: true,
       pip: true,
       fullscreen: true,
       fullscreenWeb: true,
@@ -96,6 +218,7 @@ export function VideoPlayer({ src, format, poster, autoplay = true, storageKey, 
       layers,
       customType: {
         m3u8: (video: HTMLVideoElement, url: string) => {
+          if (destroyed) return
           if (Hls.isSupported()) {
             const hls = new Hls()
             hls.loadSource(url)
@@ -110,6 +233,9 @@ export function VideoPlayer({ src, format, poster, autoplay = true, storageKey, 
         artplayerPluginHlsControl({
           quality: { control: true, setting: false },
         }),
+        ...(playlist && playlist.length > 0 && onEpisodeChange
+          ? [playlistPlugin({ playlistRef, currentEpRef, onChangeRef, onToggleRef })]
+          : []),
       ],
     })
 
@@ -172,10 +298,17 @@ export function VideoPlayer({ src, format, poster, autoplay = true, storageKey, 
     }
 
     return () => {
+      destroyed = true
+
       if (adTimeoutId) {
         clearTimeout(adTimeoutId)
         adTimeoutId = null
       }
+
+      // Mute first to immediately stop audio, even if later steps fail
+      try { art.muted = true } catch { /* ignore */ }
+      try { art.video && (art.video.muted = true) } catch { /* ignore */ }
+
       if (hlsRef.current) {
         hlsRef.current.destroy()
         hlsRef.current = null
@@ -187,10 +320,28 @@ export function VideoPlayer({ src, format, poster, autoplay = true, storageKey, 
         try { art.video?.pause() } catch { /* ignore */ }
         try { art.video?.removeAttribute('src') } catch { /* ignore */ }
         try { art.video?.load() } catch { /* ignore */ }
-        art.destroy(true) // true = remove DOM element completely
+        try { art.destroy(true) } catch { /* ignore */ }
       }
+
+      // Final safety net: clear any remaining DOM
+      el.innerHTML = ''
     }
   }, [src, format, poster, storageKey, autoplay, adConfigKey])
+
+  // Resize ArtPlayer when sidebar toggles (container width changes)
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    // Find the ArtPlayer instance for this container
+    for (const inst of Artplayer.instances) {
+      if (inst.template?.$container === el) {
+        try { (inst as unknown as { resize?: () => void }).resize?.() } catch { /* ignore */ }
+        break
+      }
+    }
+  }, [playlistVisible])
+
+  const hasPlaylist = !!(playlist && playlist.length > 0 && onEpisodeChange)
 
   if (!src) {
     return (
@@ -200,5 +351,36 @@ export function VideoPlayer({ src, format, poster, autoplay = true, storageKey, 
     )
   }
 
-  return <div ref={containerRef} className="w-full" style={{ aspectRatio: '16 / 9' }} />
+  return (
+    <div className="flex h-[40vh] w-full overflow-hidden sm:h-[55vh] lg:h-[65vh]">
+      <div ref={containerRef} className="min-w-0 flex-1" />
+      {hasPlaylist && (
+        <div
+          className={cn(
+            'shrink-0 overflow-y-auto bg-black/90 transition-all duration-300 ease-in-out',
+            playlistVisible ? 'w-44 opacity-100' : 'w-0 opacity-0',
+          )}
+        >
+          <div className="w-44 p-2">
+            <div className="flex flex-col gap-0.5">
+              {playlist!.map((it) => (
+                <div
+                  key={it.episode}
+                  className={cn(
+                    'cursor-pointer truncate rounded px-3.5 py-2 text-xs transition-colors',
+                    it.episode === currentEpisode
+                      ? 'bg-white/15 text-white'
+                      : 'text-white/70 hover:bg-white/10 hover:text-white',
+                  )}
+                  onClick={() => onEpisodeChange?.(it.episode)}
+                >
+                  {it.title || `第${it.episode}集`}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }

@@ -5,6 +5,7 @@ import { clientApi, errorMessage } from '@/lib/api'
 import { useSiteStore } from '@/store/site'
 import { VideoPlayer } from '@/components/Player'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -89,34 +90,47 @@ export default function PlayPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="overflow-hidden rounded-xl border">
-        <VideoPlayer src={episode.url} format={episode.format} adConfig={ad.enabled ? ad : null} />
+      <div className="flex flex-col gap-2">
+        <p className="text-sm text-muted-foreground">
+          正在播放：{detail.title} - 第{epNum}集
+        </p>
+        <div className="overflow-hidden rounded-xl border">
+          <VideoPlayer
+            src={episode.url}
+            format={episode.format}
+            adConfig={ad.enabled ? ad : null}
+            playlist={sourceGroup?.episodes}
+            currentEpisode={epNum}
+            onEpisodeChange={(ep) => navigate(`/play/${id}/${sourceIdNum}/${ep}`)}
+          />
+        </div>
       </div>
 
       <div className="flex flex-col gap-3">
         <h1 className="text-xl font-bold">{detail.title}</h1>
-        <p className="text-sm text-muted-foreground">
-          {sourceGroup?.name || '播放源'} · 第{epNum}集
-        </p>
 
         {detail.sources && detail.sources.length > 0 ? (
           <div className="flex flex-col gap-4">
             {detail.sources.map((source) => (
-              <div key={source.id} className="flex flex-col gap-2">
-                <p className="text-sm font-medium">{source.name}</p>
-                <div className="flex flex-wrap gap-2">
-                  {source.episodes.map((ep) => (
-                    <Button
-                      key={ep.episode}
-                      variant={source.id === sourceIdNum && ep.episode === epNum ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => navigate(`/play/${id}/${source.id}/${ep.episode}`)}
-                    >
-                      {ep.title || `第${ep.episode}集`}
-                    </Button>
-                  ))}
-                </div>
-              </div>
+              <Card key={source.id}>
+                <CardHeader>
+                  <CardTitle>{source.name}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-2">
+                    {source.episodes.map((ep) => (
+                      <Button
+                        key={ep.episode}
+                        variant={source.id === sourceIdNum && ep.episode === epNum ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => navigate(`/play/${id}/${source.id}/${ep.episode}`)}
+                      >
+                        {ep.title || `第${ep.episode}集`}
+                      </Button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         ) : null}
