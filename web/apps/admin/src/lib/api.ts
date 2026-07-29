@@ -1,5 +1,7 @@
 import {
   ADMIN_API_BASE,
+  type AdminCommentItem,
+  type AdminCommentParentItem,
   ApiError,
   apiDelete,
   apiGet,
@@ -215,6 +217,14 @@ export const adminApi = {
     withAuth((token) => apiPost(ADMIN_API_BASE, '/videos/batch/publish-status', { ids, status }, { token })),
   batchDeleteVideos: (ids: number[]) =>
     withAuth((token) => apiPost(ADMIN_API_BASE, '/videos/batch/delete', { ids }, { token })),
+
+  listComments: (query?: Record<string, string | number | undefined>) =>
+    withAuth((token) => apiGet<PageData<AdminCommentItem>>(ADMIN_API_BASE, '/comments', { token, query })),
+  getCommentParents: (id: number) =>
+    withAuth((token) => apiGet<AdminCommentParentItem[]>(ADMIN_API_BASE, `/comments/${id}/parents`, { token })),
+  updateCommentStatus: (id: number, status: number) =>
+    withAuth((token) => apiPut(ADMIN_API_BASE, `/comments/${id}/status`, { status }, { token })),
+  deleteComment: (id: number) => withAuth((token) => apiDelete(ADMIN_API_BASE, `/comments/${id}`, { token })),
 
   listAdmins: (query?: Record<string, string | number | undefined>) =>
     withAuth((token) => apiGet<PageData<AdminItem>>(ADMIN_API_BASE, '/admins', { token, query })),

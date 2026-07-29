@@ -15,6 +15,7 @@ const PlaySourcesPage = lazy(() => import('@/pages/content/playSources/PlaySourc
 const VideosPage = lazy(() => import('@/pages/content/videos/VideosPage'))
 const VideoEditPage = lazy(() => import('@/pages/content/videos/edit/VideoEditPage'))
 const LivePage = lazy(() => import('@/pages/content/live/LivePage'))
+const CommentsPage = lazy(() => import('@/pages/content/comments/CommentsPage'))
 const CollectPage = lazy(() => import('@/pages/content/collect/CollectPage'))
 const BannersPage = lazy(() => import('@/pages/content/banners/BannersPage'))
 const AdminsPage = lazy(() => import('@/pages/user/admins/AdminsPage'))
@@ -55,6 +56,7 @@ export function AppRoutes() {
           <Route path="/content/tags" element={<Lazy><TagsPage /></Lazy>} />
           <Route path="/content/play-sources" element={<Lazy><PlaySourcesPage /></Lazy>} />
           <Route path="/content/live" element={<Lazy><LivePage /></Lazy>} />
+          <Route path="/content/comments" element={<Lazy><CommentsPage /></Lazy>} />
           <Route path="/content/collect" element={<Lazy><CollectPage /></Lazy>} />
           <Route path="/content/banners" element={<Lazy><BannersPage /></Lazy>} />
           <Route path="/user/admins" element={<Lazy><AdminsPage /></Lazy>} />

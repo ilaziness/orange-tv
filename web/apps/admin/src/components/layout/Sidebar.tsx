@@ -13,6 +13,7 @@ import {
   LayoutDashboard,
   FolderTree,
   Film,
+  MessageCircle,
   Radio,
   ScanSearch,
   Clapperboard,
@@ -41,6 +42,7 @@ const contentMenus = [
   { to: '/content/actors', label: '演员管理', icon: Drama },
   { to: '/content/tags', label: '标签管理', icon: Tag },
   { to: '/content/banners', label: '首页Banner', icon: Image },
+  { to: '/content/comments', label: '评论管理', icon: MessageCircle },
 ]
 
 const userMenus = [

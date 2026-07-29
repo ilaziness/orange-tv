@@ -187,6 +187,7 @@ func (r *userFeatureRepo) ClearHistory(ctx context.Context, userID int64) error 
 func (r *userFeatureRepo) ListComments(ctx context.Context, videoID int64, offset, limit int) ([]model.VideoComments, int, error) {
 	items := make([]model.VideoComments, 0, limit)
 	q := r.db.NewSelect().Model(&items).
+		Relation("User").
 		Where("video_id = ?", videoID).
 		Where("status = ?", 1)
 	total, err := q.Count(ctx)

@@ -45,6 +45,7 @@ func (a *App) wireHTTP() error {
 	settingsRepo := repository.NewSettingsRepo(a.db)
 	logRepo := repository.NewLogRepo(a.db)
 	userFeatureRepo := repository.NewUserFeatureRepo(a.db)
+	commentRepo := repository.NewCommentRepo(a.db)
 
 	recorder := audit.NewRecorder(logRepo, a.log)
 
@@ -54,6 +55,7 @@ func (a *App) wireHTTP() error {
 	adminPlaySvc := adminsvc.NewPlayService(playRepo, videoRepo, a.log)
 	adminVideoSvc := adminsvc.NewVideoService(videoRepo, categoryRepo, metaRepo, playRepo, a.cache, a.log)
 	adminLiveSvc := adminsvc.NewLiveService(liveRepo, a.cache, a.log)
+	adminCommentSvc := adminsvc.NewCommentService(commentRepo, a.log)
 	collectEngine := collect.NewEngine(collectRepo, videoRepo, categoryRepo, metaRepo, playRepo, a.log)
 	adminCollectSvc := adminsvc.NewCollectService(collectRepo, playRepo, categoryRepo, collectEngine, a.log, a.cache)
 	adminSettingsSvc := adminsvc.NewSettingsService(settingsRepo, a.cache, a.log)
@@ -78,6 +80,7 @@ func (a *App) wireHTTP() error {
 	handlers.AdminMetadata = adminhandler.NewMetadataHandler(adminMetaSvc)
 	handlers.AdminPlay = adminhandler.NewPlayHandler(adminPlaySvc)
 	handlers.AdminLive = adminhandler.NewLiveHandler(adminLiveSvc)
+	handlers.AdminComment = adminhandler.NewCommentHandler(adminCommentSvc, recorder)
 	handlers.AdminCollect = adminhandler.NewCollectHandler(adminCollectSvc)
 	handlers.AdminSettings = adminhandler.NewSettingsHandler(adminSettingsSvc, recorder)
 	handlers.AdminLog = adminhandler.NewLogHandler(adminLogSvc)

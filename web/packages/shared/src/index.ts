@@ -479,6 +479,30 @@ export type CommentItem = {
   parent_id: number
   content: string
   like_count: number
+  dislike_count: number
+  created_at: string
+}
+
+export type AdminCommentItem = {
+  id: number
+  video_id: number
+  video_title: string
+  content: string
+  user_id: number
+  username: string
+  status: number
+  like_count: number
+  dislike_count: number
+  parent_id: number
+  created_at: string
+}
+
+export type AdminCommentParentItem = {
+  id: number
+  user_id: number
+  username: string
+  parent_id: number
+  content: string
   created_at: string
 }
 

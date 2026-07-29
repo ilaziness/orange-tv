@@ -26,6 +26,7 @@ func applyBusinessHandlers(h *Handlers, b testutil.BusinessHandlers) {
 	h.AdminMetadata = b.AdminMetadata
 	h.AdminPlay = b.AdminPlay
 	h.AdminLive = b.AdminLive
+	h.AdminComment = b.AdminComment
 	h.AdminCollect = b.AdminCollect
 	h.AdminSettings = b.AdminSettings
 	h.AdminLog = b.AdminLog

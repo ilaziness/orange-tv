@@ -22,6 +22,7 @@ type Handlers struct {
 	AdminMetadata *adminhandler.MetadataHandler
 	AdminPlay     *adminhandler.PlayHandler
 	AdminLive     *adminhandler.LiveHandler
+	AdminComment  *adminhandler.CommentHandler
 	AdminCollect  *adminhandler.CollectHandler
 	AdminSettings *adminhandler.SettingsHandler
 	AdminLog      *adminhandler.LogHandler
@@ -86,6 +87,7 @@ func (h *Handlers) validateForRoutes() error {
 		{"admin metadata handler", h.AdminMetadata != nil},
 		{"admin play handler", h.AdminPlay != nil},
 		{"admin live handler", h.AdminLive != nil},
+		{"admin comment handler", h.AdminComment != nil},
 		{"admin collect handler", h.AdminCollect != nil},
 		{"admin settings handler", h.AdminSettings != nil},
 		{"admin log handler", h.AdminLog != nil},

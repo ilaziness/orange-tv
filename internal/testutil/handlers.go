@@ -27,6 +27,7 @@ type BusinessHandlers struct {
 	AdminMetadata  *adminhandler.MetadataHandler
 	AdminPlay      *adminhandler.PlayHandler
 	AdminLive      *adminhandler.LiveHandler
+	AdminComment   *adminhandler.CommentHandler
 	AdminCollect   *adminhandler.CollectHandler
 	AdminSettings  *adminhandler.SettingsHandler
 	AdminLog       *adminhandler.LogHandler
@@ -152,6 +153,19 @@ func (s adminLiveSvc) Update(ctx context.Context, id int64, req *admindto.Update
 func (s adminLiveSvc) Delete(ctx context.Context, id int64) error { return nil }
 func (s adminLiveSvc) SyncFromSource(ctx context.Context) (*shareddto.LiveSyncResult, error) {
 	return &shareddto.LiveSyncResult{}, nil
+}
+
+type adminCommentSvc struct{}
+
+func (s adminCommentSvc) List(ctx context.Context, req *admindto.CommentListRequest) ([]admindto.CommentListItem, int, error) {
+	return nil, 0, nil
+}
+func (s adminCommentSvc) UpdateStatus(ctx context.Context, id int64, req *admindto.UpdateCommentStatusRequest) error {
+	return nil
+}
+func (s adminCommentSvc) Delete(ctx context.Context, id int64) error { return nil }
+func (s adminCommentSvc) GetParents(ctx context.Context, id int64) ([]admindto.CommentParentItem, error) {
+	return nil, nil
 }
 
 type adminCollectSvc struct{}
@@ -397,6 +411,7 @@ func NewBusinessHandlers() BusinessHandlers {
 		AdminMetadata:  adminhandler.NewMetadataHandler(adminMetadataSvc{}),
 		AdminPlay:      adminhandler.NewPlayHandler(adminPlaySvc{}),
 		AdminLive:      adminhandler.NewLiveHandler(adminLiveSvc{}),
+		AdminComment:   adminhandler.NewCommentHandler(adminCommentSvc{}, nil),
 		AdminCollect:   adminhandler.NewCollectHandler(adminCollectSvc{}),
 		AdminSettings:  adminhandler.NewSettingsHandler(adminSettingsSvc{}, nil),
 		AdminLog:       adminhandler.NewLogHandler(adminLogSvc{}),

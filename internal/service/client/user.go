@@ -297,18 +297,18 @@ func (s *userService) ListComments(ctx context.Context, videoID int64, req *clie
 	out := make([]clientdto.CommentItem, 0, len(comments))
 	for _, c := range comments {
 		item := clientdto.CommentItem{
-			ID:        c.ID,
-			VideoID:   c.VideoID,
-			UserID:    c.UserID,
-			ParentID:  c.ParentID,
-			Content:   c.Content,
-			LikeCount: c.LikeCount,
-			CreatedAt: c.CreatedAt.Format(time.RFC3339),
+			ID:           c.ID,
+			VideoID:      c.VideoID,
+			UserID:       c.UserID,
+			ParentID:     c.ParentID,
+			Content:      c.Content,
+			LikeCount:    c.LikeCount,
+			DislikeCount: c.DislikeCount,
+			CreatedAt:    c.CreatedAt.Format(time.RFC3339),
 		}
-		// Fill username
-		if u, _ := s.adminRepo.GetUserByID(ctx, int64(c.UserID)); u != nil {
-			item.Username = u.Username
-			item.Avatar = u.Avatar
+		if c.User != nil {
+			item.Username = c.User.Username
+			item.Avatar = c.User.Avatar
 		}
 		out = append(out, item)
 	}
@@ -332,20 +332,21 @@ func (s *userService) CreateComment(ctx context.Context, userID int64, req *clie
 		UserID:   uint64(userID),
 		ParentID: req.ParentID,
 		Content:  strings.TrimSpace(req.Content),
-		Status:   1,
+		Status:   0,
 	}
 	if err := s.userRepo.CreateComment(ctx, c); err != nil {
 		s.log.Error("client user: create comment failed", zap.Uint64("video_id", req.VideoID), zap.Int64("user_id", userID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	item := &clientdto.CommentItem{
-		ID:        c.ID,
-		VideoID:   c.VideoID,
-		UserID:    c.UserID,
-		ParentID:  c.ParentID,
-		Content:   c.Content,
-		LikeCount: c.LikeCount,
-		CreatedAt: c.CreatedAt.Format(time.RFC3339),
+		ID:           c.ID,
+		VideoID:      c.VideoID,
+		UserID:       c.UserID,
+		ParentID:     c.ParentID,
+		Content:      c.Content,
+		LikeCount:    c.LikeCount,
+		DislikeCount: c.DislikeCount,
+		CreatedAt:    c.CreatedAt.Format(time.RFC3339),
 	}
 	if u, _ := s.adminRepo.GetUserByID(ctx, userID); u != nil {
 		item.Username = u.Username

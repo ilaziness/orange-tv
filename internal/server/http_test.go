@@ -39,6 +39,7 @@ func TestNewHTTPServer_registersRoutes(t *testing.T) {
 	handlers.AdminMetadata = b.AdminMetadata
 	handlers.AdminPlay = b.AdminPlay
 	handlers.AdminLive = b.AdminLive
+	handlers.AdminComment = b.AdminComment
 	handlers.AdminCollect = b.AdminCollect
 	handlers.AdminSettings = b.AdminSettings
 	handlers.AdminLog = b.AdminLog

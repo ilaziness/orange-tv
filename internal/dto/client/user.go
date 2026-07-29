@@ -88,15 +88,16 @@ type CommentListRequest struct {
 
 // CommentItem is the comment list item.
 type CommentItem struct {
-	ID        uint64 `json:"id"`
-	VideoID   uint64 `json:"video_id"`
-	UserID    uint64 `json:"user_id"`
-	Username  string `json:"username"`
-	Avatar    string `json:"avatar"`
-	ParentID  uint64 `json:"parent_id"`
-	Content   string `json:"content"`
-	LikeCount uint32 `json:"like_count"`
-	CreatedAt string `json:"created_at"`
+	ID           uint64 `json:"id"`
+	VideoID      uint64 `json:"video_id"`
+	UserID       uint64 `json:"user_id"`
+	Username     string `json:"username"`
+	Avatar       string `json:"avatar"`
+	ParentID     uint64 `json:"parent_id"`
+	Content      string `json:"content"`
+	LikeCount    uint32 `json:"like_count"`
+	DislikeCount uint32 `json:"dislike_count"`
+	CreatedAt    string `json:"created_at"`
 }
 
 // CreateCommentRequest creates a comment.
