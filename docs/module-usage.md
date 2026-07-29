@@ -28,17 +28,18 @@ http:
 - `internal/handler/http/` - 公共绑定工具、health、stub
 - `internal/handler/http/admin/` - 管理端处理器
 - `internal/handler/http/client/` - 用户端处理器
+- `internal/handler/http/open/` - 开放 API 处理器
 - `internal/server/http.go` - HTTP 服务器
 - `internal/router/` - 路由注册（`Handlers` 聚合 + `RegisterRoutes`；业务路径直接写字符串）
 - `internal/middleware/http/` - HTTP 中间件
-- `internal/service/admin`、`internal/service/client` - 业务逻辑
+- `internal/service/admin`、`internal/service/client`、`internal/service/open` - 业务逻辑
 - `internal/repository/`、`internal/model/` - 数据访问与模型
 
 ### 共享层
 
 以下层被各服务类型共享，不要删除：
 
-- `internal/service/`（含 `admin/`、`client/`）- 业务逻辑层
+- `internal/service/`（含 `admin/`、`client/`、`open/`）- 业务逻辑层
 - `internal/repository/` - 数据访问层
 - `internal/model/` - 数据模型
 - `internal/dto/`（含 `admin/`、`client/`）- 数据传输对象

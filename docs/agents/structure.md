@@ -31,7 +31,8 @@ orange-tv/
 │   ├── handler/                     # 协议层请求处理器
 │   │   └── http/                    # HTTP Handler 公共工具 + health/stub
 │   │       ├── admin/               # 管理端 Handler
-│   │       └── client/              # 用户端 Handler
+│   │       ├── client/              # 用户端 Handler
+│   │       └── open/                # 开放 API Handler
 │   ├── logger/                      # Zap 日志封装
 │   ├── metrics/                     # Prometheus 指标采集与暴露
 │   ├── middleware/                  # 协议层中间件
@@ -39,9 +40,9 @@ orange-tv/
 │   ├── model/                       # Bun 数据模型（由 gen model 从库表生成）
 │   ├── repository/                  # 数据访问层
 │   ├── response/                    # 统一 HTTP 响应结构
-│   ├── router/                      # Gin 路由注册：/api/client、/api/admin、/api/internal
+│   ├── router/                      # Gin 路由注册：/api/client、/api/admin、/api/internal、/api/open
 │   ├── server/                      # HTTP 服务器实现
-│   ├── service/                     # 业务逻辑层（admin/client 子包）
+│   ├── service/                     # 业务逻辑层（admin/client/open 子包）
 │   ├── testutil/                    # 测试辅助（业务 handler 桩等）
 │   ├── tracing/                     # OpenTelemetry 链路追踪
 │   ├── utils/                       # 通用工具（协程池等）
