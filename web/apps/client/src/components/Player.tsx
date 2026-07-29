@@ -4,6 +4,9 @@ import Hls from 'hls.js'
 import artplayerPluginHlsControl from 'artplayer-plugin-hls-control'
 import type { AdSettings } from '@orange-tv/shared'
 
+// Disable the built-in right-click context menu globally
+Artplayer.CONTEXTMENU = false
+
 type Props = {
   src: string
   format?: string
@@ -88,7 +91,7 @@ export function VideoPlayer({ src, format, poster, autoplay = true, storageKey, 
       pip: true,
       fullscreen: true,
       fullscreenWeb: true,
-      setting: true,
+      setting: false,
       hotkey: true,
       layers,
       customType: {
@@ -105,7 +108,7 @@ export function VideoPlayer({ src, format, poster, autoplay = true, storageKey, 
       },
       plugins: [
         artplayerPluginHlsControl({
-          quality: { control: true, setting: true },
+          quality: { control: true, setting: false },
         }),
       ],
     })

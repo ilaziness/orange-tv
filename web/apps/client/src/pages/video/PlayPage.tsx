@@ -99,30 +99,24 @@ export default function PlayPage() {
           {sourceGroup?.name || '播放源'} · 第{epNum}集
         </p>
 
-        <div className="flex flex-wrap gap-2">
-          {detail.sources?.map((s) => (
-            <Button
-              key={s.id}
-              variant={s.id === sourceIdNum ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => navigate(`/play/${id}/${s.id}/${epNum}`)}
-            >
-              {s.name}
-            </Button>
-          ))}
-        </div>
-
-        {sourceGroup && sourceGroup.episodes.length > 1 ? (
-          <div className="flex flex-wrap gap-2">
-            {sourceGroup.episodes.map((ep) => (
-              <Button
-                key={ep.episode}
-                variant={ep.episode === epNum ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => navigate(`/play/${id}/${sourceId}/${ep.episode}`)}
-              >
-                {ep.title || `第${ep.episode}集`}
-              </Button>
+        {detail.sources && detail.sources.length > 0 ? (
+          <div className="flex flex-col gap-4">
+            {detail.sources.map((source) => (
+              <div key={source.id} className="flex flex-col gap-2">
+                <p className="text-sm font-medium">{source.name}</p>
+                <div className="flex flex-wrap gap-2">
+                  {source.episodes.map((ep) => (
+                    <Button
+                      key={ep.episode}
+                      variant={source.id === sourceIdNum && ep.episode === epNum ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => navigate(`/play/${id}/${source.id}/${ep.episode}`)}
+                    >
+                      {ep.title || `第${ep.episode}集`}
+                    </Button>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         ) : null}

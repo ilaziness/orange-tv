@@ -188,13 +188,13 @@ func (r *userFeatureRepo) ListComments(ctx context.Context, videoID int64, offse
 	items := make([]model.VideoComments, 0, limit)
 	q := r.db.NewSelect().Model(&items).
 		Relation("User").
-		Where("video_id = ?", videoID).
-		Where("status = ?", 1)
+		Where("vc.video_id = ?", videoID).
+		Where("vc.status = ?", 1)
 	total, err := q.Count(ctx)
 	if err != nil {
 		return nil, 0, fmt.Errorf("count comments: %w", err)
 	}
-	if err := q.Order("id DESC").Offset(offset).Limit(limit).Scan(ctx); err != nil {
+	if err := q.Order("vc.id DESC").Offset(offset).Limit(limit).Scan(ctx); err != nil {
 		return nil, 0, fmt.Errorf("list comments: %w", err)
 	}
 	return items, total, nil
