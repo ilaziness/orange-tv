@@ -22,6 +22,10 @@ type AdminRepository interface {
 	UpdateLastLogin(ctx context.Context, id int64, at time.Time) error
 	ExistsUsername(ctx context.Context, username string) (bool, error)
 
+	// Self-service profile update
+	UpdateProfile(ctx context.Context, adminID int64, nickname, email, avatar string) error
+	UpdatePassword(ctx context.Context, adminID int64, hashedPassword string) error
+
 	// Admin CRUD (A3)
 	ListAdmins(ctx context.Context, f AdminListFilter) ([]model.Admins, int, error)
 	UpdateAdmin(ctx context.Context, admin *model.Admins) error
@@ -156,6 +160,34 @@ func (r *adminRepo) UpdateLastLogin(ctx context.Context, id int64, at time.Time)
 		Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("update admin last login: %w", err)
+	}
+	return nil
+}
+
+func (r *adminRepo) UpdateProfile(ctx context.Context, adminID int64, nickname, email, avatar string) error {
+	_, err := r.db.NewUpdate().Model((*model.Admins)(nil)).
+		Set("nickname = ?", nickname).
+		Set("email = ?", email).
+		Set("avatar = ?", avatar).
+		Set("updated_at = ?", time.Now()).
+		Where("id = ?", adminID).
+		Where("deleted_at IS NULL").
+		Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("update admin profile: %w", err)
+	}
+	return nil
+}
+
+func (r *adminRepo) UpdatePassword(ctx context.Context, adminID int64, hashedPassword string) error {
+	_, err := r.db.NewUpdate().Model((*model.Admins)(nil)).
+		Set("password = ?", hashedPassword).
+		Set("updated_at = ?", time.Now()).
+		Where("id = ?", adminID).
+		Where("deleted_at IS NULL").
+		Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("update admin password: %w", err)
 	}
 	return nil
 }

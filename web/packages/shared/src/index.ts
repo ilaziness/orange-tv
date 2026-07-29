@@ -107,10 +107,22 @@ export async function apiDelete<T>(base: string, path: string, options?: Request
 export type AdminProfile = {
   id: number
   username: string
+  nickname: string
   email: string
   avatar: string
   role: string
   status: number
+}
+
+export type UpdateProfileRequest = {
+  nickname: string
+  email: string
+  avatar: string
+}
+
+export type ChangePasswordRequest = {
+  old_password: string
+  new_password: string
 }
 
 export type LoginResult = {

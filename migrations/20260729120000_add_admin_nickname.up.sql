@@ -1,0 +1,1 @@
+ALTER TABLE admins ADD COLUMN nickname VARCHAR(50) NOT NULL DEFAULT '' COMMENT '昵称' AFTER username;

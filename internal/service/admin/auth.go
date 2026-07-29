@@ -30,6 +30,8 @@ type AuthService interface {
 	Profile(ctx context.Context, adminID int64) (*dto.Profile, error)
 	// EnsureSuperAdmin loads admin+group and validates super_admin access for each request.
 	EnsureSuperAdmin(ctx context.Context, adminID int64) (*model.Admins, *model.UserGroups, error)
+	UpdateProfile(ctx context.Context, adminID int64, req *dto.UpdateProfileRequest) (*dto.Profile, error)
+	ChangePassword(ctx context.Context, adminID int64, req *dto.ChangePasswordRequest) error
 }
 
 type authService struct {
@@ -128,6 +130,56 @@ func (s *authService) Profile(ctx context.Context, adminID int64) (*dto.Profile,
 	return toAdminProfile(admin, group.Name), nil
 }
 
+func (s *authService) UpdateProfile(ctx context.Context, adminID int64, req *dto.UpdateProfileRequest) (*dto.Profile, error) {
+	admin, group, err := s.EnsureSuperAdmin(ctx, adminID)
+	if err != nil {
+		return nil, err
+	}
+	nickname := strings.TrimSpace(req.Nickname)
+	if len(nickname) > 50 {
+		return nil, errcode.WithMessage(errcode.ParamError, "昵称长度不能超过50")
+	}
+	email := strings.TrimSpace(req.Email)
+	if len(email) > 100 {
+		return nil, errcode.WithMessage(errcode.ParamError, "邮箱长度不能超过100")
+	}
+	avatar := strings.TrimSpace(req.Avatar)
+	if len(avatar) > 500 {
+		return nil, errcode.WithMessage(errcode.ParamError, "头像URL长度不能超过500")
+	}
+	if err := s.adminRepo.UpdateProfile(ctx, adminID, nickname, email, avatar); err != nil {
+		s.log.Error("auth: update admin profile failed", zap.Int64("admin_id", adminID), zap.Error(err))
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	admin.Nickname = nickname
+	admin.Email = email
+	admin.Avatar = avatar
+	return toAdminProfile(admin, group.Name), nil
+}
+
+func (s *authService) ChangePassword(ctx context.Context, adminID int64, req *dto.ChangePasswordRequest) error {
+	admin, _, err := s.EnsureSuperAdmin(ctx, adminID)
+	if err != nil {
+		return err
+	}
+	if err := crypto.CheckPassword(req.OldPassword, admin.Password); err != nil {
+		return errcode.InvalidCredentials
+	}
+	if req.OldPassword == req.NewPassword {
+		return errcode.WithMessage(errcode.ParamError, "新密码不能与旧密码相同")
+	}
+	hash, err := crypto.HashPassword(req.NewPassword)
+	if err != nil {
+		s.log.Error("auth: hash new password failed", zap.Int64("admin_id", adminID), zap.Error(err))
+		return errcode.Wrap(errcode.InternalError, err)
+	}
+	if err := s.adminRepo.UpdatePassword(ctx, adminID, hash); err != nil {
+		s.log.Error("auth: update admin password failed", zap.Int64("admin_id", adminID), zap.Error(err))
+		return errcode.Wrap(errcode.DatabaseError, err)
+	}
+	return nil
+}
+
 func (s *authService) EnsureSuperAdmin(ctx context.Context, adminID int64) (*model.Admins, *model.UserGroups, error) {
 	if adminID <= 0 {
 		return nil, nil, errcode.AuthFailed
@@ -158,6 +210,7 @@ func toAdminProfile(admin *model.Admins, role string) *dto.Profile {
 	return &dto.Profile{
 		ID:       admin.ID,
 		Username: admin.Username,
+		Nickname: admin.Nickname,
 		Email:    admin.Email,
 		Avatar:   admin.Avatar,
 		Role:     role,

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { AdminProfile } from '@orange-tv/shared'
+import type { AdminProfile, UpdateProfileRequest } from '@orange-tv/shared'
 import { adminApi, getToken, setToken } from '../lib/api'
 
 type AuthState = {
@@ -9,6 +9,7 @@ type AuthState = {
   login: (username: string, password: string) => Promise<void>
   logout: () => Promise<void>
   loadProfile: () => Promise<void>
+  updateProfile: (body: UpdateProfileRequest) => Promise<AdminProfile>
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -46,5 +47,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({ token: null, profile: null, loading: false })
       throw err
     }
+  },
+  async updateProfile(body) {
+    const res = await adminApi.updateProfile(body)
+    set({ profile: res.data })
+    return res.data
   },
 }))

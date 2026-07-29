@@ -29,6 +29,8 @@ func registerAdminProtectedAuthRoutes(v1 *gin.RouterGroup, h *Handlers) {
 	auth := v1.Group("/auth")
 	auth.POST("/logout", h.AdminAuth.Logout)
 	auth.GET("/profile", h.AdminAuth.Profile)
+	auth.PUT("/profile", h.AdminAuth.UpdateProfile)
+	auth.PUT("/profile/password", h.AdminAuth.ChangePassword)
 }
 
 func registerAdminContentRoutes(v1 *gin.RouterGroup, h *Handlers) {

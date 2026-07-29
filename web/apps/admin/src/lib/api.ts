@@ -11,6 +11,7 @@ import {
   type AdminItem,
   type BannerItem,
   type Category,
+  type ChangePasswordRequest,
   type CollectCategoryMap,
   type CollectLog,
   type CollectSource,
@@ -32,6 +33,7 @@ import {
   type APISettings,
   type AdSettings,
   type UpdateSettingsRequest,
+  type UpdateProfileRequest,
   type UserGroupItem,
   type UserItem,
   type VideoDetail,
@@ -90,6 +92,10 @@ export const adminApi = {
     apiPost<LoginResult>(ADMIN_API_BASE, '/auth/login', { username, password }),
   logout: () => withAuth((token) => apiPost(ADMIN_API_BASE, '/auth/logout', null, { token })),
   profile: () => withAuth((token) => apiGet<AdminProfile>(ADMIN_API_BASE, '/auth/profile', { token })),
+  updateProfile: (body: UpdateProfileRequest) =>
+    withAuth((token) => apiPut<AdminProfile>(ADMIN_API_BASE, '/auth/profile', body, { token })),
+  changePassword: (body: ChangePasswordRequest) =>
+    withAuth((token) => apiPut(ADMIN_API_BASE, '/auth/profile/password', body, { token })),
 
   listCategories: () => withAuth((token) => apiGet<Category[]>(ADMIN_API_BASE, '/categories', { token })),
   createCategory: (body: unknown) => withAuth((token) => apiPost(ADMIN_API_BASE, '/categories', body, { token })),

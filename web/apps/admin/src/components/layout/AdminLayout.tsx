@@ -13,7 +13,10 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -23,7 +26,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { LogOut, Sun, Moon, User } from 'lucide-react'
+import { LogOut, Sun, Moon, Settings } from 'lucide-react'
 import { toast } from 'sonner'
 
 export function AdminLayout() {
@@ -75,20 +78,24 @@ export function AdminLayout() {
               <DropdownMenuTrigger className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-sm hover:bg-accent">
                 <Avatar className="size-7">
                   <AvatarFallback className="text-xs">
-                    {profile?.username?.[0]?.toUpperCase() ?? 'A'}
+                    {(profile?.nickname || profile?.username)?.[0]?.toUpperCase() ?? 'A'}
                   </AvatarFallback>
                 </Avatar>
-                <span className="hidden sm:inline">{profile?.username}</span>
+                <span className="hidden sm:inline">{profile?.nickname || profile?.username}</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem disabled>
-                  <User />
-                  {profile?.role}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleLogout}>
-                  <LogOut />
-                  退出登录
-                </DropdownMenuItem>
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel>{profile?.role}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/settings')}>
+                    <Settings />
+                    用户设置
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut />
+                    退出登录
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

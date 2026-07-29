@@ -53,6 +53,12 @@ func (s authSvc) Profile(ctx context.Context, adminID int64) (*admindto.Profile,
 func (s authSvc) EnsureSuperAdmin(ctx context.Context, adminID int64) (*model.Admins, *model.UserGroups, error) {
 	return &model.Admins{ID: uint64(adminID)}, &model.UserGroups{Name: "super_admin"}, nil
 }
+func (s authSvc) UpdateProfile(ctx context.Context, adminID int64, req *admindto.UpdateProfileRequest) (*admindto.Profile, error) {
+	return &admindto.Profile{ID: uint64(adminID)}, nil
+}
+func (s authSvc) ChangePassword(ctx context.Context, adminID int64, req *admindto.ChangePasswordRequest) error {
+	return nil
+}
 
 type adminCategorySvc struct{}
 

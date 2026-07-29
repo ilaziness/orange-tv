@@ -82,6 +82,22 @@ func (f *fakeAdminRepo) ExistsUsername(ctx context.Context, username string) (bo
 	return false, nil
 }
 
+func (f *fakeAdminRepo) UpdateProfile(ctx context.Context, adminID int64, nickname, email, avatar string) error {
+	if a, ok := f.admins[uint64(adminID)]; ok {
+		a.Nickname = nickname
+		a.Email = email
+		a.Avatar = avatar
+	}
+	return nil
+}
+
+func (f *fakeAdminRepo) UpdatePassword(ctx context.Context, adminID int64, hashedPassword string) error {
+	if a, ok := f.admins[uint64(adminID)]; ok {
+		a.Password = hashedPassword
+	}
+	return nil
+}
+
 // Stub implementations for new AdminRepository methods (not used in auth tests)
 func (f *fakeAdminRepo) ListAdmins(ctx context.Context, fl repository.AdminListFilter) ([]model.Admins, int, error) {
 	return nil, 0, nil
