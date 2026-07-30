@@ -51,13 +51,10 @@ export function useVideoEdit() {
   const isNew = !id || id === 'new'
   const [error, setError] = useState('')
   const [categories, setCategories] = useState<Array<Category & { depth: number }>>([])
-  const [directors, setDirectors] = useState<NamedItem[]>([])
-  const [actors, setActors] = useState<NamedItem[]>([])
-  const [tags, setTags] = useState<NamedItem[]>([])
   const [sources, setSources] = useState<PlaySource[]>([])
-  const [selectedDirectors, setSelectedDirectors] = useState<number[]>([])
-  const [selectedActors, setSelectedActors] = useState<number[]>([])
-  const [selectedTags, setSelectedTags] = useState<number[]>([])
+  const [selectedDirectors, setSelectedDirectors] = useState<NamedItem[]>([])
+  const [selectedActors, setSelectedActors] = useState<NamedItem[]>([])
+  const [selectedTags, setSelectedTags] = useState<NamedItem[]>([])
   const [episodes, setEpisodes] = useState<EpisodeDraft[]>([])
   const [form, setForm] = useState(emptyForm)
   const [submitting, setSubmitting] = useState(false)
@@ -67,17 +64,11 @@ export function useVideoEdit() {
     void (async () => {
       setInitLoading(true)
       try {
-        const [cats, dirs, acts, tgs, srcs] = await Promise.all([
+        const [cats, srcs] = await Promise.all([
           adminApi.listCategories(),
-          adminApi.listDirectors(),
-          adminApi.listActors(),
-          adminApi.listTags(),
           adminApi.listPlaySources(),
         ])
         setCategories(flattenCategories(cats.data || []))
-        setDirectors(dirs.data.list || [])
-        setActors(acts.data.list || [])
-        setTags(tgs.data.list || [])
         setSources(srcs.data.list || [])
         if (!isNew && id) {
           const detail = await adminApi.getVideo(Number(id))
@@ -98,9 +89,9 @@ export function useVideoEdit() {
             rating: d.rating ? String(d.rating) : '',
             release_date: d.release_date || '',
           })
-          setSelectedDirectors(d.directors.map((x) => x.id))
-          setSelectedActors(d.actors.map((x) => x.id))
-          setSelectedTags(d.tags.map((x) => x.id))
+          setSelectedDirectors(d.directors || [])
+          setSelectedActors(d.actors || [])
+          setSelectedTags(d.tags || [])
         }
       } catch (err) {
         setError(errorMessage(err))
@@ -109,18 +100,6 @@ export function useVideoEdit() {
       }
     })()
   }, [id, isNew])
-
-  function toggleDirector(id: number) {
-    setSelectedDirectors((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])
-  }
-
-  function toggleTag(id: number) {
-    setSelectedTags((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])
-  }
-
-  function toggleActor(id: number) {
-    setSelectedActors((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id])
-  }
 
   function addEpisode() {
     setEpisodes((prev) => [...prev, { ...emptyEpisode }])
@@ -148,9 +127,9 @@ export function useVideoEdit() {
     }
     const body = {
       ...result.data,
-      director_ids: selectedDirectors,
-      actors: selectedActors.map((id) => ({ actor_id: id })),
-      tag_ids: selectedTags,
+      director_ids: selectedDirectors.map((x) => x.id),
+      actors: selectedActors.map((x) => ({ actor_id: x.id })),
+      tag_ids: selectedTags.map((x) => x.id),
     }
     setSubmitting(true)
     try {
@@ -193,9 +172,6 @@ export function useVideoEdit() {
     initLoading,
     submitting,
     categories,
-    directors,
-    actors,
-    tags,
     sources,
     selectedDirectors,
     selectedActors,
@@ -203,9 +179,9 @@ export function useVideoEdit() {
     episodes,
     form,
     setForm,
-    toggleDirector,
-    toggleActor,
-    toggleTag,
+    setSelectedDirectors,
+    setSelectedActors,
+    setSelectedTags,
     addEpisode,
     updateEpisode,
     removeEpisode,

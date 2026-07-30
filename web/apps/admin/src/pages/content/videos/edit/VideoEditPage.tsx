@@ -2,9 +2,7 @@ import { Link, useNavigate, useParams } from 'react-router'
 import type * as React from 'react'
 import { useVideoEdit } from './useVideoEdit'
 import { VideoBasicForm } from './VideoBasicForm'
-import { DirectorSelector } from './DirectorSelector'
-import { ActorSelector } from './ActorSelector'
-import { TagSelector } from './TagSelector'
+import { NamedItemPicker } from './NamedItemPicker'
 import { EpisodeManager } from './EpisodeManager'
 import { PageContainer } from '@/components/shared'
 import {
@@ -17,6 +15,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
+import { adminApi } from '@/lib/api'
 import { ArrowLeft, Save } from 'lucide-react'
 
 export default function VideoEditPage() {
@@ -28,9 +27,6 @@ export default function VideoEditPage() {
     initLoading,
     submitting,
     categories,
-    directors,
-    actors,
-    tags,
     sources,
     selectedDirectors,
     selectedActors,
@@ -38,9 +34,9 @@ export default function VideoEditPage() {
     episodes,
     form,
     setForm,
-    toggleDirector,
-    toggleActor,
-    toggleTag,
+    setSelectedDirectors,
+    setSelectedActors,
+    setSelectedTags,
     addEpisode,
     updateEpisode,
     removeEpisode,
@@ -79,9 +75,9 @@ export default function VideoEditPage() {
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
               <VideoBasicForm form={form} setForm={setForm} categories={categories} />
-              <DirectorSelector directors={directors} selected={selectedDirectors} onToggle={toggleDirector} />
-              <ActorSelector actors={actors} selected={selectedActors} onToggle={toggleActor} />
-              <TagSelector tags={tags} selected={selectedTags} onToggle={toggleTag} />
+              <NamedItemPicker title="导演" selected={selectedDirectors} onChange={setSelectedDirectors} searchFn={adminApi.listDirectors} />
+              <NamedItemPicker title="演员" selected={selectedActors} onChange={setSelectedActors} searchFn={adminApi.listActors} />
+              <NamedItemPicker title="标签" selected={selectedTags} onChange={setSelectedTags} searchFn={adminApi.listTags} />
               <EpisodeManager episodes={episodes} sources={sources} onAdd={addEpisode} onUpdate={updateEpisode} onRemove={removeEpisode} />
               <div className="flex justify-end">
                 <Button type="submit" disabled={submitting}>

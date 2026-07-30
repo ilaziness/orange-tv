@@ -116,7 +116,7 @@ export const adminApi = {
     withAuth((token) =>
       apiGet<PageData<NamedItem>>(ADMIN_API_BASE, '/directors', {
         token,
-        query: { keyword: query?.keyword ?? '', page: query?.page ?? 1, page_size: query?.page_size ?? 100 },
+        query: { keyword: query?.keyword ?? '', page: query?.page ?? 1, page_size: query?.page_size ?? 20 },
       }),
     ),
   createDirector: (name: string) =>
@@ -129,7 +129,7 @@ export const adminApi = {
     withAuth((token) =>
       apiGet<PageData<NamedItem>>(ADMIN_API_BASE, '/actors', {
         token,
-        query: { keyword: query?.keyword ?? '', page: query?.page ?? 1, page_size: query?.page_size ?? 100 },
+        query: { keyword: query?.keyword ?? '', page: query?.page ?? 1, page_size: query?.page_size ?? 20 },
       }),
     ),
   createActor: (name: string) =>
@@ -142,7 +142,7 @@ export const adminApi = {
     withAuth((token) =>
       apiGet<PageData<NamedItem>>(ADMIN_API_BASE, '/tags', {
         token,
-        query: { keyword: query?.keyword ?? '', page: query?.page ?? 1, page_size: query?.page_size ?? 100 },
+        query: { keyword: query?.keyword ?? '', page: query?.page ?? 1, page_size: query?.page_size ?? 20 },
       }),
     ),
   createTag: (name: string) => withAuth((token) => apiPost<NamedItem>(ADMIN_API_BASE, '/tags', { name }, { token })),
