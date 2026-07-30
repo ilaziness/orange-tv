@@ -14,6 +14,8 @@
 relations:
   # 管理员 - 用户组
   - admins.group_id -> user_groups.id
+  # 管理员登录日志 - 管理员
+  - admin_login_logs.user_id -> admins.id
   # Banner - 影视
   - banners.video_id -> videos.id
   # 分类自关联（父子）

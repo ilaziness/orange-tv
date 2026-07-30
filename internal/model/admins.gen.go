@@ -35,9 +35,10 @@ type Admins struct {
 	CreatedAt   *time.Time `bun:"created_at" json:"created_at"`
 	UpdatedAt   *time.Time `bun:"updated_at" json:"updated_at"`
 	// 软删除时间
-	DeletedAt  *time.Time    `bun:"deleted_at" json:"deleted_at"`
-	UserGroup  *UserGroups   `bun:"rel:belongs-to,join:group_id=id" json:"-"`
-	SystemLogs []*SystemLogs `bun:"rel:has-many,join:id=admin_id" json:"-"`
+	DeletedAt      *time.Time        `bun:"deleted_at" json:"deleted_at"`
+	AdminLoginLogs []*AdminLoginLogs `bun:"rel:has-many,join:id=user_id" json:"-"`
+	UserGroup      *UserGroups       `bun:"rel:belongs-to,join:group_id=id" json:"-"`
+	SystemLogs     []*SystemLogs     `bun:"rel:has-many,join:id=admin_id" json:"-"`
 }
 
 var _ bun.BeforeAppendModelHook = (*Admins)(nil)

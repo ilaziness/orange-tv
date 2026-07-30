@@ -45,7 +45,7 @@ type ManagementService interface {
 	UpdateUser(ctx context.Context, id int64, req *dto.UpdateUserRequest) (*dto.UserItem, error)
 	ResetUserPassword(ctx context.Context, id int64, req *dto.ResetUserPasswordRequest) error
 	DeleteUser(ctx context.Context, id int64) error
-	ListUserLoginLogs(ctx context.Context, userID int64, offset, limit int) ([]model.UserLoginLogs, int, error)
+	ListUserLoginLogs(ctx context.Context, req *dto.UserLoginLogListRequest) ([]dto.UserLoginLogItem, int, error)
 
 	// C1: Banner CRUD
 	ListBanners(ctx context.Context, offset, limit int) ([]dto.BannerItem, int, error)
@@ -644,8 +644,44 @@ func (s *managementService) DeleteUser(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (s *managementService) ListUserLoginLogs(ctx context.Context, userID int64, offset, limit int) ([]model.UserLoginLogs, int, error) {
-	return s.userRepo.ListUserLoginLogs(ctx, userID, offset, limit)
+func (s *managementService) ListUserLoginLogs(ctx context.Context, req *dto.UserLoginLogListRequest) ([]dto.UserLoginLogItem, int, error) {
+	if req == nil {
+		req = &dto.UserLoginLogListRequest{}
+	}
+	start, end, err := parseTimeRange(req.Start, req.End)
+	if err != nil {
+		return nil, 0, errcode.WithMessage(errcode.ParamError, "时间范围无效")
+	}
+	items, total, err := s.userRepo.ListUserLoginLogs(ctx, repository.UserLoginLogFilter{
+		UserID:    req.UserID,
+		Username:  req.Username,
+		Status:    req.Status,
+		StartTime: start,
+		EndTime:   end,
+		Offset:    req.GetOffset(),
+		Limit:     req.GetLimit(),
+	})
+	if err != nil {
+		s.log.Error("management: list user login logs failed", zap.Error(err))
+		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	out := make([]dto.UserLoginLogItem, 0, len(items))
+	for i := range items {
+		out = append(out, toUserLoginLogItem(&items[i]))
+	}
+	return out, total, nil
+}
+
+func toUserLoginLogItem(m *model.UserLoginLogs) dto.UserLoginLogItem {
+	return dto.UserLoginLogItem{
+		ID:        m.ID,
+		UserID:    m.UserID,
+		Username:  m.Username,
+		IP:        m.IP,
+		UserAgent: m.UserAgent,
+		Status:    m.Status,
+		CreatedAt: utils.FormatTimeStr(&m.CreatedAt),
+	}
 }
 
 // ===== C1: Banner CRUD =====

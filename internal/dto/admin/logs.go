@@ -13,10 +13,19 @@ type SystemLogListRequest struct {
 	End   string `form:"end"`
 }
 
-// LoginLogListRequest queries login_logs.
-type LoginLogListRequest struct {
+// AdminLoginLogListRequest queries admin_login_logs.
+type AdminLoginLogListRequest struct {
 	shareddto.PaginationRequest
-	UserType *uint8 `form:"user_type" validate:"omitempty,oneof=1 2"`
+	Username string `form:"username"`
+	Status   *uint8 `form:"status" validate:"omitempty,oneof=1 2"`
+	Start    string `form:"start"`
+	End      string `form:"end"`
+}
+
+// UserLoginLogListRequest queries user_login_logs.
+type UserLoginLogListRequest struct {
+	shareddto.PaginationRequest
+	UserID   *int64 `form:"user_id" validate:"omitempty,min=1"`
 	Username string `form:"username"`
 	Status   *uint8 `form:"status" validate:"omitempty,oneof=1 2"`
 	Start    string `form:"start"`
@@ -35,13 +44,23 @@ type SystemLogItem struct {
 	CreatedAt string `json:"created_at"`
 }
 
-// LoginLogItem is one login log row.
-type LoginLogItem struct {
+// AdminLoginLogItem is one admin login log row.
+type AdminLoginLogItem struct {
 	ID        uint64 `json:"id"`
-	UserType  uint8  `json:"user_type"`
 	UserID    uint64 `json:"user_id"`
 	Username  string `json:"username"`
-	IPAddress string `json:"ip_address"`
+	IP        string `json:"ip"`
+	UserAgent string `json:"user_agent"`
+	Status    uint8  `json:"status"`
+	CreatedAt string `json:"created_at"`
+}
+
+// UserLoginLogItem is one user login log row.
+type UserLoginLogItem struct {
+	ID        uint64 `json:"id"`
+	UserID    uint64 `json:"user_id"`
+	Username  string `json:"username"`
+	IP        string `json:"ip"`
 	UserAgent string `json:"user_agent"`
 	Status    uint8  `json:"status"`
 	CreatedAt string `json:"created_at"`

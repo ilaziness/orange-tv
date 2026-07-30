@@ -5,11 +5,23 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/ilaziness/orange-tv/internal/database"
 	"github.com/ilaziness/orange-tv/internal/model"
 )
+
+// UserLoginLogFilter filters user_login_logs queries.
+type UserLoginLogFilter struct {
+	UserID    *int64
+	Username  string
+	Status    *uint8
+	StartTime *time.Time
+	EndTime   *time.Time
+	Offset    int
+	Limit     int
+}
 
 // UserFeatureRepository manages user favorites, play history, comments, banners and site stats.
 type UserFeatureRepository interface {
@@ -36,7 +48,7 @@ type UserFeatureRepository interface {
 
 	// User login logs
 	CreateUserLoginLog(ctx context.Context, l *model.UserLoginLogs) error
-	ListUserLoginLogs(ctx context.Context, userID int64, offset, limit int) ([]model.UserLoginLogs, int, error)
+	ListUserLoginLogs(ctx context.Context, f UserLoginLogFilter) ([]model.UserLoginLogs, int, error)
 
 	// Banners
 	ListBanners(ctx context.Context, status *uint8) ([]model.Banners, error)
@@ -261,14 +273,33 @@ func (r *userFeatureRepo) CreateUserLoginLog(ctx context.Context, l *model.UserL
 	return nil
 }
 
-func (r *userFeatureRepo) ListUserLoginLogs(ctx context.Context, userID int64, offset, limit int) ([]model.UserLoginLogs, int, error) {
-	items := make([]model.UserLoginLogs, 0, limit)
-	q := r.db.NewSelect().Model(&items).Where("user_id = ?", userID)
+func (r *userFeatureRepo) ListUserLoginLogs(ctx context.Context, f UserLoginLogFilter) ([]model.UserLoginLogs, int, error) {
+	items := make([]model.UserLoginLogs, 0, f.Limit)
+	q := r.db.NewSelect().Model(&items)
+	if f.UserID != nil && *f.UserID > 0 {
+		q = q.Where("user_id = ?", *f.UserID)
+	}
+	if kw := strings.TrimSpace(f.Username); kw != "" {
+		q = q.Where("username LIKE ?", "%"+kw+"%")
+	}
+	if f.Status != nil {
+		q = q.Where("status = ?", *f.Status)
+	}
+	if f.StartTime != nil {
+		q = q.Where("created_at >= ?", *f.StartTime)
+	}
+	if f.EndTime != nil {
+		q = q.Where("created_at <= ?", *f.EndTime)
+	}
 	total, err := q.Count(ctx)
 	if err != nil {
 		return nil, 0, fmt.Errorf("count user login logs: %w", err)
 	}
-	if err := q.Order("id DESC").Offset(offset).Limit(limit).Scan(ctx); err != nil {
+	limit := f.Limit
+	if limit <= 0 {
+		limit = 20
+	}
+	if err := q.Order("id DESC").Offset(f.Offset).Limit(limit).Scan(ctx); err != nil {
 		return nil, 0, fmt.Errorf("list user login logs: %w", err)
 	}
 	return items, total, nil

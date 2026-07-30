@@ -21,8 +21,9 @@ import {
   type AppLogListResponse,
   type BatchUpdateExecuteResult,
   type BatchUpdatePreviewResult,
-  type LoginLogItem,
+  type AdminLoginLogItem,
   type LoginResult,
+  type UserLoginLogItem,
   type NamedItem,
   type PageData,
   type PlayEpisode,
@@ -212,8 +213,8 @@ export const adminApi = {
     withAuth((token) => apiPut<Record<string, unknown>>(ADMIN_API_BASE, '/settings', body, { token })),
   listSystemLogs: (query?: Record<string, string | number | undefined>) =>
     withAuth((token) => apiGet<PageData<SystemLogItem>>(ADMIN_API_BASE, '/system-logs', { token, query })),
-  listLoginLogs: (query?: Record<string, string | number | undefined>) =>
-    withAuth((token) => apiGet<PageData<LoginLogItem>>(ADMIN_API_BASE, '/login-logs', { token, query })),
+  listAdminLoginLogs: (query?: Record<string, string | number | undefined>) =>
+    withAuth((token) => apiGet<PageData<AdminLoginLogItem>>(ADMIN_API_BASE, '/admin-login-logs', { token, query })),
   listAppLogs: (query?: Record<string, string | number | undefined>) =>
     withAuth((token) => apiGet<AppLogListResponse>(ADMIN_API_BASE, '/app-logs', { token, query })),
 
@@ -257,8 +258,8 @@ export const adminApi = {
   deleteUser: (id: number) => withAuth((token) => apiDelete(ADMIN_API_BASE, `/users/${id}`, { token })),
   resetUserPassword: (id: number, password: string) =>
     withAuth((token) => apiPut(ADMIN_API_BASE, `/users/${id}/password`, { password }, { token })),
-  listUserLoginLogs: (id: number, query?: Record<string, string | number | undefined>) =>
-    withAuth((token) => apiGet<PageData<LoginLogItem>>(ADMIN_API_BASE, `/users/${id}/login-logs`, { token, query })),
+  listUserLoginLogs: (query?: Record<string, string | number | undefined>) =>
+    withAuth((token) => apiGet<PageData<UserLoginLogItem>>(ADMIN_API_BASE, '/user-login-logs', { token, query })),
 
   listBanners: (query?: Record<string, string | number | undefined>) =>
     withAuth((token) => apiGet<PageData<BannerItem>>(ADMIN_API_BASE, '/banners', { token, query })),

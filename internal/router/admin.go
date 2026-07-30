@@ -119,7 +119,6 @@ func registerAdminUserRoutes(v1 *gin.RouterGroup, h *Handlers) {
 	v1.PUT("/users/:id", h.AdminMgmt.UpdateUser)
 	v1.DELETE("/users/:id", h.AdminMgmt.DeleteUser)
 	v1.PUT("/users/:id/password", h.AdminMgmt.ResetUserPassword)
-	v1.GET("/users/:id/login-logs", h.AdminMgmt.ListUserLoginLogs)
 }
 
 func registerAdminManagementRoutes(v1 *gin.RouterGroup, h *Handlers) {
@@ -142,7 +141,8 @@ func registerAdminSystemRoutes(v1 *gin.RouterGroup, h *Handlers) {
 	v1.PUT("/settings", h.AdminSettings.Update)
 
 	v1.GET("/system-logs", h.AdminLog.ListSystemLogs)
-	v1.GET("/login-logs", h.AdminLog.ListLoginLogs)
+	v1.GET("/admin-login-logs", h.AdminLog.ListAdminLoginLogs)
+	v1.GET("/user-login-logs", h.AdminMgmt.ListUserLoginLogs)
 	v1.GET("/app-logs", h.AdminLog.ListAppLogs)
 
 	// data management

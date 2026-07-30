@@ -262,20 +262,16 @@ func (h *ManagementHandler) DeleteUser(c *gin.Context) {
 }
 
 func (h *ManagementHandler) ListUserLoginLogs(c *gin.Context) {
-	var uri shareddto.IDURI
-	if !httphandler.BindURI(c, &uri) {
+	var req admindto.UserLoginLogListRequest
+	if !httphandler.BindQuery(c, &req) {
 		return
 	}
-	var page shareddto.PaginationRequest
-	if !httphandler.BindQuery(c, &page) {
-		return
-	}
-	list, total, err := h.svc.ListUserLoginLogs(c.Request.Context(), uri.ID, page.GetOffset(), page.GetPageSize())
+	list, total, err := h.svc.ListUserLoginLogs(c.Request.Context(), &req)
 	if err != nil {
 		response.Error(c, err)
 		return
 	}
-	response.SuccessPage(c, list, int64(total), page.GetPage(), page.GetPageSize(), page.GetTotalPages(total))
+	response.SuccessPage(c, list, int64(total), req.GetPage(), req.GetPageSize(), req.GetTotalPages(total))
 }
 
 // ===== C1: Banner CRUD =====

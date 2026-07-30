@@ -359,12 +359,21 @@ export type SystemLogItem = {
   created_at: string
 }
 
-export type LoginLogItem = {
+export type AdminLoginLogItem = {
   id: number
-  user_type: number
   user_id: number
   username: string
-  ip_address: string
+  ip: string
+  user_agent: string
+  status: number
+  created_at: string
+}
+
+export type UserLoginLogItem = {
+  id: number
+  user_id: number
+  username: string
+  ip: string
   user_agent: string
   status: number
   created_at: string

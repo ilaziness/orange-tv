@@ -22,8 +22,8 @@ func NewRecorder(repo repository.LogRepository, logger *zap.Logger) *Recorder {
 	return &Recorder{repo: repo, logger: logger}
 }
 
-// Login records an admin/user login attempt.
-func (r *Recorder) Login(ctx context.Context, userType uint8, userID int64, username, ip, ua string, success bool) {
+// AdminLogin records an admin login attempt.
+func (r *Recorder) AdminLogin(ctx context.Context, userID int64, username, ip, ua string, success bool) {
 	if r == nil || r.repo == nil {
 		return
 	}
@@ -31,16 +31,15 @@ func (r *Recorder) Login(ctx context.Context, userType uint8, userID int64, user
 	if !success {
 		status = constant.LoginStatusFailed
 	}
-	m := &model.LoginLogs{
-		UserType:  userType,
+	m := &model.AdminLoginLogs{
 		UserID:    uint64(userID),
 		Username:  strings.TrimSpace(username),
-		IPAddress: trimIP(ip),
+		IP:        trimIP(ip),
 		UserAgent: trimUA(ua),
 		Status:    status,
 	}
-	if err := r.repo.CreateLoginLog(ctx, m); err != nil && r.logger != nil {
-		r.logger.Warn("record login log failed", zap.Error(err))
+	if err := r.repo.CreateAdminLoginLog(ctx, m); err != nil && r.logger != nil {
+		r.logger.Warn("record admin login log failed", zap.Error(err))
 	}
 }
 

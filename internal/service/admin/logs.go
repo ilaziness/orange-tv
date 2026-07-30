@@ -16,10 +16,10 @@ import (
 	"go.uber.org/zap"
 )
 
-// LogService queries login / system logs for admin.
+// LogService queries admin login / system logs for admin.
 type LogService interface {
 	ListSystemLogs(ctx context.Context, req *admindto.SystemLogListRequest) ([]admindto.SystemLogItem, int, error)
-	ListLoginLogs(ctx context.Context, req *admindto.LoginLogListRequest) ([]admindto.LoginLogItem, int, error)
+	ListAdminLoginLogs(ctx context.Context, req *admindto.AdminLoginLogListRequest) ([]admindto.AdminLoginLogItem, int, error)
 	ListAppLogs(ctx context.Context, req *admindto.AppLogListRequest) (*admindto.AppLogListResponse, error)
 }
 
@@ -65,16 +65,15 @@ func (s *logService) ListSystemLogs(ctx context.Context, req *admindto.SystemLog
 	return out, total, nil
 }
 
-func (s *logService) ListLoginLogs(ctx context.Context, req *admindto.LoginLogListRequest) ([]admindto.LoginLogItem, int, error) {
+func (s *logService) ListAdminLoginLogs(ctx context.Context, req *admindto.AdminLoginLogListRequest) ([]admindto.AdminLoginLogItem, int, error) {
 	if req == nil {
-		req = &admindto.LoginLogListRequest{}
+		req = &admindto.AdminLoginLogListRequest{}
 	}
 	start, end, err := parseTimeRange(req.Start, req.End)
 	if err != nil {
 		return nil, 0, errcode.WithMessage(errcode.ParamError, "时间范围无效")
 	}
-	items, total, err := s.repo.ListLoginLogs(ctx, repository.LoginLogFilter{
-		UserType:  req.UserType,
+	items, total, err := s.repo.ListAdminLoginLogs(ctx, repository.AdminLoginLogFilter{
 		Username:  req.Username,
 		Status:    req.Status,
 		StartTime: start,
@@ -83,12 +82,12 @@ func (s *logService) ListLoginLogs(ctx context.Context, req *admindto.LoginLogLi
 		Limit:     req.GetLimit(),
 	})
 	if err != nil {
-		s.log.Error("logs: list login logs failed", zap.Error(err))
+		s.log.Error("logs: list admin login logs failed", zap.Error(err))
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	out := make([]admindto.LoginLogItem, 0, len(items))
+	out := make([]admindto.AdminLoginLogItem, 0, len(items))
 	for i := range items {
-		out = append(out, toLoginLogItem(&items[i]))
+		out = append(out, toAdminLoginItem(&items[i]))
 	}
 	return out, total, nil
 }
@@ -272,13 +271,12 @@ func toSystemLogItem(m *model.SystemLogs) admindto.SystemLogItem {
 	}
 }
 
-func toLoginLogItem(m *model.LoginLogs) admindto.LoginLogItem {
-	return admindto.LoginLogItem{
+func toAdminLoginItem(m *model.AdminLoginLogs) admindto.AdminLoginLogItem {
+	return admindto.AdminLoginLogItem{
 		ID:        m.ID,
-		UserType:  m.UserType,
 		UserID:    m.UserID,
 		Username:  m.Username,
-		IPAddress: m.IPAddress,
+		IP:        m.IP,
 		UserAgent: m.UserAgent,
 		Status:    m.Status,
 		CreatedAt: utils.FormatTimeStr(m.CreatedAt),

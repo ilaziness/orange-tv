@@ -879,7 +879,7 @@ PUT    /api/admin/v1/settings          // 更新系统设置
   - 列表/详情查询默认过滤 `deleted_at IS NULL`（业务层约定）。
   - 关联表、日志表、系统配置键值表不做软删除。
 - **适用软删除的表**：`categories`、`videos`、`directors`、`actors`、`tags`、`play_sources`、`play_episodes`、`live_channels`、`collect_sources`、`admins`、`users`、`user_groups`。
-- **不做软删除的表**：`video_directors`、`video_actors`、`video_tags`、`collect_source_categories`、`collect_logs`、`login_logs`、`system_logs`、`system_settings`。
+- **不做软删除的表**：`video_directors`、`video_actors`、`video_tags`、`collect_source_categories`、`collect_logs`、`admin_login_logs`、`user_login_logs`、`system_logs`、`system_settings`。
 - **名称唯一策略**：
   - `directors.name` / `actors.name` / `tags.name`：数据库全局唯一索引（含软删除记录占用名称）。
   - `categories.name` / `play_sources.name`：**不建**数据库唯一索引；业务层仅对未软删除记录做同名冲突校验（软删除后允许复用名称）。
@@ -925,10 +925,10 @@ PUT    /api/admin/v1/settings          // 更新系统设置
 │ (系统设置表) │       │  (管理员表) │       │ (用户组表)  │
 └─────────────┘       └─────────────┘       └─────────────┘
 
-┌─────────────┐       ┌─────────────┐       ┌─────────────┐
-│    Users    │       │  LoginLogs  │       │ SystemLogs  │
-│ (普通用户表)│       │ (登录日志表)│       │ (系统日志表)│
-└─────────────┘       └─────────────┘       └─────────────┘
+┌─────────────┐       ┌──────────────────┐       ┌──────────────────┐       ┌─────────────┐
+│    Users    │       │ UserLoginLogs    │       │ AdminLoginLogs   │       │ SystemLogs  │
+│ (普通用户表)│       │ (用户登录日志表) │       │ (管理员登录日志表)│       │ (系统日志表)│
+└─────────────┘       └──────────────────┘       └──────────────────┘       └─────────────┘
 
 ```
 ### 4.2 影视内容表
@@ -1190,18 +1190,17 @@ CREATE TABLE users (
 
 ```sql
 
--- 登录日志表
-CREATE TABLE login_logs (
+-- 管理员登录日志表
+CREATE TABLE admin_login_logs (
     id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    user_type TINYINT NOT NULL DEFAULT 1 COMMENT '用户类型：1管理员 2普通用户',
-    user_id BIGINT NOT NULL COMMENT '用户ID',
-    username VARCHAR(50) NOT NULL COMMENT '用户名',
-    ip_address VARCHAR(45) NOT NULL DEFAULT '' COMMENT 'IP地址',
+    user_id BIGINT NOT NULL COMMENT '管理员ID',
+    username VARCHAR(50) NOT NULL DEFAULT '' COMMENT '用户名',
+    ip VARCHAR(45) NOT NULL DEFAULT '' COMMENT 'IP地址',
     user_agent VARCHAR(500) NOT NULL DEFAULT '' COMMENT 'User-Agent',
-    status TINYINT NOT NULL DEFAULT 1 COMMENT '登录状态：1成功 2失败',
+    status TINYINT NOT NULL DEFAULT 2 COMMENT '登录状态：1成功 2失败',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_user (user_type, user_id),
-    INDEX idx_created (created_at)
+    INDEX idx_admin_login_logs_user (user_id),
+    INDEX idx_admin_login_logs_created (created_at)
 );
 
 -- 系统日志表
@@ -1421,7 +1420,7 @@ const appleCmsCompatible = {
 - `user_favorites`：用户收藏（user_id/video_id，联合唯一）
 - `user_play_history`：播放历史（user_id/video_id/play_source_id/episode_id/progress/duration/last_played_at）
 - `video_comments`：影视评论（video_id/user_id/parent_id/content/like_count/status）
-- `user_login_logs`：用户登录日志（user_id/username/ip/user_agent/status/message）
+- `user_login_logs`：用户登录日志（user_id/username/ip/user_agent/status）
 
 ### 5.3 JWT Subject 区分
 

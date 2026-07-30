@@ -10,29 +10,29 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// LoginLogs represents the login_logs table.
-type LoginLogs struct {
-	bun.BaseModel `bun:"table:login_logs,alias:ll"`
+// AdminLoginLogs represents the admin_login_logs table.
+type AdminLoginLogs struct {
+	bun.BaseModel `bun:"table:admin_login_logs,alias:all"`
 
 	ID uint64 `bun:"id,pk,autoincrement" json:"id"`
-	// 用户类型：1管理员 2普通用户
-	UserType uint8 `bun:"user_type,notnull" json:"user_type"`
-	// 用户ID
+	// 管理员ID
+	// Relation: user_id -> Admins(ID)
 	UserID uint64 `bun:"user_id,notnull" json:"user_id"`
 	// 用户名
 	Username string `bun:"username,notnull" json:"username"`
 	// IP地址
-	IPAddress string `bun:"ip_address,notnull" json:"ip_address"`
+	IP string `bun:"ip,notnull" json:"ip"`
 	// User-Agent
 	UserAgent string `bun:"user_agent,notnull" json:"user_agent"`
 	// 登录状态：1成功 2失败
 	Status    uint8      `bun:"status,notnull" json:"status"`
 	CreatedAt *time.Time `bun:"created_at" json:"created_at"`
+	Admin     *Admins    `bun:"rel:belongs-to,join:user_id=id" json:"-"`
 }
 
-var _ bun.BeforeAppendModelHook = (*LoginLogs)(nil)
+var _ bun.BeforeAppendModelHook = (*AdminLoginLogs)(nil)
 
-func (m *LoginLogs) BeforeAppendModel(ctx context.Context, query bun.Query) error {
+func (m *AdminLoginLogs) BeforeAppendModel(ctx context.Context, query bun.Query) error {
 	now := time.Now()
 	switch query.(type) {
 	case *bun.InsertQuery:

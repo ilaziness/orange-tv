@@ -221,7 +221,7 @@ type adminLogSvc struct{}
 func (s adminLogSvc) ListSystemLogs(ctx context.Context, req *admindto.SystemLogListRequest) ([]admindto.SystemLogItem, int, error) {
 	return nil, 0, nil
 }
-func (s adminLogSvc) ListLoginLogs(ctx context.Context, req *admindto.LoginLogListRequest) ([]admindto.LoginLogItem, int, error) {
+func (s adminLogSvc) ListAdminLoginLogs(ctx context.Context, req *admindto.AdminLoginLogListRequest) ([]admindto.AdminLoginLogItem, int, error) {
 	return nil, 0, nil
 }
 func (s adminLogSvc) ListAppLogs(ctx context.Context, req *admindto.AppLogListRequest) (*admindto.AppLogListResponse, error) {
@@ -350,7 +350,7 @@ func (s adminMgmtSvc) ResetUserPassword(ctx context.Context, id int64, req *admi
 	return nil
 }
 func (s adminMgmtSvc) DeleteUser(ctx context.Context, id int64) error { return nil }
-func (s adminMgmtSvc) ListUserLoginLogs(ctx context.Context, userID int64, offset, limit int) ([]model.UserLoginLogs, int, error) {
+func (s adminMgmtSvc) ListUserLoginLogs(ctx context.Context, req *admindto.UserLoginLogListRequest) ([]admindto.UserLoginLogItem, int, error) {
 	return nil, 0, nil
 }
 func (s adminMgmtSvc) ListBanners(ctx context.Context, offset, limit int) ([]admindto.BannerItem, int, error) {

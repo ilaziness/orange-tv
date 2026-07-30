@@ -33,11 +33,8 @@ const (
 	CollectLogFailed    uint8 = 3
 )
 
-// Login log user types / status.
+// Login log status (shared by admin_login_logs and user_login_logs).
 const (
-	LoginUserTypeAdmin uint8 = 1
-	LoginUserTypeUser  uint8 = 2
-
 	LoginStatusSuccess uint8 = 1
 	LoginStatusFailed  uint8 = 2
 )

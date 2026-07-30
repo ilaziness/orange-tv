@@ -117,26 +117,25 @@ func (s *userService) Login(ctx context.Context, req *clientdto.LoginRequest, ip
 	if u != nil {
 		userID = int64(u.ID)
 	}
-	recordLog := func(success bool, msg string) {
+	recordLog := func(success bool) {
 		_ = s.userRepo.CreateUserLoginLog(ctx, &model.UserLoginLogs{
 			UserID:    uint64(userID),
 			Username:  username,
 			IP:        ip,
 			UserAgent: ua,
 			Status:    boolToStatus(success),
-			Message:   msg,
 		})
 	}
 	if u == nil {
-		recordLog(false, "用户不存在")
+		recordLog(false)
 		return nil, errcode.InvalidCredentials
 	}
 	if u.Status != constant.StatusEnabled {
-		recordLog(false, "账号已禁用")
+		recordLog(false)
 		return nil, errcode.UserDisabled
 	}
 	if err := crypto.CheckPassword(req.Password, u.Password); err != nil {
-		recordLog(false, "密码错误")
+		recordLog(false)
 		return nil, errcode.InvalidCredentials
 	}
 	token, err := s.jwtMgr.GenerateAccessTokenFor(int64(u.ID), auth.SubjectUser)
@@ -147,7 +146,7 @@ func (s *userService) Login(ctx context.Context, req *clientdto.LoginRequest, ip
 	now := time.Now()
 	u.LastLoginAt = &now
 	_ = s.adminRepo.UpdateUser(ctx, u)
-	recordLog(true, "登录成功")
+	recordLog(true)
 	return &clientdto.LoginResponse{
 		AccessToken: token,
 		TokenType:   "Bearer",
@@ -384,7 +383,7 @@ func toUserProfile(u *model.Users) *clientdto.Profile {
 
 func boolToStatus(b bool) uint8 {
 	if b {
-		return 1
+		return constant.LoginStatusSuccess
 	}
-	return 0
+	return constant.LoginStatusFailed
 }

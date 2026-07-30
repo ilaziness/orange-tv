@@ -33,12 +33,12 @@ func (h *LogHandler) ListSystemLogs(c *gin.Context) {
 	response.SuccessPage(c, items, int64(total), page, size, req.GetTotalPages(total))
 }
 
-func (h *LogHandler) ListLoginLogs(c *gin.Context) {
-	var req admindto.LoginLogListRequest
+func (h *LogHandler) ListAdminLoginLogs(c *gin.Context) {
+	var req admindto.AdminLoginLogListRequest
 	if !httphandler.BindQuery(c, &req) {
 		return
 	}
-	items, total, err := h.svc.ListLoginLogs(c.Request.Context(), &req)
+	items, total, err := h.svc.ListAdminLoginLogs(c.Request.Context(), &req)
 	if err != nil {
 		response.Error(c, err)
 		return

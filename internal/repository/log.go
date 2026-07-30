@@ -10,9 +10,8 @@ import (
 	"github.com/ilaziness/orange-tv/internal/model"
 )
 
-// LoginLogFilter filters login_logs queries.
-type LoginLogFilter struct {
-	UserType  *uint8
+// AdminLoginLogFilter filters admin_login_logs queries.
+type AdminLoginLogFilter struct {
 	Username  string
 	Status    *uint8
 	StartTime *time.Time
@@ -32,10 +31,10 @@ type SystemLogFilter struct {
 	Limit     int
 }
 
-// LogRepository persists login and system logs.
+// LogRepository persists admin login and system logs.
 type LogRepository interface {
-	CreateLoginLog(ctx context.Context, m *model.LoginLogs) error
-	ListLoginLogs(ctx context.Context, f LoginLogFilter) ([]model.LoginLogs, int, error)
+	CreateAdminLoginLog(ctx context.Context, m *model.AdminLoginLogs) error
+	ListAdminLoginLogs(ctx context.Context, f AdminLoginLogFilter) ([]model.AdminLoginLogs, int, error)
 	CreateSystemLog(ctx context.Context, m *model.SystemLogs) error
 	ListSystemLogs(ctx context.Context, f SystemLogFilter) ([]model.SystemLogs, int, error)
 }
@@ -49,20 +48,17 @@ func NewLogRepo(db *database.DB) LogRepository {
 	return &logRepo{db: db}
 }
 
-func (r *logRepo) CreateLoginLog(ctx context.Context, m *model.LoginLogs) error {
+func (r *logRepo) CreateAdminLoginLog(ctx context.Context, m *model.AdminLoginLogs) error {
 	_, err := r.db.NewInsert().Model(m).Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("create login log: %w", err)
+		return fmt.Errorf("create admin login log: %w", err)
 	}
 	return nil
 }
 
-func (r *logRepo) ListLoginLogs(ctx context.Context, f LoginLogFilter) ([]model.LoginLogs, int, error) {
-	var items []model.LoginLogs
+func (r *logRepo) ListAdminLoginLogs(ctx context.Context, f AdminLoginLogFilter) ([]model.AdminLoginLogs, int, error) {
+	var items []model.AdminLoginLogs
 	q := r.db.NewSelect().Model(&items)
-	if f.UserType != nil {
-		q = q.Where("user_type = ?", *f.UserType)
-	}
 	if kw := strings.TrimSpace(f.Username); kw != "" {
 		q = q.Where("username LIKE ?", "%"+kw+"%")
 	}
@@ -77,7 +73,7 @@ func (r *logRepo) ListLoginLogs(ctx context.Context, f LoginLogFilter) ([]model.
 	}
 	total, err := q.Count(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("count login logs: %w", err)
+		return nil, 0, fmt.Errorf("count admin login logs: %w", err)
 	}
 	limit := f.Limit
 	if limit <= 0 {
@@ -85,7 +81,7 @@ func (r *logRepo) ListLoginLogs(ctx context.Context, f LoginLogFilter) ([]model.
 	}
 	err = q.Order("id DESC").Offset(f.Offset).Limit(limit).Scan(ctx)
 	if err != nil {
-		return nil, 0, fmt.Errorf("list login logs: %w", err)
+		return nil, 0, fmt.Errorf("list admin login logs: %w", err)
 	}
 	return items, total, nil
 }

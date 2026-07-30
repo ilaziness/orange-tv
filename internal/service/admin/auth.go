@@ -61,12 +61,12 @@ func (s *authService) Login(ctx context.Context, req *dto.LoginRequest, meta *Lo
 	}
 	recordFail := func(userID int64, username string) {
 		if s.audit != nil {
-			s.audit.Login(ctx, constant.LoginUserTypeAdmin, userID, username, ip, ua, false)
+			s.audit.AdminLogin(ctx, userID, username, ip, ua, false)
 		}
 	}
 	recordOK := func(userID int64, username string) {
 		if s.audit != nil {
-			s.audit.Login(ctx, constant.LoginUserTypeAdmin, userID, username, ip, ua, true)
+			s.audit.AdminLogin(ctx, userID, username, ip, ua, true)
 		}
 	}
 
