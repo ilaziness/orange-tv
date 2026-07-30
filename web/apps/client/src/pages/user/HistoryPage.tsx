@@ -1,25 +1,50 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router'
+import { useEffect, useState, useMemo } from 'react'
 import type { HistoryItem } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
-import { Card } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { HistoryCard } from '@/components/common/HistoryCard'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
 import { AlertCircleIcon } from 'lucide-react'
+
+function dayKey(iso: string): string {
+  // YYYY-MM-DD (local)
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return '未知日期'
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+function dayLabel(key: string): string {
+  if (key === '未知日期') return key
+  const today = new Date()
+  const todayKey = dayKey(today.toISOString())
+  const yesterday = new Date(today)
+  yesterday.setDate(today.getDate() - 1)
+  const yesterdayKey = dayKey(yesterday.toISOString())
+  if (key === todayKey) return '今天'
+  if (key === yesterdayKey) return '昨天'
+  return key
+}
 
 export default function HistoryPage() {
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState('')
+  const [page, setPage] = useState(1)
+  const [total, setTotal] = useState(0)
 
   useEffect(() => {
     void (async () => {
       setLoading(true)
       try {
-        const res = await clientApi.listHistory()
+        const res = await clientApi.listHistory(1)
         setHistory(res.data.list || [])
+        setTotal(res.data.total || 0)
       } catch (err) {
         setError(errorMessage(err))
       } finally {
@@ -27,6 +52,40 @@ export default function HistoryPage() {
       }
     })()
   }, [])
+
+  const loadMore = async () => {
+    const next = page + 1
+    setLoadingMore(true)
+    try {
+      const res = await clientApi.listHistory(next)
+      setHistory((prev) => [...prev, ...(res.data.list || [])])
+      setTotal(res.data.total || total)
+      setPage(next)
+    } catch (err) {
+      setError(errorMessage(err))
+    } finally {
+      setLoadingMore(false)
+    }
+  }
+
+  // 按天分组，最近的天在最上；同一天内按 last_played_at 倒序（越近越左）
+  const groups = useMemo(() => {
+    const map = new Map<string, HistoryItem[]>()
+    for (const h of history) {
+      const k = dayKey(h.last_played_at)
+      const arr = map.get(k) || []
+      arr.push(h)
+      map.set(k, arr)
+    }
+    // 每组内按时间倒序
+    for (const arr of map.values()) {
+      arr.sort((a, b) => new Date(b.last_played_at).getTime() - new Date(a.last_played_at).getTime())
+    }
+    // 组按天倒序（最近在上）
+    return Array.from(map.entries()).sort((a, b) => (a[0] < b[0] ? 1 : -1))
+  }, [history])
+
+  const hasMore = history.length < total
 
   return (
     <div className="flex flex-col gap-6">
@@ -41,15 +100,16 @@ export default function HistoryPage() {
       ) : null}
 
       {loading ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="overflow-hidden">
-              <Skeleton className="aspect-[2/3] w-full rounded-none" />
-              <div className="flex flex-col gap-2 p-3">
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-3 w-1/2" />
+        <div className="flex flex-col gap-6">
+          {Array.from({ length: 2 }).map((_, gi) => (
+            <div key={gi} className="flex flex-col gap-3">
+              <Skeleton className="h-5 w-24" />
+              <div className="flex flex-wrap gap-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="w-28 aspect-[2/3] rounded-md" />
+                ))}
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       ) : !history.length ? (
@@ -60,31 +120,39 @@ export default function HistoryPage() {
           </EmptyHeader>
         </Empty>
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-8">
-          {history.map((h) => (
-            <Link key={h.video_id} to={`/video/${h.video_id}`}>
-              <Card className="overflow-hidden transition-all hover:ring-primary/40">
-                <div
-                  className="aspect-[2/3] w-full bg-cover bg-center"
-                  style={h.cover ? { backgroundImage: `url(${h.cover})` } : undefined}
-                >
-                  {h.progress > 0 ? (
-                    <div className="flex p-2">
-                      <Badge variant="default" className="bg-black/65 text-white">
-                        {Math.round(h.progress)}%
-                      </Badge>
-                    </div>
-                  ) : null}
-                </div>
-                <div className="flex flex-col gap-1 p-3">
-                  <h3 className="truncate text-sm font-medium">{h.title}</h3>
-                  <p className="text-xs text-muted-foreground">
-                    观看于 {new Date(h.last_played_at).toLocaleDateString()}
-                  </p>
-                </div>
-              </Card>
-            </Link>
+        <div className="flex flex-col gap-6">
+          {groups.map(([key, items]) => (
+            <div key={key} className="flex gap-4">
+              {/* 左侧时间轴 */}
+              <div className="flex w-20 shrink-0 flex-col items-end">
+                <span className="text-sm font-medium text-foreground">{dayLabel(key)}</span>
+                <div className="mt-2 w-px flex-1 bg-border" />
+              </div>
+              {/* 右侧卡片横向排列 */}
+              <div className="flex flex-1 flex-wrap gap-3 pb-2">
+                {items.map((h) => (
+                  <HistoryCard
+                    key={`${h.video_id}_${h.episode_id}`}
+                    videoId={h.video_id}
+                    sourceId={h.play_source_id}
+                    episodeId={h.episode_id}
+                    title={h.title}
+                    year={h.year}
+                    cover={h.cover}
+                    progress={h.progress}
+                  />
+                ))}
+              </div>
+            </div>
           ))}
+
+          {hasMore ? (
+            <div className="flex justify-center">
+              <Button variant="outline" size="sm" onClick={() => void loadMore()} disabled={loadingMore}>
+                {loadingMore ? '加载中…' : '加载更多'}
+              </Button>
+            </div>
+          ) : null}
         </div>
       )}
     </div>

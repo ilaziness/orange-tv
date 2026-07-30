@@ -25,8 +25,8 @@ type PlayRepository interface {
 	ListEpisodes(ctx context.Context, videoID, sourceID int64, offset, limit int) ([]model.PlayEpisodes, int, error)
 	ListEpisodesByVideo(ctx context.Context, videoID int64, onlyEnabled bool) ([]model.PlayEpisodes, error)
 	GetEpisode(ctx context.Context, id int64) (*model.PlayEpisodes, error)
-	// GetPlayableEpisode returns a single enabled, non-deleted episode by video/source/episode number.
-	GetPlayableEpisode(ctx context.Context, videoID, sourceID int64, episodeNumber int32) (*model.PlayEpisodes, error)
+	// GetPlayableEpisodeByID returns a single enabled, non-deleted episode by its primary key and video.
+	GetPlayableEpisodeByID(ctx context.Context, videoID, episodeID int64) (*model.PlayEpisodes, error)
 	// GetEpisodeByKey returns an episode including soft-deleted rows (for unique key reuse).
 	GetEpisodeByKey(ctx context.Context, videoID, sourceID int64, episodeNumber int32) (*model.PlayEpisodes, error)
 	ExistsEpisode(ctx context.Context, videoID, sourceID int64, episodeNumber int32, excludeID int64) (bool, error)
@@ -180,12 +180,11 @@ func (r *playRepo) GetEpisode(ctx context.Context, id int64) (*model.PlayEpisode
 	return item, nil
 }
 
-func (r *playRepo) GetPlayableEpisode(ctx context.Context, videoID, sourceID int64, episodeNumber int32) (*model.PlayEpisodes, error) {
+func (r *playRepo) GetPlayableEpisodeByID(ctx context.Context, videoID, episodeID int64) (*model.PlayEpisodes, error) {
 	item := new(model.PlayEpisodes)
 	err := r.db.NewSelect().Model(item).
+		Where("id = ?", episodeID).
 		Where("video_id = ?", videoID).
-		Where("source_id = ?", sourceID).
-		Where("episode_number = ?", episodeNumber).
 		Where("status = ?", 1).
 		Where("deleted_at IS NULL").
 		Scan(ctx)
@@ -193,7 +192,7 @@ func (r *playRepo) GetPlayableEpisode(ctx context.Context, videoID, sourceID int
 		return nil, nil
 	}
 	if err != nil {
-		return nil, fmt.Errorf("get playable episode: %w", err)
+		return nil, fmt.Errorf("get playable episode by id: %w", err)
 	}
 	return item, nil
 }

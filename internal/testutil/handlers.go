@@ -251,7 +251,7 @@ func (s clientVideoSvc) Get(ctx context.Context, id int64) (*clientdto.ClientVid
 func (s clientVideoSvc) Related(ctx context.Context, id int64, limit int) ([]shareddto.VideoListItem, error) {
 	return nil, nil
 }
-func (s clientVideoSvc) GetEpisode(ctx context.Context, videoID, sourceID int64, episodeNumber int32) (*shareddto.PlayEpisodeResponse, error) {
+func (s clientVideoSvc) GetEpisode(ctx context.Context, videoID, episodeID int64) (*shareddto.PlayEpisodeResponse, error) {
 	return &shareddto.PlayEpisodeResponse{}, nil
 }
 
@@ -385,6 +385,9 @@ func (s clientUserSvc) AddFavorite(ctx context.Context, userID, videoID int64) e
 func (s clientUserSvc) RemoveFavorite(ctx context.Context, userID, videoID int64) error { return nil }
 func (s clientUserSvc) ListHistory(ctx context.Context, userID int64, req *clientdto.HistoryListRequest) ([]clientdto.HistoryItem, int, error) {
 	return nil, 0, nil
+}
+func (s clientUserSvc) GetHistory(ctx context.Context, userID, videoID int64) (*clientdto.HistoryItem, error) {
+	return nil, nil
 }
 func (s clientUserSvc) UpsertHistory(ctx context.Context, userID int64, req *clientdto.UpsertHistoryRequest) error {
 	return nil

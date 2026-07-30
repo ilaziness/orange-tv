@@ -111,6 +111,7 @@ type VideoSourceGroup struct {
 
 // VideoDetailEpisode is an episode summary without play URL (client detail API).
 type VideoDetailEpisode struct {
+	ID      uint64 `json:"id"`
 	Episode uint32 `json:"episode"`
 	Title   string `json:"title"`
 }

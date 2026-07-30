@@ -151,10 +151,10 @@ export default function VideoDetailPage() {
                   <div className="flex flex-wrap gap-2">
                     {source.episodes.map((ep) => (
                       <Button
-                        key={ep.episode}
+                        key={ep.id}
                         variant="outline"
                         size="sm"
-                        onClick={() => navigate(`/play/${id}/${source.id}/${ep.episode}`)}
+                        onClick={() => navigate(`/play/${id}/${source.id}/${ep.id}`)}
                       >
                         {ep.title || `第${ep.episode}集`}
                       </Button>

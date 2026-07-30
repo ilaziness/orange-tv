@@ -20,7 +20,7 @@ type VideoService interface {
 	Search(ctx context.Context, req *clientdto.SearchRequest) ([]shareddto.VideoListItem, int, error)
 	Get(ctx context.Context, id int64) (*clientdto.ClientVideoDetailResponse, error)
 	Related(ctx context.Context, id int64, limit int) ([]shareddto.VideoListItem, error)
-	GetEpisode(ctx context.Context, videoID, sourceID int64, episodeNumber int32) (*shareddto.PlayEpisodeResponse, error)
+	GetEpisode(ctx context.Context, videoID, episodeID int64) (*shareddto.PlayEpisodeResponse, error)
 }
 
 type videoService struct {
@@ -282,6 +282,7 @@ func (s *videoService) Get(ctx context.Context, id int64) (*clientdto.ClientVide
 			order = append(order, ep.SourceID)
 		}
 		g.Episodes = append(g.Episodes, shareddto.VideoDetailEpisode{
+			ID:      ep.ID,
 			Episode: ep.EpisodeNumber,
 			Title:   ep.Title,
 		})
@@ -320,7 +321,7 @@ func (s *videoService) Get(ctx context.Context, id int64) (*clientdto.ClientVide
 	}, nil
 }
 
-func (s *videoService) GetEpisode(ctx context.Context, videoID, sourceID int64, episodeNumber int32) (*shareddto.PlayEpisodeResponse, error) {
+func (s *videoService) GetEpisode(ctx context.Context, videoID, episodeID int64) (*shareddto.PlayEpisodeResponse, error) {
 	video, err := s.videoRepo.GetByID(ctx, uint64(videoID))
 	if err != nil {
 		s.log.Error("client video: get episode - get video failed", zap.Int64("video_id", videoID), zap.Error(err))
@@ -329,9 +330,9 @@ func (s *videoService) GetEpisode(ctx context.Context, videoID, sourceID int64, 
 	if video == nil || video.PublishStatus != constant.PublishStatusOnline {
 		return nil, errcode.VideoNotFound
 	}
-	ep, err := s.playRepo.GetPlayableEpisode(ctx, videoID, sourceID, episodeNumber)
+	ep, err := s.playRepo.GetPlayableEpisodeByID(ctx, videoID, episodeID)
 	if err != nil {
-		s.log.Error("client video: get playable episode failed", zap.Int64("video_id", videoID), zap.Int64("source_id", sourceID), zap.Int32("ep", episodeNumber), zap.Error(err))
+		s.log.Error("client video: get playable episode failed", zap.Int64("video_id", videoID), zap.Int64("episode_id", episodeID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if ep == nil {

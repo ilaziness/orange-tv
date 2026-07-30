@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 // Disable the built-in right-click context menu globally
 Artplayer.CONTEXTMENU = false
 
-type PlaylistItem = { episode: number; title: string }
+type PlaylistItem = { episodeId: number; title: string }
 
 type Props = {
   src: string
@@ -17,12 +17,13 @@ type Props = {
   autoplay?: boolean
   videoId?: number
   sourceId?: number
-  episode?: number
+  episodeId?: number
+  resumeAt?: number
   adConfig?: AdSettings | null
   playlist?: PlaylistItem[]
-  currentEpisode?: number
-  onEpisodeChange?: (episode: number) => void
-  onProgress?: (currentTime: number) => void
+  currentEpisodeId?: number
+  onEpisodeChange?: (episodeId: number) => void
+  onProgress?: (currentTime: number, duration: number) => void
 }
 
 function isHlsSrc(format?: string, src?: string): boolean {
@@ -70,7 +71,7 @@ const SVG_NEXT = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" st
 function playlistPlugin(option: {
   playlistRef: React.MutableRefObject<PlaylistItem[] | undefined>
   currentEpRef: React.MutableRefObject<number | undefined>
-  onChangeRef: React.MutableRefObject<((episode: number) => void) | undefined>
+  onChangeRef: React.MutableRefObject<((episodeId: number) => void) | undefined>
   onToggleRef: React.MutableRefObject<() => void>
 }) {
   return (art: Artplayer) => {
@@ -85,19 +86,19 @@ function playlistPlugin(option: {
     function findIndex(): number {
       const items = getItems()
       const cur = getCurrent()
-      return items.findIndex((it) => it.episode === cur)
+      return items.findIndex((it) => it.episodeId === cur)
     }
 
-    function changeTo(episode: number) {
+    function changeTo(episodeId: number) {
       const fn = option.onChangeRef.current
-      if (fn) fn(episode)
+      if (fn) fn(episodeId)
     }
 
     function next() {
       const items = getItems()
       const idx = findIndex()
       if (idx >= 0 && idx < items.length - 1) {
-        changeTo(items[idx + 1].episode)
+        changeTo(items[idx + 1].episodeId)
       }
     }
 
@@ -105,7 +106,7 @@ function playlistPlugin(option: {
       const items = getItems()
       const idx = findIndex()
       if (idx > 0) {
-        changeTo(items[idx - 1].episode)
+        changeTo(items[idx - 1].episodeId)
       }
     }
 
@@ -152,18 +153,18 @@ function playlistPlugin(option: {
   }
 }
 
-export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sourceId, episode, adConfig, playlist, currentEpisode, onEpisodeChange, onProgress }: Props) {
+export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sourceId, episodeId, resumeAt, adConfig, playlist, currentEpisodeId, onEpisodeChange, onProgress }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [playlistVisible, setPlaylistVisible] = useState(true)
 
   // Refs for playlist data — updated every render, read inside plugin closures
   const playlistRef = useRef<PlaylistItem[] | undefined>(playlist)
-  const currentEpRef = useRef<number | undefined>(currentEpisode)
-  const onChangeRef = useRef<((episode: number) => void) | undefined>(onEpisodeChange)
+  const currentEpRef = useRef<number | undefined>(currentEpisodeId)
+  const onChangeRef = useRef<((episodeId: number) => void) | undefined>(onEpisodeChange)
   const onToggleRef = useRef<() => void>(() => {})
-  const onProgressRef = useRef<((currentTime: number) => void) | undefined>(onProgress)
+  const onProgressRef = useRef<((currentTime: number, duration: number) => void) | undefined>(onProgress)
   playlistRef.current = playlist
-  currentEpRef.current = currentEpisode
+  currentEpRef.current = currentEpisodeId
   onChangeRef.current = onEpisodeChange
   onToggleRef.current = () => setPlaylistVisible(v => !v)
   onProgressRef.current = onProgress
@@ -184,7 +185,7 @@ export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sou
     for (const inst of Artplayer.instances) {
       if (inst.template?.$container === el) {
         try { inst.muted = true } catch { /* ignore */ }
-        try { inst.video && (inst.video.muted = true) } catch { /* ignore */ }
+        try { if (inst.video) inst.video.muted = true } catch { /* ignore */ }
         try { inst.pause() } catch { /* ignore */ }
         try { inst.destroy(true) } catch { /* ignore */ }
       }
@@ -203,8 +204,8 @@ export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sou
       layers.push(buildAdLayer(ad) as NonNullable<Artplayer['option']['layers']>[number])
     }
 
-    const playbackId = videoId != null && sourceId != null && episode != null
-      ? `video_${videoId}_source_${sourceId}_ep_${episode}`
+    const playbackId = videoId != null && sourceId != null && episodeId != null
+      ? `video_${videoId}_source_${sourceId}_ep_${episodeId}`
       : undefined
 
     const art = new Artplayer({
@@ -224,7 +225,7 @@ export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sou
       fullscreenWeb: true,
       setting: false,
       hotkey: true,
-      autoPlayback: !!playbackId,
+      autoPlayback: !!playbackId && !resumeAt,
       id: playbackId,
       layers,
       customType: {
@@ -288,6 +289,19 @@ export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sou
       })
     }
 
+    // Resume playback from a saved position (e.g. remote history) — once only
+    if (resumeAt && resumeAt > 0) {
+      const seekToResume = () => {
+        try {
+          if (art.duration && art.duration > resumeAt) {
+            art.currentTime = resumeAt
+          }
+        } catch { /* ignore */ }
+      }
+      art.once('video:loadedmetadata', seekToResume)
+      art.once('video:canplay', seekToResume)
+    }
+
     // Progress callback with 3-second throttle — only record after 10 seconds
     let lastSavedTime = 0
     art.on('video:timeupdate', () => {
@@ -297,7 +311,8 @@ export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sou
       if (!fn) return
       if (t > 10 && t - lastSavedTime >= 3) {
         lastSavedTime = t
-        fn(Math.floor(t))
+        const d = typeof art.duration === 'number' ? art.duration : 0
+        fn(Math.floor(t), Math.floor(d))
       }
     })
 
@@ -311,7 +326,7 @@ export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sou
 
       // Mute first to immediately stop audio, even if later steps fail
       try { art.muted = true } catch { /* ignore */ }
-      try { art.video && (art.video.muted = true) } catch { /* ignore */ }
+      try { if (art.video) art.video.muted = true } catch { /* ignore */ }
 
       if (hlsRef.current) {
         hlsRef.current.destroy()
@@ -330,7 +345,10 @@ export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sou
       // Final safety net: clear any remaining DOM
       el.innerHTML = ''
     }
-  }, [src, format, poster, autoplay, adConfigKey, videoId, sourceId, episode])
+    // playlist/onEpisodeChange are read via refs (playlistRef/onChangeRef) updated every render,
+    // so they are intentionally omitted from the dependency array.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [src, format, poster, autoplay, adConfigKey, videoId, sourceId, episodeId, resumeAt])
 
   // Resize ArtPlayer when sidebar toggles (container width changes)
   useEffect(() => {
@@ -369,16 +387,16 @@ export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sou
             <div className="flex flex-col gap-0.5">
               {playlist!.map((it) => (
                 <div
-                  key={it.episode}
+                  key={it.episodeId}
                   className={cn(
                     'cursor-pointer truncate rounded px-3.5 py-2 text-xs transition-colors',
-                    it.episode === currentEpisode
+                    it.episodeId === currentEpisodeId
                       ? 'bg-white/15 text-white'
                       : 'text-white/70 hover:bg-white/10 hover:text-white',
                   )}
-                  onClick={() => onEpisodeChange?.(it.episode)}
+                  onClick={() => onEpisodeChange?.(it.episodeId)}
                 >
-                  {it.title || `第${it.episode}集`}
+                  {it.title || `第${it.episodeId}集`}
                 </div>
               ))}
             </div>

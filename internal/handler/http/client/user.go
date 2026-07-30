@@ -138,6 +138,33 @@ func (h *UserHandler) ListHistory(c *gin.Context) {
 	response.SuccessPage(c, list, int64(total), req.GetPage(), req.GetPageSize(), req.GetTotalPages(total))
 }
 
+// GetHistory returns the current user's play history for a single video.
+// @Summary 获取单条播放历史
+// @Description 根据影视ID获取当前用户的播放历史（用于恢复播放进度）
+// @Tags client-user
+// @Accept json
+// @Produce json
+// @Param id path int true "影视ID"
+// @Success 200 {object} response.Response{data=clientdto.HistoryItem}
+// @Router /api/client/v1/history/{id} [get]
+func (h *UserHandler) GetHistory(c *gin.Context) {
+	userID := currentUserID(c)
+	if userID <= 0 {
+		response.Error(c, errcode.AuthFailed)
+		return
+	}
+	var uri shareddto.IDURI
+	if !httphandler.BindURI(c, &uri) {
+		return
+	}
+	item, err := h.svc.GetHistory(c.Request.Context(), userID, uri.ID)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	response.Success(c, item)
+}
+
 func (h *UserHandler) UpsertHistory(c *gin.Context) {
 	userID := currentUserID(c)
 	if userID <= 0 {

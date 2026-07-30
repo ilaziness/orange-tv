@@ -16,7 +16,7 @@ func registerClientContentRoutes(v1 *gin.RouterGroup, h *Handlers) {
 	v1.GET("/categories", h.ClientCategory.List)
 	v1.GET("/videos", h.ClientVideo.List)
 	v1.GET("/videos/:id", h.ClientVideo.Get)
-	v1.GET("/videos/:id/episodes/:source_id/:episode_number", h.ClientVideo.GetEpisode)
+	v1.GET("/videos/:id/episodes/:source_id/:episode_id", h.ClientVideo.GetEpisode)
 	v1.GET("/search", h.ClientVideo.Search)
 	v1.GET("/videos/:id/related", h.ClientVideo.Related)
 
@@ -39,6 +39,7 @@ func registerClientContentRoutes(v1 *gin.RouterGroup, h *Handlers) {
 
 	// Play history (C6) — requires JWT
 	v1.GET("/history", h.ClientUser.ListHistory)
+	v1.GET("/history/:id", h.ClientUser.GetHistory)
 	v1.POST("/history", h.ClientUser.UpsertHistory)
 	v1.DELETE("/history/:id", h.ClientUser.DeleteHistory)
 	v1.DELETE("/history", h.ClientUser.ClearHistory)

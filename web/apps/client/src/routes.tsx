@@ -36,7 +36,7 @@ export function AppRoutes() {
         <Route path="/" element={<Lazy><HomePage /></Lazy>} />
         <Route path="/videos" element={<Lazy><VideosPage /></Lazy>} />
         <Route path="/video/:id" element={<Lazy><VideoDetailPage /></Lazy>} />
-        <Route path="/play/:id/:sourceId/:episodeNumber" element={<Lazy><PlayPage /></Lazy>} />
+        <Route path="/play/:id/:sourceId/:episodeId" element={<Lazy><PlayPage /></Lazy>} />
         <Route path="/live" element={<Lazy><LivePage /></Lazy>} />
         <Route path="/login" element={<Lazy><LoginPage /></Lazy>} />
         <Route path="/register" element={<Lazy><RegisterPage /></Lazy>} />

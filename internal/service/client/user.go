@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"strconv"
 	"strings"
 	"time"
 
@@ -29,6 +30,7 @@ type UserService interface {
 
 	// C6: History
 	ListHistory(ctx context.Context, userID int64, req *clientdto.HistoryListRequest) ([]clientdto.HistoryItem, int, error)
+	GetHistory(ctx context.Context, userID, videoID int64) (*clientdto.HistoryItem, error)
 	UpsertHistory(ctx context.Context, userID int64, req *clientdto.UpsertHistoryRequest) error
 	DeleteHistory(ctx context.Context, userID, videoID int64) error
 	ClearHistory(ctx context.Context, userID int64) error
@@ -250,10 +252,41 @@ func (s *userService) ListHistory(ctx context.Context, userID int64, req *client
 		if v != nil {
 			item.Title = v.Title
 			item.Cover = v.CoverImage
+			if v.Year > 0 {
+				item.Year = strconv.FormatUint(uint64(v.Year), 10)
+			}
 		}
 		out = append(out, item)
 	}
 	return out, total, nil
+}
+
+func (s *userService) GetHistory(ctx context.Context, userID, videoID int64) (*clientdto.HistoryItem, error) {
+	h, err := s.userRepo.GetHistory(ctx, userID, videoID)
+	if err != nil {
+		s.log.Error("client user: get history failed", zap.Int64("user_id", userID), zap.Int64("video_id", videoID), zap.Error(err))
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	if h == nil {
+		return nil, errcode.HistoryNotFound
+	}
+	item := clientdto.HistoryItem{
+		VideoID:      h.VideoID,
+		PlaySourceID: h.PlaySourceID,
+		EpisodeID:    h.EpisodeID,
+		Progress:     h.Progress,
+		Duration:     h.Duration,
+		LastPlayedAt: h.LastPlayedAt.Format(time.RFC3339),
+	}
+	v, _ := s.videoRepo.GetByID(ctx, h.VideoID)
+	if v != nil {
+		item.Title = v.Title
+		item.Cover = v.CoverImage
+		if v.Year > 0 {
+			item.Year = strconv.FormatUint(uint64(v.Year), 10)
+		}
+	}
+	return &item, nil
 }
 
 func (s *userService) UpsertHistory(ctx context.Context, userID int64, req *clientdto.UpsertHistoryRequest) error {

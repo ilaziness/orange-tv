@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link, Outlet, useNavigate } from 'react-router'
 import type { Category } from '@orange-tv/shared'
 import { useAuth } from '@/hooks/useAuth'
 import { useSite } from '@/hooks/useSite'
 import { clientApi } from '@/lib/api'
 import { getHistory, formatTime, type PlaybackHistoryItem } from '@/lib/playbackHistory'
+import type { HistoryItem } from '@orange-tv/shared'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { Button } from '@/components/ui/button'
 import { InputGroup, InputGroupInput, InputGroupAddon } from '@/components/ui/input-group'
@@ -44,6 +45,31 @@ import {
   FilmIcon,
 } from 'lucide-react'
 
+// 统一展示类型：本地与远端历史映射为同一结构
+type HistoryEntry = {
+  videoId: number
+  sourceId: number
+  episodeId: number
+  progress: number
+  title: string
+  updatedAt: number
+}
+
+function fromLocal(it: PlaybackHistoryItem): HistoryEntry {
+  return { videoId: it.videoId, sourceId: it.sourceId, episodeId: it.episodeId, progress: it.progress, title: it.title, updatedAt: it.updatedAt }
+}
+
+function fromRemote(it: HistoryItem): HistoryEntry {
+  return {
+    videoId: it.video_id,
+    sourceId: it.play_source_id,
+    episodeId: it.episode_id,
+    progress: it.progress,
+    title: it.title,
+    updatedAt: new Date(it.last_played_at).getTime(),
+  }
+}
+
 export function ClientLayout() {
   const [keyword, setKeyword] = useState('')
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -51,9 +77,26 @@ export function ClientLayout() {
   const [categoriesLoading, setCategoriesLoading] = useState(false)
   const [categoryOpen, setCategoryOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
-  const [historyList, setHistoryList] = useState<PlaybackHistoryItem[]>([])
+  const [historyList, setHistoryList] = useState<HistoryEntry[]>([])
   const navigate = useNavigate()
   const { profile, logout } = useAuth()
+
+  // 加载历史：已登录拉远端最近若干条；未登录用本地 localStorage
+  const loadHistory = useCallback(() => {
+    if (profile) {
+      clientApi
+        .listHistory(1)
+        .then((res) => {
+          setHistoryList((res.data.list || []).slice(0, 8).map(fromRemote))
+        })
+        .catch(() => {
+          // 远端失败时回退本地，保证弹窗不空
+          setHistoryList(getHistory().slice(0, 8).map(fromLocal))
+        })
+    } else {
+      setHistoryList(getHistory().slice(0, 8).map(fromLocal))
+    }
+  }, [profile])
   const { site } = useSite()
 
   useEffect(() => {
@@ -187,7 +230,7 @@ export function ClientLayout() {
   const renderHistoryPopover = () => (
     <Popover open={historyOpen} onOpenChange={(open) => {
       setHistoryOpen(open)
-      if (open) setHistoryList(getHistory())
+      if (open) loadHistory()
     }}>
       <PopoverTrigger
         render={
@@ -207,18 +250,29 @@ export function ClientLayout() {
           <div className="flex flex-col gap-0.5">
             {historyList.map((item) => (
               <button
-                key={`${item.videoId}_${item.sourceId}_${item.episode}`}
+                key={`${item.videoId}_${item.sourceId}_${item.episodeId}`}
                 type="button"
                 className="flex items-center justify-between gap-2 rounded px-3 py-2 text-left text-sm transition-colors hover:bg-accent"
                 onClick={() => {
                   setHistoryOpen(false)
-                  navigate(`/play/${item.videoId}/${item.sourceId}/${item.episode}`)
+                  navigate(`/play/${item.videoId}/${item.sourceId}/${item.episodeId}`)
                 }}
               >
                 <span className="truncate">{item.title}</span>
                 <span className="shrink-0 text-xs text-muted-foreground">{formatTime(item.progress)}</span>
               </button>
             ))}
+            <Separator className="my-1" />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full justify-center"
+              nativeButton={false}
+              render={<Link to={profile ? '/history' : '/login'} />}
+              onClick={() => setHistoryOpen(false)}
+            >
+              查看更多
+            </Button>
           </div>
         )}
       </PopoverContent>
@@ -302,7 +356,7 @@ export function ClientLayout() {
 
             <Sheet open={mobileOpen} onOpenChange={(open) => {
               setMobileOpen(open)
-              if (open) setHistoryList(getHistory())
+              if (open) loadHistory()
             }}>
               <SheetTrigger
                 render={
@@ -321,20 +375,32 @@ export function ClientLayout() {
                   <Separator />
                   <div className="flex flex-col gap-2">
                     {historyList.length > 0 ? (
-                      historyList.map((item) => (
+                      <>
+                        {historyList.map((item) => (
+                          <Button
+                            key={`${item.videoId}_${item.sourceId}_${item.episodeId}`}
+                            variant="ghost"
+                            className="justify-between"
+                            onClick={() => {
+                              setMobileOpen(false)
+                              navigate(`/play/${item.videoId}/${item.sourceId}/${item.episodeId}`)
+                            }}
+                          >
+                            <span className="truncate">{item.title}</span>
+                            <span className="shrink-0 text-xs text-muted-foreground">{formatTime(item.progress)}</span>
+                          </Button>
+                        ))}
                         <Button
-                          key={`${item.videoId}_${item.sourceId}_${item.episode}`}
-                          variant="ghost"
-                          className="justify-between"
-                          onClick={() => {
-                            setMobileOpen(false)
-                            navigate(`/play/${item.videoId}/${item.sourceId}/${item.episode}`)
-                          }}
+                          variant="outline"
+                          size="sm"
+                          className="w-full justify-center"
+                          nativeButton={false}
+                          render={<Link to={profile ? '/history' : '/login'} />}
+                          onClick={() => setMobileOpen(false)}
                         >
-                          <span className="truncate">{item.title}</span>
-                          <span className="shrink-0 text-xs text-muted-foreground">{formatTime(item.progress)}</span>
+                          查看更多
                         </Button>
-                      ))
+                      </>
                     ) : (
                       <p className="px-2 py-1 text-sm text-muted-foreground">暂无播放历史</p>
                     )}

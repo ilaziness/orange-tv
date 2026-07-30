@@ -40,8 +40,8 @@ export const clientApi = {
   videos: (query?: Record<string, string | number | undefined>) =>
     apiGet<PageData<VideoListItem>>(CLIENT_API_BASE, '/videos', { query }),
   video: (id: number) => apiGet<ClientVideoDetail>(CLIENT_API_BASE, `/videos/${id}`),
-  playEpisode: (id: number, sourceId: number, episode: number) =>
-    apiGet<PlayEpisodeResponse>(CLIENT_API_BASE, `/videos/${id}/episodes/${sourceId}/${episode}`),
+  playEpisode: (id: number, sourceId: number, episodeId: number) =>
+    apiGet<PlayEpisodeResponse>(CLIENT_API_BASE, `/videos/${id}/episodes/${sourceId}/${episodeId}`),
   related: (id: number, limit = 12) =>
     apiGet<VideoListItem[]>(CLIENT_API_BASE, `/videos/${id}/related`, { query: { limit } }),
   search: (keyword: string, page = 1, extra?: Record<string, string | number | undefined>) =>
@@ -75,6 +75,8 @@ export const clientApi = {
   // History (C6)
   listHistory: (page = 1) =>
     withAuth((token) => apiGet<PageData<HistoryItem>>(CLIENT_API_BASE, '/history', { token, query: { page, page_size: 20 } })),
+  getHistory: (videoId: number) =>
+    withAuth((token) => apiGet<HistoryItem>(CLIENT_API_BASE, `/history/${videoId}`, { token })),
   upsertHistory: (body: Record<string, unknown>) =>
     withAuth((token) => apiPost(CLIENT_API_BASE, '/history', body, { token })),
   deleteHistory: (videoId: number) =>

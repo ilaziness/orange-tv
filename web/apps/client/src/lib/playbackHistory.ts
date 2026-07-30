@@ -1,7 +1,7 @@
 export interface PlaybackHistoryItem {
   videoId: number
   sourceId: number
-  episode: number
+  episodeId: number
   progress: number
   title: string
   updatedAt: number
@@ -25,7 +25,7 @@ export function getHistory(): PlaybackHistoryItem[] {
 export function saveHistory(item: PlaybackHistoryItem): void {
   try {
     const list = getHistory()
-    const key = (it: PlaybackHistoryItem) => `${it.videoId}_${it.sourceId}_${it.episode}`
+    const key = (it: PlaybackHistoryItem) => `${it.videoId}_${it.sourceId}_${it.episodeId}`
     const filtered = list.filter((it) => key(it) !== key(item))
     filtered.unshift(item)
     const trimmed = filtered.slice(0, MAX_ITEMS)

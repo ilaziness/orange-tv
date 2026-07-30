@@ -63,6 +63,7 @@ type HistoryItem struct {
 	VideoID      uint64 `json:"video_id"`
 	Title        string `json:"title"`
 	Cover        string `json:"cover"`
+	Year         string `json:"year"`
 	PlaySourceID uint64 `json:"play_source_id"`
 	EpisodeID    uint64 `json:"episode_id"`
 	Progress     uint32 `json:"progress"`

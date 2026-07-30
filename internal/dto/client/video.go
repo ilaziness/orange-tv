@@ -30,9 +30,9 @@ type RelatedRequest struct {
 
 // EpisodeURI captures route params for single-episode play URL.
 type EpisodeURI struct {
-	ID            int64 `uri:"id" binding:"required,gt=0"`
-	SourceID      int64 `uri:"source_id" binding:"required,gt=0"`
-	EpisodeNumber int32 `uri:"episode_number" binding:"required,gt=0"`
+	ID        int64 `uri:"id" binding:"required,gt=0"`
+	SourceID  int64 `uri:"source_id" binding:"required,gt=0"`
+	EpisodeID int64 `uri:"episode_id" binding:"required,gt=0"`
 }
 
 // ClientVideoDetailResponse is the client video detail payload (no play URLs).

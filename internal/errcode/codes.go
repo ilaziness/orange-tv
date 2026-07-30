@@ -26,6 +26,7 @@ var (
 	UserGroupNameDup   = &Code{2000021, "用户组名称已存在", 409, nil}
 	FavoriteExists     = &Code{2000030, "已收藏该影视", 409, nil}
 	FavoriteNotFound   = &Code{2000031, "未收藏该影视", 404, nil}
+	HistoryNotFound    = &Code{2000032, "播放历史不存在", 404, nil}
 	CommentNotFound    = &Code{2000040, "评论不存在", 404, nil}
 	CommentTooLong     = &Code{2000041, "评论内容过长", 400, nil}
 	BannerNotFound     = &Code{2000050, "Banner不存在", 404, nil}

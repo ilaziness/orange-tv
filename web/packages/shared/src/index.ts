@@ -179,6 +179,7 @@ export type VideoSourceGroup = {
 }
 
 export type VideoDetailEpisode = {
+  id: number
   episode: number
   title: string
 }
@@ -486,6 +487,7 @@ export type HistoryItem = {
   video_id: number
   title: string
   cover: string
+  year: string
   play_source_id: number
   episode_id: number
   progress: number
