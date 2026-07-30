@@ -38,6 +38,7 @@ API 路径：用户端 `/api/client/v1`、`/api/client/v2`，管理端 `/api/adm
 11. **外部输入边界验证**：编写业务逻辑时必须验证外部输入（HTTP 参数/Body、TCP/UDP payload、数据库/缓存读取、外部接口返回等）的边界条件（空值、范围、长度、枚举、越界等）；无效输入应返回对应 errcode，禁止未经验证的数据进入后续处理
 12. `internal\service`下面的`admin`，`client`， `open`对应三端不能互相`import`逻辑，如果是需要多端通用使用的写到包`internal\service`下面，然后再具体端的包里面import调用即可
 13. api接口需要在`handler`函数添加`swagger`注释，方便生成api文档
+14. 更新新增数据不需要填充`updated_at`和`created_at`通过模型操作会按需自动加上这两个字段
 
 ## 按需查阅
 

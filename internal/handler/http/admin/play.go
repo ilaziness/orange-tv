@@ -128,3 +128,24 @@ func (h *PlayHandler) DeleteEpisode(c *gin.Context) {
 	}
 	response.Success(c, nil)
 }
+
+// BatchUpdateEpisodeStatus 批量更新某影视下指定播放源的全部剧集上下架状态。
+// @Summary 批量更新剧集上下架状态
+// @Tags 播放源管理
+// @Accept json
+// @Produce json
+// @Param body body admindto.BatchUpdateEpisodeStatusRequest true "批量更新剧集状态请求"
+// @Success 200 {object} response.Response{data=admindto.BatchUpdateEpisodeStatusResponse}
+// @Router /api/admin/v1/play-episodes/batch-status [post]
+func (h *PlayHandler) BatchUpdateEpisodeStatus(c *gin.Context) {
+	var req admindto.BatchUpdateEpisodeStatusRequest
+	if !httphandler.BindAndValidate(c, &req) {
+		return
+	}
+	resp, err := h.svc.BatchUpdateEpisodeStatus(c.Request.Context(), &req)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	response.Success(c, resp)
+}

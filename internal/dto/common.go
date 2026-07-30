@@ -93,11 +93,13 @@ type VideoListItem struct {
 
 // VideoSourceEpisode is one playable episode under a source (admin/open API, includes URL).
 type VideoSourceEpisode struct {
+	ID      uint64 `json:"id"`
 	Episode uint32 `json:"episode"`
 	Title   string `json:"title"`
 	URL     string `json:"url"`
 	Quality string `json:"quality"`
 	Format  string `json:"format"`
+	Status  uint8  `json:"status"`
 }
 
 // VideoSourceGroup groups episodes by play source (admin/open API, includes URL).

@@ -163,11 +163,13 @@ export type VideoListItem = {
 }
 
 export type VideoSourceEpisode = {
+  id: number
   episode: number
   title: string
   url: string
   quality: string
   format: string
+  status: number
 }
 
 export type VideoSourceGroup = {

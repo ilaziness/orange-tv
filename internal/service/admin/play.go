@@ -24,6 +24,7 @@ type PlayService interface {
 	CreateEpisode(ctx context.Context, req *dto.CreatePlayEpisodeRequest) (*dto.PlayEpisodeResponse, error)
 	UpdateEpisode(ctx context.Context, id int64, req *dto.UpdatePlayEpisodeRequest) (*dto.PlayEpisodeResponse, error)
 	DeleteEpisode(ctx context.Context, id int64) error
+	BatchUpdateEpisodeStatus(ctx context.Context, req *dto.BatchUpdateEpisodeStatusRequest) (*dto.BatchUpdateEpisodeStatusResponse, error)
 }
 
 type playService struct {
@@ -296,6 +297,23 @@ func (s *playService) DeleteEpisode(ctx context.Context, id int64) error {
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return nil
+}
+
+// BatchUpdateEpisodeStatus 批量更新某影视下指定播放源的全部剧集状态。
+func (s *playService) BatchUpdateEpisodeStatus(ctx context.Context, req *dto.BatchUpdateEpisodeStatusRequest) (*dto.BatchUpdateEpisodeStatusResponse, error) {
+	if err := s.validateEpisodeRefs(ctx, int64(req.VideoID), int64(req.SourceID)); err != nil {
+		return nil, err
+	}
+	n, err := s.playRepo.UpdateEpisodeStatusBySource(ctx, int64(req.VideoID), int64(req.SourceID), req.Status)
+	if err != nil {
+		s.log.Error("play: batch update episode status failed",
+			zap.Uint64("video_id", req.VideoID),
+			zap.Uint64("source_id", req.SourceID),
+			zap.Uint8("status", req.Status),
+			zap.Error(err))
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	return &dto.BatchUpdateEpisodeStatusResponse{Affected: n}, nil
 }
 
 func (s *playService) validateEpisodeRefs(ctx context.Context, videoID, sourceID int64) error {

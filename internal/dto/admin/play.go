@@ -70,3 +70,15 @@ type PlayEpisodeResponse struct {
 	SortOrder     uint32 `json:"sort_order"`
 	Status        uint8  `json:"status"`
 }
+
+// BatchUpdateEpisodeStatusRequest 批量更新某影视下指定播放源的全部剧集状态。
+type BatchUpdateEpisodeStatusRequest struct {
+	VideoID  uint64 `json:"video_id" validate:"required,min=1"`
+	SourceID uint64 `json:"source_id" validate:"required,min=1"`
+	Status   uint8  `json:"status" validate:"required,oneof=0 1"`
+}
+
+// BatchUpdateEpisodeStatusResponse 批量更新剧集状态响应。
+type BatchUpdateEpisodeStatusResponse struct {
+	Affected int `json:"affected"`
+}

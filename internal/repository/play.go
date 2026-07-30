@@ -37,6 +37,8 @@ type PlayRepository interface {
 	// HardDeleteEpisodeByKey permanently removes soft-deleted rows for the unique key.
 	HardDeleteEpisodeByKey(ctx context.Context, videoID, sourceID int64, episodeNumber int32, excludeID int64) error
 	SoftDeleteEpisode(ctx context.Context, id int64) error
+	// UpdateEpisodeStatusBySource 批量更新某影视下指定播放源的全部剧集状态。
+	UpdateEpisodeStatusBySource(ctx context.Context, videoID, sourceID int64, status uint8) (int, error)
 	WithTx(tx bun.Tx) PlayRepository
 }
 
@@ -296,4 +298,21 @@ func (r *playRepo) SoftDeleteEpisode(ctx context.Context, id int64) error {
 		return fmt.Errorf("delete play episode: %w", err)
 	}
 	return nil
+}
+
+// UpdateEpisodeStatusBySource 批量更新某影视下指定播放源的全部剧集状态。
+func (r *playRepo) UpdateEpisodeStatusBySource(ctx context.Context, videoID, sourceID int64, status uint8) (int, error) {
+	now := time.Now()
+	res, err := r.db.NewUpdate().Model((*model.PlayEpisodes)(nil)).
+		Set("status = ?", status).
+		Set("updated_at = ?", now).
+		Where("video_id = ?", videoID).
+		Where("source_id = ?", sourceID).
+		Where("deleted_at IS NULL").
+		Exec(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("update episode status by source: %w", err)
+	}
+	n, _ := res.RowsAffected()
+	return int(n), nil
 }

@@ -54,6 +54,7 @@ func registerAdminContentRoutes(v1 *gin.RouterGroup, h *Handlers) {
 	v1.DELETE("/play-sources/:id", h.AdminPlay.DeleteSource)
 	v1.GET("/play-episodes", h.AdminPlay.ListEpisodes)
 	v1.POST("/play-episodes", h.AdminPlay.CreateEpisode)
+	v1.POST("/play-episodes/batch-status", h.AdminPlay.BatchUpdateEpisodeStatus)
 	v1.PUT("/play-episodes/:id", h.AdminPlay.UpdateEpisode)
 	v1.DELETE("/play-episodes/:id", h.AdminPlay.DeleteEpisode)
 

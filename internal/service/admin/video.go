@@ -374,11 +374,13 @@ func (s *videoService) getDetail(ctx context.Context, id int64, clientOnly bool)
 			order = append(order, ep.SourceID)
 		}
 		g.Episodes = append(g.Episodes, shareddto.VideoSourceEpisode{
+			ID:      ep.ID,
 			Episode: ep.EpisodeNumber,
 			Title:   ep.Title,
 			URL:     ep.PlayURL,
 			Quality: ep.Quality,
 			Format:  ep.Format,
+			Status:  ep.Status,
 		})
 	}
 	sourceGroups := make([]shareddto.VideoSourceGroup, 0, len(order))

@@ -312,7 +312,7 @@ func (s *resourceService) loadDetail(ctx context.Context, id int64) (*detailBund
 			order = append(order, ep.SourceID)
 		}
 		g.Episodes = append(g.Episodes, shareddto.VideoSourceEpisode{
-			Episode: ep.EpisodeNumber, Title: ep.Title, URL: ep.PlayURL, Quality: ep.Quality, Format: ep.Format,
+			ID: ep.ID, Episode: ep.EpisodeNumber, Title: ep.Title, URL: ep.PlayURL, Quality: ep.Quality, Format: ep.Format, Status: ep.Status,
 		})
 	}
 	sourceGroups := make([]shareddto.VideoSourceGroup, 0, len(order))

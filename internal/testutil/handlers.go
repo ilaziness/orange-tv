@@ -144,6 +144,9 @@ func (s adminPlaySvc) UpdateEpisode(ctx context.Context, id int64, req *admindto
 	return &admindto.PlayEpisodeResponse{ID: uint64(id)}, nil
 }
 func (s adminPlaySvc) DeleteEpisode(ctx context.Context, id int64) error { return nil }
+func (s adminPlaySvc) BatchUpdateEpisodeStatus(ctx context.Context, req *admindto.BatchUpdateEpisodeStatusRequest) (*admindto.BatchUpdateEpisodeStatusResponse, error) {
+	return &admindto.BatchUpdateEpisodeStatusResponse{}, nil
+}
 
 type adminLiveSvc struct{}
 

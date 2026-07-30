@@ -126,6 +126,19 @@ func (f *fakePlayRepo) SoftDeleteEpisode(ctx context.Context, id int64) error {
 	}
 	return nil
 }
+func (f *fakePlayRepo) UpdateEpisodeStatusBySource(ctx context.Context, videoID, sourceID int64, status uint8) (int, error) {
+	n := 0
+	for _, ep := range f.episodes {
+		if ep.DeletedAt != nil {
+			continue
+		}
+		if ep.VideoID == uint64(videoID) && ep.SourceID == uint64(sourceID) {
+			ep.Status = status
+			n++
+		}
+	}
+	return n, nil
+}
 
 func (f *fakePlayRepo) WithTx(tx bun.Tx) repository.PlayRepository { return f }
 
@@ -220,4 +233,57 @@ func TestPlayService_CreateEpisodeRejectsActiveDuplicate(t *testing.T) {
 	code, ok := errcode.As(err)
 	require.True(t, ok)
 	require.Equal(t, errcode.PlayEpisodeDuplicate.Code, code.Code)
+}
+
+func TestPlayService_BatchUpdateEpisodeStatus(t *testing.T) {
+	playRepo := newFakePlayRepo()
+	playRepo.sources[1] = &model.PlaySources{ID: 1, Name: "源1", Status: 1}
+	playRepo.episodes[10] = &model.PlayEpisodes{ID: 10, VideoID: 1, SourceID: 1, EpisodeNumber: 1, Format: "hls", Status: 1}
+	playRepo.episodes[11] = &model.PlayEpisodes{ID: 11, VideoID: 1, SourceID: 1, EpisodeNumber: 2, Format: "hls", Status: 1}
+	playRepo.episodes[12] = &model.PlayEpisodes{ID: 12, VideoID: 1, SourceID: 2, EpisodeNumber: 1, Format: "hls", Status: 1}
+	svc := NewPlayService(playRepo, &videoRepoStub{videos: map[uint64]*model.Videos{1: {ID: 1, Title: "v"}}}, nil)
+
+	// 下架 source 1 的全部剧集
+	resp, err := svc.BatchUpdateEpisodeStatus(context.Background(), &dto.BatchUpdateEpisodeStatusRequest{
+		VideoID: 1, SourceID: 1, Status: 0,
+	})
+	require.NoError(t, err)
+	require.Equal(t, 2, resp.Affected)
+	require.Equal(t, uint8(0), playRepo.episodes[10].Status)
+	require.Equal(t, uint8(0), playRepo.episodes[11].Status)
+	// source 2 不受影响
+	require.Equal(t, uint8(1), playRepo.episodes[12].Status)
+
+	// 上架 source 1 的全部剧集
+	resp, err = svc.BatchUpdateEpisodeStatus(context.Background(), &dto.BatchUpdateEpisodeStatusRequest{
+		VideoID: 1, SourceID: 1, Status: 1,
+	})
+	require.NoError(t, err)
+	require.Equal(t, 2, resp.Affected)
+	require.Equal(t, uint8(1), playRepo.episodes[10].Status)
+	require.Equal(t, uint8(1), playRepo.episodes[11].Status)
+}
+
+func TestPlayService_BatchUpdateEpisodeStatusRejectsMissingRefs(t *testing.T) {
+	playRepo := newFakePlayRepo()
+	playRepo.sources[1] = &model.PlaySources{ID: 1, Name: "源1", Status: 1}
+	svc := NewPlayService(playRepo, &videoRepoStub{videos: map[uint64]*model.Videos{1: {ID: 1, Title: "v"}}}, nil)
+
+	// video 不存在
+	_, err := svc.BatchUpdateEpisodeStatus(context.Background(), &dto.BatchUpdateEpisodeStatusRequest{
+		VideoID: 99, SourceID: 1, Status: 0,
+	})
+	require.Error(t, err)
+	code, ok := errcode.As(err)
+	require.True(t, ok)
+	require.Equal(t, errcode.VideoNotFound.Code, code.Code)
+
+	// source 不存在
+	_, err = svc.BatchUpdateEpisodeStatus(context.Background(), &dto.BatchUpdateEpisodeStatusRequest{
+		VideoID: 1, SourceID: 99, Status: 0,
+	})
+	require.Error(t, err)
+	code, ok = errcode.As(err)
+	require.True(t, ok)
+	require.Equal(t, errcode.PlaySourceNotFound.Code, code.Code)
 }

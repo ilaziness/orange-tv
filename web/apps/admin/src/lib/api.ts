@@ -168,6 +168,10 @@ export const adminApi = {
   createEpisode: (body: unknown) =>
     withAuth((token) => apiPost(ADMIN_API_BASE, '/play-episodes', body, { token })),
   deleteEpisode: (id: number) => withAuth((token) => apiDelete(ADMIN_API_BASE, `/play-episodes/${id}`, { token })),
+  batchUpdateEpisodeStatus: (body: { video_id: number; source_id: number; status: number }) =>
+    withAuth((token) =>
+      apiPost<{ affected: number }>(ADMIN_API_BASE, '/play-episodes/batch-status', body, { token }),
+    ),
 
   listLive: (query?: Record<string, string | number | undefined>) =>
     withAuth((token) => apiGet<PageData<LiveChannel>>(ADMIN_API_BASE, '/live', { token, query })),
