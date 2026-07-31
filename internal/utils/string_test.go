@@ -11,6 +11,19 @@ func TestStripHTMLTags(t *testing.T) {
 	require.Equal(t, "多行文本", StripHTMLTags("<div>多行<br>文本</div>"))
 	require.Equal(t, "", StripHTMLTags(""))
 	require.Equal(t, "无标签", StripHTMLTags("无标签"))
+	// HTML entities should be decoded and resulting whitespace collapsed.
+	require.Equal(t, "a b", StripHTMLTags("a&nbsp;&nbsp;b"))
+	require.Equal(t, "a & b", StripHTMLTags("a &amp; b"))
+	require.Equal(t, "中文 中文", StripHTMLTags("<p>中文&nbsp;中文</p>"))
+	require.Equal(t, "a b c d", StripHTMLTags("a&nbsp;b&#160;c&#x20;d"))
+	// Unknown "&xxx;" sequences are kept as literal text to avoid destroying
+	// legitimate content such as "Tom & Jerry;".
+	require.Equal(t, "x&unknown;y", StripHTMLTags("x&unknown;y"))
+	require.Equal(t, "Tom & Jerry; 第一集", StripHTMLTags("Tom & Jerry; 第一集"))
+	// Escaped markup is preserved as literal text (tags stripped before decoding).
+	require.Equal(t, "<script>", StripHTMLTags("&lt;script&gt;"))
+	// Mixed tags and entities with newlines collapse to single spaces.
+	require.Equal(t, "hello world", StripHTMLTags("<div>hello</div>&nbsp;<br>world"))
 }
 
 func TestSplitNamesWithSpaces(t *testing.T) {

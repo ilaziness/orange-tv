@@ -1,19 +1,57 @@
 package utils
 
 import (
+	"html"
 	"regexp"
 	"strings"
+	"unicode"
 )
 
-var htmlTagRegexp = regexp.MustCompile(`<[^>]*>`)
+var (
+	htmlTagRegexp = regexp.MustCompile(`<[^>]*>`)
+	multiSpaceReg = regexp.MustCompile(` +`)
+	// zeroWidthRunes are format/zero-width characters that carry no visible
+	// glyph. They are not Unicode whitespace, so they must be removed rather
+	// than collapsed into a space (which would introduce spurious spaces).
+	zeroWidthRunes = map[rune]bool{
+		'\u200B': true, // ZERO WIDTH SPACE
+		'\u200C': true, // ZERO WIDTH NON-JOINER
+		'\u200D': true, // ZERO WIDTH JOINER
+		'\u2060': true, // WORD JOINER
+		'\uFEFF': true, // ZERO WIDTH NO-BREAK SPACE (BOM)
+	}
+)
 
-// StripHTMLTags removes HTML tags from s and trims whitespace.
+// StripHTMLTags removes HTML tags and HTML entities (such as &nbsp;) from s,
+// collapses consecutive whitespace into a single space, and trims the result.
+//
+// Tags are stripped before entity decoding so that escaped markup
+// (e.g. "&lt;script&gt;") is preserved as literal text rather than being
+// removed as a tag. Standard entities are decoded via html.UnescapeString;
+// unknown "&xxx;" sequences are kept as-is to avoid destroying legitimate
+// text such as "Tom & Jerry;".
 func StripHTMLTags(s string) string {
 	s = strings.TrimSpace(s)
 	if s == "" {
 		return ""
 	}
 	s = htmlTagRegexp.ReplaceAllString(s, "")
+	// Decode known HTML entities (&nbsp;, &amp;, &#160;, ...). &nbsp; becomes U+00A0.
+	s = html.UnescapeString(s)
+	// Normalize every Unicode whitespace rune (incl. NBSP, NEL, line/paragraph
+	// separators, ideographic space, ...) to a single ASCII space and drop
+	// zero-width / format characters that would otherwise linger.
+	s = strings.Map(func(r rune) rune {
+		if zeroWidthRunes[r] {
+			return -1
+		}
+		if unicode.IsSpace(r) {
+			return ' '
+		}
+		return r
+	}, s)
+	// Collapse runs of ASCII spaces produced above into one space.
+	s = multiSpaceReg.ReplaceAllString(s, " ")
 	return strings.TrimSpace(s)
 }
 
