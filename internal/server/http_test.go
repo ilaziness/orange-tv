@@ -48,7 +48,7 @@ func TestNewHTTPServer_registersRoutes(t *testing.T) {
 	handlers.ClientCategory = b.ClientCategory
 	handlers.ClientVideo = b.ClientVideo
 	handlers.ClientLive = b.ClientLive
-	handlers.ClientSite = b.ClientSite
+	handlers.ClientSettings = b.ClientSettings
 	handlers.ClientUser = b.ClientUser
 	handlers.ClientBanner = b.ClientBanner
 	handlers.OpenResource = b.OpenResource

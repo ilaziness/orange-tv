@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ilaziness/orange-tv/internal/cache"
 	"github.com/ilaziness/orange-tv/internal/constant"
 	admindto "github.com/ilaziness/orange-tv/internal/dto/admin"
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
@@ -25,24 +24,23 @@ type SettingsService interface {
 }
 
 type settingsService struct {
-	repo  repository.SettingsRepository
-	cache *cache.Manager
-	log   *zap.Logger
+	shared service.SettingsService
+	log    *zap.Logger
 }
 
 // NewSettingsService creates a SettingsService.
-func NewSettingsService(repo repository.SettingsRepository, c *cache.Manager, log *zap.Logger) SettingsService {
+func NewSettingsService(shared service.SettingsService, log *zap.Logger) SettingsService {
 	if log == nil {
 		log = zap.NewNop()
 	}
-	return &settingsService{repo: repo, cache: c, log: log}
+	return &settingsService{shared: shared, log: log}
 }
 
 func (s *settingsService) Get(ctx context.Context, group string) (any, error) {
 	if !constant.IsValidSettingGroup(group) {
 		return nil, errcode.WithMessage(errcode.ParamError, "无效的设置分组")
 	}
-	m, err := s.loadMapByGroup(ctx, group)
+	m, err := s.shared.LoadMapByGroup(ctx, group)
 	if err != nil {
 		return nil, err
 	}
@@ -65,13 +63,11 @@ func (s *settingsService) Update(ctx context.Context, group string, data json.Ra
 		return nil, errcode.WithMessage(errcode.ParamError, "无更新内容")
 	}
 
-	if err := s.repo.UpsertMany(ctx, upserts); err != nil {
-		s.log.Error("settings: upsert many failed", zap.Int("count", len(upserts)), zap.Error(err))
-		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	if err := s.shared.UpsertMany(ctx, group, upserts); err != nil {
+		return nil, err
 	}
-	s.cache.InvalidateSettings(ctx)
 
-	m, err := s.loadMapByGroup(ctx, group)
+	m, err := s.shared.LoadMapByGroup(ctx, group)
 	if err != nil {
 		return nil, err
 	}
@@ -252,40 +248,17 @@ func (s *settingsService) buildAdUpserts(ad *admindto.UpdateAdSettings) []reposi
 
 func (s *settingsService) mapToResponse(group string, m map[string]model.SystemSettings) any {
 	switch group {
-	case constant.SettingGroupSite:
-		return mapToSiteSettings(m)
+	case constant.SettingGroupSite, constant.SettingGroupAd, constant.SettingGroupFeature:
+		resp, err := s.shared.MapGroupToResponse(group, m)
+		if err != nil {
+			s.log.Error("settings: map group to response failed", zap.String("group", group), zap.Error(err))
+			return nil
+		}
+		return resp
 	case constant.SettingGroupAPI:
 		return mapToAPISettings(m)
-	case constant.SettingGroupAd:
-		return mapToAdSettings(m)
-	case constant.SettingGroupFeature:
-		return mapToFeatureSettings(m)
 	default:
 		return nil
-	}
-}
-
-func (s *settingsService) loadMapByGroup(ctx context.Context, group string) (map[string]model.SystemSettings, error) {
-	if m, err := s.cache.GetSettingsByGroup(ctx, group); err == nil && m != nil {
-		return m, nil
-	}
-	m, err := s.repo.GetByGroup(ctx, group)
-	if err != nil {
-		s.log.Error("settings: list by group failed", zap.String("group", group), zap.Error(err))
-		return nil, errcode.Wrap(errcode.DatabaseError, err)
-	}
-	_ = s.cache.SetSettingsByGroup(ctx, group, m)
-	return m, nil
-}
-
-func mapToSiteSettings(m map[string]model.SystemSettings) admindto.SiteSettings {
-	return admindto.SiteSettings{
-		Name:        utils.DefaultStr(service.StrVal(m, constant.SettingSiteName), "Orange TV"),
-		Logo:        service.StrVal(m, constant.SettingSiteLogo),
-		Copyright:   service.StrVal(m, constant.SettingSiteCopyright),
-		ICP:         service.StrVal(m, constant.SettingSiteICP),
-		SEOKeywords: service.StrVal(m, constant.SettingSiteSEOKeywords),
-		Description: service.StrVal(m, constant.SettingSiteDescription),
 	}
 }
 
@@ -301,17 +274,6 @@ func mapToAPISettings(m map[string]model.SystemSettings) admindto.APISettings {
 		EnableThirdPartyCollect: service.BoolVal(m, constant.SettingEnableThirdPartyCollect, true),
 		ResourceAPIKeySet:       key != "",
 		ResourceAPIKeyMasked:    masked,
-	}
-}
-
-func mapToAdSettings(m map[string]model.SystemSettings) admindto.AdSettings {
-	return admindto.AdSettings{
-		Enabled:  service.BoolVal(m, constant.SettingVideoAdEnabled, false),
-		Type:     service.StrVal(m, constant.SettingVideoAdType),
-		URL:      service.StrVal(m, constant.SettingVideoAdUrl),
-		Link:     service.StrVal(m, constant.SettingVideoAdLink),
-		Duration: service.IntVal(m, constant.SettingVideoAdDuration, 5),
-		Skipable: service.BoolVal(m, constant.SettingVideoAdSkipable, true),
 	}
 }
 
@@ -348,12 +310,4 @@ func (s *settingsService) buildFeatureUpserts(f *admindto.UpdateFeatureSettings)
 		})
 	}
 	return upserts
-}
-
-func mapToFeatureSettings(m map[string]model.SystemSettings) admindto.FeatureSettings {
-	return admindto.FeatureSettings{
-		LiveEnabled:    service.BoolVal(m, constant.SettingFeatureLiveEnabled, false),
-		CommentEnabled: service.BoolVal(m, constant.SettingFeatureCommentEnabled, true),
-		CommentReview:  service.BoolVal(m, constant.SettingFeatureCommentReview, true),
-	}
 }

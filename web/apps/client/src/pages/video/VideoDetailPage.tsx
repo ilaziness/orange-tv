@@ -4,6 +4,7 @@ import type { CommentItem, ClientVideoDetail, VideoListItem } from '@orange-tv/s
 import { clientApi, errorMessage } from '@/lib/api'
 import { VideoGrid } from '@/components/common'
 import { CommentSection } from '@/components/CommentSection'
+import { useSettings } from '@/hooks/useSettings'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -21,6 +22,7 @@ export default function VideoDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [posterError, setPosterError] = useState(false)
+  const { feature } = useSettings()
 
   const loadComments = () => {
     if (!id) return
@@ -173,11 +175,13 @@ export default function VideoDetailPage() {
         </CardContent>
       </Card>
 
-      <CommentSection
-        videoId={Number(id)}
-        comments={comments}
-        onRefresh={loadComments}
-      />
+      {feature.comment_enabled ? (
+        <CommentSection
+          videoId={Number(id)}
+          comments={comments}
+          onRefresh={loadComments}
+        />
+      ) : null}
 
       {related.length ? (
         <section className="flex flex-col gap-4">

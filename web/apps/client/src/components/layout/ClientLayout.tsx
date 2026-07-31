@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, Outlet, useNavigate } from 'react-router'
 import type { Category } from '@orange-tv/shared'
 import { useAuth } from '@/hooks/useAuth'
-import { useSite } from '@/hooks/useSite'
+import { useSettings } from '@/hooks/useSettings'
 import { clientApi } from '@/lib/api'
 import { getHistory, formatTime, type PlaybackHistoryItem } from '@/lib/playbackHistory'
 import type { HistoryItem } from '@orange-tv/shared'
@@ -80,6 +80,7 @@ export function ClientLayout() {
   const [historyList, setHistoryList] = useState<HistoryEntry[]>([])
   const navigate = useNavigate()
   const { profile, logout } = useAuth()
+  const { site, feature } = useSettings()
 
   // 加载历史：已登录拉远端最近若干条；未登录用本地 localStorage
   const loadHistory = useCallback(() => {
@@ -97,7 +98,6 @@ export function ClientLayout() {
       setHistoryList(getHistory().slice(0, 8).map(fromLocal))
     }
   }, [profile])
-  const { site } = useSite()
 
   useEffect(() => {
     if (!categories.length && !categoriesLoading) {
@@ -217,13 +217,15 @@ export function ClientLayout() {
   const renderNavLinks = () => (
     <>
       {renderCategoryPopover()}
-      <Link
-        to="/live"
-        className="flex flex-col items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-primary"
-      >
-        <TvIcon className="size-4" />
-        电视
-      </Link>
+      {feature.live_enabled ? (
+        <Link
+          to="/live"
+          className="flex flex-col items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-primary"
+        >
+          <TvIcon className="size-4" />
+          电视
+        </Link>
+      ) : null}
     </>
   )
 
@@ -411,15 +413,17 @@ export function ClientLayout() {
                       Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-9 w-full" />)
                     ) : (
                       <>
-                        <Button
-                          variant="ghost"
-                          className="justify-start"
-                          nativeButton={false}
-                          render={<Link to="/live" />}
-                          onClick={() => setMobileOpen(false)}
-                        >
-                          电视
-                        </Button>
+                        {feature.live_enabled ? (
+                          <Button
+                            variant="ghost"
+                            className="justify-start"
+                            nativeButton={false}
+                            render={<Link to="/live" />}
+                            onClick={() => setMobileOpen(false)}
+                          >
+                            电视
+                          </Button>
+                        ) : null}
                         {roots.map((root) => (
                           <Button
                             key={root.id}

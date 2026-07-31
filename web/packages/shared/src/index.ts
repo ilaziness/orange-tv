@@ -30,7 +30,7 @@ export class ApiError extends Error {
 
 export type RequestOptions = RequestInit & {
   token?: string | null
-  query?: Record<string, string | number | boolean | undefined | null>
+  query?: Record<string, string | number | boolean | undefined | null | string[]>
 }
 
 function buildURL(base: string, path: string, query?: RequestOptions['query']): string {
@@ -38,6 +38,13 @@ function buildURL(base: string, path: string, query?: RequestOptions['query']): 
   if (query) {
     Object.entries(query).forEach(([key, value]) => {
       if (value === undefined || value === null || value === '') return
+      if (Array.isArray(value)) {
+        value.forEach((v) => {
+          if (v === undefined || v === null || v === '') return
+          url.searchParams.append(key, String(v))
+        })
+        return
+      }
       url.searchParams.set(key, String(value))
     })
   }
@@ -352,6 +359,8 @@ export type FeatureSettings = {
   comment_enabled: boolean
   comment_review: boolean
 }
+
+export type SettingsResponse = SiteSettings | AdSettings | FeatureSettings | Record<string, SiteSettings | AdSettings | FeatureSettings>
 
 export type UpdateSettingsRequest = {
   group: string

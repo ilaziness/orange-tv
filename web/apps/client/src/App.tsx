@@ -1,14 +1,14 @@
 import { useEffect } from 'react'
 import { BrowserRouter } from 'react-router'
 import { AppRoutes } from '@/routes'
-import { useSiteStore } from '@/store/site'
+import { useSettingsStore } from '@/store/settings'
 
 export default function App() {
-  const loadSite = useSiteStore((s) => s.loadSite)
+  const loadSettings = useSettingsStore((s) => s.loadSettings)
 
   useEffect(() => {
-    void loadSite()
-  }, [loadSite])
+    void loadSettings()
+  }, [loadSettings])
 
   return (
     <BrowserRouter>

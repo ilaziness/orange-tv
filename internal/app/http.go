@@ -14,6 +14,7 @@ import (
 	"github.com/ilaziness/orange-tv/internal/repository"
 	"github.com/ilaziness/orange-tv/internal/router"
 	"github.com/ilaziness/orange-tv/internal/server"
+	"github.com/ilaziness/orange-tv/internal/service"
 	adminsvc "github.com/ilaziness/orange-tv/internal/service/admin"
 	clientsvc "github.com/ilaziness/orange-tv/internal/service/client"
 	opensvc "github.com/ilaziness/orange-tv/internal/service/open"
@@ -48,6 +49,8 @@ func (a *App) wireHTTP() error {
 	userFeatureRepo := repository.NewUserFeatureRepo(a.db)
 	commentRepo := repository.NewCommentRepo(a.db)
 
+	sharedSettingsSvc := service.NewSettingsService(settingsRepo, a.cache, a.log)
+
 	recorder := audit.NewRecorder(logRepo, a.log)
 
 	authSvc := adminsvc.NewAuthService(adminRepo, a.jwtMgr, a.cfg, recorder, a.log)
@@ -59,8 +62,8 @@ func (a *App) wireHTTP() error {
 	adminCommentSvc := adminsvc.NewCommentService(commentRepo, a.log)
 	collectEngine := collect.NewEngine(collectRepo, videoRepo, categoryRepo, metaRepo, playRepo, a.log)
 	adminCollectSvc := adminsvc.NewCollectService(collectRepo, playRepo, categoryRepo, collectEngine, a.log, a.cache)
-	adminSettingsSvc := adminsvc.NewSettingsService(settingsRepo, a.cache, a.log)
-	clientSettingsSvc := clientsvc.NewClientSettingsService(settingsRepo, a.cache, a.log)
+	adminSettingsSvc := adminsvc.NewSettingsService(sharedSettingsSvc, a.log)
+	clientSettingsSvc := clientsvc.NewClientSettingsService(sharedSettingsSvc)
 	adminLogSvc := adminsvc.NewLogService(logRepo, a.log, a.cfg.Log.Filename)
 	adminMgmtSvc := adminsvc.NewManagementService(adminRepo, videoRepo, userFeatureRepo, recorder, a.log)
 	adminDataSvc := adminsvc.NewDataService(a.db, a.cfg, logRepo, a.log)
@@ -69,7 +72,7 @@ func (a *App) wireHTTP() error {
 	clientVideoSvc := clientsvc.NewVideoService(videoRepo, categoryRepo, metaRepo, playRepo, a.cache, a.log)
 	clientLiveSvc := clientsvc.NewLiveService(liveRepo, a.cache, a.log)
 	clientLiveProxySvc := clientsvc.NewLiveProxyService(clientLiveSvc, a.log)
-	clientUserSvc := clientsvc.NewUserService(adminRepo, userFeatureRepo, videoRepo, a.jwtMgr, a.cfg.JWT.AccessTokenTTL, a.log)
+	clientUserSvc := clientsvc.NewUserService(adminRepo, userFeatureRepo, videoRepo, a.jwtMgr, a.cfg.JWT.AccessTokenTTL, sharedSettingsSvc, a.log)
 	clientBannerSvc := clientsvc.NewBannerService(userFeatureRepo, a.log)
 
 	openResourceSvc := opensvc.NewResourceService(settingsRepo, videoRepo, metaRepo, playRepo, categoryRepo, a.cache, a.log)
@@ -91,7 +94,7 @@ func (a *App) wireHTTP() error {
 	handlers.ClientCategory = clienthandler.NewCategoryHandler(clientCategorySvc)
 	handlers.ClientVideo = clienthandler.NewVideoHandler(clientVideoSvc)
 	handlers.ClientLive = clienthandler.NewLiveHandler(clientLiveSvc, clientLiveProxySvc)
-	handlers.ClientSite = clienthandler.NewSiteHandler(clientSettingsSvc)
+	handlers.ClientSettings = clienthandler.NewSettingsHandler(clientSettingsSvc)
 	handlers.ClientUser = clienthandler.NewUserHandler(clientUserSvc)
 	handlers.ClientBanner = clienthandler.NewBannerHandler(clientBannerSvc)
 	handlers.OpenResource = openhandler.NewResourceHandler(openResourceSvc)

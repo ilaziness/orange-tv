@@ -35,7 +35,7 @@ func applyBusinessHandlers(h *Handlers, b testutil.BusinessHandlers) {
 	h.ClientCategory = b.ClientCategory
 	h.ClientVideo = b.ClientVideo
 	h.ClientLive = b.ClientLive
-	h.ClientSite = b.ClientSite
+	h.ClientSettings = b.ClientSettings
 	h.ClientUser = b.ClientUser
 	h.ClientBanner = b.ClientBanner
 	h.OpenResource = b.OpenResource

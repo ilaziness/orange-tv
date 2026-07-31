@@ -54,3 +54,9 @@ const (
 	SettingTypeBoolean uint8 = 3
 	SettingTypeJSON    uint8 = 4
 )
+
+// Comment status values (video_comments.status).
+const (
+	CommentStatusHidden uint8 = 0 // 隐藏/待审核
+	CommentStatusNormal uint8 = 1 // 正常
+)

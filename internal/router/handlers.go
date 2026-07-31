@@ -34,7 +34,7 @@ type Handlers struct {
 	ClientCategory *clienthandler.CategoryHandler
 	ClientVideo    *clienthandler.VideoHandler
 	ClientLive     *clienthandler.LiveHandler
-	ClientSite     *clienthandler.SiteHandler
+	ClientSettings *clienthandler.SettingsHandler
 	ClientUser     *clienthandler.UserHandler
 	ClientBanner   *clienthandler.BannerHandler
 
@@ -96,7 +96,7 @@ func (h *Handlers) validateForRoutes() error {
 		{"client category handler", h.ClientCategory != nil},
 		{"client video handler", h.ClientVideo != nil},
 		{"client live handler", h.ClientLive != nil},
-		{"client site handler", h.ClientSite != nil},
+		{"client settings handler", h.ClientSettings != nil},
 		{"client user handler", h.ClientUser != nil},
 		{"client banner handler", h.ClientBanner != nil},
 		{"open resource handler", h.OpenResource != nil},

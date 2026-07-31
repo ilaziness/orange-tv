@@ -29,6 +29,7 @@ var (
 	HistoryNotFound    = &Code{2000032, "播放历史不存在", 404, nil}
 	CommentNotFound    = &Code{2000040, "评论不存在", 404, nil}
 	CommentTooLong     = &Code{2000041, "评论内容过长", 400, nil}
+	CommentDisabled    = &Code{2000042, "评论功能已关闭", 403, nil}
 	BannerNotFound     = &Code{2000050, "Banner不存在", 404, nil}
 
 	// 认证模块 (300xxxx)

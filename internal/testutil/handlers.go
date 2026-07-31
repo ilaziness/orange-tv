@@ -36,7 +36,7 @@ type BusinessHandlers struct {
 	ClientCategory *clienthandler.CategoryHandler
 	ClientVideo    *clienthandler.VideoHandler
 	ClientLive     *clienthandler.LiveHandler
-	ClientSite     *clienthandler.SiteHandler
+	ClientSettings *clienthandler.SettingsHandler
 	ClientUser     *clienthandler.UserHandler
 	ClientBanner   *clienthandler.BannerHandler
 	OpenResource   *openhandler.ResourceHandler
@@ -275,7 +275,7 @@ func (s clientLiveProxySvc) Proxy(c *gin.Context, channelID int64, segURL string
 
 type clientSettingsSvc struct{}
 
-func (s clientSettingsSvc) GetByGroup(ctx context.Context, group string) (any, error) {
+func (s clientSettingsSvc) GetByGroups(ctx context.Context, groups []string) (any, error) {
 	return map[string]any{}, nil
 }
 
@@ -432,7 +432,7 @@ func NewBusinessHandlers() BusinessHandlers {
 		ClientCategory: clienthandler.NewCategoryHandler(clientCategorySvc{}),
 		ClientVideo:    clienthandler.NewVideoHandler(clientVideoSvc{}),
 		ClientLive:     clienthandler.NewLiveHandler(clientLiveSvc, clientLiveProxySvc{}),
-		ClientSite:     clienthandler.NewSiteHandler(clientSettingsSvc{}),
+		ClientSettings: clienthandler.NewSettingsHandler(clientSettingsSvc{}),
 		ClientUser:     clienthandler.NewUserHandler(userSvc),
 		ClientBanner:   clienthandler.NewBannerHandler(bannerSvc),
 		OpenResource:   openhandler.NewResourceHandler(openResourceSvc{}),

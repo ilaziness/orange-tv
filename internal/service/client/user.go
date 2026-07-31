@@ -13,6 +13,7 @@ import (
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
+	"github.com/ilaziness/orange-tv/internal/service"
 	"go.uber.org/zap"
 )
 
@@ -42,12 +43,13 @@ type UserService interface {
 }
 
 type userService struct {
-	adminRepo repository.AdminRepository
-	userRepo  repository.UserFeatureRepository
-	videoRepo repository.VideoRepository
-	jwtMgr    *auth.JWTManager
-	accessTTL int
-	log       *zap.Logger
+	adminRepo   repository.AdminRepository
+	userRepo    repository.UserFeatureRepository
+	videoRepo   repository.VideoRepository
+	jwtMgr      *auth.JWTManager
+	accessTTL   int
+	settingsSvc service.SettingsService
+	log         *zap.Logger
 }
 
 // NewUserService creates a client UserService.
@@ -57,6 +59,7 @@ func NewUserService(
 	videoRepo repository.VideoRepository,
 	jwtMgr *auth.JWTManager,
 	accessTTL int,
+	settingsSvc service.SettingsService,
 	log *zap.Logger,
 ) UserService {
 	if accessTTL <= 0 {
@@ -66,12 +69,13 @@ func NewUserService(
 		log = zap.NewNop()
 	}
 	return &userService{
-		adminRepo: adminRepo,
-		userRepo:  userRepo,
-		videoRepo: videoRepo,
-		jwtMgr:    jwtMgr,
-		accessTTL: accessTTL,
-		log:       log,
+		adminRepo:   adminRepo,
+		userRepo:    userRepo,
+		videoRepo:   videoRepo,
+		jwtMgr:      jwtMgr,
+		accessTTL:   accessTTL,
+		settingsSvc: settingsSvc,
+		log:         log,
 	}
 }
 
@@ -348,6 +352,16 @@ func (s *userService) ListComments(ctx context.Context, videoID int64, req *clie
 }
 
 func (s *userService) CreateComment(ctx context.Context, userID int64, req *clientdto.CreateCommentRequest) (*clientdto.CommentItem, error) {
+	// Check feature toggles
+	featureMap, err := s.settingsSvc.LoadMapByGroup(ctx, constant.SettingGroupFeature)
+	if err != nil {
+		s.log.Error("client user: load feature settings for create comment failed", zap.Error(err))
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	if !service.BoolVal(featureMap, constant.SettingFeatureCommentEnabled, true) {
+		return nil, errcode.CommentDisabled
+	}
+
 	v, err := s.videoRepo.GetByID(ctx, req.VideoID)
 	if err != nil {
 		s.log.Error("client user: get video for create comment failed", zap.Uint64("video_id", req.VideoID), zap.Error(err))
@@ -359,12 +373,19 @@ func (s *userService) CreateComment(ctx context.Context, userID int64, req *clie
 	if len(req.Content) > 500 {
 		return nil, errcode.CommentTooLong
 	}
+
+	// Determine comment status based on review toggle
+	status := constant.CommentStatusNormal
+	if service.BoolVal(featureMap, constant.SettingFeatureCommentReview, true) {
+		status = constant.CommentStatusHidden
+	}
+
 	c := &model.VideoComments{
 		VideoID:  req.VideoID,
 		UserID:   uint64(userID),
 		ParentID: req.ParentID,
 		Content:  strings.TrimSpace(req.Content),
-		Status:   0,
+		Status:   status,
 	}
 	if err := s.userRepo.CreateComment(ctx, c); err != nil {
 		s.log.Error("client user: create comment failed", zap.Uint64("video_id", req.VideoID), zap.Int64("user_id", userID), zap.Error(err))

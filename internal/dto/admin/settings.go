@@ -1,16 +1,19 @@
 package admin
 
-import "encoding/json"
+import (
+	"encoding/json"
 
-// SiteSettings holds public site branding fields.
-type SiteSettings struct {
-	Name        string `json:"name"`
-	Logo        string `json:"logo"`
-	Copyright   string `json:"copyright"`
-	ICP         string `json:"icp"`
-	SEOKeywords string `json:"seo_keywords"`
-	Description string `json:"description"`
-}
+	dto "github.com/ilaziness/orange-tv/internal/dto"
+)
+
+// SiteSettings is an alias to the shared DTO for admin convenience.
+type SiteSettings = dto.SiteSettings
+
+// AdSettings is an alias to the shared DTO for admin convenience.
+type AdSettings = dto.AdSettings
+
+// FeatureSettings is an alias to the shared DTO for admin convenience.
+type FeatureSettings = dto.FeatureSettings
 
 // APISettings holds resource-station / API mode settings.
 // ResourceAPIKey is never returned in plain text; ResourceAPIKeySet indicates whether configured.
@@ -48,16 +51,6 @@ type UpdateAPISettings struct {
 	ResourceAPIKey *string `json:"resource_api_key" validate:"omitempty,max=255"`
 }
 
-// AdSettings holds video loading ad configuration.
-type AdSettings struct {
-	Enabled  bool   `json:"enabled"`
-	Type     string `json:"type"`
-	URL      string `json:"url"`
-	Link     string `json:"link"`
-	Duration int    `json:"duration"`
-	Skipable bool   `json:"skipable"`
-}
-
 // UpdateAdSettings updates video ad fields (all optional).
 type UpdateAdSettings struct {
 	Enabled  *bool   `json:"enabled"`
@@ -66,13 +59,6 @@ type UpdateAdSettings struct {
 	Link     *string `json:"link" validate:"omitempty,max=500"`
 	Duration *int    `json:"duration" validate:"omitempty,min=1,max=300"`
 	Skipable *bool   `json:"skipable"`
-}
-
-// FeatureSettings holds client feature toggle settings.
-type FeatureSettings struct {
-	LiveEnabled    bool `json:"live_enabled"`
-	CommentEnabled bool `json:"comment_enabled"`
-	CommentReview  bool `json:"comment_review"`
 }
 
 // UpdateFeatureSettings updates client feature toggles (all optional).
