@@ -52,28 +52,7 @@ func New(cfg Config) (*Logger, error) {
 		level = zapcore.InfoLevel
 	}
 
-	// Create encoder config
-	encoderConfig := zapcore.EncoderConfig{
-		TimeKey:        "time",
-		LevelKey:       "level",
-		NameKey:        "logger",
-		CallerKey:      "caller",
-		FunctionKey:    zapcore.OmitKey,
-		MessageKey:     "msg",
-		StacktraceKey:  "stacktrace",
-		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.LowercaseLevelEncoder,
-		EncodeTime:     zapcore.ISO8601TimeEncoder,
-		EncodeDuration: zapcore.SecondsDurationEncoder,
-		EncodeCaller:   zapcore.ShortCallerEncoder,
-	}
-
-	// Stdout uses console encoder (human-friendly, colored);
-	// file uses JSON encoder (machine-parseable, friendly for log files).
-	stdoutEncoderConfig := encoderConfig
-	stdoutEncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-	stdoutEncoder := zapcore.NewConsoleEncoder(stdoutEncoderConfig)
-	fileEncoder := zapcore.NewJSONEncoder(encoderConfig)
+	stdoutEncoder, fileEncoder := buildEncoders()
 
 	// Create writers based on output
 	var cores []zapcore.Core
@@ -98,6 +77,51 @@ func New(cfg Config) (*Logger, error) {
 		Logger: zapLogger,
 		sugar:  zapLogger.Sugar(),
 	}, nil
+}
+
+// NewStdoutLogger creates a logger that only writes to stdout, regardless of
+// the main logger's output config. It is intended for HTTP access logs that
+// should not be persisted to log files.
+func NewStdoutLogger(level string) *zap.Logger {
+	return newStdoutLoggerWithSyncer(level, zapcore.AddSync(os.Stdout))
+}
+
+// newStdoutLoggerWithSyncer is the testable core of NewStdoutLogger. It accepts
+// a custom WriteSyncer so tests can capture output without modifying
+// process-global stdout.
+func newStdoutLoggerWithSyncer(level string, ws zapcore.WriteSyncer) *zap.Logger {
+	lvl, err := zapcore.ParseLevel(level)
+	if err != nil {
+		lvl = zapcore.InfoLevel
+	}
+	stdoutEncoder, _ := buildEncoders()
+	core := zapcore.NewCore(stdoutEncoder, ws, lvl)
+	return zap.New(core, zap.AddCaller(), zap.AddCallerSkip(1))
+}
+
+// buildEncoders returns the stdout (console, colored) and file (JSON) encoders
+// sharing the same base encoder config.
+func buildEncoders() (stdoutEncoder, fileEncoder zapcore.Encoder) {
+	encoderConfig := zapcore.EncoderConfig{
+		TimeKey:        "time",
+		LevelKey:       "level",
+		NameKey:        "logger",
+		CallerKey:      "caller",
+		FunctionKey:    zapcore.OmitKey,
+		MessageKey:     "msg",
+		StacktraceKey:  "stacktrace",
+		LineEnding:     zapcore.DefaultLineEnding,
+		EncodeLevel:    zapcore.LowercaseLevelEncoder,
+		EncodeTime:     zapcore.ISO8601TimeEncoder,
+		EncodeDuration: zapcore.SecondsDurationEncoder,
+		EncodeCaller:   zapcore.ShortCallerEncoder,
+	}
+
+	// Stdout uses console encoder (human-friendly, colored);
+	// file uses JSON encoder (machine-parseable, friendly for log files).
+	stdoutEncoderConfig := encoderConfig
+	stdoutEncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	return zapcore.NewConsoleEncoder(stdoutEncoderConfig), zapcore.NewJSONEncoder(encoderConfig)
 }
 
 // createFileCore creates a file-based core with log rotation.

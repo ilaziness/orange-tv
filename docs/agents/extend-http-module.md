@@ -172,7 +172,7 @@ if err != nil {
 }
 handlers.AdminOrder = adminhandler.NewOrderHandler(orderSvc)
 
-httpServer, err := server.NewHTTPServer(a.cfg, a.log, handlers, a.metrics, a.jwtMgr)
+httpServer, err := server.NewHTTPServer(a.cfg, a.log, accessLogger, handlers, a.metrics, a.jwtMgr)
 if err != nil {
 	return err
 }

@@ -10,6 +10,7 @@ import (
 	clienthandler "github.com/ilaziness/orange-tv/internal/handler/http/client"
 	openhandler "github.com/ilaziness/orange-tv/internal/handler/http/open"
 	"github.com/ilaziness/orange-tv/internal/health"
+	"github.com/ilaziness/orange-tv/internal/logger"
 	"github.com/ilaziness/orange-tv/internal/repository"
 	"github.com/ilaziness/orange-tv/internal/router"
 	"github.com/ilaziness/orange-tv/internal/server"
@@ -105,7 +106,10 @@ func (a *App) wireHTTP() error {
 			return adminCollectSvc.StopScheduler(ctx)
 		},
 	})
-	httpServer, err := server.NewHTTPServer(a.cfg, a.log, handlers, a.metrics, a.jwtMgr)
+	// Access logs (gin request logs) go to stdout only so they don't clutter
+	// the application log file. Business/recovery logs still use a.log.
+	accessLogger := logger.NewStdoutLogger(a.cfg.Log.Level)
+	httpServer, err := server.NewHTTPServer(a.cfg, a.log, accessLogger, handlers, a.metrics, a.jwtMgr)
 	if err != nil {
 		return err
 	}

@@ -31,7 +31,11 @@ type HTTPServer struct {
 	keyFile  string
 }
 
-func NewHTTPServer(cfg *config.Config, logger *zap.Logger, h *router.Handlers, m *metrics.Metrics, jwtMgr *auth.JWTManager) (*HTTPServer, error) {
+// NewHTTPServer creates the HTTP server. accessLogger is used for HTTP access
+// logs (gin request logs) and should write to stdout only so that access logs
+// are not persisted to the application log file. logger is used for
+// non-access logging (recovery, rate limit warnings, etc.).
+func NewHTTPServer(cfg *config.Config, logger *zap.Logger, accessLogger *zap.Logger, h *router.Handlers, m *metrics.Metrics, jwtMgr *auth.JWTManager) (*HTTPServer, error) {
 	httpServer := &HTTPServer{
 		enabled: cfg.HTTP.Enabled,
 	}
@@ -45,7 +49,8 @@ func NewHTTPServer(cfg *config.Config, logger *zap.Logger, h *router.Handlers, m
 	// Apply core middlewares
 	ginRouter.Use(httpmiddleware.RequestID())
 	ginRouter.Use(httpmiddleware.SecurityHeaders())
-	ginRouter.Use(httpmiddleware.Logger(logger, router.SystemPaths...))
+	// Access logs go to stdout only (accessLogger) to avoid cluttering log files.
+	ginRouter.Use(httpmiddleware.Logger(accessLogger, router.SystemPaths...))
 	ginRouter.Use(httpmiddleware.Recovery(logger))
 	ginRouter.Use(httpmiddleware.CORS())
 	ginRouter.Use(httpmiddleware.BodySizeLimit(0)) // default 10MB
