@@ -19,3 +19,10 @@ type AdSettings struct {
 	Duration int    `json:"duration"`
 	Skipable bool   `json:"skipable"`
 }
+
+// FeatureSettings holds client feature toggle settings visible to the client.
+type FeatureSettings struct {
+	LiveEnabled    bool `json:"live_enabled"`
+	CommentEnabled bool `json:"comment_enabled"`
+	CommentReview  bool `json:"comment_review"`
+}

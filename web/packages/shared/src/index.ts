@@ -346,6 +346,12 @@ export type AdSettings = {
   skipable: boolean
 }
 
+export type FeatureSettings = {
+  live_enabled: boolean
+  comment_enabled: boolean
+  comment_review: boolean
+}
+
 export type UpdateSettingsRequest = {
   group: string
   data: Record<string, unknown>

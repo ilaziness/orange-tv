@@ -33,6 +33,7 @@ import {
   type SiteSettings,
   type APISettings,
   type AdSettings,
+  type FeatureSettings,
   type UpdateSettingsRequest,
   type UpdateProfileRequest,
   type UserGroupItem,
@@ -213,6 +214,8 @@ export const adminApi = {
     withAuth((token) => apiGet<APISettings>(ADMIN_API_BASE, '/settings', { token, query: { group: 'api' } })),
   getAdSettings: () =>
     withAuth((token) => apiGet<AdSettings>(ADMIN_API_BASE, '/settings', { token, query: { group: 'ad' } })),
+  getFeatureSettings: () =>
+    withAuth((token) => apiGet<FeatureSettings>(ADMIN_API_BASE, '/settings', { token, query: { group: 'feature' } })),
   updateSettings: (body: UpdateSettingsRequest) =>
     withAuth((token) => apiPut<Record<string, unknown>>(ADMIN_API_BASE, '/settings', body, { token })),
   listSystemLogs: (query?: Record<string, string | number | undefined>) =>

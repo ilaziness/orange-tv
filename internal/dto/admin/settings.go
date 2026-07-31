@@ -25,7 +25,7 @@ type APISettings struct {
 // UpdateSettingsRequest updates settings for a single group.
 // Data is the group-specific key-value JSON payload.
 type UpdateSettingsRequest struct {
-	Group string          `json:"group" validate:"required,oneof=site api ad"`
+	Group string          `json:"group" validate:"required,oneof=site api ad feature"`
 	Data  json.RawMessage `json:"data" validate:"required"`
 }
 
@@ -66,4 +66,18 @@ type UpdateAdSettings struct {
 	Link     *string `json:"link" validate:"omitempty,max=500"`
 	Duration *int    `json:"duration" validate:"omitempty,min=1,max=300"`
 	Skipable *bool   `json:"skipable"`
+}
+
+// FeatureSettings holds client feature toggle settings.
+type FeatureSettings struct {
+	LiveEnabled    bool `json:"live_enabled"`
+	CommentEnabled bool `json:"comment_enabled"`
+	CommentReview  bool `json:"comment_review"`
+}
+
+// UpdateFeatureSettings updates client feature toggles (all optional).
+type UpdateFeatureSettings struct {
+	LiveEnabled    *bool `json:"live_enabled"`
+	CommentEnabled *bool `json:"comment_enabled"`
+	CommentReview  *bool `json:"comment_review"`
 }

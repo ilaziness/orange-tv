@@ -107,6 +107,15 @@ func (s *settingsService) parseUpdateData(group string, data json.RawMessage) ([
 			return nil, errcode.WithMessage(errcode.ParamError, err.Error())
 		}
 		return s.buildAdUpserts(&req), nil
+	case constant.SettingGroupFeature:
+		var req admindto.UpdateFeatureSettings
+		if err := json.Unmarshal(data, &req); err != nil {
+			return nil, errcode.WithMessage(errcode.ParamError, "无效的设置数据")
+		}
+		if err := validator.Validate(&req); err != nil {
+			return nil, errcode.WithMessage(errcode.ParamError, err.Error())
+		}
+		return s.buildFeatureUpserts(&req), nil
 	default:
 		return nil, errcode.WithMessage(errcode.ParamError, "无效的设置分组")
 	}
@@ -249,6 +258,8 @@ func (s *settingsService) mapToResponse(group string, m map[string]model.SystemS
 		return mapToAPISettings(m)
 	case constant.SettingGroupAd:
 		return mapToAdSettings(m)
+	case constant.SettingGroupFeature:
+		return mapToFeatureSettings(m)
 	default:
 		return nil
 	}
@@ -301,5 +312,48 @@ func mapToAdSettings(m map[string]model.SystemSettings) admindto.AdSettings {
 		Link:     service.StrVal(m, constant.SettingVideoAdLink),
 		Duration: service.IntVal(m, constant.SettingVideoAdDuration, 5),
 		Skipable: service.BoolVal(m, constant.SettingVideoAdSkipable, true),
+	}
+}
+
+func (s *settingsService) buildFeatureUpserts(f *admindto.UpdateFeatureSettings) []repository.SettingUpsert {
+	var upserts []repository.SettingUpsert
+	if f.LiveEnabled != nil {
+		v := "0"
+		if *f.LiveEnabled {
+			v = "1"
+		}
+		upserts = append(upserts, repository.SettingUpsert{
+			Key: constant.SettingFeatureLiveEnabled, Group: constant.SettingGroupFeature, Value: v,
+			SettingType: constant.SettingTypeBoolean, Description: "电视直播开关",
+		})
+	}
+	if f.CommentEnabled != nil {
+		v := "0"
+		if *f.CommentEnabled {
+			v = "1"
+		}
+		upserts = append(upserts, repository.SettingUpsert{
+			Key: constant.SettingFeatureCommentEnabled, Group: constant.SettingGroupFeature, Value: v,
+			SettingType: constant.SettingTypeBoolean, Description: "视频评论开关",
+		})
+	}
+	if f.CommentReview != nil {
+		v := "0"
+		if *f.CommentReview {
+			v = "1"
+		}
+		upserts = append(upserts, repository.SettingUpsert{
+			Key: constant.SettingFeatureCommentReview, Group: constant.SettingGroupFeature, Value: v,
+			SettingType: constant.SettingTypeBoolean, Description: "评论是否需要审核",
+		})
+	}
+	return upserts
+}
+
+func mapToFeatureSettings(m map[string]model.SystemSettings) admindto.FeatureSettings {
+	return admindto.FeatureSettings{
+		LiveEnabled:    service.BoolVal(m, constant.SettingFeatureLiveEnabled, false),
+		CommentEnabled: service.BoolVal(m, constant.SettingFeatureCommentEnabled, true),
+		CommentReview:  service.BoolVal(m, constant.SettingFeatureCommentReview, true),
 	}
 }

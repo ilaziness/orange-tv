@@ -52,6 +52,8 @@ func (s *clientSettingsService) GetByGroup(ctx context.Context, group string) (a
 		return mapToSiteSettings(m), nil
 	case constant.SettingGroupAd:
 		return mapToAdSettings(m), nil
+	case constant.SettingGroupFeature:
+		return mapToFeatureSettings(m), nil
 	default:
 		return nil, errcode.WithMessage(errcode.ParamError, "无效的设置分组")
 	}
@@ -89,5 +91,13 @@ func mapToAdSettings(m map[string]model.SystemSettings) clientdto.AdSettings {
 		Link:     service.StrVal(m, constant.SettingVideoAdLink),
 		Duration: service.IntVal(m, constant.SettingVideoAdDuration, 5),
 		Skipable: service.BoolVal(m, constant.SettingVideoAdSkipable, true),
+	}
+}
+
+func mapToFeatureSettings(m map[string]model.SystemSettings) clientdto.FeatureSettings {
+	return clientdto.FeatureSettings{
+		LiveEnabled:    service.BoolVal(m, constant.SettingFeatureLiveEnabled, false),
+		CommentEnabled: service.BoolVal(m, constant.SettingFeatureCommentEnabled, true),
+		CommentReview:  service.BoolVal(m, constant.SettingFeatureCommentReview, true),
 	}
 }
