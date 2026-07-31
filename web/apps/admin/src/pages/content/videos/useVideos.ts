@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { adminApi, errorMessage } from '@/lib/api'
-import type { VideoListItem } from '@orange-tv/shared'
+import { flattenCategories } from '@/lib/categories'
+import type { Category, VideoListItem } from '@orange-tv/shared'
 import { toast } from 'sonner'
 import { DEFAULT_PAGE_SIZE } from '@/lib/constants'
 
@@ -13,6 +14,8 @@ export function useVideos() {
 
   const [items, setItems] = useState<VideoListItem[]>([])
   const [keyword, setKeyword] = useState('')
+  const [categoryId, setCategoryId] = useState('')
+  const [categories, setCategories] = useState<Array<Category & { depth: number }>>([])
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [selected, setSelected] = useState<Set<number>>(new Set())
@@ -24,9 +27,11 @@ export function useVideos() {
   const [batchLoading, setBatchLoading] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
   const keywordRef = useRef(keyword)
+  const categoryIdRef = useRef(categoryId)
   const pageRef = useRef(page)
 
   useEffect(() => { keywordRef.current = keyword }, [keyword])
+  useEffect(() => { categoryIdRef.current = categoryId }, [categoryId])
   useEffect(() => { pageRef.current = page }, [page])
 
   const load = useCallback(async (p = pageRef.current) => {
@@ -34,6 +39,7 @@ export function useVideos() {
     try {
       const res = await adminApi.listVideos({
         keyword: keywordRef.current,
+        category_id: categoryIdRef.current || undefined,
         page: p,
         page_size: DEFAULT_PAGE_SIZE,
         director_id: directorId ? Number(directorId) : undefined,
@@ -51,7 +57,15 @@ export function useVideos() {
     }
   }, [directorId, actorId, tagId])
 
-  useEffect(() => { void load(1) }, [load])
+  useEffect(() => {
+    void load(1)
+  }, [load, categoryId])
+
+  useEffect(() => {
+    adminApi.listCategories().then((res) => {
+      setCategories(flattenCategories(res.data || []))
+    }).catch(() => {})
+  }, [])
 
   function toggleSelect(id: number) {
     setSelected((prev) => {
@@ -124,6 +138,9 @@ export function useVideos() {
     items,
     keyword,
     setKeyword,
+    categoryId,
+    setCategoryId,
+    categories,
     page,
     total,
     selected,

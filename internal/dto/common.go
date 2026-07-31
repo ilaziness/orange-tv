@@ -83,6 +83,7 @@ type VideoListItem struct {
 	Language      string  `json:"language"`
 	Rating        float64 `json:"rating"`
 	CategoryID    uint64  `json:"category_id"`
+	CategoryName  string  `json:"category_name,omitempty"`
 	PublishStatus uint8   `json:"publish_status,omitempty"`
 	SerialStatus  uint8   `json:"serial_status"`
 	Duration      uint32  `json:"duration"`

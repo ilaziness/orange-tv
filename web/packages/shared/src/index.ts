@@ -154,6 +154,7 @@ export type VideoListItem = {
   language: string
   rating: number
   category_id: number
+  category_name?: string
   publish_status?: number
   serial_status: number
   duration: number

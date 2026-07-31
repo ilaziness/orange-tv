@@ -58,9 +58,18 @@ func NewVideoService(
 }
 
 func (s *videoService) List(ctx context.Context, req *dto.VideoListRequest) ([]shareddto.VideoListItem, int, error) {
-	items, total, err := s.videoRepo.List(ctx, repository.VideoListFilter{
+	cats, err := s.categoryRepo.List(ctx, false)
+	if err != nil {
+		s.log.Error("video: list categories failed", zap.Error(err))
+		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	catMap := make(map[uint64]*model.Categories, len(cats))
+	for i := range cats {
+		catMap[cats[i].ID] = &cats[i]
+	}
+
+	filter := repository.VideoListFilter{
 		Keyword:       strings.TrimSpace(req.Keyword),
-		CategoryID:    req.CategoryID,
 		PublishStatus: req.PublishStatus,
 		Year:          req.Year,
 		Region:        strings.TrimSpace(req.Region),
@@ -71,12 +80,18 @@ func (s *videoService) List(ctx context.Context, req *dto.VideoListRequest) ([]s
 		TagID:         req.TagID,
 		Offset:        req.GetOffset(),
 		Limit:         req.GetLimit(),
-	})
+	}
+
+	if req.CategoryID > 0 {
+		filter.CategoryIDs = collectDescendantIDs(catMap, req.CategoryID)
+	}
+
+	items, total, err := s.videoRepo.List(ctx, filter)
 	if err != nil {
 		s.log.Error("video: list failed", zap.Error(err))
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	return mapVideoList(items), total, nil
+	return mapVideoList(items, catMap), total, nil
 }
 
 func (s *videoService) Get(ctx context.Context, id int64) (*shareddto.VideoDetailResponse, error) {
@@ -508,7 +523,7 @@ func (s *videoService) ensureTags(ctx context.Context, ids []uint64) error {
 	return nil
 }
 
-func mapVideoList(items []model.Videos) []shareddto.VideoListItem {
+func mapVideoList(items []model.Videos, catMap map[uint64]*model.Categories) []shareddto.VideoListItem {
 	out := make([]shareddto.VideoListItem, 0, len(items))
 	for _, v := range items {
 		out = append(out, shareddto.VideoListItem{
@@ -522,6 +537,7 @@ func mapVideoList(items []model.Videos) []shareddto.VideoListItem {
 			Language:      v.Language,
 			Rating:        v.Rating,
 			CategoryID:    v.CategoryID,
+			CategoryName:  resolveCategoryName(catMap, v.CategoryID),
 			PublishStatus: v.PublishStatus,
 			SerialStatus:  v.SerialStatus,
 			Duration:      v.Duration,
@@ -531,6 +547,33 @@ func mapVideoList(items []model.Videos) []shareddto.VideoListItem {
 		})
 	}
 	return out
+}
+
+// resolveCategoryName builds a display string for a category. If the category
+// has a parent, the format is "parent/child"; otherwise just the category name.
+func resolveCategoryName(catMap map[uint64]*model.Categories, id uint64) string {
+	cat, ok := catMap[id]
+	if !ok {
+		return ""
+	}
+	if cat.ParentID > 0 {
+		if parent, ok := catMap[cat.ParentID]; ok {
+			return parent.Name + "/" + cat.Name
+		}
+	}
+	return cat.Name
+}
+
+// collectDescendantIDs gathers the given category ID and all its descendant IDs
+// from the flat category map.
+func collectDescendantIDs(catMap map[uint64]*model.Categories, id uint64) []uint64 {
+	ids := []uint64{id}
+	for _, cat := range catMap {
+		if cat.ParentID == id {
+			ids = append(ids, collectDescendantIDs(catMap, cat.ID)...)
+		}
+	}
+	return ids
 }
 
 func toActorRels(inputs []dto.VideoActorInput) []model.VideoActors {

@@ -51,6 +51,7 @@ export function VideoTable({
             </TableHead>
             <TableHead className="w-16">ID</TableHead>
             <TableHead>标题</TableHead>
+            <TableHead>分类</TableHead>
             <TableHead className="w-20">年份</TableHead>
             <TableHead className="w-20">评分</TableHead>
             <TableHead className="w-20">状态</TableHead>
@@ -73,6 +74,7 @@ export function VideoTable({
                 </TableCell>
                 <TableCell>{item.id}</TableCell>
                 <TableCell className="font-medium">{item.title}</TableCell>
+                <TableCell>{item.category_name || '-'}</TableCell>
                 <TableCell>{item.year || '-'}</TableCell>
                 <TableCell>{item.rating}</TableCell>
                 <TableCell>
@@ -115,7 +117,7 @@ export function VideoTable({
           })}
           {loading && items.length === 0 && (
             <TableRow>
-              <TableCell colSpan={9} className="py-8 text-center text-muted-foreground">
+              <TableCell colSpan={10} className="py-8 text-center text-muted-foreground">
                 <Spinner className="mx-auto" />
                 <span className="mt-2 block text-sm">加载中...</span>
               </TableCell>
@@ -123,7 +125,7 @@ export function VideoTable({
           )}
           {!loading && items.length === 0 && (
             <TableRow>
-              <TableCell colSpan={9} className="p-0">
+              <TableCell colSpan={10} className="p-0">
                 <Empty className="py-8">
                   <EmptyHeader>
                     <EmptyTitle>暂无数据</EmptyTitle>

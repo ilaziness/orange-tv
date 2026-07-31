@@ -22,6 +22,9 @@ export default function VideosPage() {
     items,
     keyword,
     setKeyword,
+    categoryId,
+    setCategoryId,
+    categories,
     page,
     total,
     selected,
@@ -87,6 +90,9 @@ export default function VideosPage() {
             setKeyword={setKeyword}
             loading={loading}
             onSearch={() => void load(1)}
+            categories={categories}
+            categoryId={categoryId}
+            onCategoryChange={setCategoryId}
           />
           <VideoBatchBar
             count={selected.size}
