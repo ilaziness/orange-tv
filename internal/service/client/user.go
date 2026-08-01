@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
 	"github.com/ilaziness/orange-tv/internal/service"
+	"github.com/uptrace/bun"
 	"go.uber.org/zap"
 )
 
@@ -41,6 +43,10 @@ type UserService interface {
 	ListComments(ctx context.Context, videoID int64, req *clientdto.CommentListRequest) ([]clientdto.CommentItem, int, error)
 	CreateComment(ctx context.Context, userID int64, req *clientdto.CreateCommentRequest) (*clientdto.CommentItem, error)
 	DeleteComment(ctx context.Context, userID, commentID int64) error
+
+	// C6: Ratings
+	RateVideo(ctx context.Context, userID, videoID int64, req *clientdto.RateVideoRequest) (*clientdto.RatingResult, error)
+	GetRating(ctx context.Context, userID, videoID int64) (*clientdto.RatingResult, error)
 }
 
 type userService struct {
@@ -450,6 +456,110 @@ func (s *userService) DeleteComment(ctx context.Context, userID, commentID int64
 		return errcode.InsufficientPermission
 	}
 	return s.userRepo.DeleteComment(ctx, commentID)
+}
+
+// ===== Ratings (C6) =====
+
+// RateVideo submits or updates a user's rating for a video.
+func (s *userService) RateVideo(ctx context.Context, userID, videoID int64, req *clientdto.RateVideoRequest) (*clientdto.RatingResult, error) {
+	// Check feature toggle
+	featureMap, err := s.settingsSvc.LoadMapByGroup(ctx, constant.SettingGroupFeature)
+	if err != nil {
+		s.log.Error("client user: load feature settings for rate video failed", zap.Error(err))
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	if !service.BoolVal(featureMap, constant.SettingFeatureRatingEnabled, true) {
+		return nil, errcode.RatingDisabled
+	}
+
+	// Validate score: 0.5-10.0 in 0.5 increments
+	score := req.Score
+	doubled := score * 2
+	if doubled != float64(int(doubled)) || doubled < 1 || doubled > 20 {
+		return nil, errcode.RatingInvalid
+	}
+
+	// Validate video exists
+	v, err := s.videoRepo.GetByID(ctx, uint64(videoID))
+	if err != nil {
+		s.log.Error("client user: get video for rate failed", zap.Int64("video_id", videoID), zap.Error(err))
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	if v == nil {
+		return nil, errcode.VideoNotFound
+	}
+
+	// Upsert rating + recompute stats + update video in a transaction
+	var avg float64
+	var count int
+	err = s.userRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
+		txUserRepo := s.userRepo.WithTx(tx)
+		txVideoRepo := s.videoRepo.WithTx(tx)
+
+		ur := &model.UserRatings{
+			UserID:  uint64(userID),
+			VideoID: uint64(videoID),
+			Score:   score,
+		}
+		if err := txUserRepo.UpsertRating(ctx, ur); err != nil {
+			s.log.Error("client user: upsert rating failed", zap.Int64("video_id", videoID), zap.Int64("user_id", userID), zap.Error(err))
+			return errcode.Wrap(errcode.DatabaseError, err)
+		}
+
+		avg, count, err = txUserRepo.GetRatingStats(ctx, videoID)
+		if err != nil {
+			s.log.Error("client user: get rating stats failed", zap.Int64("video_id", videoID), zap.Error(err))
+			return errcode.Wrap(errcode.DatabaseError, err)
+		}
+
+		// Round to 1 decimal place
+		rounded := math.Round(avg*10) / 10
+		if err := txVideoRepo.UpdateRatingStats(ctx, uint64(videoID), rounded, uint32(count)); err != nil {
+			s.log.Error("client user: update video rating stats failed", zap.Int64("video_id", videoID), zap.Error(err))
+			return errcode.Wrap(errcode.DatabaseError, err)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &clientdto.RatingResult{
+		MyScore:     score,
+		Rating:      math.Round(avg*10) / 10,
+		RatingCount: uint32(count),
+	}, nil
+}
+
+// GetRating returns the video's rating stats and the current user's score (0 if not logged in / not rated).
+func (s *userService) GetRating(ctx context.Context, userID, videoID int64) (*clientdto.RatingResult, error) {
+	v, err := s.videoRepo.GetByID(ctx, uint64(videoID))
+	if err != nil {
+		s.log.Error("client user: get video for get rating failed", zap.Int64("video_id", videoID), zap.Error(err))
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	if v == nil {
+		return nil, errcode.VideoNotFound
+	}
+
+	result := &clientdto.RatingResult{
+		MyScore:     0,
+		Rating:      v.Rating,
+		RatingCount: v.RatingCount,
+	}
+
+	if userID > 0 {
+		rating, err := s.userRepo.GetRating(ctx, userID, videoID)
+		if err != nil {
+			s.log.Error("client user: get user rating failed", zap.Int64("video_id", videoID), zap.Int64("user_id", userID), zap.Error(err))
+			return nil, errcode.Wrap(errcode.DatabaseError, err)
+		}
+		if rating != nil {
+			result.MyScore = rating.Score
+		}
+	}
+
+	return result, nil
 }
 
 // ===== helpers =====

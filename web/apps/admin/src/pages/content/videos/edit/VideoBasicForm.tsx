@@ -139,17 +139,6 @@ export function VideoBasicForm({ form, setForm, categories }: VideoBasicFormProp
         />
       </Field>
       <Field>
-        <FieldLabel htmlFor="rating">评分</FieldLabel>
-        <Input
-          id="rating"
-          type="number"
-          step="0.1"
-          placeholder="0-10，如 8.5"
-          value={form.rating}
-          onChange={(e) => setForm((prev) => ({ ...prev, rating: e.target.value }))}
-        />
-      </Field>
-      <Field>
         <FieldLabel htmlFor="release_date">上映日期</FieldLabel>
         <Input
           id="release_date"

@@ -309,5 +309,15 @@ func (s *settingsService) buildFeatureUpserts(f *admindto.UpdateFeatureSettings)
 			SettingType: constant.SettingTypeBoolean, Description: "评论是否需要审核",
 		})
 	}
+	if f.RatingEnabled != nil {
+		v := "0"
+		if *f.RatingEnabled {
+			v = "1"
+		}
+		upserts = append(upserts, repository.SettingUpsert{
+			Key: constant.SettingFeatureRatingEnabled, Group: constant.SettingGroupFeature, Value: v,
+			SettingType: constant.SettingTypeBoolean, Description: "视频评分开关",
+		})
+	}
 	return upserts
 }

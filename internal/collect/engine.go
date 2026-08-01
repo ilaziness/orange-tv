@@ -329,9 +329,6 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 			if item.Duration > 0 {
 				existing.Duration = uint32(item.Duration)
 			}
-			if item.Rating > 0 {
-				existing.Rating = item.Rating
-			}
 			if rd := parseReleaseDate(item.ReleaseDate); rd != nil {
 				existing.ReleaseDate = rd
 			}
@@ -366,7 +363,6 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 				Region:           item.Region,
 				Language:         item.Language,
 				Duration:         uint32(item.Duration),
-				Rating:           item.Rating,
 				ReleaseDate:      parseReleaseDate(item.ReleaseDate),
 				CollectSourceID:  uint64(source.ID),
 			}

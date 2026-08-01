@@ -67,6 +67,7 @@ const (
 	SettingFeatureLiveEnabled    = "live_enabled"    // 电视直播开关
 	SettingFeatureCommentEnabled = "comment_enabled" // 视频评论开关
 	SettingFeatureCommentReview  = "comment_review"  // 评论是否需要审核
+	SettingFeatureRatingEnabled  = "rating_enabled"  // 视频评分开关
 )
 
 // GroupKeys maps each setting group to its constituent key list.
@@ -97,6 +98,7 @@ var GroupKeys = map[string][]string{
 		SettingFeatureLiveEnabled,
 		SettingFeatureCommentEnabled,
 		SettingFeatureCommentReview,
+		SettingFeatureRatingEnabled,
 	},
 }
 
@@ -121,6 +123,7 @@ var KeyToGroup = map[string]string{
 	SettingFeatureLiveEnabled:      SettingGroupFeature,
 	SettingFeatureCommentEnabled:   SettingGroupFeature,
 	SettingFeatureCommentReview:    SettingGroupFeature,
+	SettingFeatureRatingEnabled:    SettingGroupFeature,
 }
 
 // Site mode values.

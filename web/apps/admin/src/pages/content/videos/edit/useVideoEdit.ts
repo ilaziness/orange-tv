@@ -20,7 +20,6 @@ const videoFormSchema = z.object({
   region: z.string(),
   language: z.string(),
   duration: z.union([z.string(), z.number()]).transform((v) => Number(v) || 0),
-  rating: z.union([z.string(), z.number()]).transform((v) => Number(v) || 0),
   release_date: z.string(),
 })
 
@@ -37,7 +36,6 @@ const emptyForm = {
   region: '',
   language: '',
   duration: '',
-  rating: '',
   release_date: '',
 }
 
@@ -86,7 +84,6 @@ export function useVideoEdit() {
             region: d.region,
             language: d.language,
             duration: d.duration ? String(d.duration) : '',
-            rating: d.rating ? String(d.rating) : '',
             release_date: d.release_date || '',
           })
           setSelectedDirectors(d.directors || [])

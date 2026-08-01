@@ -56,6 +56,7 @@ type VideoRepository interface {
 	ListTagsByVideoIDs(ctx context.Context, videoIDs []uint64) ([]VideoTagRow, error)
 	RunInTx(ctx context.Context, fn func(ctx context.Context, tx bun.Tx) error) error
 	WithTx(tx bun.Tx) VideoRepository
+	UpdateRatingStats(ctx context.Context, videoID uint64, rating float64, count uint32) error
 
 	// Batch operations (A2)
 	BatchUpdatePublishStatus(ctx context.Context, ids []uint64, status uint8) (int, error)
@@ -83,6 +84,21 @@ func (r *videoRepo) WithTx(tx bun.Tx) VideoRepository {
 
 func (r *videoRepo) RunInTx(ctx context.Context, fn func(ctx context.Context, tx bun.Tx) error) error {
 	return r.db.RunInTx(ctx, nil, fn)
+}
+
+// UpdateRatingStats updates the rating and rating_count columns for a video.
+// Uses explicit Set to persist zero values (Bun's model Update skips zero fields).
+func (r *videoRepo) UpdateRatingStats(ctx context.Context, videoID uint64, rating float64, count uint32) error {
+	_, err := r.db.NewUpdate().Model((*model.Videos)(nil)).
+		Set("rating = ?", rating).
+		Set("rating_count = ?", count).
+		Where("id = ?", videoID).
+		Where("deleted_at IS NULL").
+		Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("update rating stats: %w", err)
+	}
+	return nil
 }
 
 func (r *videoRepo) List(ctx context.Context, f VideoListFilter) ([]model.Videos, int, error) {

@@ -40,6 +40,8 @@ type Videos struct {
 	Region string `bun:"region,notnull" json:"region"`
 	// 评分
 	Rating float64 `bun:"rating,notnull" json:"rating"`
+	// 用户评分人数
+	RatingCount uint32 `bun:"rating_count,notnull" json:"rating_count"`
 	// 播放次数
 	ViewCount uint32 `bun:"view_count,notnull" json:"view_count"`
 	// 时长（分钟）
@@ -58,6 +60,7 @@ type Videos struct {
 	PlayEpisodes      []*PlayEpisodes    `bun:"rel:has-many,join:id=video_id" json:"-"`
 	UserFavorites     []*UserFavorites   `bun:"rel:has-many,join:id=video_id" json:"-"`
 	UserPlayHistories []*UserPlayHistory `bun:"rel:has-many,join:id=video_id" json:"-"`
+	UserRatings       []*UserRatings     `bun:"rel:has-many,join:id=video_id" json:"-"`
 	VideoActors       []*VideoActors     `bun:"rel:has-many,join:id=video_id" json:"-"`
 	VideoComments     []*VideoComments   `bun:"rel:has-many,join:id=video_id" json:"-"`
 	VideoDirectors    []*VideoDirectors  `bun:"rel:has-many,join:id=video_id" json:"-"`

@@ -19,12 +19,12 @@ type CollectLogs struct {
 	// Relation: source_id -> CollectSources(ID)
 	SourceID uint64 `bun:"source_id,notnull" json:"source_id"`
 	// 采集状态：1完成 2采集中
-	Status    uint8      `bun:"status,notnull" json:"status"`
-	CreatedAt *time.Time `bun:"created_at" json:"created_at"`
+	Status uint8 `bun:"status,notnull" json:"status"`
 	// 采集数量（累加）
 	CollectCount uint32 `bun:"collect_count,notnull" json:"collect_count"`
 	// 耗时(秒)
 	DurationSec   uint32          `bun:"duration_sec,notnull" json:"duration_sec"`
+	CreatedAt     *time.Time      `bun:"created_at" json:"created_at"`
 	CollectSource *CollectSources `bun:"rel:belongs-to,join:source_id=id" json:"-"`
 }
 

@@ -31,6 +31,8 @@ var (
 	CommentTooLong     = &Code{2000041, "评论内容过长", 400, nil}
 	CommentDisabled    = &Code{2000042, "评论功能已关闭", 403, nil}
 	BannerNotFound     = &Code{2000050, "Banner不存在", 404, nil}
+	RatingInvalid      = &Code{2000060, "评分无效，范围 0.5-10.0 且步进 0.5", 400, nil}
+	RatingDisabled     = &Code{2000061, "评分功能已关闭", 403, nil}
 
 	// 认证模块 (300xxxx)
 	AuthFailed             = &Code{3000001, "认证失败", 401, nil}

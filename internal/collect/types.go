@@ -21,7 +21,6 @@ type Item struct {
 	Region             string
 	Language           string
 	Duration           int32
-	Rating             float64
 	ReleaseDate        string
 	ExternalCategoryID int64 // external category type_id for mapping
 	Directors          []string

@@ -321,6 +321,63 @@ func (h *UserHandler) DeleteComment(c *gin.Context) {
 	response.Success(c, nil)
 }
 
+// ===== C6: Ratings =====
+
+// GetRating returns the video's rating stats and the current user's score.
+// @Summary 获取影视评分
+// @Description 根据影视ID获取视频评分统计与当前用户评分（未登录时 my_score 为 0）
+// @Tags client-user
+// @Accept json
+// @Produce json
+// @Param id path int true "影视ID"
+// @Success 200 {object} response.Response{data=clientdto.RatingResult}
+// @Router /api/client/v1/ratings/{id} [get]
+func (h *UserHandler) GetRating(c *gin.Context) {
+	var uri shareddto.IDURI
+	if !httphandler.BindURI(c, &uri) {
+		return
+	}
+	userID := currentUserID(c)
+	result, err := h.svc.GetRating(c.Request.Context(), userID, uri.ID)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	response.Success(c, result)
+}
+
+// RateVideo submits or updates the current user's rating for a video.
+// @Summary 评分影视
+// @Description 当前用户对影视评分（0.5-10.0，步进 0.5），需登录
+// @Tags client-user
+// @Accept json
+// @Produce json
+// @Param id path int true "影视ID"
+// @Param body body clientdto.RateVideoRequest true "评分请求"
+// @Success 200 {object} response.Response{data=clientdto.RatingResult}
+// @Router /api/client/v1/ratings/{id} [post]
+func (h *UserHandler) RateVideo(c *gin.Context) {
+	userID := currentUserID(c)
+	if userID <= 0 {
+		response.Error(c, errcode.AuthFailed)
+		return
+	}
+	var uri shareddto.IDURI
+	if !httphandler.BindURI(c, &uri) {
+		return
+	}
+	var req clientdto.RateVideoRequest
+	if !httphandler.BindAndValidate(c, &req) {
+		return
+	}
+	result, err := h.svc.RateVideo(c.Request.Context(), userID, uri.ID, &req)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	response.Success(c, result)
+}
+
 // ===== C1: Banners (public) =====
 
 // ListBanners is kept for backwards-compatibility; the public banner list

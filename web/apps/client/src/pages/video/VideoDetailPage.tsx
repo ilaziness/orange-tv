@@ -6,7 +6,7 @@ import type {
   VideoListItem,
 } from "@orange-tv/shared";
 import { clientApi, errorMessage } from "@/lib/api";
-import { VideoGrid, FavoriteButton } from "@/components/common";
+import { VideoGrid, FavoriteButton, RatingStars } from "@/components/common";
 import { CommentSection } from "@/components/CommentSection";
 import { useSettings } from "@/hooks/useSettings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -129,14 +129,16 @@ export default function VideoDetailPage() {
           {detail.subtitle ? (
             <p className="text-muted-foreground">{detail.subtitle}</p>
           ) : null}
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary">
-              评分: {detail.rating?.toFixed(1) || "N/A"}
-            </Badge>
+          <div className="flex flex-wrap items-center gap-2">
             <Badge variant="secondary">{detail.year || "未知"}</Badge>
             <Badge variant="secondary">{detail.region || "未知"}</Badge>
             <Badge variant="secondary">{detail.language || "未知"}</Badge>
           </div>
+          <RatingStars
+            videoId={Number(id)}
+            rating={detail.rating}
+            ratingCount={detail.rating_count}
+          />
           <div className="flex flex-col gap-1 text-sm">
             <p>
               <span className="text-muted-foreground">导演: </span>

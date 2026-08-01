@@ -64,7 +64,6 @@ func ParseDefaultJSON(body []byte) (*Page, error) {
 			Region:             strings.TrimSpace(row.Region),
 			Language:           strings.TrimSpace(row.Language),
 			Duration:           row.Duration,
-			Rating:             row.Rating,
 			ReleaseDate:        strings.TrimSpace(row.ReleaseDate),
 			ExternalCategoryID: row.CategoryID,
 			Directors:          utils.SplitNames(row.Directors),
@@ -120,7 +119,6 @@ type defaultItem struct {
 	Region      string           `json:"region"`
 	Language    string           `json:"language"`
 	Duration    int32            `json:"duration"`
-	Rating      float64          `json:"rating"`
 	ReleaseDate string           `json:"release_date"`
 	Category    string           `json:"category"`
 	CategoryID  int64            `json:"category_id"`
@@ -240,7 +238,6 @@ func ParseAppleCMSDetail(body []byte) (*Page, error) {
 			Region:             strings.TrimSpace(row.VodArea),
 			Language:           strings.TrimSpace(row.VodLang),
 			Duration:           int32(utils.AnyToInt(row.VodDuration)),
-			Rating:             utils.AnyToFloat(row.DoubanScore),
 			ReleaseDate:        strings.TrimSpace(row.Pubdate),
 			ExternalCategoryID: int64(utils.AnyToInt(row.TypeID)),
 			Directors:          utils.SplitNames(row.Director),
@@ -304,7 +301,6 @@ type appleItem struct {
 	VodArea     string `json:"vod_area"`
 	VodLang     string `json:"vod_lang"`
 	VodDuration any    `json:"vod_duration"`
-	DoubanScore any    `json:"douban_score"`
 	VodPlayFrom string `json:"vod_play_from"`
 	VodPlayURL  string `json:"vod_play_url"`
 	VodTime     string `json:"vod_time"`

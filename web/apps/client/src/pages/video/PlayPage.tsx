@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircleIcon } from "lucide-react";
-import { FavoriteButton } from "@/components/common";
+import { FavoriteButton, RatingStars } from "@/components/common";
 
 export default function PlayPage() {
   const { id, sourceId, episodeId } = useParams();
@@ -198,6 +198,11 @@ export default function PlayPage() {
           </Link>
           <FavoriteButton videoId={Number(id)} />
         </div>
+        <RatingStars
+          videoId={Number(id)}
+          rating={detail.rating}
+          ratingCount={detail.rating_count}
+        />
 
         {detail.sources && detail.sources.length > 0 ? (
           <div className="flex flex-col gap-4">

@@ -135,5 +135,6 @@ func mapToFeatureSettings(m map[string]model.SystemSettings) dto.FeatureSettings
 		LiveEnabled:    BoolVal(m, constant.SettingFeatureLiveEnabled, false),
 		CommentEnabled: BoolVal(m, constant.SettingFeatureCommentEnabled, true),
 		CommentReview:  BoolVal(m, constant.SettingFeatureCommentReview, true),
+		RatingEnabled:  BoolVal(m, constant.SettingFeatureRatingEnabled, true),
 	}
 }

@@ -316,7 +316,7 @@ func (s *videoService) Get(ctx context.Context, id int64) (*clientdto.ClientVide
 		ID: video.ID, Title: video.Title, Subtitle: video.Subtitle, Description: desc,
 		CategoryID: video.CategoryID, SerialStatus: video.SerialStatus, Cover: video.CoverImage, Poster: video.PosterImage,
 		Year: video.Year, Region: video.Region, Language: video.Language, Duration: video.Duration,
-		ReleaseDate: release, Rating: video.Rating, ViewCount: video.ViewCount,
+		ReleaseDate: release, Rating: video.Rating, RatingCount: video.RatingCount, ViewCount: video.ViewCount,
 		Directors: dirItems, Actors: actorItems, Tags: tagItems, Sources: sourceGroups,
 	}, nil
 }

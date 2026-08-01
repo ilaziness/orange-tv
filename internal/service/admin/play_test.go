@@ -184,6 +184,9 @@ func (v *videoRepoStub) RunInTx(ctx context.Context, fn func(ctx context.Context
 	return nil
 }
 func (v *videoRepoStub) WithTx(tx bun.Tx) repository.VideoRepository { return v }
+func (v *videoRepoStub) UpdateRatingStats(ctx context.Context, videoID uint64, rating float64, count uint32) error {
+	return nil
+}
 func (v *videoRepoStub) BatchUpdatePublishStatus(ctx context.Context, ids []uint64, status uint8) (int, error) {
 	return 0, nil
 }

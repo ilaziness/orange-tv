@@ -34,6 +34,7 @@ function FeatureSettingsTab() {
     live_enabled: false,
     comment_enabled: true,
     comment_review: true,
+    rating_enabled: true,
   })
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -47,6 +48,7 @@ function FeatureSettingsTab() {
         live_enabled: !!f.live_enabled,
         comment_enabled: !!f.comment_enabled,
         comment_review: !!f.comment_review,
+        rating_enabled: !!f.rating_enabled,
       })
     } catch (err) {
       toast.error(errorMessage(err))
@@ -125,6 +127,18 @@ function FeatureSettingsTab() {
                   </div>
                 </Field>
               )}
+              <Field data-disabled={submitting ? true : undefined}>
+                <FieldLabel htmlFor="rating_enabled">视频评分</FieldLabel>
+                <div className="flex items-center gap-2 text-sm">
+                  <Switch
+                    id="rating_enabled"
+                    checked={form.rating_enabled}
+                    onCheckedChange={(checked) => setForm((prev) => ({ ...prev, rating_enabled: checked }))}
+                    disabled={submitting}
+                  />
+                  <span>开启用户端视频评分功能</span>
+                </div>
+              </Field>
             </FieldGroup>
             <div className="flex justify-end">
               <Button type="submit" disabled={submitting}>

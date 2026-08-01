@@ -59,21 +59,3 @@ func AnyToString(v any) string {
 		return strings.TrimSpace(fmt.Sprint(t))
 	}
 }
-
-// AnyToFloat converts an any value to float64, handling common JSON types.
-func AnyToFloat(v any) float64 {
-	switch t := v.(type) {
-	case nil:
-		return 0
-	case float64:
-		return t
-	case int:
-		return float64(t)
-	case string:
-		f, _ := strconv.ParseFloat(strings.TrimSpace(t), 64)
-		return f
-	default:
-		f, _ := strconv.ParseFloat(fmt.Sprint(t), 64)
-		return f
-	}
-}

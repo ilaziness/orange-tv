@@ -34,6 +34,7 @@ type Users struct {
 	UserFavorites     []*UserFavorites   `bun:"rel:has-many,join:id=user_id" json:"-"`
 	UserLoginLogs     []*UserLoginLogs   `bun:"rel:has-many,join:id=user_id" json:"-"`
 	UserPlayHistories []*UserPlayHistory `bun:"rel:has-many,join:id=user_id" json:"-"`
+	UserRatings       []*UserRatings     `bun:"rel:has-many,join:id=user_id" json:"-"`
 	VideoComments     []*VideoComments   `bun:"rel:has-many,join:id=user_id" json:"-"`
 }
 

@@ -14,6 +14,7 @@ import {
   type LiveChannel,
   type PageData,
   type PlayEpisodeResponse,
+  type RatingResult,
   type SettingsResponse,
   type UserLoginResult,
   type UserProfile,
@@ -152,6 +153,19 @@ export const clientApi = {
   deleteComment: (commentId: number) =>
     withAuth((token) =>
       apiDelete(CLIENT_API_BASE, `/comments/${commentId}`, { token }),
+    ),
+  getRating: (videoId: number) =>
+    withAuth((token) =>
+      apiGet<RatingResult>(CLIENT_API_BASE, `/ratings/${videoId}`, { token }),
+    ),
+  rateVideo: (videoId: number, score: number) =>
+    withAuth((token) =>
+      apiPost<RatingResult>(
+        CLIENT_API_BASE,
+        `/ratings/${videoId}`,
+        { score },
+        { token },
+      ),
     ),
 };
 

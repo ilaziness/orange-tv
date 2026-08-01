@@ -15,6 +15,7 @@ const DEFAULT_FEATURE: FeatureSettings = {
   live_enabled: false,
   comment_enabled: true,
   comment_review: true,
+  rating_enabled: true,
 }
 
 interface SettingsState {

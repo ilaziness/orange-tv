@@ -141,7 +141,6 @@ func (s *videoService) Create(ctx context.Context, req *dto.CreateVideoRequest) 
 		PosterImage:   strings.TrimSpace(req.PosterImage),
 		Year:          req.Year,
 		Region:        strings.TrimSpace(req.Region),
-		Rating:        req.Rating,
 		Duration:      req.Duration,
 		Language:      strings.TrimSpace(req.Language),
 		ReleaseDate:   releaseDate,
@@ -226,9 +225,6 @@ func (s *videoService) Update(ctx context.Context, id int64, req *dto.UpdateVide
 	}
 	if req.Region != nil {
 		video.Region = strings.TrimSpace(*req.Region)
-	}
-	if req.Rating != nil {
-		video.Rating = *req.Rating
 	}
 	if req.Duration != nil {
 		video.Duration = *req.Duration

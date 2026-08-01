@@ -29,7 +29,6 @@ type CreateVideoRequest struct {
 	PosterImage   string            `json:"poster_image" validate:"omitempty,max=500"`
 	Year          uint32            `json:"year" validate:"omitempty,min=0,max=9999"`
 	Region        string            `json:"region" validate:"omitempty,max=50"`
-	Rating        float64           `json:"rating" validate:"omitempty,min=0,max=10"`
 	Duration      uint32            `json:"duration" validate:"omitempty,min=0"`
 	Language      string            `json:"language" validate:"omitempty,max=50"`
 	ReleaseDate   string            `json:"release_date" validate:"omitempty"`
@@ -50,7 +49,6 @@ type UpdateVideoRequest struct {
 	PosterImage   *string            `json:"poster_image" validate:"omitempty,max=500"`
 	Year          *uint32            `json:"year" validate:"omitempty,min=0,max=9999"`
 	Region        *string            `json:"region" validate:"omitempty,max=50"`
-	Rating        *float64           `json:"rating" validate:"omitempty,min=0,max=10"`
 	Duration      *uint32            `json:"duration" validate:"omitempty,min=0"`
 	Language      *string            `json:"language" validate:"omitempty,max=50"`
 	ReleaseDate   *string            `json:"release_date" validate:"omitempty"`

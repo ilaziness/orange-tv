@@ -10,6 +10,7 @@ import (
 
 	"github.com/ilaziness/orange-tv/internal/database"
 	"github.com/ilaziness/orange-tv/internal/model"
+	"github.com/uptrace/bun"
 )
 
 // UserLoginLogFilter filters user_login_logs queries.
@@ -46,6 +47,13 @@ type UserFeatureRepository interface {
 	UpdateCommentStatus(ctx context.Context, id int64, status int8) error
 	DeleteComment(ctx context.Context, id int64) error
 
+	// Ratings
+	GetRating(ctx context.Context, userID, videoID int64) (*model.UserRatings, error)
+	UpsertRating(ctx context.Context, r *model.UserRatings) error
+	GetRatingStats(ctx context.Context, videoID int64) (float64, int, error)
+	WithTx(tx bun.Tx) UserFeatureRepository
+	RunInTx(ctx context.Context, fn func(ctx context.Context, tx bun.Tx) error) error
+
 	// User login logs
 	CreateUserLoginLog(ctx context.Context, l *model.UserLoginLogs) error
 	ListUserLoginLogs(ctx context.Context, f UserLoginLogFilter) ([]model.UserLoginLogs, int, error)
@@ -67,12 +75,20 @@ type UserFeatureRepository interface {
 }
 
 type userFeatureRepo struct {
-	db *database.DB
+	db bun.IDB
 }
 
 // NewUserFeatureRepo creates a UserFeatureRepository.
 func NewUserFeatureRepo(db *database.DB) UserFeatureRepository {
 	return &userFeatureRepo{db: db}
+}
+
+func (r *userFeatureRepo) WithTx(tx bun.Tx) UserFeatureRepository {
+	return &userFeatureRepo{db: tx}
+}
+
+func (r *userFeatureRepo) RunInTx(ctx context.Context, fn func(ctx context.Context, tx bun.Tx) error) error {
+	return r.db.RunInTx(ctx, nil, fn)
 }
 
 // notFoundOrErr returns (found, err). found is false when err is sql.ErrNoRows.
@@ -452,4 +468,49 @@ func (r *userFeatureRepo) CleanupOnlineSessions(ctx context.Context, before time
 		return fmt.Errorf("cleanup online sessions: %w", err)
 	}
 	return nil
+}
+
+// ===== Ratings =====
+
+func (r *userFeatureRepo) GetRating(ctx context.Context, userID, videoID int64) (*model.UserRatings, error) {
+	rating := new(model.UserRatings)
+	err := r.db.NewSelect().Model(rating).
+		Where("user_id = ?", userID).
+		Where("video_id = ?", videoID).
+		Scan(ctx)
+	found, err := notFoundOrErr(err, "get rating")
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, nil
+	}
+	return rating, nil
+}
+
+func (r *userFeatureRepo) UpsertRating(ctx context.Context, ur *model.UserRatings) error {
+	_, err := r.db.NewInsert().Model(ur).
+		On("DUPLICATE KEY UPDATE").
+		Set("score = VALUES(score)").
+		Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("upsert rating: %w", err)
+	}
+	return nil
+}
+
+func (r *userFeatureRepo) GetRatingStats(ctx context.Context, videoID int64) (float64, int, error) {
+	var stats struct {
+		Avg   float64 `bun:"avg"`
+		Count int     `bun:"cnt"`
+	}
+	err := r.db.NewSelect().TableExpr("user_ratings").
+		ColumnExpr("COALESCE(AVG(score), 0) AS avg").
+		ColumnExpr("COUNT(*) AS cnt").
+		Where("video_id = ?", videoID).
+		Scan(ctx, &stats)
+	if err != nil {
+		return 0, 0, fmt.Errorf("get rating stats: %w", err)
+	}
+	return stats.Avg, stats.Count, nil
 }

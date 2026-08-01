@@ -51,6 +51,7 @@ type ClientVideoDetailResponse struct {
 	Duration     uint32                       `json:"duration"`
 	ReleaseDate  string                       `json:"release_date,omitempty"`
 	Rating       float64                      `json:"rating"`
+	RatingCount  uint32                       `json:"rating_count"`
 	ViewCount    uint32                       `json:"view_count"`
 	Directors    []dto.NamedItem              `json:"directors"`
 	Actors       []dto.NamedItem              `json:"actors"`

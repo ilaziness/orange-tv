@@ -404,6 +404,12 @@ func (s clientUserSvc) CreateComment(ctx context.Context, userID int64, req *cli
 	return &clientdto.CommentItem{}, nil
 }
 func (s clientUserSvc) DeleteComment(ctx context.Context, userID, commentID int64) error { return nil }
+func (s clientUserSvc) RateVideo(ctx context.Context, userID, videoID int64, req *clientdto.RateVideoRequest) (*clientdto.RatingResult, error) {
+	return &clientdto.RatingResult{}, nil
+}
+func (s clientUserSvc) GetRating(ctx context.Context, userID, videoID int64) (*clientdto.RatingResult, error) {
+	return &clientdto.RatingResult{}, nil
+}
 
 type clientBannerSvc struct{}
 

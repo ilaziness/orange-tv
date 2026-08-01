@@ -125,3 +125,17 @@ type BannerItem struct {
 	Link    string `json:"link"`
 	VideoID uint64 `json:"video_id"`
 }
+
+// ===== Ratings (C6) =====
+
+// RateVideoRequest is the user video rating payload.
+type RateVideoRequest struct {
+	Score float64 `json:"score" validate:"required"`
+}
+
+// RatingResult is the rating response containing the user's score and video stats.
+type RatingResult struct {
+	MyScore     float64 `json:"my_score"`     // 当前用户评分，0 表示未评/未登录
+	Rating      float64 `json:"rating"`       // 视频平均分
+	RatingCount uint32  `json:"rating_count"` // 评分人数
+}

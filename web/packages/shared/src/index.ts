@@ -243,6 +243,7 @@ export type ClientVideoDetail = {
   duration: number
   release_date?: string
   rating: number
+  rating_count: number
   view_count: number
   directors: NamedItem[]
   actors: NamedItem[]
@@ -359,6 +360,7 @@ export type FeatureSettings = {
   live_enabled: boolean
   comment_enabled: boolean
   comment_review: boolean
+  rating_enabled: boolean
 }
 
 export type SettingsResponse = SiteSettings | AdSettings | FeatureSettings | Record<string, SiteSettings | AdSettings | FeatureSettings>
@@ -503,6 +505,12 @@ export type FavoriteItem = {
 
 export type FavoriteCheckResult = {
   favorited: boolean
+}
+
+export type RatingResult = {
+  my_score: number
+  rating: number
+  rating_count: number
 }
 
 export type HistoryItem = {

@@ -51,6 +51,10 @@ relations:
   - user_play_history.user_id -> users.id
   # 用户播放历史 - 影视
   - user_play_history.video_id -> videos.id
+  # 用户评分 - 用户
+  - user_ratings.user_id -> users.id
+  # 用户评分 - 影视
+  - user_ratings.video_id -> videos.id
   # 影视演员关联 - 演员
   - video_actors.actor_id -> actors.id
   # 影视演员关联 - 影视

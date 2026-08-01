@@ -49,4 +49,8 @@ func registerClientContentRoutes(v1 *gin.RouterGroup, h *Handlers) {
 	v1.GET("/videos/:id/comments", h.ClientUser.ListComments)
 	v1.POST("/comments", h.ClientUser.CreateComment)
 	v1.DELETE("/comments/:id", h.ClientUser.DeleteComment)
+
+	// Ratings (C6) — get is public, create requires JWT
+	v1.GET("/ratings/:id", h.ClientUser.GetRating)
+	v1.POST("/ratings/:id", h.ClientUser.RateVideo)
 }

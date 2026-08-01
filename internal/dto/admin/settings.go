@@ -66,4 +66,5 @@ type UpdateFeatureSettings struct {
 	LiveEnabled    *bool `json:"live_enabled"`
 	CommentEnabled *bool `json:"comment_enabled"`
 	CommentReview  *bool `json:"comment_review"`
+	RatingEnabled  *bool `json:"rating_enabled"`
 }
