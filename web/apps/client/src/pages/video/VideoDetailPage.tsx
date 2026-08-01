@@ -65,7 +65,7 @@ export default function VideoDetailPage() {
     return (
       <div className="flex flex-col gap-6">
         <div className="flex gap-6">
-          <Skeleton className="aspect-[2/3] w-48 shrink-0 rounded-xl" />
+          <Skeleton className="aspect-[2/3] w-40 shrink-0 rounded-xl md:w-56" />
           <div className="flex flex-1 flex-col gap-3">
             <Skeleton className="h-8 w-2/3" />
             <Skeleton className="h-4 w-1/3" />
@@ -103,14 +103,17 @@ export default function VideoDetailPage() {
   const actorText = detail.actors?.length
     ? detail.actors.map((a) => a.name).join(" / ")
     : "暂无";
+  const tagsText = detail.tags?.length
+    ? detail.tags.map((t) => t.name).join(" / ")
+    : "";
 
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-6 md:flex-row">
         <div className="relative flex aspect-[2/3] w-40 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-muted shadow-lg md:w-56">
-          {detail.poster && !posterError ? (
+          {detail.cover && !posterError ? (
             <img
-              src={detail.poster}
+              src={detail.cover}
               alt={detail.title}
               className="absolute inset-0 h-full w-full object-cover"
               onError={() => setPosterError(true)}
@@ -126,13 +129,16 @@ export default function VideoDetailPage() {
             </h1>
             <FavoriteButton videoId={Number(id)} />
           </div>
-          {detail.subtitle ? (
-            <p className="text-muted-foreground">{detail.subtitle}</p>
-          ) : null}
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="secondary">{detail.year || "未知"}</Badge>
-            <Badge variant="secondary">{detail.region || "未知"}</Badge>
-            <Badge variant="secondary">{detail.language || "未知"}</Badge>
+            {detail.year ? (
+              <Badge variant="secondary">{detail.year}</Badge>
+            ) : null}
+            {detail.region ? (
+              <Badge variant="secondary">{detail.region}</Badge>
+            ) : null}
+            {detail.language ? (
+              <Badge variant="secondary">{detail.language}</Badge>
+            ) : null}
           </div>
           <RatingStars
             videoId={Number(id)}
@@ -140,6 +146,18 @@ export default function VideoDetailPage() {
             ratingCount={detail.rating_count}
           />
           <div className="flex flex-col gap-1 text-sm">
+            {detail.subtitle ? (
+              <p>
+                <span className="text-muted-foreground">别名: </span>
+                {detail.subtitle}
+              </p>
+            ) : null}
+            {tagsText ? (
+              <p>
+                <span className="text-muted-foreground">类型: </span>
+                {tagsText}
+              </p>
+            ) : null}
             <p>
               <span className="text-muted-foreground">导演: </span>
               {directorText}
@@ -150,17 +168,9 @@ export default function VideoDetailPage() {
             </p>
           </div>
           <p className="text-sm leading-relaxed">
+            <span className="text-muted-foreground">剧情简介：</span>
             {detail.description || "暂无简介"}
           </p>
-          {detail.tags?.length ? (
-            <div className="flex flex-wrap gap-2">
-              {detail.tags.map((t) => (
-                <Badge key={t.id} variant="outline">
-                  {t.name}
-                </Badge>
-              ))}
-            </div>
-          ) : null}
         </div>
       </div>
 

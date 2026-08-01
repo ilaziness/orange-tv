@@ -153,7 +153,7 @@ export function ClientLayout() {
 
   const renderSearch = () => (
     <form onSubmit={handleSearch}>
-      <InputGroup className="w-64">
+      <InputGroup className="w-full md:w-64">
         <InputGroupInput
           placeholder="搜索影视"
           value={keyword}
@@ -377,7 +377,7 @@ export function ClientLayout() {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
-        <div className="flex h-14 w-full items-center gap-4 px-4">
+        <div className="flex h-14 w-full items-center justify-between gap-4 px-4">
           {/* 左侧：Logo + 导航 */}
           <div className="flex items-center gap-4">
             {renderLogo()}
@@ -422,6 +422,42 @@ export function ClientLayout() {
                   {renderSearch()}
                   <Separator />
                   <div className="flex flex-col gap-2">
+                    {categoriesLoading ? (
+                      Array.from({ length: 4 }).map((_, i) => (
+                        <Skeleton key={i} className="h-9 w-full" />
+                      ))
+                    ) : (
+                      <>
+                        {feature.live_enabled ? (
+                          <Button
+                            variant="ghost"
+                            className="justify-start"
+                            nativeButton={false}
+                            render={<Link to="/live" />}
+                            onClick={() => setMobileOpen(false)}
+                          >
+                            电视
+                          </Button>
+                        ) : null}
+                        {roots.map((root) => (
+                          <Button
+                            key={root.id}
+                            variant="ghost"
+                            className="justify-start"
+                            nativeButton={false}
+                            render={
+                              <Link to={`/videos?category_id=${root.id}`} />
+                            }
+                            onClick={() => setMobileOpen(false)}
+                          >
+                            {root.name}
+                          </Button>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                  <Separator />
+                  <div className="flex flex-col gap-2">
                     {historyList.length > 0 ? (
                       <>
                         {historyList.map((item) => (
@@ -457,42 +493,6 @@ export function ClientLayout() {
                       <p className="px-2 py-1 text-sm text-muted-foreground">
                         暂无播放历史
                       </p>
-                    )}
-                  </div>
-                  <Separator />
-                  <div className="flex flex-col gap-2">
-                    {categoriesLoading ? (
-                      Array.from({ length: 4 }).map((_, i) => (
-                        <Skeleton key={i} className="h-9 w-full" />
-                      ))
-                    ) : (
-                      <>
-                        {feature.live_enabled ? (
-                          <Button
-                            variant="ghost"
-                            className="justify-start"
-                            nativeButton={false}
-                            render={<Link to="/live" />}
-                            onClick={() => setMobileOpen(false)}
-                          >
-                            电视
-                          </Button>
-                        ) : null}
-                        {roots.map((root) => (
-                          <Button
-                            key={root.id}
-                            variant="ghost"
-                            className="justify-start"
-                            nativeButton={false}
-                            render={
-                              <Link to={`/videos?category_id=${root.id}`} />
-                            }
-                            onClick={() => setMobileOpen(false)}
-                          >
-                            {root.name}
-                          </Button>
-                        ))}
-                      </>
                     )}
                   </div>
                   <Separator />

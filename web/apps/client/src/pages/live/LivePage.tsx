@@ -59,9 +59,7 @@ export default function LivePage() {
     for (const arr of map.values()) {
       arr.sort((a, b) => a.sort_order - b.sort_order)
     }
-    return Array.from(map.keys())
-      .sort()
-      .map((key) => ({ category: key, channels: map.get(key)! }))
+    return Array.from(map.keys()).map((key) => ({ category: key, channels: map.get(key)! }))
   }, [channels])
 
   const selectedChannel = useMemo<LiveChannel | null>(() => {
@@ -94,13 +92,13 @@ export default function LivePage() {
   if (loading) {
     return (
       <div className="flex h-[calc(100vh-8rem)] flex-col gap-4 lg:flex-row">
-        <aside className="flex h-full w-full flex-col gap-2 lg:w-72">
+        <aside className="flex h-auto max-h-48 w-full shrink-0 flex-col gap-2 lg:h-full lg:max-h-none lg:w-44">
           <Skeleton className="h-6 w-32" />
           {Array.from({ length: 8 }).map((_, i) => (
             <Skeleton key={i} className="h-9 w-full" />
           ))}
         </aside>
-        <section className="flex h-full flex-1 flex-col gap-4">
+        <section className="flex min-h-0 flex-1 flex-col gap-4 lg:h-full">
           <Skeleton className="aspect-video w-full rounded-xl" />
           <Skeleton className="h-7 w-1/3" />
         </section>
@@ -131,7 +129,7 @@ export default function LivePage() {
 
   return (
     <div className="flex h-[calc(100vh-8rem)] flex-col gap-4 lg:flex-row">
-      <aside className="flex h-full w-full flex-col gap-2 lg:w-72">
+      <aside className="flex h-auto max-h-48 w-full shrink-0 flex-col gap-2 lg:h-full lg:max-h-none lg:w-44">
         <h2 className="text-base font-semibold">电视频道</h2>
         <div className="flex flex-1 flex-col gap-1 overflow-y-auto pr-1">
           {groups.map((group) => {
@@ -200,7 +198,7 @@ export default function LivePage() {
           })}
         </div>
       </aside>
-      <section className="flex h-full flex-1 flex-col gap-4 overflow-y-auto">
+      <section className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto lg:h-full">
         {selectedChannel ? (
           <>
             <div className="overflow-hidden rounded-xl border border-border">

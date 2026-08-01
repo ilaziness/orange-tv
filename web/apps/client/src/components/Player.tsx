@@ -155,7 +155,16 @@ function playlistPlugin(option: {
 
 export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sourceId, episodeId, resumeAt, adConfig, playlist, currentEpisodeId, onEpisodeChange, onProgress }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null)
-  const [playlistVisible, setPlaylistVisible] = useState(true)
+  const [playlistVisible, setPlaylistVisible] = useState(false)
+
+  // Desktop shows playlist by default; mobile hides it to avoid narrowing the video
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 1024px)')
+    setPlaylistVisible(mql.matches)
+    const handler = (e: MediaQueryListEvent) => setPlaylistVisible(e.matches)
+    mql.addEventListener('change', handler)
+    return () => mql.removeEventListener('change', handler)
+  }, [])
 
   // Refs for playlist data — updated every render, read inside plugin closures
   const playlistRef = useRef<PlaylistItem[] | undefined>(playlist)
@@ -194,8 +203,6 @@ export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sou
     // Clear any leftover DOM from a previous instance (StrictMode remount or re-render)
     el.innerHTML = ''
 
-    const hlsRef: { current: Hls | null } = { current: null }
-
     // Parse adConfig back from the serialized string
     const ad: AdSettings | null = adConfigKey ? JSON.parse(adConfigKey) : null
 
@@ -225,17 +232,22 @@ export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sou
       fullscreenWeb: true,
       setting: false,
       hotkey: true,
-      autoPlayback: !!playbackId && !resumeAt,
-      id: playbackId,
+      ...(playbackId
+        ? { autoPlayback: !resumeAt, id: playbackId }
+        : { autoPlayback: false }),
       layers,
       customType: {
-        m3u8: (video: HTMLVideoElement, url: string) => {
+        m3u8: (video: HTMLVideoElement, url: string, art: Artplayer) => {
           if (destroyed) return
           if (Hls.isSupported()) {
+            const prevHls = (art as unknown as { hls?: Hls }).hls
+            if (prevHls) {
+              prevHls.destroy()
+            }
             const hls = new Hls()
             hls.loadSource(url)
             hls.attachMedia(video)
-            hlsRef.current = hls
+            ;(art as unknown as { hls?: Hls }).hls = hls
           } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
             video.src = url
           }
@@ -328,9 +340,10 @@ export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sou
       try { art.muted = true } catch { /* ignore */ }
       try { if (art.video) art.video.muted = true } catch { /* ignore */ }
 
-      if (hlsRef.current) {
-        hlsRef.current.destroy()
-        hlsRef.current = null
+      const artHls = (art as unknown as { hls?: Hls }).hls
+      if (artHls) {
+        artHls.destroy()
+        ;(art as unknown as { hls?: Hls }).hls = undefined
       }
       // Use the local `art` variable, not artRef.current, to ensure we destroy
       // the exact instance created in this effect run (StrictMode double-invoke safe)
@@ -374,12 +387,13 @@ export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sou
   }
 
   return (
-    <div className="flex h-[40vh] w-full overflow-hidden sm:h-[55vh] lg:h-[65vh]">
+    <div className="relative flex h-[40vh] w-full overflow-hidden sm:h-[55vh] lg:h-[65vh]">
       <div ref={containerRef} className="min-w-0 flex-1" />
       {hasPlaylist && (
         <div
           className={cn(
-            'shrink-0 overflow-y-auto bg-black/90 transition-all duration-300 ease-in-out',
+            'overflow-y-auto bg-black/90 transition-all duration-300 ease-in-out',
+            'absolute inset-y-0 right-0 z-20 lg:static lg:h-full',
             playlistVisible ? 'w-44 opacity-100' : 'w-0 opacity-0',
           )}
         >
@@ -394,7 +408,13 @@ export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sou
                       ? 'bg-white/15 text-white'
                       : 'text-white/70 hover:bg-white/10 hover:text-white',
                   )}
-                  onClick={() => onEpisodeChange?.(it.episodeId)}
+                  onClick={() => {
+                    onEpisodeChange?.(it.episodeId)
+                    // Auto-hide overlay playlist on mobile after switching episode
+                    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                      setPlaylistVisible(false)
+                    }
+                  }}
                 >
                   {it.title || `第${it.episodeId}集`}
                 </div>

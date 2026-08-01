@@ -3,6 +3,11 @@ import { clientApi, errorMessage } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import { useLoginDialogStore } from "@/store/loginDialog";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { HeartIcon } from "lucide-react";
 import { toast } from "sonner";
@@ -46,17 +51,26 @@ export function FavoriteButton({ videoId }: { videoId: number }) {
   };
 
   return (
-    <Button
-      variant={favorited ? "default" : "outline"}
-      size="sm"
-      disabled={loading}
-      onClick={handleClick}
-    >
-      <HeartIcon
-        data-icon="inline-start"
-        className={cn(favorited && "fill-current")}
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <Button
+            variant={favorited ? "default" : "outline"}
+            size="sm"
+            disabled={loading}
+            onClick={handleClick}
+          >
+            <HeartIcon
+              data-icon="inline-start"
+              className={cn(favorited && "fill-current")}
+            />
+            {favorited ? "已收藏" : "收藏"}
+          </Button>
+        }
       />
-      {favorited ? "已收藏" : "收藏"}
-    </Button>
+      <TooltipContent>
+        {favorited ? "点击取消收藏" : "点击收藏"}
+      </TooltipContent>
+    </Tooltip>
   );
 }
