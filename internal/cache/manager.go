@@ -112,7 +112,7 @@ func (m *Manager) InvalidateVideo(ctx context.Context, videoID int64) {
 	for _, sort := range []string{"", "id_desc", "rating_desc", "view_count_desc", "created_at_desc"} {
 		for _, page := range []int{1, 2} {
 			for _, limit := range []int{12, 20, 24} {
-				_ = m.cache.Delete(ctx, VideoListKey(0, sort, page, limit))
+				_ = m.cache.Delete(ctx, VideoListKey(0, 0, sort, page, limit))
 				_ = m.cache.Delete(ctx, OpenVideoListKey("default", page, limit))
 				_ = m.cache.Delete(ctx, OpenVideoListKey("apple_cms", page, limit))
 			}

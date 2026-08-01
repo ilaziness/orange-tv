@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, Outlet, useNavigate } from "react-router";
+import { Link, Outlet, useNavigate, useSearchParams } from "react-router";
 import type { Category } from "@orange-tv/shared";
 import { useAuth } from "@/hooks/useAuth";
 import { useSettings } from "@/hooks/useSettings";
@@ -93,6 +93,9 @@ export function ClientLayout() {
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyList, setHistoryList] = useState<HistoryEntry[]>([]);
+  const [params] = useSearchParams();
+  const selectedParentId = Number(params.get("parent_category_id") || 0);
+  const selectedCategoryId = Number(params.get("category_id") || 0);
   const navigate = useNavigate();
   const { profile, logout } = useAuth();
   const { site, feature } = useSettings();
@@ -130,7 +133,10 @@ export function ClientLayout() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (keyword.trim()) {
-      navigate(`/videos?keyword=${encodeURIComponent(keyword.trim())}`);
+      const newParams = new URLSearchParams(params);
+      newParams.set('keyword', keyword.trim());
+      newParams.set('page', '1');
+      navigate(`/videos?${newParams.toString()}`);
       setMobileOpen(false);
     }
   };
@@ -200,9 +206,9 @@ export function ClientLayout() {
               return (
                 <div key={root.id} className="flex flex-col gap-1.5">
                   <Link
-                    to={`/videos?category_id=${root.id}`}
+                    to={`/videos?parent_category_id=${root.id}&page=1`}
                     onClick={() => setCategoryOpen(false)}
-                    className="text-sm font-semibold text-foreground hover:text-primary transition-colors"
+                    className={`text-sm font-semibold transition-colors ${selectedParentId === root.id ? 'text-primary' : 'text-foreground hover:text-primary'}`}
                   >
                     {root.name}
                   </Link>
@@ -211,9 +217,9 @@ export function ClientLayout() {
                       {subs.map((sub) => (
                         <Link
                           key={sub.id}
-                          to={`/videos?category_id=${sub.id}`}
+                          to={`/videos?parent_category_id=${root.id}&category_id=${sub.id}&page=1`}
                           onClick={() => setCategoryOpen(false)}
-                          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                          className={`text-sm transition-colors ${selectedCategoryId === sub.id ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
                         >
                           {sub.name}
                         </Link>

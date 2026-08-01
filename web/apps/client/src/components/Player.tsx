@@ -65,8 +65,6 @@ function buildAdLayer(adConfig: AdSettings) {
 }
 
 const SVG_LIST = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>'
-const SVG_PREV = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5"/></svg>'
-const SVG_NEXT = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19"/></svg>'
 
 function playlistPlugin(option: {
   playlistRef: React.MutableRefObject<PlaylistItem[] | undefined>
@@ -110,30 +108,11 @@ function playlistPlugin(option: {
       }
     }
 
-    // Prev button
-    art.controls.add({
-      name: 'playlistPrev',
-      position: 'right',
-      html: SVG_PREV,
-      tooltip: '上一集',
-      style: { marginRight: '6px', opacity: '0.85', cursor: 'pointer' },
-      click: prev,
-    })
-
-    // Next button
-    art.controls.add({
-      name: 'playlistNext',
-      position: 'right',
-      html: SVG_NEXT,
-      tooltip: '下一集',
-      style: { marginRight: '6px', opacity: '0.85', cursor: 'pointer' },
-      click: next,
-    })
-
     // Playlist toggle button — delegates to React state
     art.controls.add({
       name: 'playlistToggle',
       position: 'right',
+      index: 100,
       html: SVG_LIST,
       tooltip: '播放列表',
       style: { marginRight: '6px', opacity: '0.85', cursor: 'pointer' },
@@ -227,7 +206,7 @@ export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sou
       loop: false,
       muted: false,
       mutex: true,
-      pip: true,
+      pip: false,
       fullscreen: true,
       fullscreenWeb: true,
       setting: false,
@@ -314,6 +293,14 @@ export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sou
       art.once('video:canplay', seekToResume)
     }
 
+    // Hide the HLS quality selector when only one resolution is available
+    art.on('ready', () => {
+      const hlsInstance = (art as unknown as { hls?: Hls }).hls
+      if (hlsInstance && hlsInstance.levels.length <= 1) {
+        try { art.controls.remove('hls-quality') } catch { /* ignore */ }
+      }
+    })
+
     // Progress callback with 3-second throttle — only record after 10 seconds
     let lastSavedTime = 0
     art.on('video:timeupdate', () => {
@@ -392,8 +379,8 @@ export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sou
       {hasPlaylist && (
         <div
           className={cn(
-            'overflow-y-auto bg-black/90 transition-all duration-300 ease-in-out',
-            'absolute inset-y-0 right-0 z-20 lg:static lg:h-full',
+            'overflow-y-auto overflow-x-hidden bg-zinc-900 text-white transition-all duration-300 ease-in-out',
+            'absolute inset-y-0 right-0 z-20 shadow-lg lg:static lg:h-full',
             playlistVisible ? 'w-44 opacity-100' : 'w-0 opacity-0',
           )}
         >

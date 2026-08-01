@@ -32,7 +32,7 @@ const (
 	TTLOpenVideoDetail    = 2 * time.Minute
 
 	// Video (client) - 视频列表（动态键）
-	KeyTplVideoList = "video:list:%d:%s:%d:%d"
+	KeyTplVideoList = "video:list:%d:%d:%s:%d:%d"
 	TTLVideoList    = 2 * time.Minute
 )
 
@@ -42,8 +42,8 @@ func SettingsGroupKey(group string) string {
 }
 
 // VideoListKey 生成客户端视频列表缓存键。
-func VideoListKey(categoryID uint64, sort string, page, limit int) string {
-	return fmt.Sprintf(KeyTplVideoList, categoryID, sort, page, limit)
+func VideoListKey(categoryID, parentCategoryID uint64, sort string, page, limit int) string {
+	return fmt.Sprintf(KeyTplVideoList, categoryID, parentCategoryID, sort, page, limit)
 }
 
 // OpenVideoListKey 生成 Open API 视频列表缓存键。

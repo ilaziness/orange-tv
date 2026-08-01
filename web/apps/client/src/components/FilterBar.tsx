@@ -1,10 +1,13 @@
 import { Button } from '@/components/ui/button'
+import type { Category } from '@orange-tv/shared'
 
 type FilterBarProps = {
   /** 当前选中分类 ID（可能是子分类） */
   categoryId: number
   /** 当前选中分类的父分类 ID（子分类时为父级，根分类时为 0） */
   parentCategoryId: number
+  /** 当前选中父分类下的二级分类列表 */
+  subCategories: Category[]
   yearStart: number
   yearEnd: number
   region: string
@@ -41,6 +44,7 @@ function buildYearOptions(): YearOption[] {
 export function FilterBar({
   categoryId,
   parentCategoryId,
+  subCategories,
   yearStart,
   yearEnd,
   region,
@@ -55,6 +59,30 @@ export function FilterBar({
 
   return (
     <div className="flex flex-col gap-3">
+      {/* 类别行：选择了一级分类后才展示 */}
+      {subCategories.length ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm text-muted-foreground">类别：</span>
+          <Button
+            variant={!categoryId ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onChange({ category_id: null })}
+          >
+            全部
+          </Button>
+          {subCategories.map((c) => (
+            <Button
+              key={c.id}
+              variant={categoryId === c.id ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => onChange({ category_id: c.id })}
+            >
+              {c.name}
+            </Button>
+          ))}
+        </div>
+      ) : null}
+
       {/* 年份行 */}
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-sm text-muted-foreground">年份：</span>

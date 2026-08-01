@@ -24,18 +24,16 @@ type VideoService interface {
 }
 
 type videoService struct {
-	videoRepo    repository.VideoRepository
-	categoryRepo repository.CategoryRepository
-	metaRepo     repository.MetadataRepository
-	playRepo     repository.PlayRepository
-	cache        *cache.Manager
-	log          *zap.Logger
+	videoRepo repository.VideoRepository
+	metaRepo  repository.MetadataRepository
+	playRepo  repository.PlayRepository
+	cache     *cache.Manager
+	log       *zap.Logger
 }
 
 // NewVideoService creates a client VideoService.
 func NewVideoService(
 	videoRepo repository.VideoRepository,
-	categoryRepo repository.CategoryRepository,
 	metaRepo repository.MetadataRepository,
 	playRepo repository.PlayRepository,
 	c *cache.Manager,
@@ -44,32 +42,7 @@ func NewVideoService(
 	if log == nil {
 		log = zap.NewNop()
 	}
-	return &videoService{videoRepo: videoRepo, categoryRepo: categoryRepo, metaRepo: metaRepo, playRepo: playRepo, cache: c, log: log}
-}
-
-// expandCategoryIDs collects the given category ID and all its descendant IDs.
-func (s *videoService) expandCategoryIDs(ctx context.Context, categoryID uint64) ([]uint64, error) {
-	if categoryID == 0 {
-		return nil, nil
-	}
-	items, err := s.categoryRepo.List(ctx, true)
-	if err != nil {
-		return nil, err
-	}
-	byParent := make(map[uint64][]uint64)
-	for _, c := range items {
-		byParent[c.ParentID] = append(byParent[c.ParentID], c.ID)
-	}
-	ids := []uint64{categoryID}
-	var collect func(pid uint64)
-	collect = func(pid uint64) {
-		for _, cid := range byParent[pid] {
-			ids = append(ids, cid)
-			collect(cid)
-		}
-	}
-	collect(categoryID)
-	return ids, nil
+	return &videoService{videoRepo: videoRepo, metaRepo: metaRepo, playRepo: playRepo, cache: c, log: log}
 }
 
 func (s *videoService) List(ctx context.Context, req *clientdto.VideoListRequest) ([]shareddto.VideoListItem, int, error) {
@@ -82,27 +55,22 @@ func (s *videoService) List(ctx context.Context, req *clientdto.VideoListRequest
 	cacheable := strings.TrimSpace(req.Region) == "" && req.YearStart == 0 && req.YearEnd == 0
 	cacheKey := ""
 	if cacheable {
-		cacheKey = cache.VideoListKey(req.CategoryID, sort, req.GetPage(), req.GetLimit())
+		cacheKey = cache.VideoListKey(req.CategoryID, req.ParentCategoryID, sort, req.GetPage(), req.GetLimit())
 		if e, err := s.cache.GetVideoListClient(ctx, cacheKey); err == nil && e != nil {
 			return e.Items, e.Total, nil
 		}
 	}
 
-	categoryIDs, err := s.expandCategoryIDs(ctx, req.CategoryID)
-	if err != nil {
-		s.log.Error("client video: expand category ids failed", zap.Error(err))
-		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
-	}
-
 	items, total, err := s.videoRepo.List(ctx, repository.VideoListFilter{
-		CategoryIDs: categoryIDs,
-		YearStart:   req.YearStart,
-		YearEnd:     req.YearEnd,
-		Region:      strings.TrimSpace(req.Region),
-		Sort:        sort,
-		OnlyOnline:  true,
-		Offset:      req.GetOffset(),
-		Limit:       req.GetLimit(),
+		CategoryID:       req.CategoryID,
+		ParentCategoryID: req.ParentCategoryID,
+		YearStart:        req.YearStart,
+		YearEnd:          req.YearEnd,
+		Region:           strings.TrimSpace(req.Region),
+		Sort:             sort,
+		OnlyOnline:       true,
+		Offset:           req.GetOffset(),
+		Limit:            req.GetLimit(),
 	})
 	if err != nil {
 		s.log.Error("client video: list failed", zap.Error(err))
@@ -116,26 +84,21 @@ func (s *videoService) List(ctx context.Context, req *clientdto.VideoListRequest
 }
 
 func (s *videoService) Search(ctx context.Context, req *clientdto.SearchRequest) ([]shareddto.VideoListItem, int, error) {
-	categoryIDs, err := s.expandCategoryIDs(ctx, req.CategoryID)
-	if err != nil {
-		s.log.Error("client video: expand category ids failed", zap.Error(err))
-		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
-	}
-
 	sort := strings.TrimSpace(req.Sort)
 	if sort == "" {
 		sort = "year_desc"
 	}
 	items, total, err := s.videoRepo.List(ctx, repository.VideoListFilter{
-		Keyword:     strings.TrimSpace(req.Keyword),
-		CategoryIDs: categoryIDs,
-		YearStart:   req.YearStart,
-		YearEnd:     req.YearEnd,
-		Region:      strings.TrimSpace(req.Region),
-		Sort:        sort,
-		OnlyOnline:  true,
-		Offset:      req.GetOffset(),
-		Limit:       req.GetLimit(),
+		Keyword:          strings.TrimSpace(req.Keyword),
+		CategoryID:       req.CategoryID,
+		ParentCategoryID: req.ParentCategoryID,
+		YearStart:        req.YearStart,
+		YearEnd:          req.YearEnd,
+		Region:           strings.TrimSpace(req.Region),
+		Sort:             sort,
+		OnlyOnline:       true,
+		Offset:           req.GetOffset(),
+		Limit:            req.GetLimit(),
 	})
 	if err != nil {
 		s.log.Error("client video: search failed", zap.Error(err))

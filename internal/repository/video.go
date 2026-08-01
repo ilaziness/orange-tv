@@ -23,22 +23,23 @@ type VideoTagRow struct {
 
 // VideoListFilter filters video queries.
 type VideoListFilter struct {
-	Keyword       string
-	CategoryID    uint64
-	CategoryIDs   []uint64
-	PublishStatus *uint8
-	Year          uint32 // exact year match (admin)
-	YearStart     uint32 // year range start (client, inclusive)
-	YearEnd       uint32 // year range end (client, inclusive)
-	Region        string
-	Language      string
-	Sort          string
-	DirectorID    uint64
-	ActorID       uint64
-	TagID         uint64
-	OnlyOnline    bool
-	Offset        int
-	Limit         int
+	Keyword          string
+	CategoryID       uint64
+	ParentCategoryID uint64
+	CategoryIDs      []uint64
+	PublishStatus    *uint8
+	Year             uint32 // exact year match (admin)
+	YearStart        uint32 // year range start (client, inclusive)
+	YearEnd          uint32 // year range end (client, inclusive)
+	Region           string
+	Language         string
+	Sort             string
+	DirectorID       uint64
+	ActorID          uint64
+	TagID            uint64
+	OnlyOnline       bool
+	Offset           int
+	Limit            int
 }
 
 // VideoRepository provides video and association persistence.
@@ -114,6 +115,9 @@ func (r *videoRepo) List(ctx context.Context, f VideoListFilter) ([]model.Videos
 	}
 	if f.CategoryID > 0 {
 		q = q.Where("category_id = ?", f.CategoryID)
+	}
+	if f.ParentCategoryID > 0 {
+		q = q.Where("parent_category_id = ?", f.ParentCategoryID)
 	}
 	if len(f.CategoryIDs) > 0 {
 		q = q.Where("category_id IN (?)", bun.In(f.CategoryIDs))

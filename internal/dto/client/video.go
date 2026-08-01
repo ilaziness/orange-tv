@@ -5,22 +5,24 @@ import "github.com/ilaziness/orange-tv/internal/dto"
 // VideoListRequest filters public video list.
 type VideoListRequest struct {
 	dto.PaginationRequest
-	CategoryID uint64 `form:"category_id"`
-	YearStart  uint32 `form:"year_start"`
-	YearEnd    uint32 `form:"year_end"`
-	Region     string `form:"region"`
-	Sort       string `form:"sort"`
+	CategoryID       uint64 `form:"category_id"`
+	ParentCategoryID uint64 `form:"parent_category_id"`
+	YearStart        uint32 `form:"year_start"`
+	YearEnd          uint32 `form:"year_end"`
+	Region           string `form:"region"`
+	Sort             string `form:"sort"`
 }
 
 // SearchRequest is the public search query with optional filters.
 type SearchRequest struct {
 	dto.PaginationRequest
-	Keyword    string `form:"keyword" validate:"required,min=1,max=100"`
-	CategoryID uint64 `form:"category_id"`
-	YearStart  uint32 `form:"year_start"`
-	YearEnd    uint32 `form:"year_end"`
-	Region     string `form:"region"`
-	Sort       string `form:"sort"`
+	Keyword          string `form:"keyword" validate:"required,min=1,max=100"`
+	CategoryID       uint64 `form:"category_id"`
+	ParentCategoryID uint64 `form:"parent_category_id"`
+	YearStart        uint32 `form:"year_start"`
+	YearEnd          uint32 `form:"year_end"`
+	Region           string `form:"region"`
+	Sort             string `form:"sort"`
 }
 
 // RelatedRequest loads related videos for a detail page.

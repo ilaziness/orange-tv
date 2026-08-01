@@ -36,6 +36,7 @@ export default function VideosPage() {
 
   const pageSize = usePageSize()
   const categoryId = Number(params.get('category_id') || 0)
+  const parentCategoryId = Number(params.get('parent_category_id') || 0)
   const yearStart = Number(params.get('year_start') || 0)
   const yearEnd = Number(params.get('year_end') || 0)
   const region = params.get('region') || ''
@@ -54,6 +55,8 @@ export default function VideosPage() {
         const res = keyword
           ? await clientApi.search(keyword, page, {
               page_size: pageSize,
+              parent_category_id: parentCategoryId || undefined,
+              category_id: categoryId || undefined,
               year_start: yearStart || undefined,
               year_end: yearEnd || undefined,
               region: region || undefined,
@@ -61,6 +64,7 @@ export default function VideosPage() {
           : await clientApi.videos({
               page,
               page_size: pageSize,
+              parent_category_id: parentCategoryId || undefined,
               category_id: categoryId || undefined,
               year_start: yearStart || undefined,
               year_end: yearEnd || undefined,
@@ -74,7 +78,7 @@ export default function VideosPage() {
         setLoading(false)
       }
     })()
-  }, [categoryId, yearStart, yearEnd, region, keyword, page, pageSize])
+  }, [parentCategoryId, categoryId, yearStart, yearEnd, region, keyword, page, pageSize])
 
   const updateParams = (updates: Record<string, string | number | null>) => {
     const newParams = new URLSearchParams(params)
@@ -88,14 +92,12 @@ export default function VideosPage() {
 
   // categories 是树结构（roots with children）
   const roots = categories
-  const currentRoot = roots.find((c) => c.id === categoryId)
+  const currentRoot = roots.find((c) => c.id === parentCategoryId)
   const currentSub = roots.flatMap((r) => r.children || []).find((c) => c.id === categoryId)
-  const currentCategory = currentRoot || currentSub || null
-  // 当前选中分类的父级（用于显示二级分类按钮）
-  const parentOfCurrent = currentSub ? roots.find((r) => r.id === currentSub.parent_id) : null
-  const subCategoriesToShow = currentRoot?.children || (parentOfCurrent?.children || [])
-  // 传给 FilterBar 的父分类 ID：子分类时为父级 ID，根分类或未选时为 0
-  const filterParentCategoryId = currentSub ? currentSub.parent_id : 0
+  const currentCategory = currentSub || currentRoot || null
+  const subCategoriesToShow = currentRoot?.children || []
+  // 传给 FilterBar 的父分类 ID：根分类 ID，未选时为 0
+  const filterParentCategoryId = currentRoot?.id || 0
 
   const title = keyword
     ? `搜索：${keyword}`
@@ -112,43 +114,31 @@ export default function VideosPage() {
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap gap-2">
             <Button
-              variant={!categoryId ? 'default' : 'outline'}
+              variant={!parentCategoryId && !categoryId ? 'default' : 'outline'}
               size="sm"
-              onClick={() => updateParams({ category_id: null })}
+              onClick={() => updateParams({ parent_category_id: null, category_id: null })}
             >
               全部
             </Button>
             {roots.map((c) => (
               <Button
                 key={c.id}
-                variant={categoryId === c.id ? 'default' : 'outline'}
+                variant={parentCategoryId === c.id ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => updateParams({ category_id: c.id })}
+                onClick={() => updateParams({ parent_category_id: c.id, category_id: null })}
               >
                 {c.name}
               </Button>
             ))}
           </div>
-          {subCategoriesToShow.length ? (
-            <div className="flex flex-wrap gap-2">
-              {subCategoriesToShow.map((c) => (
-                <Button
-                  key={c.id}
-                  variant={categoryId === c.id ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => updateParams({ category_id: c.id })}
-                >
-                  {c.name}
-                </Button>
-              ))}
-            </div>
-          ) : null}
+
         </div>
       ) : null}
 
       <FilterBar
         categoryId={categoryId}
         parentCategoryId={filterParentCategoryId}
+        subCategories={subCategoriesToShow}
         yearStart={yearStart}
         yearEnd={yearEnd}
         region={region}
