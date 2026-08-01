@@ -9,7 +9,6 @@ import (
 	"github.com/ilaziness/orange-tv/internal/constant"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
-	"github.com/ilaziness/orange-tv/internal/utils"
 	"github.com/uptrace/bun"
 	"go.uber.org/zap"
 )
@@ -329,7 +328,7 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 			if item.Duration > 0 {
 				existing.Duration = uint32(item.Duration)
 			}
-			if rd := parseReleaseDate(item.ReleaseDate); rd != nil {
+			if rd := releaseDatePtr(item.ReleaseDate); rd != nil {
 				existing.ReleaseDate = rd
 			}
 			if serialStatus > 0 {
@@ -363,7 +362,7 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 				Region:           item.Region,
 				Language:         item.Language,
 				Duration:         uint32(item.Duration),
-				ReleaseDate:      parseReleaseDate(item.ReleaseDate),
+				ReleaseDate:      releaseDatePtr(item.ReleaseDate),
 				CollectSourceID:  uint64(source.ID),
 			}
 			if v.SerialStatus == 0 {
@@ -530,16 +529,14 @@ func (e *Engine) ensureTags(ctx context.Context, names []string) ([]uint64, erro
 	return ids, nil
 }
 
-func parseReleaseDate(s string) *time.Time {
+// releaseDatePtr trims the raw collect release_date string and returns a pointer
+// (nil when empty). The value is stored as-is to preserve the original source format.
+func releaseDatePtr(s string) *string {
 	s = strings.TrimSpace(s)
 	if s == "" {
 		return nil
 	}
-	tm, err := utils.ParseFlexibleDate(s, []string{"2006-01-02", "2006/01/02", "2006-1-2", time.RFC3339})
-	if err != nil {
-		return nil
-	}
-	return &tm
+	return &s
 }
 
 // parseSerialStatus parses vod_remarks to determine serial status.

@@ -1,98 +1,105 @@
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { Button } from '@/components/ui/button'
 
 type FilterBarProps = {
-  year: number
+  /** 当前选中分类 ID（可能是子分类） */
+  categoryId: number
+  /** 当前选中分类的父分类 ID（子分类时为父级，根分类时为 0） */
+  parentCategoryId: number
+  yearStart: number
+  yearEnd: number
   region: string
-  language: string
-  sort: string
   onChange: (updates: Record<string, string | number | null>) => void
 }
 
-const REGIONS = ['中国大陆', '中国香港', '中国台湾', '美国', '日本', '韩国', '英国', '法国', '德国', '其他']
-const LANGUAGES = ['普通话', '英语', '日语', '韩语', '粤语', '其他']
-const SORTS = [
-  { value: 'created_at_desc', label: '最新上架' },
-  { value: 'rating_desc', label: '评分最高' },
-  { value: 'view_count_desc', label: '播放最多' },
-]
+// 主要地区筛选项（后端用 LIKE 模糊匹配，"大陆"可同时命中"大陆"和"中国大陆"）
+const REGIONS = ['大陆', '中国香港', '美国', '日本', '韩国', '英国']
 
-export function FilterBar({ year, region, language, sort, onChange }: FilterBarProps) {
+// 体育分类（id=8）仅展示年份筛选，不展示地区
+const SPORTS_CATEGORY_ID = 8
+
+type YearOption = { label: string; start: number; end: number }
+
+function buildYearOptions(): YearOption[] {
   const currentYear = new Date().getFullYear()
+  const opts: YearOption[] = []
+  // 近 6 年（含当前年）展示具体年份
+  for (let i = 0; i < 6; i++) {
+    const y = currentYear - i
+    opts.push({ label: String(y), start: y, end: y })
+  }
+  // 年代展示到 90 年代
+  const decades: YearOption[] = [
+    { label: '2020年代', start: 2020, end: 2029 },
+    { label: '2010年代', start: 2010, end: 2019 },
+    { label: '2000年代', start: 2000, end: 2009 },
+    { label: '90年代', start: 1990, end: 1999 },
+  ]
+  opts.push(...decades)
+  return opts
+}
+
+export function FilterBar({
+  categoryId,
+  parentCategoryId,
+  yearStart,
+  yearEnd,
+  region,
+  onChange,
+}: FilterBarProps) {
+  // 判断是否为体育分类（根分类或其子分类）
+  const isSports = categoryId === SPORTS_CATEGORY_ID || parentCategoryId === SPORTS_CATEGORY_ID
+  const yearOptions = buildYearOptions()
+
+  const isYearActive = (opt: YearOption) =>
+    yearStart === opt.start && yearEnd === opt.end
 
   return (
-    <div className="flex flex-wrap gap-3">
-      <Select
-        value={year ? String(year) : ''}
-        onValueChange={(v) => onChange({ year: v ? Number(v) : null })}
-      >
-        <SelectTrigger className="w-32">
-          <SelectValue placeholder="全部年份" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            {Array.from({ length: 50 }, (_, i) => currentYear - i).map((y) => (
-              <SelectItem key={y} value={String(y)}>{y}</SelectItem>
-            ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
+    <div className="flex flex-col gap-3">
+      {/* 年份行 */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm text-muted-foreground">年份：</span>
+        <Button
+          variant={!yearStart && !yearEnd ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => onChange({ year_start: null, year_end: null })}
+        >
+          全部
+        </Button>
+        {yearOptions.map((opt) => (
+          <Button
+            key={opt.label}
+            variant={isYearActive(opt) ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onChange({ year_start: opt.start, year_end: opt.end })}
+          >
+            {opt.label}
+          </Button>
+        ))}
+      </div>
 
-      <Select
-        value={region || ''}
-        onValueChange={(v) => onChange({ region: v || null })}
-      >
-        <SelectTrigger className="w-32">
-          <SelectValue placeholder="全部地区" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            {REGIONS.map((r) => (
-              <SelectItem key={r} value={r}>{r}</SelectItem>
-            ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
-
-      <Select
-        value={language || ''}
-        onValueChange={(v) => onChange({ language: v || null })}
-      >
-        <SelectTrigger className="w-32">
-          <SelectValue placeholder="全部语言" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            {LANGUAGES.map((l) => (
-              <SelectItem key={l} value={l}>{l}</SelectItem>
-            ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
-
-      <Select
-        value={sort}
-        onValueChange={(v) => onChange({ sort: v })}
-      >
-        <SelectTrigger className="w-32">
-          <SelectValue>
-            {(value: string) => SORTS.find((s) => s.value === value)?.label || '排序'}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            {SORTS.map((s) => (
-              <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-            ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
+      {/* 地区行：体育分类不展示 */}
+      {!isSports ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-sm text-muted-foreground">地区：</span>
+          <Button
+            variant={!region ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onChange({ region: null })}
+          >
+            全部
+          </Button>
+          {REGIONS.map((r) => (
+            <Button
+              key={r}
+              variant={region === r ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => onChange({ region: r })}
+            >
+              {r}
+            </Button>
+          ))}
+        </div>
+      ) : null}
     </div>
   )
 }

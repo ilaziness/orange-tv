@@ -73,11 +73,16 @@ func (s *videoService) expandCategoryIDs(ctx context.Context, categoryID uint64)
 }
 
 func (s *videoService) List(ctx context.Context, req *clientdto.VideoListRequest) ([]shareddto.VideoListItem, int, error) {
+	// 默认按年份倒序；首页等场景可通过 sort 参数指定其他排序
+	sort := strings.TrimSpace(req.Sort)
+	if sort == "" {
+		sort = "year_desc"
+	}
 	// Cache hot home/list queries without keyword search complexity.
-	cacheable := strings.TrimSpace(req.Region) == "" && strings.TrimSpace(req.Language) == "" && req.Year == 0
+	cacheable := strings.TrimSpace(req.Region) == "" && req.YearStart == 0 && req.YearEnd == 0
 	cacheKey := ""
 	if cacheable {
-		cacheKey = cache.VideoListKey(req.CategoryID, req.Sort, req.GetPage(), req.GetLimit())
+		cacheKey = cache.VideoListKey(req.CategoryID, sort, req.GetPage(), req.GetLimit())
 		if e, err := s.cache.GetVideoListClient(ctx, cacheKey); err == nil && e != nil {
 			return e.Items, e.Total, nil
 		}
@@ -91,10 +96,10 @@ func (s *videoService) List(ctx context.Context, req *clientdto.VideoListRequest
 
 	items, total, err := s.videoRepo.List(ctx, repository.VideoListFilter{
 		CategoryIDs: categoryIDs,
-		Year:        req.Year,
+		YearStart:   req.YearStart,
+		YearEnd:     req.YearEnd,
 		Region:      strings.TrimSpace(req.Region),
-		Language:    strings.TrimSpace(req.Language),
-		Sort:        req.Sort,
+		Sort:        sort,
 		OnlyOnline:  true,
 		Offset:      req.GetOffset(),
 		Limit:       req.GetLimit(),
@@ -117,13 +122,17 @@ func (s *videoService) Search(ctx context.Context, req *clientdto.SearchRequest)
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
 
+	sort := strings.TrimSpace(req.Sort)
+	if sort == "" {
+		sort = "year_desc"
+	}
 	items, total, err := s.videoRepo.List(ctx, repository.VideoListFilter{
 		Keyword:     strings.TrimSpace(req.Keyword),
 		CategoryIDs: categoryIDs,
-		Year:        req.Year,
+		YearStart:   req.YearStart,
+		YearEnd:     req.YearEnd,
 		Region:      strings.TrimSpace(req.Region),
-		Language:    strings.TrimSpace(req.Language),
-		Sort:        req.Sort,
+		Sort:        sort,
 		OnlyOnline:  true,
 		Offset:      req.GetOffset(),
 		Limit:       req.GetLimit(),
@@ -310,7 +319,7 @@ func (s *videoService) Get(ctx context.Context, id int64) (*clientdto.ClientVide
 	}
 	release := ""
 	if video.ReleaseDate != nil {
-		release = video.ReleaseDate.Format("2006-01-02")
+		release = *video.ReleaseDate
 	}
 	return &clientdto.ClientVideoDetailResponse{
 		ID: video.ID, Title: video.Title, Subtitle: video.Subtitle, Description: desc,

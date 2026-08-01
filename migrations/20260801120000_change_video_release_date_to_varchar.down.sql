@@ -1,0 +1,1 @@
+ALTER TABLE videos MODIFY COLUMN release_date DATE NULL COMMENT '上映日期';

@@ -3,7 +3,6 @@ package admin
 import (
 	"context"
 	"strings"
-	"time"
 
 	"github.com/ilaziness/orange-tv/internal/cache"
 	"github.com/ilaziness/orange-tv/internal/constant"
@@ -125,9 +124,10 @@ func (s *videoService) Create(ctx context.Context, req *dto.CreateVideoRequest) 
 		d := strings.TrimSpace(req.Description)
 		desc = &d
 	}
-	releaseDate, err := parseOptionalDate(req.ReleaseDate)
-	if err != nil {
-		return nil, errcode.WithMessage(errcode.ParamError, "上映日期格式无效，期望 YYYY-MM-DD")
+	releaseDate := strings.TrimSpace(req.ReleaseDate)
+	var releaseDatePtr *string
+	if releaseDate != "" {
+		releaseDatePtr = &releaseDate
 	}
 
 	video := &model.Videos{
@@ -143,10 +143,10 @@ func (s *videoService) Create(ctx context.Context, req *dto.CreateVideoRequest) 
 		Region:        strings.TrimSpace(req.Region),
 		Duration:      req.Duration,
 		Language:      strings.TrimSpace(req.Language),
-		ReleaseDate:   releaseDate,
+		ReleaseDate:   releaseDatePtr,
 	}
 
-	err = s.videoRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
+	err := s.videoRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
 		txRepo := s.videoRepo.WithTx(tx)
 		if err := txRepo.Create(ctx, video); err != nil {
 			return err
@@ -233,11 +233,12 @@ func (s *videoService) Update(ctx context.Context, id int64, req *dto.UpdateVide
 		video.Language = strings.TrimSpace(*req.Language)
 	}
 	if req.ReleaseDate != nil {
-		rd, err := parseOptionalDate(*req.ReleaseDate)
-		if err != nil {
-			return nil, errcode.WithMessage(errcode.ParamError, "上映日期格式无效，期望 YYYY-MM-DD")
+		rd := strings.TrimSpace(*req.ReleaseDate)
+		if rd == "" {
+			video.ReleaseDate = nil
+		} else {
+			video.ReleaseDate = &rd
 		}
-		video.ReleaseDate = rd
 	}
 
 	err = s.videoRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
@@ -421,7 +422,7 @@ func (s *videoService) getDetail(ctx context.Context, id int64, clientOnly bool)
 	}
 	release := ""
 	if video.ReleaseDate != nil {
-		release = video.ReleaseDate.Format("2006-01-02")
+		release = *video.ReleaseDate
 	}
 
 	resp := &shareddto.VideoDetailResponse{
@@ -588,16 +589,4 @@ func toActorRels(inputs []dto.VideoActorInput) []model.VideoActors {
 		})
 	}
 	return out
-}
-
-func parseOptionalDate(s string) (*time.Time, error) {
-	s = strings.TrimSpace(s)
-	if s == "" {
-		return nil, nil
-	}
-	t, err := time.ParseInLocation("2006-01-02", s, time.Local)
-	if err != nil {
-		return nil, err
-	}
-	return &t, nil
 }

@@ -50,8 +50,8 @@ type Videos struct {
 	Language string `bun:"language,notnull" json:"language"`
 	// 采集源ID，标识最初由哪个采集源采集
 	CollectSourceID uint64 `bun:"collect_source_id,notnull" json:"collect_source_id"`
-	// 上映日期
-	ReleaseDate *time.Time `bun:"release_date" json:"release_date"`
+	// 上映日期（采集原始字符串）
+	ReleaseDate *string    `bun:"release_date" json:"release_date"`
 	CreatedAt   *time.Time `bun:"created_at" json:"created_at"`
 	UpdatedAt   *time.Time `bun:"updated_at" json:"updated_at"`
 	// 软删除时间

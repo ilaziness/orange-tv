@@ -31,7 +31,7 @@ type CreateVideoRequest struct {
 	Region        string            `json:"region" validate:"omitempty,max=50"`
 	Duration      uint32            `json:"duration" validate:"omitempty,min=0"`
 	Language      string            `json:"language" validate:"omitempty,max=50"`
-	ReleaseDate   string            `json:"release_date" validate:"omitempty"`
+	ReleaseDate   string            `json:"release_date" validate:"omitempty,max=64"`
 	DirectorIDs   []uint64          `json:"director_ids" validate:"omitempty,dive,min=1"`
 	Actors        []VideoActorInput `json:"actors" validate:"omitempty,dive"`
 	TagIDs        []uint64          `json:"tag_ids" validate:"omitempty,dive,min=1"`
@@ -51,7 +51,7 @@ type UpdateVideoRequest struct {
 	Region        *string            `json:"region" validate:"omitempty,max=50"`
 	Duration      *uint32            `json:"duration" validate:"omitempty,min=0"`
 	Language      *string            `json:"language" validate:"omitempty,max=50"`
-	ReleaseDate   *string            `json:"release_date" validate:"omitempty"`
+	ReleaseDate   *string            `json:"release_date" validate:"omitempty,max=64"`
 	DirectorIDs   *[]uint64          `json:"director_ids" validate:"omitempty,dive,min=1"`
 	Actors        *[]VideoActorInput `json:"actors" validate:"omitempty,dive"`
 	TagIDs        *[]uint64          `json:"tag_ids" validate:"omitempty,dive,min=1"`

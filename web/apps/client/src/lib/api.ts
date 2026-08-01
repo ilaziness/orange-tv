@@ -59,7 +59,7 @@ export const clientApi = {
     extra?: Record<string, string | number | undefined>,
   ) =>
     apiGet<PageData<VideoListItem>>(CLIENT_API_BASE, "/search", {
-      query: { keyword, page, page_size: 20, ...extra },
+      query: { keyword, page, page_size: 30, ...extra },
     }),
   live: (query?: Record<string, string | number | undefined>) =>
     apiGet<PageData<LiveChannel>>(CLIENT_API_BASE, "/live", { query }),

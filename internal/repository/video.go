@@ -27,7 +27,9 @@ type VideoListFilter struct {
 	CategoryID    uint64
 	CategoryIDs   []uint64
 	PublishStatus *uint8
-	Year          uint32
+	Year          uint32 // exact year match (admin)
+	YearStart     uint32 // year range start (client, inclusive)
+	YearEnd       uint32 // year range end (client, inclusive)
 	Region        string
 	Language      string
 	Sort          string
@@ -119,8 +121,15 @@ func (r *videoRepo) List(ctx context.Context, f VideoListFilter) ([]model.Videos
 	if f.Year > 0 {
 		q = q.Where("year = ?", f.Year)
 	}
+	if f.YearStart > 0 && f.YearEnd > 0 {
+		q = q.Where("year BETWEEN ? AND ?", f.YearStart, f.YearEnd)
+	} else if f.YearStart > 0 {
+		q = q.Where("year >= ?", f.YearStart)
+	} else if f.YearEnd > 0 {
+		q = q.Where("year <= ?", f.YearEnd)
+	}
 	if f.Region != "" {
-		q = q.Where("region = ?", f.Region)
+		q = q.Where("(region = ? OR region LIKE ?)", f.Region, "%"+f.Region+"%")
 	}
 	if f.Language != "" {
 		q = q.Where("language = ?", f.Language)
@@ -170,7 +179,7 @@ func videoSortExpr(sort string) string {
 	case "created_at_asc":
 		return "created_at ASC, id ASC"
 	default:
-		return "created_at DESC, id DESC"
+		return "year DESC, id DESC"
 	}
 }
 

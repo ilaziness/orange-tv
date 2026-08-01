@@ -153,7 +153,7 @@ export function ClientLayout() {
 
   const renderSearch = () => (
     <form onSubmit={handleSearch}>
-      <InputGroup className="w-48">
+      <InputGroup className="w-64">
         <InputGroupInput
           placeholder="搜索影视"
           value={keyword}
@@ -377,16 +377,23 @@ export function ClientLayout() {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
-        <div className="flex h-14 w-full items-center justify-start gap-4 px-4">
-          {renderLogo()}
+        <div className="flex h-14 w-full items-center gap-4 px-4">
+          {/* 左侧：Logo + 导航 */}
+          <div className="flex items-center gap-4">
+            {renderLogo()}
+            <nav className="hidden items-center gap-4 md:flex">
+              {renderNavLinks()}
+            </nav>
+          </div>
 
-          <nav className="hidden items-center gap-4 md:flex">
-            {renderNavLinks()}
-          </nav>
+          {/* 中间：搜索栏（仅桌面端居中） */}
+          <div className="hidden flex-1 justify-center md:flex">
+            {renderSearch()}
+          </div>
 
-          <div className="ml-auto flex items-center gap-2">
+          {/* 右侧：历史 + 主题 + 用户 + 移动端菜单 */}
+          <div className="flex items-center gap-2">
             <div className="hidden items-center gap-2 md:flex">
-              {renderSearch()}
               {renderHistoryPopover()}
             </div>
             <ThemeToggle />

@@ -142,7 +142,8 @@ export function VideoBasicForm({ form, setForm, categories }: VideoBasicFormProp
         <FieldLabel htmlFor="release_date">上映日期</FieldLabel>
         <Input
           id="release_date"
-          type="date"
+          type="text"
+          placeholder="如 2024-01-01 或 2024年3月"
           value={form.release_date}
           onChange={(e) => setForm((prev) => ({ ...prev, release_date: e.target.value }))}
         />

@@ -9,7 +9,22 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { AlertCircleIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
 
-const PAGE_SIZE = 24
+const MOBILE_PAGE_SIZE = 24
+const PC_PAGE_SIZE = 64
+const PC_BREAKPOINT = 768
+
+function usePageSize(): number {
+  const [isPC, setIsPC] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia(`(min-width: ${PC_BREAKPOINT}px)`).matches : true,
+  )
+  useEffect(() => {
+    const mql = window.matchMedia(`(min-width: ${PC_BREAKPOINT}px)`)
+    const handler = (e: MediaQueryListEvent) => setIsPC(e.matches)
+    mql.addEventListener('change', handler)
+    return () => mql.removeEventListener('change', handler)
+  }, [])
+  return isPC ? PC_PAGE_SIZE : MOBILE_PAGE_SIZE
+}
 
 export default function VideosPage() {
   const [params, setParams] = useSearchParams()
@@ -19,11 +34,11 @@ export default function VideosPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
+  const pageSize = usePageSize()
   const categoryId = Number(params.get('category_id') || 0)
-  const year = Number(params.get('year') || 0)
+  const yearStart = Number(params.get('year_start') || 0)
+  const yearEnd = Number(params.get('year_end') || 0)
   const region = params.get('region') || ''
-  const language = params.get('language') || ''
-  const sort = params.get('sort') || 'created_at_desc'
   const keyword = params.get('keyword') || ''
   const page = Number(params.get('page') || 1)
 
@@ -38,18 +53,18 @@ export default function VideosPage() {
       try {
         const res = keyword
           ? await clientApi.search(keyword, page, {
-              year: year || undefined,
+              page_size: pageSize,
+              year_start: yearStart || undefined,
+              year_end: yearEnd || undefined,
               region: region || undefined,
-              language: language || undefined,
             })
           : await clientApi.videos({
               page,
-              page_size: PAGE_SIZE,
+              page_size: pageSize,
               category_id: categoryId || undefined,
-              year: year || undefined,
+              year_start: yearStart || undefined,
+              year_end: yearEnd || undefined,
               region: region || undefined,
-              language: language || undefined,
-              sort,
             })
         setVideos(res.data.list || [])
         setTotal(res.data.total || 0)
@@ -59,7 +74,7 @@ export default function VideosPage() {
         setLoading(false)
       }
     })()
-  }, [categoryId, year, region, language, sort, keyword, page])
+  }, [categoryId, yearStart, yearEnd, region, keyword, page, pageSize])
 
   const updateParams = (updates: Record<string, string | number | null>) => {
     const newParams = new URLSearchParams(params)
@@ -79,6 +94,8 @@ export default function VideosPage() {
   // 当前选中分类的父级（用于显示二级分类按钮）
   const parentOfCurrent = currentSub ? roots.find((r) => r.id === currentSub.parent_id) : null
   const subCategoriesToShow = currentRoot?.children || (parentOfCurrent?.children || [])
+  // 传给 FilterBar 的父分类 ID：子分类时为父级 ID，根分类或未选时为 0
+  const filterParentCategoryId = currentSub ? currentSub.parent_id : 0
 
   const title = keyword
     ? `搜索：${keyword}`
@@ -130,10 +147,11 @@ export default function VideosPage() {
       ) : null}
 
       <FilterBar
-        year={year}
+        categoryId={categoryId}
+        parentCategoryId={filterParentCategoryId}
+        yearStart={yearStart}
+        yearEnd={yearEnd}
         region={region}
-        language={language}
-        sort={sort}
         onChange={updateParams}
       />
 
@@ -158,7 +176,7 @@ export default function VideosPage() {
         <VideoGrid items={videos} />
       )}
 
-      {total > PAGE_SIZE ? (
+      {total > pageSize ? (
         <div className="flex items-center justify-center gap-4">
           <Button
             variant="outline"
@@ -173,7 +191,7 @@ export default function VideosPage() {
           <Button
             variant="outline"
             size="sm"
-            disabled={page * PAGE_SIZE >= total}
+            disabled={page * pageSize >= total}
             onClick={() => updateParams({ page: page + 1 })}
           >
             下一页

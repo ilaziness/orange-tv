@@ -6,9 +6,9 @@ import "github.com/ilaziness/orange-tv/internal/dto"
 type VideoListRequest struct {
 	dto.PaginationRequest
 	CategoryID uint64 `form:"category_id"`
-	Year       uint32 `form:"year"`
+	YearStart  uint32 `form:"year_start"`
+	YearEnd    uint32 `form:"year_end"`
 	Region     string `form:"region"`
-	Language   string `form:"language"`
 	Sort       string `form:"sort"`
 }
 
@@ -17,9 +17,9 @@ type SearchRequest struct {
 	dto.PaginationRequest
 	Keyword    string `form:"keyword" validate:"required,min=1,max=100"`
 	CategoryID uint64 `form:"category_id"`
-	Year       uint32 `form:"year"`
+	YearStart  uint32 `form:"year_start"`
+	YearEnd    uint32 `form:"year_end"`
 	Region     string `form:"region"`
-	Language   string `form:"language"`
 	Sort       string `form:"sort"`
 }
 
