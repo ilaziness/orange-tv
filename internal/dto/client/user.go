@@ -64,6 +64,7 @@ type HistoryItem struct {
 	Title        string `json:"title"`
 	Cover        string `json:"cover"`
 	Year         string `json:"year"`
+	CategoryName string `json:"category_name"`
 	PlaySourceID uint64 `json:"play_source_id"`
 	EpisodeID    uint64 `json:"episode_id"`
 	Progress     uint32 `json:"progress"`

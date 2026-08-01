@@ -43,13 +43,14 @@ type UserService interface {
 }
 
 type userService struct {
-	adminRepo   repository.AdminRepository
-	userRepo    repository.UserFeatureRepository
-	videoRepo   repository.VideoRepository
-	jwtMgr      *auth.JWTManager
-	accessTTL   int
-	settingsSvc service.SettingsService
-	log         *zap.Logger
+	adminRepo    repository.AdminRepository
+	userRepo     repository.UserFeatureRepository
+	videoRepo    repository.VideoRepository
+	categoryRepo repository.CategoryRepository
+	jwtMgr       *auth.JWTManager
+	accessTTL    int
+	settingsSvc  service.SettingsService
+	log          *zap.Logger
 }
 
 // NewUserService creates a client UserService.
@@ -57,6 +58,7 @@ func NewUserService(
 	adminRepo repository.AdminRepository,
 	userRepo repository.UserFeatureRepository,
 	videoRepo repository.VideoRepository,
+	categoryRepo repository.CategoryRepository,
 	jwtMgr *auth.JWTManager,
 	accessTTL int,
 	settingsSvc service.SettingsService,
@@ -69,13 +71,14 @@ func NewUserService(
 		log = zap.NewNop()
 	}
 	return &userService{
-		adminRepo:   adminRepo,
-		userRepo:    userRepo,
-		videoRepo:   videoRepo,
-		jwtMgr:      jwtMgr,
-		accessTTL:   accessTTL,
-		settingsSvc: settingsSvc,
-		log:         log,
+		adminRepo:    adminRepo,
+		userRepo:     userRepo,
+		videoRepo:    videoRepo,
+		categoryRepo: categoryRepo,
+		jwtMgr:       jwtMgr,
+		accessTTL:    accessTTL,
+		settingsSvc:  settingsSvc,
+		log:          log,
 	}
 }
 
@@ -259,6 +262,11 @@ func (s *userService) ListHistory(ctx context.Context, userID int64, req *client
 			if v.Year > 0 {
 				item.Year = strconv.FormatUint(uint64(v.Year), 10)
 			}
+			if v.CategoryID > 0 {
+				if cat, _ := s.categoryRepo.GetByID(ctx, int64(v.CategoryID)); cat != nil {
+					item.CategoryName = cat.Name
+				}
+			}
 		}
 		out = append(out, item)
 	}
@@ -288,6 +296,11 @@ func (s *userService) GetHistory(ctx context.Context, userID, videoID int64) (*c
 		item.Cover = v.CoverImage
 		if v.Year > 0 {
 			item.Year = strconv.FormatUint(uint64(v.Year), 10)
+		}
+		if v.CategoryID > 0 {
+			if cat, _ := s.categoryRepo.GetByID(ctx, int64(v.CategoryID)); cat != nil {
+				item.CategoryName = cat.Name
+			}
 		}
 	}
 	return &item, nil

@@ -9,18 +9,20 @@ type Props = {
   sourceId: number
   episodeId: number
   title: string
+  categoryName?: string
   year?: string
   cover?: string
   progress: number
 }
 
-export function HistoryCard({ videoId, sourceId, episodeId, title, year, cover, progress }: Props) {
+export function HistoryCard({ videoId, sourceId, episodeId, title, categoryName, year, cover, progress }: Props) {
   const [error, setError] = useState(false)
   const hasCover = cover && !error
   const to = `/play/${videoId}/${sourceId}/${episodeId}`
+  const metaParts = [categoryName || null, year || null].filter((v): v is string => v !== null)
   return (
     <Link to={to} className="block w-28 shrink-0 cursor-pointer">
-      <Card className="overflow-hidden pt-0 transition-all hover:ring-primary/40 hover:transition-all">
+      <Card className="gap-0 overflow-hidden pb-1.5 pt-0 transition-all hover:ring-primary/40 hover:transition-all">
         <div className="relative flex aspect-[2/3] w-full items-center justify-center bg-muted">
           {hasCover ? (
             <img
@@ -38,9 +40,9 @@ export function HistoryCard({ videoId, sourceId, episodeId, title, year, cover, 
             </div>
           ) : null}
         </div>
-        <div className="flex flex-col gap-1 p-2">
+        <div className="flex flex-col gap-0.5 p-1.5">
           <h3 className="truncate text-xs font-medium">{title}</h3>
-          {year ? <p className="text-xs text-muted-foreground">{year}</p> : null}
+          {metaParts.length > 0 && <p className="truncate text-xs text-muted-foreground">{metaParts.join(' · ')}</p>}
         </div>
       </Card>
     </Link>

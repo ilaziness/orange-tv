@@ -505,6 +505,7 @@ export type HistoryItem = {
   title: string
   cover: string
   year: string
+  category_name: string
   play_source_id: number
   episode_id: number
   progress: number

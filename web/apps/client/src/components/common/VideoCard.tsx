@@ -14,7 +14,7 @@ export function VideoCard({ item }: { item: VideoListItem }) {
   const tags = (item.tags || []).slice(0, 2)
   return (
     <Link to={`/video/${item.id}`} className="cursor-pointer">
-      <Card className="overflow-hidden pt-0 transition-all hover:ring-primary/40 hover:transition-all">
+      <Card className="gap-0 overflow-hidden pb-2 pt-0 transition-all hover:ring-primary/40 hover:transition-all">
         <div className="relative flex aspect-[2/3] w-full items-center justify-center bg-muted">
           {hasCover ? (
             <img
@@ -34,7 +34,7 @@ export function VideoCard({ item }: { item: VideoListItem }) {
             </div>
           ) : null}
         </div>
-        <div className="flex flex-col gap-1 p-3">
+        <div className="flex flex-col gap-0.5 p-2">
           <h3 className="truncate text-sm font-medium">{item.title}</h3>
           {metaParts.length > 0 && (
             <p className="text-xs text-muted-foreground">{metaParts.join(' · ')}</p>

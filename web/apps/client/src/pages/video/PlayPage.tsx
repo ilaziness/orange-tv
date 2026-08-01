@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router'
 import type { ClientVideoDetail, PlayEpisodeResponse, VideoDetailSourceGroup } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
 import { useAuth } from '@/hooks/useAuth'
-import { useSiteStore } from '@/store/site'
+import { useSettingsStore } from '@/store/settings'
 import { VideoPlayer } from '@/components/Player'
 import { saveHistory } from '@/lib/playbackHistory'
 import { Button } from '@/components/ui/button'
@@ -16,7 +16,7 @@ import { AlertCircleIcon } from 'lucide-react'
 export default function PlayPage() {
   const { id, sourceId, episodeId } = useParams()
   const navigate = useNavigate()
-  const ad = useSiteStore((s) => s.ad)
+  const ad = useSettingsStore((s) => s.ad)
   const { profile } = useAuth()
   const [detail, setDetail] = useState<ClientVideoDetail | null>(null)
   const [episode, setEpisode] = useState<PlayEpisodeResponse | null>(null)

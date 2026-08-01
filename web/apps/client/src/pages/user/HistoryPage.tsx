@@ -5,6 +5,7 @@ import { HistoryCard } from '@/components/common/HistoryCard'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { AlertCircleIcon } from 'lucide-react'
 
@@ -106,7 +107,15 @@ export default function HistoryPage() {
               <Skeleton className="h-5 w-24" />
               <div className="flex flex-wrap gap-3">
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <Skeleton key={i} className="w-28 aspect-[2/3] rounded-md" />
+                  <div key={i} className="w-28 shrink-0">
+                    <Card className="gap-0 overflow-hidden pb-1.5 pt-0">
+                      <Skeleton className="aspect-[2/3] w-full rounded-t-xl" />
+                      <div className="flex flex-col gap-0.5 p-1.5">
+                        <Skeleton className="h-3 w-full" />
+                        <Skeleton className="h-2.5 w-2/3" />
+                      </div>
+                    </Card>
+                  </div>
                 ))}
               </div>
             </div>
@@ -137,6 +146,7 @@ export default function HistoryPage() {
                     sourceId={h.play_source_id}
                     episodeId={h.episode_id}
                     title={h.title}
+                    categoryName={h.category_name}
                     year={h.year}
                     cover={h.cover}
                     progress={h.progress}

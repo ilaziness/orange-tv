@@ -40,6 +40,10 @@ API 路径：用户端 `/api/client/v1`、`/api/client/v2`，管理端 `/api/adm
 13. api接口需要在`handler`函数添加`swagger`注释，方便生成api文档
 14. 更新新增数据不需要填充`updated_at`和`created_at`通过模型操作会按需自动加上这两个字段
 
+## 前端项目指南
+
+修改前端项目才需要，后端项目忽略，指南文件：`web/AGENTS.md`。
+
 ## 按需查阅
 
 | 主题 | 文件 | 何时阅读 |
