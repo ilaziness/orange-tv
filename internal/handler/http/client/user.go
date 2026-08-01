@@ -66,6 +66,16 @@ func (h *UserHandler) Profile(c *gin.Context) {
 
 // ===== C6: Favorites =====
 
+// ListFavorites returns the current user's favorite list.
+// @Summary 获取收藏列表
+// @Description 分页获取当前用户的收藏列表
+// @Tags client-user
+// @Accept json
+// @Produce json
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(20)
+// @Success 200 {object} response.Response{data=response.Page{list=[]clientdto.FavoriteItem}}
+// @Router /api/client/v1/favorites [get]
 func (h *UserHandler) ListFavorites(c *gin.Context) {
 	userID := currentUserID(c)
 	if userID <= 0 {
@@ -84,6 +94,15 @@ func (h *UserHandler) ListFavorites(c *gin.Context) {
 	response.SuccessPage(c, list, int64(total), req.GetPage(), req.GetPageSize(), req.GetTotalPages(total))
 }
 
+// AddFavorite adds a video to the current user's favorites.
+// @Summary 添加收藏
+// @Description 将指定影视添加到当前用户的收藏
+// @Tags client-user
+// @Accept json
+// @Produce json
+// @Param id path int true "影视ID"
+// @Success 200 {object} response.Response
+// @Router /api/client/v1/favorites/{id} [post]
 func (h *UserHandler) AddFavorite(c *gin.Context) {
 	userID := currentUserID(c)
 	if userID <= 0 {
@@ -101,6 +120,15 @@ func (h *UserHandler) AddFavorite(c *gin.Context) {
 	response.Success(c, nil)
 }
 
+// RemoveFavorite removes a video from the current user's favorites.
+// @Summary 取消收藏
+// @Description 将指定影视从当前用户的收藏中移除
+// @Tags client-user
+// @Accept json
+// @Produce json
+// @Param id path int true "影视ID"
+// @Success 200 {object} response.Response
+// @Router /api/client/v1/favorites/{id} [delete]
 func (h *UserHandler) RemoveFavorite(c *gin.Context) {
 	userID := currentUserID(c)
 	if userID <= 0 {
@@ -116,6 +144,33 @@ func (h *UserHandler) RemoveFavorite(c *gin.Context) {
 		return
 	}
 	response.Success(c, nil)
+}
+
+// CheckFavorite checks if a video is in the current user's favorites.
+// @Summary 检查收藏状态
+// @Description 检查指定影视是否已被当前用户收藏
+// @Tags client-user
+// @Accept json
+// @Produce json
+// @Param id path int true "影视ID"
+// @Success 200 {object} response.Response{data=clientdto.FavoriteCheckResult}
+// @Router /api/client/v1/favorites/{id} [get]
+func (h *UserHandler) CheckFavorite(c *gin.Context) {
+	userID := currentUserID(c)
+	if userID <= 0 {
+		response.Error(c, errcode.AuthFailed)
+		return
+	}
+	var uri shareddto.IDURI
+	if !httphandler.BindURI(c, &uri) {
+		return
+	}
+	favorited, err := h.svc.CheckFavorite(c.Request.Context(), userID, uri.ID)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	response.Success(c, &clientdto.FavoriteCheckResult{Favorited: favorited})
 }
 
 // ===== C6: History =====

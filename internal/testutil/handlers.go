@@ -383,6 +383,9 @@ func (s clientUserSvc) ListFavorites(ctx context.Context, userID int64, req *cli
 }
 func (s clientUserSvc) AddFavorite(ctx context.Context, userID, videoID int64) error    { return nil }
 func (s clientUserSvc) RemoveFavorite(ctx context.Context, userID, videoID int64) error { return nil }
+func (s clientUserSvc) CheckFavorite(ctx context.Context, userID, videoID int64) (bool, error) {
+	return false, nil
+}
 func (s clientUserSvc) ListHistory(ctx context.Context, userID int64, req *clientdto.HistoryListRequest) ([]clientdto.HistoryItem, int, error) {
 	return nil, 0, nil
 }

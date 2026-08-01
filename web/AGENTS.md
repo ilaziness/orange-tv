@@ -76,7 +76,7 @@ API 前缀：
 1. **格式化与检查**：`npm run lint` 和 `npm run typecheck` 必须通过；提交前执行 `npm run build`
 2. **TypeScript**：禁用隐式 `any`，函数与组件参数必须带类型；优先从 `@orange-tv/shared` 复用类型
 3. **组件**：函数组件 + Hooks；优先使用 shadcn/ui 官方组件与项目已有 `@/components/ui`，不重复造基础组件。`components/ui/` 下组件文件使用小写，业务组件与页面使用 PascalCase
-4. **shadcn 组件安装**：在 `apps/admin` 或 `apps/client` 目录下执行 `npx shadcn@latest add <component> --yes`，CLI 会将文件放到 `<app>/@/components/ui/` 目录（monorepo 路径解析问题），安装后需将文件移动到 `<app>/src/components/ui/` 并删除 `@/` 目录
+4. **shadcn 组件安装**：在 `apps/admin` 或 `apps/client` 目录下执行 `npx --yes shadcn@latest add <component> -y`（`--yes` 跳过 npx 安装确认，`-y` 跳过 shadcn 覆盖确认），CLI 会将文件放到 `<app>/@/components/ui/` 目录（monorepo 路径解析问题），安装后需将文件移动到 `<app>/src/components/ui/` 并删除 `@/` 目录
 5. **状态管理**：全局状态用 Zustand（`src/store/*`），局部状态用 `useState` / `useReducer`
 6. **API 调用**：统一通过 `@orange-tv/shared` 的 `apiGet` / `apiPost` / `apiPut` / `apiDelete`；不要在页面内直接写 `fetch`
 7. **路径别名**：`@` 指向当前应用 `src`，`@orange-tv/shared` 指向共享包入口；不要使用相对路径跨层引用

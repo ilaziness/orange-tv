@@ -1,17 +1,25 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Link, Outlet, useNavigate } from 'react-router'
-import type { Category } from '@orange-tv/shared'
-import { useAuth } from '@/hooks/useAuth'
-import { useSettings } from '@/hooks/useSettings'
-import { clientApi } from '@/lib/api'
-import { getHistory, formatTime, type PlaybackHistoryItem } from '@/lib/playbackHistory'
-import type { HistoryItem } from '@orange-tv/shared'
-import { ThemeToggle } from '@/components/ThemeToggle'
-import { Button } from '@/components/ui/button'
-import { InputGroup, InputGroupInput, InputGroupAddon } from '@/components/ui/input-group'
-import { Separator } from '@/components/ui/separator'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Skeleton } from '@/components/ui/skeleton'
+import { useCallback, useEffect, useState } from "react";
+import { Link, Outlet, useNavigate } from "react-router";
+import type { Category } from "@orange-tv/shared";
+import { useAuth } from "@/hooks/useAuth";
+import { useSettings } from "@/hooks/useSettings";
+import { clientApi } from "@/lib/api";
+import {
+  getHistory,
+  formatTime,
+  type PlaybackHistoryItem,
+} from "@/lib/playbackHistory";
+import type { HistoryItem } from "@orange-tv/shared";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { Button } from "@/components/ui/button";
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupAddon,
+} from "@/components/ui/input-group";
+import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,19 +28,19 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
+} from "@/components/ui/dropdown-menu";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from '@/components/ui/popover'
+} from "@/components/ui/popover";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet'
+} from "@/components/ui/sheet";
 import {
   SearchIcon,
   MenuIcon,
@@ -43,20 +51,27 @@ import {
   FilterIcon,
   TvIcon,
   FilmIcon,
-} from 'lucide-react'
+} from "lucide-react";
 
 // 统一展示类型：本地与远端历史映射为同一结构
 type HistoryEntry = {
-  videoId: number
-  sourceId: number
-  episodeId: number
-  progress: number
-  title: string
-  updatedAt: number
-}
+  videoId: number;
+  sourceId: number;
+  episodeId: number;
+  progress: number;
+  title: string;
+  updatedAt: number;
+};
 
 function fromLocal(it: PlaybackHistoryItem): HistoryEntry {
-  return { videoId: it.videoId, sourceId: it.sourceId, episodeId: it.episodeId, progress: it.progress, title: it.title, updatedAt: it.updatedAt }
+  return {
+    videoId: it.videoId,
+    sourceId: it.sourceId,
+    episodeId: it.episodeId,
+    progress: it.progress,
+    title: it.title,
+    updatedAt: it.updatedAt,
+  };
 }
 
 function fromRemote(it: HistoryItem): HistoryEntry {
@@ -67,20 +82,20 @@ function fromRemote(it: HistoryItem): HistoryEntry {
     progress: it.progress,
     title: it.title,
     updatedAt: new Date(it.last_played_at).getTime(),
-  }
+  };
 }
 
 export function ClientLayout() {
-  const [keyword, setKeyword] = useState('')
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const [categories, setCategories] = useState<Category[]>([])
-  const [categoriesLoading, setCategoriesLoading] = useState(false)
-  const [categoryOpen, setCategoryOpen] = useState(false)
-  const [historyOpen, setHistoryOpen] = useState(false)
-  const [historyList, setHistoryList] = useState<HistoryEntry[]>([])
-  const navigate = useNavigate()
-  const { profile, logout } = useAuth()
-  const { site, feature } = useSettings()
+  const [keyword, setKeyword] = useState("");
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyList, setHistoryList] = useState<HistoryEntry[]>([]);
+  const navigate = useNavigate();
+  const { profile, logout } = useAuth();
+  const { site, feature } = useSettings();
 
   // 加载历史：已登录拉远端最近若干条；未登录用本地 localStorage
   const loadHistory = useCallback(() => {
@@ -88,39 +103,37 @@ export function ClientLayout() {
       clientApi
         .listHistory(1)
         .then((res) => {
-          setHistoryList((res.data.list || []).slice(0, 8).map(fromRemote))
+          setHistoryList((res.data.list || []).slice(0, 8).map(fromRemote));
         })
         .catch(() => {
           // 远端失败时回退本地，保证弹窗不空
-          setHistoryList(getHistory().slice(0, 8).map(fromLocal))
-        })
+          setHistoryList(getHistory().slice(0, 8).map(fromLocal));
+        });
     } else {
-      setHistoryList(getHistory().slice(0, 8).map(fromLocal))
+      setHistoryList(getHistory().slice(0, 8).map(fromLocal));
     }
-  }, [profile])
+  }, [profile]);
 
   useEffect(() => {
     if (!categories.length && !categoriesLoading) {
-      setCategoriesLoading(true)
+      setCategoriesLoading(true);
       clientApi
         .categories()
         .then((res) => setCategories(res.data || []))
         .catch(() => undefined)
-        .finally(() => setCategoriesLoading(false))
+        .finally(() => setCategoriesLoading(false));
     }
-  }, [categories.length, categoriesLoading])
+  }, [categories.length, categoriesLoading]);
 
-  const roots = categories
-    .slice()
-    .sort((a, b) => a.sort_order - b.sort_order)
+  const roots = categories.slice().sort((a, b) => a.sort_order - b.sort_order);
 
   const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (keyword.trim()) {
-      navigate(`/videos?keyword=${encodeURIComponent(keyword.trim())}`)
-      setMobileOpen(false)
+      navigate(`/videos?keyword=${encodeURIComponent(keyword.trim())}`);
+      setMobileOpen(false);
     }
-  }
+  };
 
   const renderLogo = () => (
     <Link to="/" className="flex items-center gap-2">
@@ -130,13 +143,13 @@ export function ClientLayout() {
           alt={site.name}
           className="h-7 w-auto"
           onError={(e) => {
-            ;(e.currentTarget as HTMLImageElement).style.display = 'none'
+            (e.currentTarget as HTMLImageElement).style.display = "none";
           }}
         />
       ) : null}
       <span className="text-base font-bold">{site.name}</span>
     </Link>
-  )
+  );
 
   const renderSearch = () => (
     <form onSubmit={handleSearch}>
@@ -154,7 +167,7 @@ export function ClientLayout() {
         </InputGroupAddon>
       </InputGroup>
     </form>
-  )
+  );
 
   const renderCategoryPopover = () => (
     <Popover open={categoryOpen} onOpenChange={(open) => setCategoryOpen(open)}>
@@ -162,7 +175,7 @@ export function ClientLayout() {
         render={
           <button
             type="button"
-            className="flex flex-col items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
             <FilterIcon className="size-4" />
             筛选
@@ -181,7 +194,9 @@ export function ClientLayout() {
         ) : (
           <div className="flex flex-col gap-3">
             {roots.map((root) => {
-              const subs = (root.children || []).slice().sort((a, b) => a.sort_order - b.sort_order)
+              const subs = (root.children || [])
+                .slice()
+                .sort((a, b) => a.sort_order - b.sort_order);
               return (
                 <div key={root.id} className="flex flex-col gap-1.5">
                   <Link
@@ -206,13 +221,13 @@ export function ClientLayout() {
                     </div>
                   ) : null}
                 </div>
-              )
+              );
             })}
           </div>
         )}
       </PopoverContent>
     </Popover>
-  )
+  );
 
   const renderNavLinks = () => (
     <>
@@ -220,25 +235,28 @@ export function ClientLayout() {
       {feature.live_enabled ? (
         <Link
           to="/live"
-          className="flex flex-col items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-primary"
+          className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-primary"
         >
           <TvIcon className="size-4" />
           电视
         </Link>
       ) : null}
     </>
-  )
+  );
 
   const renderHistoryPopover = () => (
-    <Popover open={historyOpen} onOpenChange={(open) => {
-      setHistoryOpen(open)
-      if (open) loadHistory()
-    }}>
+    <Popover
+      open={historyOpen}
+      onOpenChange={(open) => {
+        setHistoryOpen(open);
+        if (open) loadHistory();
+      }}
+    >
       <PopoverTrigger
         render={
           <button
             type="button"
-            className="flex flex-col items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
             <HistoryIcon className="size-4" />
             历史
@@ -247,7 +265,9 @@ export function ClientLayout() {
       />
       <PopoverContent align="start" side="bottom" className="w-72 p-2">
         {historyList.length === 0 ? (
-          <p className="py-4 text-center text-sm text-muted-foreground">暂无播放历史</p>
+          <p className="py-4 text-center text-sm text-muted-foreground">
+            暂无播放历史
+          </p>
         ) : (
           <div className="flex flex-col gap-0.5">
             {historyList.map((item) => (
@@ -256,12 +276,16 @@ export function ClientLayout() {
                 type="button"
                 className="flex items-center justify-between gap-2 rounded px-3 py-2 text-left text-sm transition-colors hover:bg-accent"
                 onClick={() => {
-                  setHistoryOpen(false)
-                  navigate(`/play/${item.videoId}/${item.sourceId}/${item.episodeId}`)
+                  setHistoryOpen(false);
+                  navigate(
+                    `/play/${item.videoId}/${item.sourceId}/${item.episodeId}`,
+                  );
                 }}
               >
                 <span className="truncate">{item.title}</span>
-                <span className="shrink-0 text-xs text-muted-foreground">{formatTime(item.progress)}</span>
+                <span className="shrink-0 text-xs text-muted-foreground">
+                  {formatTime(item.progress)}
+                </span>
               </button>
             ))}
             <Separator className="my-1" />
@@ -270,7 +294,7 @@ export function ClientLayout() {
               size="sm"
               className="w-full justify-center"
               nativeButton={false}
-              render={<Link to={profile ? '/history' : '/login'} />}
+              render={<Link to={profile ? "/history" : "/login"} />}
               onClick={() => setHistoryOpen(false)}
             >
               查看更多
@@ -279,7 +303,7 @@ export function ClientLayout() {
         )}
       </PopoverContent>
     </Popover>
-  )
+  );
 
   const renderUserMenu = () => {
     if (profile) {
@@ -290,14 +314,18 @@ export function ClientLayout() {
               <Button variant="ghost" size="icon">
                 <Avatar size="sm">
                   {profile.avatar ? <AvatarImage src={profile.avatar} /> : null}
-                  <AvatarFallback>{profile.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
+                  <AvatarFallback>
+                    {profile.username?.[0]?.toUpperCase() || "U"}
+                  </AvatarFallback>
                 </Avatar>
               </Button>
             }
           />
           <DropdownMenuContent align="end">
             <DropdownMenuGroup>
-              <DropdownMenuLabel>{profile.username || profile.email}</DropdownMenuLabel>
+              <DropdownMenuLabel>
+                {profile.username || profile.email}
+              </DropdownMenuLabel>
               <DropdownMenuItem render={<Link to="/favorites" />}>
                 <HeartIcon data-icon="inline-start" />
                 我的收藏
@@ -311,8 +339,8 @@ export function ClientLayout() {
             <DropdownMenuGroup>
               <DropdownMenuItem
                 onClick={() => {
-                  logout()
-                  navigate('/')
+                  logout();
+                  navigate("/");
                 }}
               >
                 <LogOutIcon data-icon="inline-start" />
@@ -321,20 +349,30 @@ export function ClientLayout() {
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>
-      )
+      );
     }
 
     return (
       <div className="flex gap-2">
-        <Button variant="ghost" size="sm" nativeButton={false} render={<Link to="/login" />}>
+        <Button
+          variant="ghost"
+          size="sm"
+          nativeButton={false}
+          render={<Link to="/login" />}
+        >
           登录
         </Button>
-        <Button variant="outline" size="sm" nativeButton={false} render={<Link to="/register" />}>
+        <Button
+          variant="outline"
+          size="sm"
+          nativeButton={false}
+          render={<Link to="/register" />}
+        >
           注册
         </Button>
       </div>
-    )
-  }
+    );
+  };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -352,14 +390,15 @@ export function ClientLayout() {
               {renderHistoryPopover()}
             </div>
             <ThemeToggle />
-            <div className="hidden md:block">
-              {renderUserMenu()}
-            </div>
+            <div className="hidden md:block">{renderUserMenu()}</div>
 
-            <Sheet open={mobileOpen} onOpenChange={(open) => {
-              setMobileOpen(open)
-              if (open) loadHistory()
-            }}>
+            <Sheet
+              open={mobileOpen}
+              onOpenChange={(open) => {
+                setMobileOpen(open);
+                if (open) loadHistory();
+              }}
+            >
               <SheetTrigger
                 render={
                   <Button variant="ghost" size="icon" className="md:hidden">
@@ -384,12 +423,16 @@ export function ClientLayout() {
                             variant="ghost"
                             className="justify-between"
                             onClick={() => {
-                              setMobileOpen(false)
-                              navigate(`/play/${item.videoId}/${item.sourceId}/${item.episodeId}`)
+                              setMobileOpen(false);
+                              navigate(
+                                `/play/${item.videoId}/${item.sourceId}/${item.episodeId}`,
+                              );
                             }}
                           >
                             <span className="truncate">{item.title}</span>
-                            <span className="shrink-0 text-xs text-muted-foreground">{formatTime(item.progress)}</span>
+                            <span className="shrink-0 text-xs text-muted-foreground">
+                              {formatTime(item.progress)}
+                            </span>
                           </Button>
                         ))}
                         <Button
@@ -397,20 +440,24 @@ export function ClientLayout() {
                           size="sm"
                           className="w-full justify-center"
                           nativeButton={false}
-                          render={<Link to={profile ? '/history' : '/login'} />}
+                          render={<Link to={profile ? "/history" : "/login"} />}
                           onClick={() => setMobileOpen(false)}
                         >
                           查看更多
                         </Button>
                       </>
                     ) : (
-                      <p className="px-2 py-1 text-sm text-muted-foreground">暂无播放历史</p>
+                      <p className="px-2 py-1 text-sm text-muted-foreground">
+                        暂无播放历史
+                      </p>
                     )}
                   </div>
                   <Separator />
                   <div className="flex flex-col gap-2">
                     {categoriesLoading ? (
-                      Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-9 w-full" />)
+                      Array.from({ length: 4 }).map((_, i) => (
+                        <Skeleton key={i} className="h-9 w-full" />
+                      ))
                     ) : (
                       <>
                         {feature.live_enabled ? (
@@ -430,7 +477,9 @@ export function ClientLayout() {
                             variant="ghost"
                             className="justify-start"
                             nativeButton={false}
-                            render={<Link to={`/videos?category_id=${root.id}`} />}
+                            render={
+                              <Link to={`/videos?category_id=${root.id}`} />
+                            }
                             onClick={() => setMobileOpen(false)}
                           >
                             {root.name}
@@ -444,16 +493,34 @@ export function ClientLayout() {
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center gap-2 px-2">
                         <Avatar size="sm">
-                          {profile.avatar ? <AvatarImage src={profile.avatar} /> : null}
-                          <AvatarFallback>{profile.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
+                          {profile.avatar ? (
+                            <AvatarImage src={profile.avatar} />
+                          ) : null}
+                          <AvatarFallback>
+                            {profile.username?.[0]?.toUpperCase() || "U"}
+                          </AvatarFallback>
                         </Avatar>
-                        <span className="text-sm font-medium">{profile.username || profile.email}</span>
+                        <span className="text-sm font-medium">
+                          {profile.username || profile.email}
+                        </span>
                       </div>
-                      <Button variant="ghost" className="justify-start" nativeButton={false} render={<Link to="/favorites" />} onClick={() => setMobileOpen(false)}>
+                      <Button
+                        variant="ghost"
+                        className="justify-start"
+                        nativeButton={false}
+                        render={<Link to="/favorites" />}
+                        onClick={() => setMobileOpen(false)}
+                      >
                         <HeartIcon data-icon="inline-start" />
                         我的收藏
                       </Button>
-                      <Button variant="ghost" className="justify-start" nativeButton={false} render={<Link to="/history" />} onClick={() => setMobileOpen(false)}>
+                      <Button
+                        variant="ghost"
+                        className="justify-start"
+                        nativeButton={false}
+                        render={<Link to="/history" />}
+                        onClick={() => setMobileOpen(false)}
+                      >
                         <HistoryIcon data-icon="inline-start" />
                         观看历史
                       </Button>
@@ -461,9 +528,9 @@ export function ClientLayout() {
                         variant="ghost"
                         className="justify-start"
                         onClick={() => {
-                          logout()
-                          navigate('/')
-                          setMobileOpen(false)
+                          logout();
+                          navigate("/");
+                          setMobileOpen(false);
                         }}
                       >
                         <LogOutIcon data-icon="inline-start" />
@@ -472,11 +539,21 @@ export function ClientLayout() {
                     </div>
                   ) : (
                     <div className="flex flex-col gap-2">
-                      <Button variant="ghost" nativeButton={false} render={<Link to="/login" />} onClick={() => setMobileOpen(false)}>
+                      <Button
+                        variant="ghost"
+                        nativeButton={false}
+                        render={<Link to="/login" />}
+                        onClick={() => setMobileOpen(false)}
+                      >
                         <UserIcon data-icon="inline-start" />
                         登录
                       </Button>
-                      <Button variant="outline" nativeButton={false} render={<Link to="/register" />} onClick={() => setMobileOpen(false)}>
+                      <Button
+                        variant="outline"
+                        nativeButton={false}
+                        render={<Link to="/register" />}
+                        onClick={() => setMobileOpen(false)}
+                      >
                         注册
                       </Button>
                     </div>
@@ -505,5 +582,5 @@ export function ClientLayout() {
         </div>
       </footer>
     </div>
-  )
+  );
 }

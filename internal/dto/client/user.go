@@ -43,12 +43,18 @@ type FavoriteListRequest struct {
 
 // FavoriteItem is the favorite list item.
 type FavoriteItem struct {
-	VideoID   uint64  `json:"video_id"`
-	Title     string  `json:"title"`
-	Cover     string  `json:"cover"`
-	Year      uint32  `json:"year"`
-	Rating    float64 `json:"rating"`
-	CreatedAt string  `json:"created_at"`
+	VideoID      uint64  `json:"video_id"`
+	Title        string  `json:"title"`
+	Cover        string  `json:"cover"`
+	Year         uint32  `json:"year"`
+	Rating       float64 `json:"rating"`
+	CategoryName string  `json:"category_name"`
+	CreatedAt    string  `json:"created_at"`
+}
+
+// FavoriteCheckResult is the favorite check result.
+type FavoriteCheckResult struct {
+	Favorited bool `json:"favorited"`
 }
 
 // ===== Play history (C6) =====

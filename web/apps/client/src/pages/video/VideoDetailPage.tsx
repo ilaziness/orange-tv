@@ -1,54 +1,65 @@
-import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router'
-import type { CommentItem, ClientVideoDetail, VideoListItem } from '@orange-tv/shared'
-import { clientApi, errorMessage } from '@/lib/api'
-import { VideoGrid } from '@/components/common'
-import { CommentSection } from '@/components/CommentSection'
-import { useSettings } from '@/hooks/useSettings'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
-import { Skeleton } from '@/components/ui/skeleton'
-import { AlertCircleIcon, FilmIcon } from 'lucide-react'
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router";
+import type {
+  CommentItem,
+  ClientVideoDetail,
+  VideoListItem,
+} from "@orange-tv/shared";
+import { clientApi, errorMessage } from "@/lib/api";
+import { VideoGrid, FavoriteButton } from "@/components/common";
+import { CommentSection } from "@/components/CommentSection";
+import { useSettings } from "@/hooks/useSettings";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { Skeleton } from "@/components/ui/skeleton";
+import { AlertCircleIcon, FilmIcon } from "lucide-react";
 
 export default function VideoDetailPage() {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const [detail, setDetail] = useState<ClientVideoDetail | null>(null)
-  const [related, setRelated] = useState<VideoListItem[]>([])
-  const [comments, setComments] = useState<CommentItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [posterError, setPosterError] = useState(false)
-  const { feature } = useSettings()
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [detail, setDetail] = useState<ClientVideoDetail | null>(null);
+  const [related, setRelated] = useState<VideoListItem[]>([]);
+  const [comments, setComments] = useState<CommentItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [posterError, setPosterError] = useState(false);
+  const { feature } = useSettings();
 
   const loadComments = () => {
-    if (!id) return
-    void clientApi.listComments(Number(id), 1).then((res) => setComments(res.data.list || []))
-  }
+    if (!id) return;
+    void clientApi
+      .listComments(Number(id), 1)
+      .then((res) => setComments(res.data.list || []));
+  };
 
   useEffect(() => {
-    if (!id) return
+    if (!id) return;
     void (async () => {
-      setLoading(true)
+      setLoading(true);
       try {
         const [res, rel, com] = await Promise.all([
           clientApi.video(Number(id)),
           clientApi.related(Number(id), 6),
           clientApi.listComments(Number(id), 1),
-        ])
-        setDetail(res.data || null)
-        setRelated(rel.data || [])
-        setComments(com.data.list || [])
+        ]);
+        setDetail(res.data || null);
+        setRelated(rel.data || []);
+        setComments(com.data.list || []);
       } catch (err) {
-        setError(errorMessage(err))
+        setError(errorMessage(err));
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    })()
-  }, [id])
+    })();
+  }, [id]);
 
   if (loading) {
     return (
@@ -62,7 +73,7 @@ export default function VideoDetailPage() {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -72,7 +83,7 @@ export default function VideoDetailPage() {
         <AlertTitle>加载失败</AlertTitle>
         <AlertDescription>{error}</AlertDescription>
       </Alert>
-    )
+    );
   }
 
   if (!detail) {
@@ -83,15 +94,15 @@ export default function VideoDetailPage() {
           <EmptyDescription>该视频可能已下架</EmptyDescription>
         </EmptyHeader>
       </Empty>
-    )
+    );
   }
 
   const directorText = detail.directors?.length
-    ? detail.directors.map((d) => d.name).join(' / ')
-    : '暂无'
+    ? detail.directors.map((d) => d.name).join(" / ")
+    : "暂无";
   const actorText = detail.actors?.length
-    ? detail.actors.map((a) => a.name).join(' / ')
-    : '暂无'
+    ? detail.actors.map((a) => a.name).join(" / ")
+    : "暂无";
 
   return (
     <div className="flex flex-col gap-8">
@@ -109,15 +120,22 @@ export default function VideoDetailPage() {
           )}
         </div>
         <div className="flex max-w-4xl flex-1 flex-col gap-3">
-          <h1 className="text-2xl font-bold tracking-tight">{detail.title}</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold tracking-tight">
+              {detail.title}
+            </h1>
+            <FavoriteButton videoId={Number(id)} />
+          </div>
           {detail.subtitle ? (
             <p className="text-muted-foreground">{detail.subtitle}</p>
           ) : null}
           <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary">评分: {detail.rating?.toFixed(1) || 'N/A'}</Badge>
-            <Badge variant="secondary">{detail.year || '未知'}</Badge>
-            <Badge variant="secondary">{detail.region || '未知'}</Badge>
-            <Badge variant="secondary">{detail.language || '未知'}</Badge>
+            <Badge variant="secondary">
+              评分: {detail.rating?.toFixed(1) || "N/A"}
+            </Badge>
+            <Badge variant="secondary">{detail.year || "未知"}</Badge>
+            <Badge variant="secondary">{detail.region || "未知"}</Badge>
+            <Badge variant="secondary">{detail.language || "未知"}</Badge>
           </div>
           <div className="flex flex-col gap-1 text-sm">
             <p>
@@ -129,11 +147,15 @@ export default function VideoDetailPage() {
               {actorText}
             </p>
           </div>
-          <p className="text-sm leading-relaxed">{detail.description || '暂无简介'}</p>
+          <p className="text-sm leading-relaxed">
+            {detail.description || "暂无简介"}
+          </p>
           {detail.tags?.length ? (
             <div className="flex flex-wrap gap-2">
               {detail.tags.map((t) => (
-                <Badge key={t.id} variant="outline">{t.name}</Badge>
+                <Badge key={t.id} variant="outline">
+                  {t.name}
+                </Badge>
               ))}
             </div>
           ) : null}
@@ -156,7 +178,9 @@ export default function VideoDetailPage() {
                         key={ep.id}
                         variant="outline"
                         size="sm"
-                        onClick={() => navigate(`/play/${id}/${source.id}/${ep.id}`)}
+                        onClick={() =>
+                          navigate(`/play/${id}/${source.id}/${ep.id}`)
+                        }
                       >
                         {ep.title || `第${ep.episode}集`}
                       </Button>
@@ -190,5 +214,5 @@ export default function VideoDetailPage() {
         </section>
       ) : null}
     </div>
-  )
+  );
 }

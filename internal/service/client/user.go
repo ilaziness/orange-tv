@@ -28,6 +28,7 @@ type UserService interface {
 	ListFavorites(ctx context.Context, userID int64, req *clientdto.FavoriteListRequest) ([]clientdto.FavoriteItem, int, error)
 	AddFavorite(ctx context.Context, userID, videoID int64) error
 	RemoveFavorite(ctx context.Context, userID, videoID int64) error
+	CheckFavorite(ctx context.Context, userID, videoID int64) (bool, error)
 
 	// C6: History
 	ListHistory(ctx context.Context, userID int64, req *clientdto.HistoryListRequest) ([]clientdto.HistoryItem, int, error)
@@ -196,6 +197,12 @@ func (s *userService) ListFavorites(ctx context.Context, userID int64, req *clie
 			item.Cover = v.CoverImage
 			item.Year = uint32(v.Year)
 			item.Rating = v.Rating
+			if v.CategoryID > 0 {
+				cat, _ := s.categoryRepo.GetByID(ctx, int64(v.CategoryID))
+				if cat != nil {
+					item.CategoryName = cat.Name
+				}
+			}
 		}
 		out = append(out, item)
 	}
@@ -235,6 +242,15 @@ func (s *userService) RemoveFavorite(ctx context.Context, userID, videoID int64)
 		return errcode.FavoriteNotFound
 	}
 	return s.userRepo.RemoveFavorite(ctx, userID, videoID)
+}
+
+func (s *userService) CheckFavorite(ctx context.Context, userID, videoID int64) (bool, error) {
+	existing, err := s.userRepo.GetFavorite(ctx, userID, videoID)
+	if err != nil {
+		s.log.Error("client user: check favorite failed", zap.Int64("user_id", userID), zap.Int64("video_id", videoID), zap.Error(err))
+		return false, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	return existing != nil, nil
 }
 
 // ===== C6: History =====

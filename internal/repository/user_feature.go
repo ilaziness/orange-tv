@@ -75,14 +75,15 @@ func NewUserFeatureRepo(db *database.DB) UserFeatureRepository {
 	return &userFeatureRepo{db: db}
 }
 
-func notFoundOrErr(err error, wrap string) error {
+// notFoundOrErr returns (found, err). found is false when err is sql.ErrNoRows.
+func notFoundOrErr(err error, wrap string) (bool, error) {
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil
+		return false, nil
 	}
 	if err != nil {
-		return fmt.Errorf("%s: %w", wrap, err)
+		return false, fmt.Errorf("%s: %w", wrap, err)
 	}
-	return nil
+	return true, nil
 }
 
 // ===== Favorites =====
@@ -106,8 +107,12 @@ func (r *userFeatureRepo) GetFavorite(ctx context.Context, userID, videoID int64
 		Where("user_id = ?", userID).
 		Where("video_id = ?", videoID).
 		Scan(ctx)
-	if err := notFoundOrErr(err, "get favorite"); err != nil {
+	found, err := notFoundOrErr(err, "get favorite")
+	if err != nil {
 		return nil, err
+	}
+	if !found {
+		return nil, nil
 	}
 	return f, nil
 }
@@ -152,8 +157,12 @@ func (r *userFeatureRepo) GetHistory(ctx context.Context, userID, videoID int64)
 		Where("user_id = ?", userID).
 		Where("video_id = ?", videoID).
 		Scan(ctx)
-	if err := notFoundOrErr(err, "get history"); err != nil {
+	found, err := notFoundOrErr(err, "get history")
+	if err != nil {
 		return nil, err
+	}
+	if !found {
+		return nil, nil
 	}
 	return h, nil
 }
@@ -228,8 +237,12 @@ func (r *userFeatureRepo) ListCommentsByUser(ctx context.Context, userID int64, 
 func (r *userFeatureRepo) GetComment(ctx context.Context, id int64) (*model.VideoComments, error) {
 	c := new(model.VideoComments)
 	err := r.db.NewSelect().Model(c).Where("id = ?", id).Scan(ctx)
-	if err := notFoundOrErr(err, "get comment"); err != nil {
+	found, err := notFoundOrErr(err, "get comment")
+	if err != nil {
 		return nil, err
+	}
+	if !found {
+		return nil, nil
 	}
 	return c, nil
 }
@@ -335,8 +348,12 @@ func (r *userFeatureRepo) ListAllBanners(ctx context.Context, offset, limit int)
 func (r *userFeatureRepo) GetBanner(ctx context.Context, id int64) (*model.Banners, error) {
 	b := new(model.Banners)
 	err := r.db.NewSelect().Model(b).Where("id = ?", id).Scan(ctx)
-	if err := notFoundOrErr(err, "get banner"); err != nil {
+	found, err := notFoundOrErr(err, "get banner")
+	if err != nil {
 		return nil, err
+	}
+	if !found {
+		return nil, nil
 	}
 	return b, nil
 }
@@ -390,8 +407,12 @@ func (r *userFeatureRepo) GetDailyStats(ctx context.Context, date time.Time) (*m
 	d := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, date.Location())
 	s := new(model.SiteStatsDaily)
 	err := r.db.NewSelect().Model(s).Where("stat_date = ?", d).Scan(ctx)
-	if err := notFoundOrErr(err, "get daily stats"); err != nil {
+	found, err := notFoundOrErr(err, "get daily stats")
+	if err != nil {
 		return nil, err
+	}
+	if !found {
+		return nil, nil
 	}
 	return s, nil
 }

@@ -497,7 +497,12 @@ export type FavoriteItem = {
   cover: string
   year: number
   rating: number
+  category_name: string
   created_at: string
+}
+
+export type FavoriteCheckResult = {
+  favorited: boolean
 }
 
 export type HistoryItem = {

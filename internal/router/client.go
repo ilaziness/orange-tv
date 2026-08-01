@@ -34,6 +34,7 @@ func registerClientContentRoutes(v1 *gin.RouterGroup, h *Handlers) {
 
 	// Favorites (C6) — requires JWT
 	v1.GET("/favorites", h.ClientUser.ListFavorites)
+	v1.GET("/favorites/:id", h.ClientUser.CheckFavorite)
 	v1.POST("/favorites/:id", h.ClientUser.AddFavorite)
 	v1.DELETE("/favorites/:id", h.ClientUser.RemoveFavorite)
 
