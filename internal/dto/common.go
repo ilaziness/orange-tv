@@ -73,23 +73,24 @@ type CategoryResponse struct {
 
 // VideoListItem is a compact video card payload.
 type VideoListItem struct {
-	ID            uint64  `json:"id"`
-	Title         string  `json:"title"`
-	Subtitle      string  `json:"subtitle"`
-	Cover         string  `json:"cover"`
-	Poster        string  `json:"poster"`
-	Year          uint32  `json:"year"`
-	Region        string  `json:"region"`
-	Language      string  `json:"language"`
-	Rating        float64 `json:"rating"`
-	CategoryID    uint64  `json:"category_id"`
-	CategoryName  string  `json:"category_name,omitempty"`
-	PublishStatus uint8   `json:"publish_status,omitempty"`
-	SerialStatus  uint8   `json:"serial_status"`
-	Duration      uint32  `json:"duration"`
-	ViewCount     uint32  `json:"view_count"`
-	CreatedAt     string  `json:"created_at,omitempty"`
-	UpdatedAt     string  `json:"updated_at,omitempty"`
+	ID            uint64      `json:"id"`
+	Title         string      `json:"title"`
+	Subtitle      string      `json:"subtitle"`
+	Cover         string      `json:"cover"`
+	Poster        string      `json:"poster"`
+	Year          uint32      `json:"year"`
+	Region        string      `json:"region"`
+	Language      string      `json:"language"`
+	Rating        float64     `json:"rating"`
+	CategoryID    uint64      `json:"category_id"`
+	CategoryName  string      `json:"category_name,omitempty"`
+	PublishStatus uint8       `json:"publish_status,omitempty"`
+	SerialStatus  uint8       `json:"serial_status"`
+	Duration      uint32      `json:"duration"`
+	ViewCount     uint32      `json:"view_count"`
+	Tags          []NamedItem `json:"tags,omitempty"`
+	CreatedAt     string      `json:"created_at,omitempty"`
+	UpdatedAt     string      `json:"updated_at,omitempty"`
 }
 
 // VideoSourceEpisode is one playable episode under a source (admin/open API, includes URL).

@@ -8,6 +8,10 @@ import { FilmIcon } from 'lucide-react'
 export function VideoCard({ item }: { item: VideoListItem }) {
   const [error, setError] = useState(false)
   const hasCover = item.cover && !error
+  const metaParts = [item.year ? String(item.year) : null, item.region || null].filter(
+    (v): v is string => v !== null,
+  )
+  const tags = (item.tags || []).slice(0, 2)
   return (
     <Link to={`/video/${item.id}`} className="cursor-pointer">
       <Card className="overflow-hidden pt-0 transition-all hover:ring-primary/40 hover:transition-all">
@@ -32,9 +36,18 @@ export function VideoCard({ item }: { item: VideoListItem }) {
         </div>
         <div className="flex flex-col gap-1 p-3">
           <h3 className="truncate text-sm font-medium">{item.title}</h3>
-          <p className="text-xs text-muted-foreground">
-            {item.year || '未知年份'} · {item.region || '未知地区'}
-          </p>
+          {metaParts.length > 0 && (
+            <p className="text-xs text-muted-foreground">{metaParts.join(' · ')}</p>
+          )}
+          {tags.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {tags.map((tag) => (
+                <Badge key={tag.id} variant="secondary">
+                  {tag.name}
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
       </Card>
     </Link>

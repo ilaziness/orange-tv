@@ -14,6 +14,13 @@ import (
 	"github.com/uptrace/bun"
 )
 
+// VideoTagRow is one row of a batch video→tag query.
+type VideoTagRow struct {
+	VideoID uint64 `bun:"video_id"`
+	TagID   uint64 `bun:"tag_id"`
+	Name    string `bun:"name"`
+}
+
 // VideoListFilter filters video queries.
 type VideoListFilter struct {
 	Keyword       string
@@ -46,6 +53,7 @@ type VideoRepository interface {
 	ListDirectorIDs(ctx context.Context, videoID uint64) ([]uint64, error)
 	ListActorRels(ctx context.Context, videoID uint64) ([]model.VideoActors, error)
 	ListTagIDs(ctx context.Context, videoID uint64) ([]uint64, error)
+	ListTagsByVideoIDs(ctx context.Context, videoIDs []uint64) ([]VideoTagRow, error)
 	RunInTx(ctx context.Context, fn func(ctx context.Context, tx bun.Tx) error) error
 	WithTx(tx bun.Tx) VideoRepository
 
@@ -289,6 +297,24 @@ func (r *videoRepo) ListTagIDs(ctx context.Context, videoID uint64) ([]uint64, e
 		ids = append(ids, row.TagID)
 	}
 	return ids, nil
+}
+
+func (r *videoRepo) ListTagsByVideoIDs(ctx context.Context, videoIDs []uint64) ([]VideoTagRow, error) {
+	if len(videoIDs) == 0 {
+		return nil, nil
+	}
+	var rows []VideoTagRow
+	err := r.db.NewSelect().
+		Model((*model.VideoTags)(nil)).
+		ColumnExpr("vt.video_id, vt.tag_id, ta.name").
+		Join("JOIN tags AS ta ON ta.id = vt.tag_id AND ta.deleted_at IS NULL").
+		Where("vt.video_id IN (?)", bun.In(videoIDs)).
+		OrderExpr("vt.id ASC").
+		Scan(ctx, &rows)
+	if err != nil {
+		return nil, fmt.Errorf("list tags by video ids: %w", err)
+	}
+	return rows, nil
 }
 
 // ===== Batch operations (A2) =====

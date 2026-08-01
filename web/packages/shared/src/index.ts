@@ -166,6 +166,7 @@ export type VideoListItem = {
   serial_status: number
   duration: number
   view_count: number
+  tags?: NamedItem[]
   created_at?: string
   updated_at?: string
 }

@@ -198,6 +198,9 @@ func (v *videoRepoStub) CountVideosByStatus(ctx context.Context, status uint8) (
 	return 0, nil
 }
 func (v *videoRepoStub) CountCategories(ctx context.Context) (int, error) { return 0, nil }
+func (v *videoRepoStub) ListTagsByVideoIDs(ctx context.Context, videoIDs []uint64) ([]repository.VideoTagRow, error) {
+	return nil, nil
+}
 
 func TestPlayService_CreateEpisodeRestoresSoftDeleted(t *testing.T) {
 	playRepo := newFakePlayRepo()

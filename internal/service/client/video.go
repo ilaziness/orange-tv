@@ -103,7 +103,7 @@ func (s *videoService) List(ctx context.Context, req *clientdto.VideoListRequest
 		s.log.Error("client video: list failed", zap.Error(err))
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	out := mapVideoList(items)
+	out := mapVideoList(items, s.loadVideoTags(ctx, videoIDsFromItems(items)))
 	if cacheKey != "" {
 		_ = s.cache.SetVideoListClient(ctx, cacheKey, &cache.VideoListCacheEntry{Items: out, Total: total})
 	}
@@ -132,7 +132,7 @@ func (s *videoService) Search(ctx context.Context, req *clientdto.SearchRequest)
 		s.log.Error("client video: search failed", zap.Error(err))
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	return mapVideoList(items), total, nil
+	return mapVideoList(items, s.loadVideoTags(ctx, videoIDsFromItems(items))), total, nil
 }
 
 func (s *videoService) Related(ctx context.Context, id int64, limit int) ([]shareddto.VideoListItem, error) {
@@ -199,7 +199,7 @@ func (s *videoService) Related(ctx context.Context, id int64, limit int) ([]shar
 			}
 		}
 	}
-	return mapVideoList(out), nil
+	return mapVideoList(out, s.loadVideoTags(ctx, videoIDsFromItems(out))), nil
 }
 
 func (s *videoService) Get(ctx context.Context, id int64) (*clientdto.ClientVideoDetailResponse, error) {
@@ -345,14 +345,45 @@ func (s *videoService) GetEpisode(ctx context.Context, videoID, episodeID int64)
 	}, nil
 }
 
-func mapVideoList(items []model.Videos) []shareddto.VideoListItem {
+func mapVideoList(items []model.Videos, tagMap map[uint64][]shareddto.NamedItem) []shareddto.VideoListItem {
 	out := make([]shareddto.VideoListItem, 0, len(items))
 	for _, v := range items {
 		out = append(out, shareddto.VideoListItem{
 			ID: v.ID, Title: v.Title, Subtitle: v.Subtitle, Cover: v.CoverImage, Poster: v.PosterImage,
 			Year: v.Year, Region: v.Region, Language: v.Language, Rating: v.Rating, CategoryID: v.CategoryID,
 			SerialStatus: v.SerialStatus, Duration: v.Duration, ViewCount: v.ViewCount,
+			Tags: tagMap[v.ID],
 		})
 	}
 	return out
+}
+
+// loadVideoTags batch-loads up to 2 tags per video. Returns an empty map on error
+// so the list degrades gracefully (no tags shown).
+func (s *videoService) loadVideoTags(ctx context.Context, videoIDs []uint64) map[uint64][]shareddto.NamedItem {
+	tagMap := make(map[uint64][]shareddto.NamedItem)
+	if len(videoIDs) == 0 {
+		return tagMap
+	}
+	rows, err := s.videoRepo.ListTagsByVideoIDs(ctx, videoIDs)
+	if err != nil {
+		s.log.Error("client video: load tags failed", zap.Error(err))
+		return tagMap
+	}
+	for _, row := range rows {
+		if len(tagMap[row.VideoID]) >= 2 {
+			continue
+		}
+		tagMap[row.VideoID] = append(tagMap[row.VideoID], shareddto.NamedItem{ID: row.TagID, Name: row.Name})
+	}
+	return tagMap
+}
+
+// videoIDsFromItems extracts video IDs from a model.Videos slice.
+func videoIDsFromItems(items []model.Videos) []uint64 {
+	ids := make([]uint64, 0, len(items))
+	for _, v := range items {
+		ids = append(ids, v.ID)
+	}
+	return ids
 }
