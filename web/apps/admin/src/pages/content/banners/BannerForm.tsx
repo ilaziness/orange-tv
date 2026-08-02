@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
 import {
   Select,
   SelectContent,
@@ -88,6 +88,7 @@ export function BannerFormDialog({
                   onChange={(e) => setForm((prev) => ({ ...prev, cover: e.target.value }))}
                   disabled={submitting}
                 />
+                <FieldDescription>推荐21:9比例，最大尺寸1536 × 658</FieldDescription>
               </Field>
 
               <Field data-disabled={submitting ? true : undefined}>
