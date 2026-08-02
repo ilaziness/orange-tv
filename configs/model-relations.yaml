@@ -78,3 +78,7 @@ relations:
   - video_tags.video_id -> videos.id
   # 影视 - 分类
   - videos.category_id -> categories.id
+  # 评论投票 - 用户
+  - user_comment_votes.user_id -> users.id
+  # 评论投票 - 评论
+  - user_comment_votes.comment_id -> video_comments.id

@@ -125,16 +125,19 @@ type CommentListRequest struct {
 
 // CommentItem is the comment list item.
 type CommentItem struct {
-	ID           uint64 `json:"id"`
-	VideoID      uint64 `json:"video_id"`
-	UserID       uint64 `json:"user_id"`
-	Username     string `json:"username"`
-	Avatar       string `json:"avatar"`
-	ParentID     uint64 `json:"parent_id"`
-	Content      string `json:"content"`
-	LikeCount    uint32 `json:"like_count"`
-	DislikeCount uint32 `json:"dislike_count"`
-	CreatedAt    string `json:"created_at"`
+	ID           uint64         `json:"id"`
+	VideoID      uint64         `json:"video_id"`
+	UserID       uint64         `json:"user_id"`
+	Username     string         `json:"username"`
+	Avatar       string         `json:"avatar"`
+	ParentID     uint64         `json:"parent_id"`
+	Content      string         `json:"content"`
+	LikeCount    uint32         `json:"like_count"`
+	DislikeCount uint32         `json:"dislike_count"`
+	MyVote       int8           `json:"my_vote"` // 1=顶 -1=踩 0=未投票
+	ReplyCount   int            `json:"reply_count"`
+	Replies      []*CommentItem `json:"replies"`
+	CreatedAt    string         `json:"created_at"`
 }
 
 // CreateCommentRequest creates a comment.
@@ -142,6 +145,18 @@ type CreateCommentRequest struct {
 	VideoID  uint64 `json:"video_id" validate:"required,min=1"`
 	ParentID uint64 `json:"parent_id" validate:"omitempty,min=1"`
 	Content  string `json:"content" validate:"required,min=1,max=200"`
+}
+
+// VoteCommentRequest votes on a comment.
+type VoteCommentRequest struct {
+	Action string `json:"action" validate:"required,oneof=like dislike cancel"`
+}
+
+// VoteCommentResult is returned after a comment vote.
+type VoteCommentResult struct {
+	LikeCount    uint32 `json:"like_count"`
+	DislikeCount uint32 `json:"dislike_count"`
+	MyVote       int8   `json:"my_vote"`
 }
 
 // ===== Banner (C1) =====

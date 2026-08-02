@@ -24,15 +24,16 @@ type VideoComments struct {
 	ParentID uint64 `bun:"parent_id,notnull" json:"parent_id"`
 	Content  string `bun:"content,notnull" json:"content"`
 	// 0隐藏 1正常
-	Status       uint8            `bun:"status,notnull" json:"status"`
-	LikeCount    uint32           `bun:"like_count,notnull" json:"like_count"`
-	CreatedAt    time.Time        `bun:"created_at,notnull" json:"created_at"`
-	UpdatedAt    time.Time        `bun:"updated_at,notnull" json:"updated_at"`
-	DislikeCount uint32           `bun:"dislike_count,notnull" json:"dislike_count"`
-	Parent       *VideoComments   `bun:"rel:belongs-to,join:parent_id=id" json:"-"`
-	Replies      []*VideoComments `bun:"rel:has-many,join:id=parent_id" json:"-"`
-	User         *Users           `bun:"rel:belongs-to,join:user_id=id" json:"-"`
-	Video        *Videos          `bun:"rel:belongs-to,join:video_id=id" json:"-"`
+	Status           uint8               `bun:"status,notnull" json:"status"`
+	LikeCount        uint32              `bun:"like_count,notnull" json:"like_count"`
+	CreatedAt        time.Time           `bun:"created_at,notnull" json:"created_at"`
+	UpdatedAt        time.Time           `bun:"updated_at,notnull" json:"updated_at"`
+	DislikeCount     uint32              `bun:"dislike_count,notnull" json:"dislike_count"`
+	UserCommentVotes []*UserCommentVotes `bun:"rel:has-many,join:id=comment_id" json:"-"`
+	Parent           *VideoComments      `bun:"rel:belongs-to,join:parent_id=id" json:"-"`
+	Replies          []*VideoComments    `bun:"rel:has-many,join:id=parent_id" json:"-"`
+	User             *Users              `bun:"rel:belongs-to,join:user_id=id" json:"-"`
+	Video            *Videos             `bun:"rel:belongs-to,join:video_id=id" json:"-"`
 }
 
 var _ bun.BeforeAppendModelHook = (*VideoComments)(nil)

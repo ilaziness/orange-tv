@@ -41,11 +41,16 @@ type UserFeatureRepository interface {
 
 	// Comments
 	ListComments(ctx context.Context, videoID int64, offset, limit int) ([]model.VideoComments, int, error)
+	ListReplies(ctx context.Context, parentID int64, offset, limit int) ([]model.VideoComments, int, error)
 	ListCommentsByUser(ctx context.Context, userID int64, offset, limit int) ([]model.VideoComments, int, error)
+	CountRepliesByParents(ctx context.Context, parentIDs []int64) (map[int64]int, error)
 	GetComment(ctx context.Context, id int64) (*model.VideoComments, error)
 	CreateComment(ctx context.Context, c *model.VideoComments) error
-	UpdateCommentStatus(ctx context.Context, id int64, status int8) error
-	DeleteComment(ctx context.Context, id int64) error
+	GetCommentVote(ctx context.Context, userID, commentID int64) (*model.UserCommentVotes, error)
+	UpsertCommentVote(ctx context.Context, v *model.UserCommentVotes) error
+	DeleteCommentVote(ctx context.Context, userID, commentID int64) error
+	BatchGetCommentVotes(ctx context.Context, userID int64, commentIDs []int64) (map[int64]int8, error)
+	UpdateCommentVoteCounts(ctx context.Context, commentID int64, likeDelta, dislikeDelta int) error
 
 	// Ratings
 	GetRating(ctx context.Context, userID, videoID int64) (*model.UserRatings, error)
@@ -227,13 +232,30 @@ func (r *userFeatureRepo) ListComments(ctx context.Context, videoID int64, offse
 	q := r.db.NewSelect().Model(&items).
 		Relation("User").
 		Where("vc.video_id = ?", videoID).
-		Where("vc.status = ?", 1)
+		Where("vc.status = ?", 1).
+		Where("vc.parent_id = ?", 0)
 	total, err := q.Count(ctx)
 	if err != nil {
 		return nil, 0, fmt.Errorf("count comments: %w", err)
 	}
 	if err := q.Order("vc.id DESC").Offset(offset).Limit(limit).Scan(ctx); err != nil {
 		return nil, 0, fmt.Errorf("list comments: %w", err)
+	}
+	return items, total, nil
+}
+
+func (r *userFeatureRepo) ListReplies(ctx context.Context, parentID int64, offset, limit int) ([]model.VideoComments, int, error) {
+	items := make([]model.VideoComments, 0, limit)
+	q := r.db.NewSelect().Model(&items).
+		Relation("User").
+		Where("vc.parent_id = ?", parentID).
+		Where("vc.status = ?", 1)
+	total, err := q.Count(ctx)
+	if err != nil {
+		return nil, 0, fmt.Errorf("count replies: %w", err)
+	}
+	if err := q.Order("vc.id DESC").Offset(offset).Limit(limit).Scan(ctx); err != nil {
+		return nil, 0, fmt.Errorf("list replies: %w", err)
 	}
 	return items, total, nil
 }
@@ -249,6 +271,30 @@ func (r *userFeatureRepo) ListCommentsByUser(ctx context.Context, userID int64, 
 		return nil, 0, fmt.Errorf("list user comments: %w", err)
 	}
 	return items, total, nil
+}
+
+func (r *userFeatureRepo) CountRepliesByParents(ctx context.Context, parentIDs []int64) (map[int64]int, error) {
+	result := make(map[int64]int, len(parentIDs))
+	if len(parentIDs) == 0 {
+		return result, nil
+	}
+	var rows []struct {
+		ParentID int64 `bun:"parent_id"`
+		Count    int   `bun:"cnt"`
+	}
+	err := r.db.NewSelect().TableExpr("video_comments AS vc").
+		ColumnExpr("vc.parent_id, COUNT(*) AS cnt").
+		Where("vc.parent_id IN (?)", bun.In(parentIDs)).
+		Where("vc.status = ?", 1).
+		Group("vc.parent_id").
+		Scan(ctx, &rows)
+	if err != nil {
+		return nil, fmt.Errorf("count replies by parents: %w", err)
+	}
+	for _, row := range rows {
+		result[row.ParentID] = row.Count
+	}
+	return result, nil
 }
 
 func (r *userFeatureRepo) GetComment(ctx context.Context, id int64) (*model.VideoComments, error) {
@@ -272,23 +318,84 @@ func (r *userFeatureRepo) CreateComment(ctx context.Context, c *model.VideoComme
 	return nil
 }
 
-func (r *userFeatureRepo) UpdateCommentStatus(ctx context.Context, id int64, status int8) error {
-	now := time.Now()
-	_, err := r.db.NewUpdate().Model((*model.VideoComments)(nil)).
-		Set("status = ?", status).
-		Set("updated_at = ?", now).
-		Where("id = ?", id).
+func (r *userFeatureRepo) GetCommentVote(ctx context.Context, userID, commentID int64) (*model.UserCommentVotes, error) {
+	v := new(model.UserCommentVotes)
+	err := r.db.NewSelect().Model(v).
+		Where("user_id = ?", userID).
+		Where("comment_id = ?", commentID).
+		Scan(ctx)
+	found, err := notFoundOrErr(err, "get comment vote")
+	if err != nil {
+		return nil, err
+	}
+	if !found {
+		return nil, nil
+	}
+	return v, nil
+}
+
+func (r *userFeatureRepo) UpsertCommentVote(ctx context.Context, v *model.UserCommentVotes) error {
+	_, err := r.db.NewInsert().Model(v).
+		On("DUPLICATE KEY UPDATE").
+		Set("direction = VALUES(direction)").
+		Set("updated_at = VALUES(updated_at)").
 		Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("update comment status: %w", err)
+		return fmt.Errorf("upsert comment vote: %w", err)
 	}
 	return nil
 }
 
-func (r *userFeatureRepo) DeleteComment(ctx context.Context, id int64) error {
-	_, err := r.db.NewDelete().Model((*model.VideoComments)(nil)).Where("id = ?", id).Exec(ctx)
+func (r *userFeatureRepo) DeleteCommentVote(ctx context.Context, userID, commentID int64) error {
+	_, err := r.db.NewDelete().Model((*model.UserCommentVotes)(nil)).
+		Where("user_id = ?", userID).
+		Where("comment_id = ?", commentID).
+		Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("delete comment: %w", err)
+		return fmt.Errorf("delete comment vote: %w", err)
+	}
+	return nil
+}
+
+func (r *userFeatureRepo) BatchGetCommentVotes(ctx context.Context, userID int64, commentIDs []int64) (map[int64]int8, error) {
+	result := make(map[int64]int8, len(commentIDs))
+	if len(commentIDs) == 0 || userID <= 0 {
+		return result, nil
+	}
+	var rows []struct {
+		CommentID int64 `bun:"comment_id"`
+		Direction int8  `bun:"direction"`
+	}
+	err := r.db.NewSelect().TableExpr("user_comment_votes").
+		ColumnExpr("comment_id, direction").
+		Where("user_id = ?", userID).
+		Where("comment_id IN (?)", bun.In(commentIDs)).
+		Scan(ctx, &rows)
+	if err != nil {
+		return nil, fmt.Errorf("batch get comment votes: %w", err)
+	}
+	for _, row := range rows {
+		result[row.CommentID] = row.Direction
+	}
+	return result, nil
+}
+
+func (r *userFeatureRepo) UpdateCommentVoteCounts(ctx context.Context, commentID int64, likeDelta, dislikeDelta int) error {
+	q := r.db.NewUpdate().Model((*model.VideoComments)(nil)).
+		Set("updated_at = ?", time.Now()).
+		Where("id = ?", commentID)
+	if likeDelta != 0 {
+		q = q.Set("like_count = like_count + ?", likeDelta)
+	}
+	if dislikeDelta != 0 {
+		q = q.Set("dislike_count = dislike_count + ?", dislikeDelta)
+	}
+	if likeDelta == 0 && dislikeDelta == 0 {
+		return nil
+	}
+	_, err := q.Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("update comment vote counts: %w", err)
 	}
 	return nil
 }

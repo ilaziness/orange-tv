@@ -169,6 +169,12 @@ export const clientApi = {
       `/videos/${videoId}/comments`,
       { query: { page, page_size: 20 } },
     ),
+  listReplies: (commentId: number, page = 1) =>
+    apiGet<PageData<CommentItem>>(
+      CLIENT_API_BASE,
+      `/comments/${commentId}/replies`,
+      { query: { page, page_size: 20 } },
+    ),
   createComment: (videoId: number, content: string, parentId = 0) =>
     withAuth((token) =>
       apiPost<CommentItem>(
@@ -178,9 +184,13 @@ export const clientApi = {
         { token },
       ),
     ),
-  deleteComment: (commentId: number) =>
+  voteComment: (commentId: number, action: "like" | "dislike" | "cancel") =>
     withAuth((token) =>
-      apiDelete(CLIENT_API_BASE, `/comments/${commentId}`, { token }),
+      apiPost<{
+        like_count: number;
+        dislike_count: number;
+        my_vote: 1 | -1 | 0;
+      }>(CLIENT_API_BASE, `/comments/${commentId}/vote`, { action }, { token }),
     ),
   getRating: (videoId: number) =>
     withAuth((token) =>

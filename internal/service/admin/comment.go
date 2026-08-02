@@ -72,8 +72,8 @@ func (s *commentService) Delete(ctx context.Context, id int64) error {
 	if c == nil {
 		return errcode.CommentNotFound
 	}
-	if err := s.repo.Delete(ctx, id); err != nil {
-		s.log.Error("comment: delete failed", zap.Int64("comment_id", id), zap.Error(err))
+	if err := s.repo.DeleteTree(ctx, id); err != nil {
+		s.log.Error("comment: delete tree failed", zap.Int64("comment_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return nil

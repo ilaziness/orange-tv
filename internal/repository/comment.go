@@ -27,6 +27,7 @@ type CommentRepository interface {
 	GetParentChain(ctx context.Context, id int64) ([]model.VideoComments, error)
 	UpdateStatus(ctx context.Context, id int64, status uint8) error
 	Delete(ctx context.Context, id int64) error
+	DeleteTree(ctx context.Context, id int64) error
 }
 
 type commentRepo struct {
@@ -144,4 +145,8 @@ func (r *commentRepo) Delete(ctx context.Context, id int64) error {
 		return fmt.Errorf("delete comment: %w", err)
 	}
 	return nil
+}
+
+func (r *commentRepo) DeleteTree(ctx context.Context, id int64) error {
+	return deleteCommentTreeByID(ctx, r.db, id)
 }

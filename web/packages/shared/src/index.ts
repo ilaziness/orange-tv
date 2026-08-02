@@ -546,6 +546,9 @@ export type CommentItem = {
   content: string
   like_count: number
   dislike_count: number
+  my_vote?: 1 | -1 | 0
+  reply_count?: number
+  replies?: CommentItem[]
   created_at: string
 }
 

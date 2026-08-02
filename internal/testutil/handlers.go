@@ -406,13 +406,18 @@ func (s clientUserSvc) UpsertHistory(ctx context.Context, userID int64, req *cli
 }
 func (s clientUserSvc) DeleteHistory(ctx context.Context, userID, videoID int64) error { return nil }
 func (s clientUserSvc) ClearHistory(ctx context.Context, userID int64) error           { return nil }
-func (s clientUserSvc) ListComments(ctx context.Context, videoID int64, req *clientdto.CommentListRequest) ([]clientdto.CommentItem, int, error) {
+func (s clientUserSvc) ListComments(ctx context.Context, videoID, userID int64, req *clientdto.CommentListRequest) ([]clientdto.CommentItem, int, error) {
+	return nil, 0, nil
+}
+func (s clientUserSvc) ListReplies(ctx context.Context, commentID, userID int64, req *clientdto.CommentListRequest) ([]clientdto.CommentItem, int, error) {
 	return nil, 0, nil
 }
 func (s clientUserSvc) CreateComment(ctx context.Context, userID int64, req *clientdto.CreateCommentRequest) (*clientdto.CommentItem, error) {
 	return &clientdto.CommentItem{}, nil
 }
-func (s clientUserSvc) DeleteComment(ctx context.Context, userID, commentID int64) error { return nil }
+func (s clientUserSvc) VoteComment(ctx context.Context, userID, commentID int64, req *clientdto.VoteCommentRequest) (*clientdto.VoteCommentResult, error) {
+	return &clientdto.VoteCommentResult{}, nil
+}
 func (s clientUserSvc) RateVideo(ctx context.Context, userID, videoID int64, req *clientdto.RateVideoRequest) (*clientdto.RatingResult, error) {
 	return &clientdto.RatingResult{}, nil
 }

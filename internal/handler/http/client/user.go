@@ -350,6 +350,17 @@ func (h *UserHandler) ClearHistory(c *gin.Context) {
 
 // ===== C6: Comments =====
 
+// ListComments godoc
+// @Summary 视频评论列表
+// @Description 分页获取视频顶级评论（parent_id=0），未登录时 my_vote 为 0
+// @Tags client-user
+// @Accept json
+// @Produce json
+// @Param id path int true "影视ID"
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(20)
+// @Success 200 {object} response.Response
+// @Router /api/client/v1/videos/{id}/comments [get]
 func (h *UserHandler) ListComments(c *gin.Context) {
 	var uri shareddto.IDURI
 	if !httphandler.BindURI(c, &uri) {
@@ -359,7 +370,7 @@ func (h *UserHandler) ListComments(c *gin.Context) {
 	if !httphandler.BindQuery(c, &req) {
 		return
 	}
-	list, total, err := h.svc.ListComments(c.Request.Context(), uri.ID, &req)
+	list, total, err := h.svc.ListComments(c.Request.Context(), uri.ID, currentUserID(c), &req)
 	if err != nil {
 		response.Error(c, err)
 		return
@@ -367,6 +378,43 @@ func (h *UserHandler) ListComments(c *gin.Context) {
 	response.SuccessPage(c, list, int64(total), req.GetPage(), req.GetPageSize(), req.GetTotalPages(total))
 }
 
+// ListReplies godoc
+// @Summary 评论回复列表
+// @Description 分页获取某条评论的直接子回复
+// @Tags client-user
+// @Accept json
+// @Produce json
+// @Param id path int true "评论ID"
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(20)
+// @Success 200 {object} response.Response
+// @Router /api/client/v1/comments/{id}/replies [get]
+func (h *UserHandler) ListReplies(c *gin.Context) {
+	var uri shareddto.IDURI
+	if !httphandler.BindURI(c, &uri) {
+		return
+	}
+	var req clientdto.CommentListRequest
+	if !httphandler.BindQuery(c, &req) {
+		return
+	}
+	list, total, err := h.svc.ListReplies(c.Request.Context(), uri.ID, currentUserID(c), &req)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	response.SuccessPage(c, list, int64(total), req.GetPage(), req.GetPageSize(), req.GetTotalPages(total))
+}
+
+// CreateComment godoc
+// @Summary 发表评论/回复
+// @Description 对视频发表评论或回复指定评论
+// @Tags client-user
+// @Accept json
+// @Produce json
+// @Param body body clientdto.CreateCommentRequest true "评论请求"
+// @Success 200 {object} response.Response
+// @Router /api/client/v1/comments [post]
 func (h *UserHandler) CreateComment(c *gin.Context) {
 	userID := currentUserID(c)
 	if userID <= 0 {
@@ -385,7 +433,17 @@ func (h *UserHandler) CreateComment(c *gin.Context) {
 	response.Success(c, item)
 }
 
-func (h *UserHandler) DeleteComment(c *gin.Context) {
+// VoteComment godoc
+// @Summary 评论顶/踩
+// @Description 对评论进行顶（like）、踩（dislike）或取消（cancel）
+// @Tags client-user
+// @Accept json
+// @Produce json
+// @Param id path int true "评论ID"
+// @Param body body clientdto.VoteCommentRequest true "投票请求"
+// @Success 200 {object} response.Response{data=clientdto.VoteCommentResult}
+// @Router /api/client/v1/comments/{id}/vote [post]
+func (h *UserHandler) VoteComment(c *gin.Context) {
 	userID := currentUserID(c)
 	if userID <= 0 {
 		response.Error(c, errcode.AuthFailed)
@@ -395,11 +453,16 @@ func (h *UserHandler) DeleteComment(c *gin.Context) {
 	if !httphandler.BindURI(c, &uri) {
 		return
 	}
-	if err := h.svc.DeleteComment(c.Request.Context(), userID, uri.ID); err != nil {
+	var req clientdto.VoteCommentRequest
+	if !httphandler.BindAndValidate(c, &req) {
+		return
+	}
+	result, err := h.svc.VoteComment(c.Request.Context(), userID, uri.ID, &req)
+	if err != nil {
 		response.Error(c, err)
 		return
 	}
-	response.Success(c, nil)
+	response.Success(c, result)
 }
 
 // ===== C6: Ratings =====

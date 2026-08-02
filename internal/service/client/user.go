@@ -50,9 +50,10 @@ type UserService interface {
 	ClearHistory(ctx context.Context, userID int64) error
 
 	// C6: Comments
-	ListComments(ctx context.Context, videoID int64, req *clientdto.CommentListRequest) ([]clientdto.CommentItem, int, error)
+	ListComments(ctx context.Context, videoID int64, userID int64, req *clientdto.CommentListRequest) ([]clientdto.CommentItem, int, error)
+	ListReplies(ctx context.Context, commentID int64, userID int64, req *clientdto.CommentListRequest) ([]clientdto.CommentItem, int, error)
 	CreateComment(ctx context.Context, userID int64, req *clientdto.CreateCommentRequest) (*clientdto.CommentItem, error)
-	DeleteComment(ctx context.Context, userID, commentID int64) error
+	VoteComment(ctx context.Context, userID, commentID int64, req *clientdto.VoteCommentRequest) (*clientdto.VoteCommentResult, error)
 
 	// C6: Ratings
 	RateVideo(ctx context.Context, userID, videoID int64, req *clientdto.RateVideoRequest) (*clientdto.RatingResult, error)
@@ -455,11 +456,21 @@ func (s *userService) ClearHistory(ctx context.Context, userID int64) error {
 
 // ===== C6: Comments =====
 
-func (s *userService) ListComments(ctx context.Context, videoID int64, req *clientdto.CommentListRequest) ([]clientdto.CommentItem, int, error) {
-	comments, total, err := s.userRepo.ListComments(ctx, videoID, req.GetOffset(), req.GetPageSize())
+func (s *userService) mapComments(ctx context.Context, comments []model.VideoComments, userID int64) ([]clientdto.CommentItem, error) {
+	if len(comments) == 0 {
+		return []clientdto.CommentItem{}, nil
+	}
+	ids := make([]int64, len(comments))
+	for i, c := range comments {
+		ids[i] = int64(c.ID)
+	}
+	replyCounts, err := s.userRepo.CountRepliesByParents(ctx, ids)
 	if err != nil {
-		s.log.Error("client user: list comments failed", zap.Int64("video_id", videoID), zap.Error(err))
-		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	myVotes, err := s.userRepo.BatchGetCommentVotes(ctx, userID, ids)
+	if err != nil {
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	out := make([]clientdto.CommentItem, 0, len(comments))
 	for _, c := range comments {
@@ -471,6 +482,9 @@ func (s *userService) ListComments(ctx context.Context, videoID int64, req *clie
 			Content:      c.Content,
 			LikeCount:    c.LikeCount,
 			DislikeCount: c.DislikeCount,
+			MyVote:       myVotes[int64(c.ID)],
+			ReplyCount:   replyCounts[int64(c.ID)],
+			Replies:      make([]*clientdto.CommentItem, 0),
 			CreatedAt:    utils.FormatTimeStr(&c.CreatedAt),
 		}
 		if c.User != nil {
@@ -478,6 +492,34 @@ func (s *userService) ListComments(ctx context.Context, videoID int64, req *clie
 			item.Avatar = c.User.Avatar
 		}
 		out = append(out, item)
+	}
+	return out, nil
+}
+
+func (s *userService) ListComments(ctx context.Context, videoID, userID int64, req *clientdto.CommentListRequest) ([]clientdto.CommentItem, int, error) {
+	comments, total, err := s.userRepo.ListComments(ctx, videoID, req.GetOffset(), req.GetPageSize())
+	if err != nil {
+		s.log.Error("client user: list comments failed", zap.Int64("video_id", videoID), zap.Error(err))
+		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	out, err := s.mapComments(ctx, comments, userID)
+	if err != nil {
+		s.log.Error("client user: map comments failed", zap.Int64("video_id", videoID), zap.Error(err))
+		return nil, 0, err
+	}
+	return out, total, nil
+}
+
+func (s *userService) ListReplies(ctx context.Context, commentID, userID int64, req *clientdto.CommentListRequest) ([]clientdto.CommentItem, int, error) {
+	comments, total, err := s.userRepo.ListReplies(ctx, commentID, req.GetOffset(), req.GetPageSize())
+	if err != nil {
+		s.log.Error("client user: list replies failed", zap.Int64("parent_id", commentID), zap.Error(err))
+		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	out, err := s.mapComments(ctx, comments, userID)
+	if err != nil {
+		s.log.Error("client user: map replies failed", zap.Int64("parent_id", commentID), zap.Error(err))
+		return nil, 0, err
 	}
 	return out, total, nil
 }
@@ -509,6 +551,20 @@ func (s *userService) CreateComment(ctx context.Context, userID int64, req *clie
 		return nil, errcode.CommentTooLong
 	}
 
+	if req.ParentID > 0 {
+		parent, err := s.userRepo.GetComment(ctx, int64(req.ParentID))
+		if err != nil {
+			s.log.Error("client user: get parent comment failed", zap.Uint64("parent_id", req.ParentID), zap.Error(err))
+			return nil, errcode.Wrap(errcode.DatabaseError, err)
+		}
+		if parent == nil || parent.Status != constant.CommentStatusNormal {
+			return nil, errcode.CommentNotFound
+		}
+		if parent.VideoID != req.VideoID {
+			return nil, errcode.ParamError
+		}
+	}
+
 	// Determine comment status based on review toggle
 	status := constant.CommentStatusNormal
 	if service.BoolVal(featureMap, constant.SettingFeatureCommentReview, true) {
@@ -534,6 +590,9 @@ func (s *userService) CreateComment(ctx context.Context, userID int64, req *clie
 		Content:      c.Content,
 		LikeCount:    c.LikeCount,
 		DislikeCount: c.DislikeCount,
+		MyVote:       0,
+		ReplyCount:   0,
+		Replies:      make([]*clientdto.CommentItem, 0),
 		CreatedAt:    utils.FormatTimeStr(&c.CreatedAt),
 	}
 	if u, _ := s.adminRepo.GetUserByID(ctx, userID); u != nil {
@@ -543,19 +602,98 @@ func (s *userService) CreateComment(ctx context.Context, userID int64, req *clie
 	return item, nil
 }
 
-func (s *userService) DeleteComment(ctx context.Context, userID, commentID int64) error {
+func (s *userService) VoteComment(ctx context.Context, userID, commentID int64, req *clientdto.VoteCommentRequest) (*clientdto.VoteCommentResult, error) {
 	c, err := s.userRepo.GetComment(ctx, commentID)
 	if err != nil {
-		s.log.Error("client user: get comment for delete failed", zap.Int64("comment_id", commentID), zap.Error(err))
-		return errcode.Wrap(errcode.DatabaseError, err)
+		s.log.Error("client user: get comment for vote failed", zap.Int64("comment_id", commentID), zap.Error(err))
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	if c == nil {
-		return errcode.CommentNotFound
+	if c == nil || c.Status != constant.CommentStatusNormal {
+		return nil, errcode.CommentNotFound
 	}
-	if c.UserID != uint64(userID) {
-		return errcode.InsufficientPermission
+
+	var newDir int
+	switch req.Action {
+	case "like":
+		newDir = 1
+	case "dislike":
+		newDir = -1
+	case "cancel":
+		newDir = 0
 	}
-	return s.userRepo.DeleteComment(ctx, commentID)
+
+	err = s.userRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
+		txRepo := s.userRepo.WithTx(tx)
+		oldVote, err := txRepo.GetCommentVote(ctx, userID, commentID)
+		if err != nil {
+			return err
+		}
+		oldDir := 0
+		if oldVote != nil {
+			oldDir = int(oldVote.Direction)
+		}
+		if oldDir == newDir {
+			return nil
+		}
+
+		likeDelta, dislikeDelta := 0, 0
+		if oldDir == 1 {
+			likeDelta--
+		}
+		if oldDir == -1 {
+			dislikeDelta--
+		}
+		if newDir == 1 {
+			likeDelta++
+		}
+		if newDir == -1 {
+			dislikeDelta++
+		}
+
+		if newDir != 0 {
+			if err := txRepo.UpsertCommentVote(ctx, &model.UserCommentVotes{
+				UserID:    uint64(userID),
+				CommentID: uint64(commentID),
+				Direction: int8(newDir),
+			}); err != nil {
+				return err
+			}
+		} else {
+			if err := txRepo.DeleteCommentVote(ctx, userID, commentID); err != nil {
+				return err
+			}
+		}
+		if likeDelta != 0 || dislikeDelta != 0 {
+			if err := txRepo.UpdateCommentVoteCounts(ctx, commentID, likeDelta, dislikeDelta); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		s.log.Error("client user: vote comment transaction failed", zap.Int64("comment_id", commentID), zap.Int64("user_id", userID), zap.Error(err))
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+
+	c, err = s.userRepo.GetComment(ctx, commentID)
+	if err != nil {
+		s.log.Error("client user: get comment after vote failed", zap.Int64("comment_id", commentID), zap.Error(err))
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	myVote := int8(0)
+	vote, err := s.userRepo.GetCommentVote(ctx, userID, commentID)
+	if err != nil {
+		s.log.Error("client user: get comment vote after vote failed", zap.Int64("comment_id", commentID), zap.Error(err))
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	if vote != nil {
+		myVote = vote.Direction
+	}
+	return &clientdto.VoteCommentResult{
+		LikeCount:    c.LikeCount,
+		DislikeCount: c.DislikeCount,
+		MyVote:       myVote,
+	}, nil
 }
 
 // ===== Ratings (C6) =====

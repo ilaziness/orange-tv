@@ -33,12 +33,13 @@ type Users struct {
 	DeletedAt *time.Time `bun:"deleted_at" json:"deleted_at"`
 	StrID     string     `bun:"str_id,notnull,unique" json:"str_id"`
 	// 昵称
-	Nickname          string             `bun:"nickname,notnull" json:"nickname"`
-	UserFavorites     []*UserFavorites   `bun:"rel:has-many,join:id=user_id" json:"-"`
-	UserLoginLogs     []*UserLoginLogs   `bun:"rel:has-many,join:id=user_id" json:"-"`
-	UserPlayHistories []*UserPlayHistory `bun:"rel:has-many,join:id=user_id" json:"-"`
-	UserRatings       []*UserRatings     `bun:"rel:has-many,join:id=user_id" json:"-"`
-	VideoComments     []*VideoComments   `bun:"rel:has-many,join:id=user_id" json:"-"`
+	Nickname          string              `bun:"nickname,notnull" json:"nickname"`
+	UserCommentVotes  []*UserCommentVotes `bun:"rel:has-many,join:id=user_id" json:"-"`
+	UserFavorites     []*UserFavorites    `bun:"rel:has-many,join:id=user_id" json:"-"`
+	UserLoginLogs     []*UserLoginLogs    `bun:"rel:has-many,join:id=user_id" json:"-"`
+	UserPlayHistories []*UserPlayHistory  `bun:"rel:has-many,join:id=user_id" json:"-"`
+	UserRatings       []*UserRatings      `bun:"rel:has-many,join:id=user_id" json:"-"`
+	VideoComments     []*VideoComments    `bun:"rel:has-many,join:id=user_id" json:"-"`
 }
 
 var _ bun.BeforeAppendModelHook = (*Users)(nil)

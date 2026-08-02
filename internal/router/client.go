@@ -48,10 +48,11 @@ func registerClientContentRoutes(v1 *gin.RouterGroup, h *Handlers) {
 	v1.DELETE("/history/:id", h.ClientUser.DeleteHistory)
 	v1.DELETE("/history", h.ClientUser.ClearHistory)
 
-	// Comments (C6) — list is public, create/delete require JWT
+	// Comments (C6) — list/replies are public, create/vote require JWT
 	v1.GET("/videos/:id/comments", h.ClientUser.ListComments)
+	v1.GET("/comments/:id/replies", h.ClientUser.ListReplies)
 	v1.POST("/comments", h.ClientUser.CreateComment)
-	v1.DELETE("/comments/:id", h.ClientUser.DeleteComment)
+	v1.POST("/comments/:id/vote", h.ClientUser.VoteComment)
 
 	// Ratings (C6) — get is public, create requires JWT
 	v1.GET("/ratings/:id", h.ClientUser.GetRating)
