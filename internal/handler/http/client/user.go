@@ -64,6 +64,87 @@ func (h *UserHandler) Profile(c *gin.Context) {
 	response.Success(c, profile)
 }
 
+// UpdateProfile updates the current user's profile.
+// @Summary 更新用户资料
+// @Description 更新当前登录用户的昵称、邮箱、头像
+// @Tags client-user
+// @Accept json
+// @Produce json
+// @Param body body clientdto.UpdateProfileRequest true "用户资料"
+// @Success 200 {object} response.Response{data=clientdto.Profile}
+// @Router /api/client/v1/auth/profile [put]
+func (h *UserHandler) UpdateProfile(c *gin.Context) {
+	userID := currentUserID(c)
+	if userID <= 0 {
+		response.Error(c, errcode.AuthFailed)
+		return
+	}
+	var req clientdto.UpdateProfileRequest
+	if !httphandler.BindAndValidate(c, &req) {
+		return
+	}
+	profile, err := h.svc.UpdateProfile(c.Request.Context(), userID, &req)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	response.Success(c, profile)
+}
+
+// ChangePassword changes the current user's password.
+// @Summary 修改密码
+// @Description 修改当前登录用户的密码
+// @Tags client-user
+// @Accept json
+// @Produce json
+// @Param body body clientdto.ChangePasswordRequest true "修改密码"
+// @Success 200 {object} response.Response{}
+// @Router /api/client/v1/auth/profile/password [put]
+func (h *UserHandler) ChangePassword(c *gin.Context) {
+	userID := currentUserID(c)
+	if userID <= 0 {
+		response.Error(c, errcode.AuthFailed)
+		return
+	}
+	var req clientdto.ChangePasswordRequest
+	if !httphandler.BindAndValidate(c, &req) {
+		return
+	}
+	if err := h.svc.ChangePassword(c.Request.Context(), userID, &req); err != nil {
+		response.Error(c, err)
+		return
+	}
+	response.Success(c, nil)
+}
+
+// LoginHistory returns the current user's login history for the last 3 months.
+// @Summary 获取登录历史
+// @Description 分页获取当前用户最近 3 个月的登录历史
+// @Tags client-user
+// @Accept json
+// @Produce json
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(10)
+// @Success 200 {object} response.Response{data=response.Page{list=[]clientdto.LoginHistoryItem}}
+// @Router /api/client/v1/auth/login-history [get]
+func (h *UserHandler) LoginHistory(c *gin.Context) {
+	userID := currentUserID(c)
+	if userID <= 0 {
+		response.Error(c, errcode.AuthFailed)
+		return
+	}
+	var req clientdto.LoginHistoryListRequest
+	if !httphandler.BindAndValidate(c, &req) {
+		return
+	}
+	list, total, err := h.svc.LoginHistory(c.Request.Context(), userID, &req)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	response.SuccessPage(c, list, int64(total), req.GetPage(), req.GetPageSize(), req.GetTotalPages(total))
+}
+
 // ===== C6: Favorites =====
 
 // ListFavorites returns the current user's favorite list.

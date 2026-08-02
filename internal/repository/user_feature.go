@@ -57,6 +57,7 @@ type UserFeatureRepository interface {
 	// User login logs
 	CreateUserLoginLog(ctx context.Context, l *model.UserLoginLogs) error
 	ListUserLoginLogs(ctx context.Context, f UserLoginLogFilter) ([]model.UserLoginLogs, int, error)
+	DeleteUserLoginLogsBefore(ctx context.Context, userID int64, before time.Time) error
 
 	// Banners
 	ListBanners(ctx context.Context, status *uint8) ([]model.Banners, error)
@@ -332,6 +333,17 @@ func (r *userFeatureRepo) ListUserLoginLogs(ctx context.Context, f UserLoginLogF
 		return nil, 0, fmt.Errorf("list user login logs: %w", err)
 	}
 	return items, total, nil
+}
+
+func (r *userFeatureRepo) DeleteUserLoginLogsBefore(ctx context.Context, userID int64, before time.Time) error {
+	_, err := r.db.NewDelete().Model((*model.UserLoginLogs)(nil)).
+		Where("user_id = ?", userID).
+		Where("created_at < ?", before).
+		Exec(ctx)
+	if err != nil {
+		return fmt.Errorf("delete user login logs before %v: %w", before, err)
+	}
+	return nil
 }
 
 // ===== Banners =====

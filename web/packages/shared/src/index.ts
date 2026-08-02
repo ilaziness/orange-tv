@@ -480,10 +480,20 @@ export type ClientBanner = {
 
 export type UserProfile = {
   id: number
+  str_id: string
   username: string
+  nickname: string
   email: string
   avatar: string
   status: number
+}
+
+export type LoginHistoryItem = {
+  id: number
+  ip: string
+  user_agent: string
+  status: number
+  created_at: string
 }
 
 export type UserLoginResult = {

@@ -30,7 +30,10 @@ type Users struct {
 	CreatedAt   *time.Time `bun:"created_at" json:"created_at"`
 	UpdatedAt   *time.Time `bun:"updated_at" json:"updated_at"`
 	// 软删除时间
-	DeletedAt         *time.Time         `bun:"deleted_at" json:"deleted_at"`
+	DeletedAt *time.Time `bun:"deleted_at" json:"deleted_at"`
+	StrID     string     `bun:"str_id,notnull,unique" json:"str_id"`
+	// 昵称
+	Nickname          string             `bun:"nickname,notnull" json:"nickname"`
 	UserFavorites     []*UserFavorites   `bun:"rel:has-many,join:id=user_id" json:"-"`
 	UserLoginLogs     []*UserLoginLogs   `bun:"rel:has-many,join:id=user_id" json:"-"`
 	UserPlayHistories []*UserPlayHistory `bun:"rel:has-many,join:id=user_id" json:"-"`

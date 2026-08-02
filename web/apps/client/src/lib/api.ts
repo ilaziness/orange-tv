@@ -4,6 +4,7 @@ import {
   apiDelete,
   apiGet,
   apiPost,
+  apiPut,
   type Category,
   type ClientBanner,
   type ClientVideoDetail,
@@ -12,6 +13,7 @@ import {
   type FavoriteCheckResult,
   type HistoryItem,
   type LiveChannel,
+  type LoginHistoryItem,
   type PageData,
   type PlayEpisodeResponse,
   type RatingResult,
@@ -32,10 +34,21 @@ export function setToken(token: string | null) {
   else localStorage.setItem(TOKEN_KEY, token);
 }
 
+const AUTH_REDIRECT_CODES = [3000001, 3000002, 3000004, 3000005];
+
 async function withAuth<T>(
   fn: (token: string | null) => Promise<T>,
 ): Promise<T> {
-  return fn(getToken());
+  try {
+    return await fn(getToken());
+  } catch (err) {
+    if (err instanceof ApiError && AUTH_REDIRECT_CODES.includes(err.code)) {
+      setToken(null);
+      window.location.href = "/login";
+      return new Promise(() => {});
+    }
+    throw err;
+  }
 }
 
 export const clientApi = {
@@ -88,6 +101,21 @@ export const clientApi = {
   profile: () =>
     withAuth((token) =>
       apiGet<UserProfile>(CLIENT_API_BASE, "/auth/profile", { token }),
+    ),
+  updateProfile: (body: { nickname?: string; email?: string; avatar?: string }) =>
+    withAuth((token) =>
+      apiPut<UserProfile>(CLIENT_API_BASE, "/auth/profile", body, { token }),
+    ),
+  changePassword: (body: { current_password: string; new_password: string }) =>
+    withAuth((token) =>
+      apiPut<void>(CLIENT_API_BASE, "/auth/profile/password", body, { token }),
+    ),
+  loginHistory: (page = 1, pageSize = 10) =>
+    withAuth((token) =>
+      apiGet<PageData<LoginHistoryItem>>(CLIENT_API_BASE, "/auth/login-history", {
+        token,
+        query: { page, page_size: pageSize },
+      }),
     ),
 
   // Favorites (C6)

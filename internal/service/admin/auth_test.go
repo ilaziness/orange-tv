@@ -134,6 +134,12 @@ func (f *fakeAdminRepo) ExistsUserUsername(ctx context.Context, username string)
 func (f *fakeAdminRepo) ExistsUserUsernameExcludeID(ctx context.Context, username string, excludeID int64) (bool, error) {
 	return false, nil
 }
+func (f *fakeAdminRepo) GetUserByStrID(ctx context.Context, strID string) (*model.Users, error) {
+	return nil, nil
+}
+func (f *fakeAdminRepo) ExistsUserStrID(ctx context.Context, strID string) (bool, error) {
+	return false, nil
+}
 
 func TestAuthService_LoginSuccess(t *testing.T) {
 	hash, err := crypto.HashPassword("secret12")

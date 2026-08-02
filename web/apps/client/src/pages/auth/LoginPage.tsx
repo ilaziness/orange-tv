@@ -25,7 +25,7 @@ export function Component() {
     setError('')
     const u = username.trim()
     const p = password.trim()
-    if (!isValidUsername(u) || p.length < 6) {
+    if (!isValidUsername(u) || p.length < 5 || p.length > 30) {
       setError('用户名或密码格式不正确')
       return
     }
@@ -76,6 +76,8 @@ export function Component() {
                   id="password"
                   type="password"
                   placeholder="请输入密码"
+                  minLength={5}
+                  maxLength={30}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required

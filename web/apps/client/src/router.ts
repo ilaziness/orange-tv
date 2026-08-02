@@ -20,6 +20,7 @@ const routes: RouteObject[] = [
         children: [
           { path: 'favorites', lazy: () => import('@/pages/user/FavoritesPage') },
           { path: 'history', lazy: () => import('@/pages/user/HistoryPage') },
+          { path: 'profile', lazy: () => import('@/pages/user/ProfilePage') },
         ],
       },
     ],

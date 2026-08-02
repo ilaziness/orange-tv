@@ -18,6 +18,7 @@ import (
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
 	"github.com/ilaziness/orange-tv/internal/service"
+	"github.com/ilaziness/orange-tv/internal/utils"
 	"github.com/uptrace/bun"
 	"go.uber.org/zap"
 )
@@ -31,6 +32,9 @@ type UserService interface {
 	Register(ctx context.Context, req *clientdto.RegisterRequest) (*clientdto.Profile, error)
 	Login(ctx context.Context, req *clientdto.LoginRequest, ip, ua string) (*clientdto.LoginResponse, error)
 	Profile(ctx context.Context, userID int64) (*clientdto.Profile, error)
+	UpdateProfile(ctx context.Context, userID int64, req *clientdto.UpdateProfileRequest) (*clientdto.Profile, error)
+	ChangePassword(ctx context.Context, userID int64, req *clientdto.ChangePasswordRequest) error
+	LoginHistory(ctx context.Context, userID int64, req *clientdto.LoginHistoryListRequest) ([]clientdto.LoginHistoryItem, int, error)
 
 	// C6: Favorites
 	ListFavorites(ctx context.Context, userID int64, req *clientdto.FavoriteListRequest) ([]clientdto.FavoriteItem, int, error)
@@ -113,11 +117,17 @@ func (s *userService) Register(ctx context.Context, req *clientdto.RegisterReque
 		s.log.Error("client user: hash password for register failed", zap.String("username", username), zap.Error(err))
 		return nil, errcode.Wrap(errcode.InternalError, err)
 	}
+	strID, err := utils.GenerateUniqueNumericID(ctx, 10, s.adminRepo.ExistsUserStrID)
+	if err != nil {
+		s.log.Error("client user: generate str_id for register failed", zap.String("username", username), zap.Error(err))
+		return nil, errcode.Wrap(errcode.InternalError, err)
+	}
 	u := &model.Users{
 		Username: username,
 		Password: hash,
 		Email:    strings.TrimSpace(req.Email),
 		Status:   constant.StatusEnabled,
+		StrID:    strID,
 	}
 	if err := s.adminRepo.CreateUser(ctx, u); err != nil {
 		s.log.Error("client user: create user failed", zap.String("username", username), zap.Error(err))
@@ -149,6 +159,9 @@ func (s *userService) Login(ctx context.Context, req *clientdto.LoginRequest, ip
 			UserAgent: ua,
 			Status:    boolToStatus(success),
 		})
+		if userID > 0 {
+			_ = s.userRepo.DeleteUserLoginLogsBefore(ctx, userID, time.Now().AddDate(0, -3, 0))
+		}
 	}
 	if u == nil {
 		recordLog(false)
@@ -189,6 +202,81 @@ func (s *userService) Profile(ctx context.Context, userID int64) (*clientdto.Pro
 		return nil, errcode.UserNotFound
 	}
 	return toUserProfile(u), nil
+}
+
+func (s *userService) UpdateProfile(ctx context.Context, userID int64, req *clientdto.UpdateProfileRequest) (*clientdto.Profile, error) {
+	u, err := s.adminRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		s.log.Error("client user: get user for update profile failed", zap.Int64("user_id", userID), zap.Error(err))
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	if u == nil {
+		return nil, errcode.UserNotFound
+	}
+	if nickname := strings.TrimSpace(req.Nickname); nickname != "" && nickname != u.Nickname {
+		u.Nickname = nickname
+	}
+	if email := strings.TrimSpace(req.Email); email != "" && email != u.Email {
+		u.Email = email
+	}
+	if avatar := strings.TrimSpace(req.Avatar); avatar != "" && avatar != u.Avatar {
+		u.Avatar = avatar
+	}
+	if err := s.adminRepo.UpdateUser(ctx, u); err != nil {
+		s.log.Error("client user: update profile failed", zap.Int64("user_id", userID), zap.Error(err))
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	return toUserProfile(u), nil
+}
+
+func (s *userService) ChangePassword(ctx context.Context, userID int64, req *clientdto.ChangePasswordRequest) error {
+	u, err := s.adminRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		s.log.Error("client user: get user for change password failed", zap.Int64("user_id", userID), zap.Error(err))
+		return errcode.Wrap(errcode.DatabaseError, err)
+	}
+	if u == nil {
+		return errcode.UserNotFound
+	}
+	if err := crypto.CheckPassword(req.CurrentPassword, u.Password); err != nil {
+		return errcode.InvalidCredentials
+	}
+	hash, err := crypto.HashPassword(req.NewPassword)
+	if err != nil {
+		s.log.Error("client user: hash new password failed", zap.Int64("user_id", userID), zap.Error(err))
+		return errcode.Wrap(errcode.InternalError, err)
+	}
+	u.Password = hash
+	if err := s.adminRepo.UpdateUser(ctx, u); err != nil {
+		s.log.Error("client user: update password failed", zap.Int64("user_id", userID), zap.Error(err))
+		return errcode.Wrap(errcode.DatabaseError, err)
+	}
+	return nil
+}
+
+func (s *userService) LoginHistory(ctx context.Context, userID int64, req *clientdto.LoginHistoryListRequest) ([]clientdto.LoginHistoryItem, int, error) {
+	threeMonthsAgo := time.Now().AddDate(0, -3, 0)
+	items, total, err := s.userRepo.ListUserLoginLogs(ctx, repository.UserLoginLogFilter{
+		UserID:    &userID,
+		StartTime: &threeMonthsAgo,
+		Offset:    req.GetOffset(),
+		Limit:     req.GetPageSize(),
+	})
+	if err != nil {
+		s.log.Error("client user: list login history failed", zap.Int64("user_id", userID), zap.Error(err))
+		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	out := make([]clientdto.LoginHistoryItem, 0, len(items))
+	for _, item := range items {
+		out = append(out, clientdto.LoginHistoryItem{
+			ID:        item.ID,
+			IP:        item.IP,
+			UserAgent: item.UserAgent,
+			Status:    item.Status,
+			CreatedAt: utils.FormatTimeStr(&item.CreatedAt),
+		})
+	}
+	return out, total, nil
 }
 
 // ===== C6: Favorites =====
@@ -579,7 +667,9 @@ func (s *userService) GetRating(ctx context.Context, userID, videoID int64) (*cl
 func toUserProfile(u *model.Users) *clientdto.Profile {
 	return &clientdto.Profile{
 		ID:       uint64(u.ID),
+		StrID:    u.StrID,
 		Username: u.Username,
+		Nickname: u.Nickname,
 		Email:    u.Email,
 		Avatar:   u.Avatar,
 		Status:   uint8(u.Status),

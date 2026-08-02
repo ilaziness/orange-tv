@@ -7,14 +7,14 @@ import "github.com/ilaziness/orange-tv/internal/dto"
 // RegisterRequest is the user registration payload.
 type RegisterRequest struct {
 	Username string `json:"username" validate:"required,min=2,max=15,alphanum"`
-	Password string `json:"password" validate:"required,min=6,max=72"`
+	Password string `json:"password" validate:"required,min=5,max=30"`
 	Email    string `json:"email" validate:"omitempty,email,max=128"`
 }
 
 // LoginRequest is the user login payload.
 type LoginRequest struct {
 	Username string `json:"username" validate:"required,min=2,max=15,alphanum"`
-	Password string `json:"password" validate:"required,min=6,max=72"`
+	Password string `json:"password" validate:"required,min=5,max=30"`
 }
 
 // LoginResponse is returned after successful user login.
@@ -28,10 +28,39 @@ type LoginResponse struct {
 // Profile is the authenticated user public profile.
 type Profile struct {
 	ID       uint64 `json:"id"`
+	StrID    string `json:"str_id"`
 	Username string `json:"username"`
+	Nickname string `json:"nickname"`
 	Email    string `json:"email"`
 	Avatar   string `json:"avatar"`
 	Status   uint8  `json:"status"`
+}
+
+// UpdateProfileRequest updates the current user's profile.
+type UpdateProfileRequest struct {
+	Nickname string `json:"nickname" validate:"omitempty,min=3,max=15"`
+	Email    string `json:"email" validate:"omitempty,email,max=20"`
+	Avatar   string `json:"avatar" validate:"omitempty,url,max=120"`
+}
+
+// ChangePasswordRequest changes the current user's password.
+type ChangePasswordRequest struct {
+	CurrentPassword string `json:"current_password" validate:"required,min=5,max=30"`
+	NewPassword     string `json:"new_password" validate:"required,min=5,max=30"`
+}
+
+// LoginHistoryListRequest filters user login history.
+type LoginHistoryListRequest struct {
+	dto.PaginationRequest
+}
+
+// LoginHistoryItem is a single user login log entry.
+type LoginHistoryItem struct {
+	ID        uint64 `json:"id"`
+	IP        string `json:"ip"`
+	UserAgent string `json:"user_agent"`
+	Status    uint8  `json:"status"`
+	CreatedAt string `json:"created_at"`
 }
 
 // ===== Favorites (C6) =====

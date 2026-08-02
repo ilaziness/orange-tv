@@ -316,7 +316,7 @@ export function ClientLayout() {
                 <Avatar size="sm">
                   {profile.avatar ? <AvatarImage src={profile.avatar} /> : null}
                   <AvatarFallback>
-                    {profile.username?.[0]?.toUpperCase() || "U"}
+                    {(profile.nickname?.[0] || profile.username?.[0] || "U").toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -325,8 +325,12 @@ export function ClientLayout() {
           <DropdownMenuContent align="end">
             <DropdownMenuGroup>
               <DropdownMenuLabel>
-                {profile.username || profile.email}
+                {profile.nickname || profile.username || profile.email}
               </DropdownMenuLabel>
+              <DropdownMenuItem render={<Link to="/profile" />}>
+                <UserIcon data-icon="inline-start" />
+                用户资料
+              </DropdownMenuItem>
               <DropdownMenuItem render={<Link to="/favorites" />}>
                 <HeartIcon data-icon="inline-start" />
                 我的收藏
@@ -499,13 +503,23 @@ export function ClientLayout() {
                             <AvatarImage src={profile.avatar} />
                           ) : null}
                           <AvatarFallback>
-                            {profile.username?.[0]?.toUpperCase() || "U"}
+                            {(profile.nickname?.[0] || profile.username?.[0] || "U").toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <span className="text-sm font-medium">
-                          {profile.username || profile.email}
+                          {profile.nickname || profile.username || profile.email}
                         </span>
                       </div>
+                      <Button
+                        variant="ghost"
+                        className="justify-start"
+                        nativeButton={false}
+                        render={<Link to="/profile" />}
+                        onClick={() => setMobileOpen(false)}
+                      >
+                        <UserIcon data-icon="inline-start" />
+                        用户资料
+                      </Button>
                       <Button
                         variant="ghost"
                         className="justify-start"

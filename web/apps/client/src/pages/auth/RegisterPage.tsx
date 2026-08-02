@@ -28,8 +28,8 @@ export function Component() {
       setError('用户名只能由 2-15 位字母或数字组成')
       return
     }
-    if (p.length < 6) {
-      setError('密码至少 6 位')
+    if (p.length < 5 || p.length > 30) {
+      setError('密码长度应为5-30位')
       return
     }
     if (p !== cp) {
@@ -80,7 +80,9 @@ export function Component() {
                 <Input
                   id="password"
                   type="password"
-                  placeholder="请输入密码"
+                  placeholder="5-30 位"
+                  minLength={5}
+                  maxLength={30}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -92,6 +94,8 @@ export function Component() {
                   id="confirmPassword"
                   type="password"
                   placeholder="请再次输入密码"
+                  minLength={5}
+                  maxLength={30}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required

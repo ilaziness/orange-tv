@@ -31,6 +31,9 @@ func registerClientContentRoutes(v1 *gin.RouterGroup, h *Handlers) {
 
 	// User profile (C5) — requires JWT
 	v1.GET("/auth/profile", h.ClientUser.Profile)
+	v1.PUT("/auth/profile", h.ClientUser.UpdateProfile)
+	v1.PUT("/auth/profile/password", h.ClientUser.ChangePassword)
+	v1.GET("/auth/login-history", h.ClientUser.LoginHistory)
 
 	// Favorites (C6) — requires JWT
 	v1.GET("/favorites", h.ClientUser.ListFavorites)

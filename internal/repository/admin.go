@@ -43,11 +43,13 @@ type AdminRepository interface {
 	ListUsers(ctx context.Context, f UserListFilter) ([]model.Users, int, error)
 	GetUserByID(ctx context.Context, id int64) (*model.Users, error)
 	GetUserByUsername(ctx context.Context, username string) (*model.Users, error)
+	GetUserByStrID(ctx context.Context, strID string) (*model.Users, error)
 	CreateUser(ctx context.Context, u *model.Users) error
 	UpdateUser(ctx context.Context, u *model.Users) error
 	SoftDeleteUser(ctx context.Context, id int64) error
 	ExistsUserUsername(ctx context.Context, username string) (bool, error)
 	ExistsUserUsernameExcludeID(ctx context.Context, username string, excludeID int64) (bool, error)
+	ExistsUserStrID(ctx context.Context, strID string) (bool, error)
 }
 
 // AdminListFilter filters admin list queries.
@@ -435,6 +437,32 @@ func (r *adminRepo) ExistsUserUsernameExcludeID(ctx context.Context, username st
 		Exists(ctx)
 	if err != nil {
 		return false, fmt.Errorf("check user username: %w", err)
+	}
+	return exists, nil
+}
+
+func (r *adminRepo) GetUserByStrID(ctx context.Context, strID string) (*model.Users, error) {
+	u := new(model.Users)
+	err := r.db.NewSelect().Model(u).
+		Where("str_id = ?", strID).
+		Where("deleted_at IS NULL").
+		Scan(ctx)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("get user by str_id: %w", err)
+	}
+	return u, nil
+}
+
+func (r *adminRepo) ExistsUserStrID(ctx context.Context, strID string) (bool, error) {
+	exists, err := r.db.NewSelect().Model((*model.Users)(nil)).
+		Where("str_id = ?", strID).
+		Where("deleted_at IS NULL").
+		Exists(ctx)
+	if err != nil {
+		return false, fmt.Errorf("check user str_id: %w", err)
 	}
 	return exists, nil
 }

@@ -122,7 +122,9 @@ type UserListRequest struct {
 // UserItem is the user list item.
 type UserItem struct {
 	ID          uint64 `json:"id"`
+	StrID       string `json:"str_id"`
 	Username    string `json:"username"`
+	Nickname    string `json:"nickname"`
 	Email       string `json:"email"`
 	Avatar      string `json:"avatar"`
 	Status      uint8  `json:"status"`
@@ -134,6 +136,7 @@ type UserItem struct {
 type CreateUserRequest struct {
 	Username string `json:"username" validate:"required,min=3,max=50"`
 	Password string `json:"password" validate:"required,min=6,max=72"`
+	Nickname string `json:"nickname" validate:"omitempty,min=3,max=15"`
 	Email    string `json:"email" validate:"omitempty,email,max=128"`
 	Avatar   string `json:"avatar" validate:"omitempty,max=500"`
 	Status   *uint8 `json:"status" validate:"omitempty,oneof=0 1"`
@@ -142,6 +145,7 @@ type CreateUserRequest struct {
 // UpdateUserRequest updates a regular user.
 type UpdateUserRequest struct {
 	Username string  `json:"username" validate:"omitempty,min=3,max=50"`
+	Nickname string  `json:"nickname" validate:"omitempty,min=3,max=15"`
 	Email    *string `json:"email" validate:"omitempty,max=128"`
 	Avatar   string  `json:"avatar" validate:"omitempty,max=500"`
 	Status   *uint8  `json:"status" validate:"omitempty,oneof=0 1"`

@@ -504,7 +504,9 @@ func (s *managementService) ListUsers(ctx context.Context, req *dto.UserListRequ
 	for _, u := range items {
 		out = append(out, dto.UserItem{
 			ID:          u.ID,
+			StrID:       u.StrID,
 			Username:    u.Username,
+			Nickname:    u.Nickname,
 			Email:       u.Email,
 			Avatar:      u.Avatar,
 			Status:      u.Status,
@@ -534,12 +536,19 @@ func (s *managementService) CreateUser(ctx context.Context, req *dto.CreateUserR
 	if req.Status != nil {
 		status = *req.Status
 	}
+	strID, err := utils.GenerateUniqueNumericID(ctx, 10, s.adminRepo.ExistsUserStrID)
+	if err != nil {
+		s.log.Error("management: generate str_id for create user failed", zap.String("username", username), zap.Error(err))
+		return nil, errcode.Wrap(errcode.InternalError, err)
+	}
 	u := &model.Users{
 		Username: username,
 		Password: hash,
+		Nickname: strings.TrimSpace(req.Nickname),
 		Email:    strings.TrimSpace(req.Email),
 		Avatar:   strings.TrimSpace(req.Avatar),
 		Status:   status,
+		StrID:    strID,
 	}
 	if err := s.adminRepo.CreateUser(ctx, u); err != nil {
 		s.log.Error("management: create user failed", zap.String("username", username), zap.Error(err))
@@ -547,7 +556,9 @@ func (s *managementService) CreateUser(ctx context.Context, req *dto.CreateUserR
 	}
 	return &dto.UserItem{
 		ID:          u.ID,
+		StrID:       u.StrID,
 		Username:    u.Username,
+		Nickname:    u.Nickname,
 		Email:       u.Email,
 		Avatar:      u.Avatar,
 		Status:      u.Status,
@@ -588,6 +599,9 @@ func (s *managementService) UpdateUser(ctx context.Context, id int64, req *dto.U
 	if req.Avatar != "" {
 		u.Avatar = strings.TrimSpace(req.Avatar)
 	}
+	if req.Nickname != "" {
+		u.Nickname = strings.TrimSpace(req.Nickname)
+	}
 	if req.Status != nil {
 		u.Status = *req.Status
 	}
@@ -597,7 +611,9 @@ func (s *managementService) UpdateUser(ctx context.Context, id int64, req *dto.U
 	}
 	return &dto.UserItem{
 		ID:          u.ID,
+		StrID:       u.StrID,
 		Username:    u.Username,
+		Nickname:    u.Nickname,
 		Email:       u.Email,
 		Avatar:      u.Avatar,
 		Status:      u.Status,

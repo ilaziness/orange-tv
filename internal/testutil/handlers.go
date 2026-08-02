@@ -378,6 +378,15 @@ func (s clientUserSvc) Login(ctx context.Context, req *clientdto.LoginRequest, i
 func (s clientUserSvc) Profile(ctx context.Context, userID int64) (*clientdto.Profile, error) {
 	return &clientdto.Profile{ID: uint64(userID)}, nil
 }
+func (s clientUserSvc) UpdateProfile(ctx context.Context, userID int64, req *clientdto.UpdateProfileRequest) (*clientdto.Profile, error) {
+	return &clientdto.Profile{ID: uint64(userID)}, nil
+}
+func (s clientUserSvc) ChangePassword(ctx context.Context, userID int64, req *clientdto.ChangePasswordRequest) error {
+	return nil
+}
+func (s clientUserSvc) LoginHistory(ctx context.Context, userID int64, req *clientdto.LoginHistoryListRequest) ([]clientdto.LoginHistoryItem, int, error) {
+	return nil, 0, nil
+}
 func (s clientUserSvc) ListFavorites(ctx context.Context, userID int64, req *clientdto.FavoriteListRequest) ([]clientdto.FavoriteItem, int, error) {
 	return nil, 0, nil
 }
