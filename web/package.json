@@ -20,6 +20,11 @@
     "lint:fix:admin": "npm run lint:fix -w @orange-tv/admin",
     "typecheck": "npm run typecheck -w @orange-tv/shared && npm run typecheck -w @orange-tv/client && npm run typecheck -w @orange-tv/admin",
     "typecheck:client": "npm run typecheck -w @orange-tv/client",
-    "typecheck:admin": "npm run typecheck -w @orange-tv/admin"
+    "typecheck:admin": "npm run typecheck -w @orange-tv/admin",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "3.3.3"
   }
 }
