@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { useLoaderData, useSearchParams } from 'react-router'
 import type { Category, VideoListItem } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
 import { VideoGrid } from '@/components/common'
@@ -13,72 +12,105 @@ const MOBILE_PAGE_SIZE = 24
 const PC_PAGE_SIZE = 64
 const PC_BREAKPOINT = 768
 
-function usePageSize(): number {
-  const [isPC, setIsPC] = useState(() =>
-    typeof window !== 'undefined' ? window.matchMedia(`(min-width: ${PC_BREAKPOINT}px)`).matches : true,
-  )
-  useEffect(() => {
-    const mql = window.matchMedia(`(min-width: ${PC_BREAKPOINT}px)`)
-    const handler = (e: MediaQueryListEvent) => setIsPC(e.matches)
-    mql.addEventListener('change', handler)
-    return () => mql.removeEventListener('change', handler)
-  }, [])
-  return isPC ? PC_PAGE_SIZE : MOBILE_PAGE_SIZE
+type FilterParams = {
+  parentCategoryId: number
+  categoryId: number
+  yearStart: number
+  yearEnd: number
+  region: string
+  keyword: string
+  page: number
 }
 
-export default function VideosPage() {
+type VideosLoaderData = {
+  categories: Category[]
+  videos: VideoListItem[]
+  total: number
+  pageSize: number
+  filters: FilterParams
+  error: string
+}
+
+function getPageSize(): number {
+  if (typeof window === 'undefined') return PC_PAGE_SIZE
+  return window.matchMedia(`(min-width: ${PC_BREAKPOINT}px)`).matches ? PC_PAGE_SIZE : MOBILE_PAGE_SIZE
+}
+
+function parseFilters(params: URLSearchParams): FilterParams {
+  return {
+    parentCategoryId: Number(params.get('parent_category_id') || 0),
+    categoryId: Number(params.get('category_id') || 0),
+    yearStart: Number(params.get('year_start') || 0),
+    yearEnd: Number(params.get('year_end') || 0),
+    region: params.get('region') || '',
+    keyword: params.get('keyword') || '',
+    page: Number(params.get('page') || 1),
+  }
+}
+
+export async function loader({ request }: { request: Request }): Promise<VideosLoaderData> {
+  const url = new URL(request.url)
+  const filters = parseFilters(url.searchParams)
+  const pageSize = getPageSize()
+  const { page, keyword, parentCategoryId, categoryId, yearStart, yearEnd, region } = filters
+
+  try {
+    const [categoriesRes, listRes] = await Promise.all([
+      clientApi.categories(),
+      keyword
+        ? clientApi.search(keyword, page, {
+            page_size: pageSize,
+            parent_category_id: parentCategoryId || undefined,
+            category_id: categoryId || undefined,
+            year_start: yearStart || undefined,
+            year_end: yearEnd || undefined,
+            region: region || undefined,
+          })
+        : clientApi.videos({
+            page,
+            page_size: pageSize,
+            parent_category_id: parentCategoryId || undefined,
+            category_id: categoryId || undefined,
+            year_start: yearStart || undefined,
+            year_end: yearEnd || undefined,
+            region: region || undefined,
+          }),
+    ])
+    return {
+      categories: categoriesRes.data || [],
+      videos: listRes.data.list || [],
+      total: listRes.data.total || 0,
+      pageSize,
+      filters,
+      error: '',
+    }
+  } catch (err) {
+    return {
+      categories: [],
+      videos: [],
+      total: 0,
+      pageSize,
+      filters,
+      error: errorMessage(err),
+    }
+  }
+}
+
+export function Component() {
+  const data = useLoaderData<VideosLoaderData>()
   const [params, setParams] = useSearchParams()
-  const [categories, setCategories] = useState<Category[]>([])
-  const [videos, setVideos] = useState<VideoListItem[]>([])
-  const [total, setTotal] = useState(0)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
 
-  const pageSize = usePageSize()
-  const categoryId = Number(params.get('category_id') || 0)
-  const parentCategoryId = Number(params.get('parent_category_id') || 0)
-  const yearStart = Number(params.get('year_start') || 0)
-  const yearEnd = Number(params.get('year_end') || 0)
-  const region = params.get('region') || ''
-  const keyword = params.get('keyword') || ''
-  const page = Number(params.get('page') || 1)
+  const categories = data.categories
+  const videos = data.videos
+  const total = data.total
+  const pageSize = data.pageSize
+  const filters = data.filters
+  const error = data.error
 
-  useEffect(() => {
-    void clientApi.categories().then((res) => setCategories(res.data || [])).catch(() => undefined)
-  }, [])
-
-  useEffect(() => {
-    void (async () => {
-      setLoading(true)
-      setError('')
-      try {
-        const res = keyword
-          ? await clientApi.search(keyword, page, {
-              page_size: pageSize,
-              parent_category_id: parentCategoryId || undefined,
-              category_id: categoryId || undefined,
-              year_start: yearStart || undefined,
-              year_end: yearEnd || undefined,
-              region: region || undefined,
-            })
-          : await clientApi.videos({
-              page,
-              page_size: pageSize,
-              parent_category_id: parentCategoryId || undefined,
-              category_id: categoryId || undefined,
-              year_start: yearStart || undefined,
-              year_end: yearEnd || undefined,
-              region: region || undefined,
-            })
-        setVideos(res.data.list || [])
-        setTotal(res.data.total || 0)
-      } catch (err) {
-        setError(errorMessage(err))
-      } finally {
-        setLoading(false)
-      }
-    })()
-  }, [parentCategoryId, categoryId, yearStart, yearEnd, region, keyword, page, pageSize])
+  const parentCategoryId = filters.parentCategoryId
+  const categoryId = filters.categoryId
+  const page = filters.page
+  const keyword = filters.keyword
 
   const updateParams = (updates: Record<string, string | number | null>) => {
     const newParams = new URLSearchParams(params)
@@ -90,13 +122,11 @@ export default function VideosPage() {
     setParams(newParams)
   }
 
-  // categories 是树结构（roots with children）
   const roots = categories
   const currentRoot = roots.find((c) => c.id === parentCategoryId)
   const currentSub = roots.flatMap((r) => r.children || []).find((c) => c.id === categoryId)
   const currentCategory = currentSub || currentRoot || null
   const subCategoriesToShow = currentRoot?.children || []
-  // 传给 FilterBar 的父分类 ID：根分类 ID，未选时为 0
   const filterParentCategoryId = currentRoot?.id || 0
 
   const title = keyword
@@ -105,11 +135,12 @@ export default function VideosPage() {
       ? currentCategory.name
       : '影视列表'
 
+  const hasMore = videos.length < total
+
   return (
     <div className="flex flex-col gap-6">
       <h2 className="text-lg font-semibold">{title}</h2>
 
-      {/* 分类筛选按钮：仅在非搜索模式下显示 */}
       {!keyword ? (
         <div className="flex flex-col gap-2">
           <div className="flex flex-wrap gap-2">
@@ -131,7 +162,6 @@ export default function VideosPage() {
               </Button>
             ))}
           </div>
-
         </div>
       ) : null}
 
@@ -139,9 +169,9 @@ export default function VideosPage() {
         categoryId={categoryId}
         parentCategoryId={filterParentCategoryId}
         subCategories={subCategoriesToShow}
-        yearStart={yearStart}
-        yearEnd={yearEnd}
-        region={region}
+        yearStart={filters.yearStart}
+        yearEnd={filters.yearEnd}
+        region={filters.region}
         onChange={updateParams}
       />
 
@@ -153,9 +183,7 @@ export default function VideosPage() {
         </Alert>
       ) : null}
 
-      {loading ? (
-        <VideoGrid items={[]} loading />
-      ) : !videos.length ? (
+      {!videos.length && !error ? (
         <Empty>
           <EmptyHeader>
             <EmptyTitle>暂无符合条件的影视</EmptyTitle>
@@ -166,7 +194,7 @@ export default function VideosPage() {
         <VideoGrid items={videos} />
       )}
 
-      {total > pageSize ? (
+      {hasMore ? (
         <div className="flex items-center justify-center gap-4">
           <Button
             variant="outline"

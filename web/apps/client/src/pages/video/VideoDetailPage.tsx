@@ -1,79 +1,60 @@
-import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router";
-import type {
-  CommentItem,
-  ClientVideoDetail,
-  VideoListItem,
-} from "@orange-tv/shared";
-import { clientApi, errorMessage } from "@/lib/api";
-import { VideoGrid, FavoriteButton, RatingStars } from "@/components/common";
-import { CommentSection } from "@/components/CommentSection";
-import { useSettings } from "@/hooks/useSettings";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from "@/components/ui/empty";
-import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircleIcon, FilmIcon } from "lucide-react";
+import { useState } from 'react'
+import { useNavigate, useParams, useLoaderData } from 'react-router'
+import type { CommentItem, ClientVideoDetail, VideoListItem } from '@orange-tv/shared'
+import { clientApi, errorMessage } from '@/lib/api'
+import { VideoGrid, FavoriteButton, RatingStars } from '@/components/common'
+import { CommentSection } from '@/components/CommentSection'
+import { useSettings } from '@/hooks/useSettings'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
+import { AlertCircleIcon, FilmIcon } from 'lucide-react'
 
-export default function VideoDetailPage() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const [detail, setDetail] = useState<ClientVideoDetail | null>(null);
-  const [related, setRelated] = useState<VideoListItem[]>([]);
-  const [comments, setComments] = useState<CommentItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [posterError, setPosterError] = useState(false);
-  const { feature } = useSettings();
+type VideoDetailLoaderData = {
+  detail: ClientVideoDetail | null
+  related: VideoListItem[]
+  comments: CommentItem[]
+  error: string
+}
+
+export async function loader({ params }: { params: Record<string, string | undefined> }): Promise<VideoDetailLoaderData> {
+  const id = params.id
+  if (!id) {
+    return { detail: null, related: [], comments: [], error: '' }
+  }
+  try {
+    const [res, rel, com] = await Promise.all([
+      clientApi.video(Number(id)),
+      clientApi.related(Number(id), 6),
+      clientApi.listComments(Number(id), 1),
+    ])
+    return {
+      detail: res.data || null,
+      related: rel.data || [],
+      comments: com.data.list || [],
+      error: '',
+    }
+  } catch (err) {
+    return { detail: null, related: [], comments: [], error: errorMessage(err) }
+  }
+}
+
+export function Component() {
+  const { id } = useParams()
+  const data = useLoaderData<VideoDetailLoaderData>()
+  const navigate = useNavigate()
+  const { detail, related, comments: initialComments, error } = data
+  const [comments, setComments] = useState<CommentItem[]>(initialComments)
+  const [posterError, setPosterError] = useState(false)
+  const { feature } = useSettings()
 
   const loadComments = () => {
-    if (!id) return;
+    if (!id) return
     void clientApi
       .listComments(Number(id), 1)
-      .then((res) => setComments(res.data.list || []));
-  };
-
-  useEffect(() => {
-    if (!id) return;
-    void (async () => {
-      setLoading(true);
-      try {
-        const [res, rel, com] = await Promise.all([
-          clientApi.video(Number(id)),
-          clientApi.related(Number(id), 6),
-          clientApi.listComments(Number(id), 1),
-        ]);
-        setDetail(res.data || null);
-        setRelated(rel.data || []);
-        setComments(com.data.list || []);
-      } catch (err) {
-        setError(errorMessage(err));
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [id]);
-
-  if (loading) {
-    return (
-      <div className="flex flex-col gap-6">
-        <div className="flex gap-6">
-          <Skeleton className="aspect-[2/3] w-40 shrink-0 rounded-xl md:w-56" />
-          <div className="flex flex-1 flex-col gap-3">
-            <Skeleton className="h-8 w-2/3" />
-            <Skeleton className="h-4 w-1/3" />
-            <Skeleton className="h-20 w-full" />
-          </div>
-        </div>
-      </div>
-    );
+      .then((res) => setComments(res.data.list || []))
   }
 
   if (error) {
@@ -83,7 +64,7 @@ export default function VideoDetailPage() {
         <AlertTitle>加载失败</AlertTitle>
         <AlertDescription>{error}</AlertDescription>
       </Alert>
-    );
+    )
   }
 
   if (!detail) {
@@ -94,18 +75,18 @@ export default function VideoDetailPage() {
           <EmptyDescription>该视频可能已下架</EmptyDescription>
         </EmptyHeader>
       </Empty>
-    );
+    )
   }
 
   const directorText = detail.directors?.length
-    ? detail.directors.map((d) => d.name).join(" / ")
-    : "暂无";
+    ? detail.directors.map((d) => d.name).join(' / ')
+    : '暂无'
   const actorText = detail.actors?.length
-    ? detail.actors.map((a) => a.name).join(" / ")
-    : "暂无";
+    ? detail.actors.map((a) => a.name).join(' / ')
+    : '暂无'
   const tagsText = detail.tags?.length
-    ? detail.tags.map((t) => t.name).join(" / ")
-    : "";
+    ? detail.tags.map((t) => t.name).join(' / ')
+    : ''
 
   return (
     <div className="flex flex-col gap-8">
@@ -169,7 +150,7 @@ export default function VideoDetailPage() {
           </div>
           <p className="text-sm leading-relaxed">
             <span className="text-muted-foreground">剧情简介：</span>
-            {detail.description || "暂无简介"}
+            {detail.description || '暂无简介'}
           </p>
         </div>
       </div>
@@ -226,5 +207,5 @@ export default function VideoDetailPage() {
         </section>
       ) : null}
     </div>
-  );
+  )
 }

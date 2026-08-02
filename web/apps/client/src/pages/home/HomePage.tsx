@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useLoaderData } from 'react-router'
 import type { Category, ClientBanner, VideoListItem } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
 import { BannerCarousel, VideoGrid } from '@/components/common'
@@ -18,63 +18,54 @@ type SectionState = {
   error: string
 }
 
-export default function HomePage() {
-  const [categories, setCategories] = useState<Category[]>([])
-  const [banners, setBanners] = useState<ClientBanner[]>([])
-  const [globalError, setGlobalError] = useState('')
+type HomeLoaderData = {
+  categories: Category[]
+  banners: ClientBanner[]
+  hot: SectionState
+  latest: SectionState
+  globalError: string
+}
 
-  const [hot, setHot] = useState<SectionState>({ loading: true, items: [], error: '' })
-  const [latest, setLatest] = useState<SectionState>({ loading: true, items: [], error: '' })
+export async function loader(): Promise<HomeLoaderData> {
+  try {
+    const [categoriesRes, bannersRes, hotRes, latestRes] = await Promise.all([
+      clientApi.categories(),
+      clientApi.banners(),
+      clientApi.videos({ page: 1, page_size: SECTION_PAGE_SIZE, sort: 'rating_desc' }),
+      clientApi.videos({ page: 1, page_size: SECTION_PAGE_SIZE, sort: 'created_at_desc' }),
+    ])
+    return {
+      categories: categoriesRes.data || [],
+      banners: bannersRes.data || [],
+      hot: { loading: false, items: hotRes.data.list || [], error: '' },
+      latest: { loading: false, items: latestRes.data.list || [], error: '' },
+      globalError: '',
+    }
+  } catch (err) {
+    return {
+      categories: [],
+      banners: [],
+      hot: { loading: false, items: [], error: '' },
+      latest: { loading: false, items: [], error: '' },
+      globalError: errorMessage(err),
+    }
+  }
+}
+
+export function Component() {
+  const data = useLoaderData<HomeLoaderData>()
+  const categories = data.categories
+  const banners = data.banners
+  const hot = data.hot
+  const latest = data.latest
+  const globalError = data.globalError
+
   const [categorySections, setCategorySections] = useState<Record<number, SectionState>>({})
-
-  useEffect(() => {
-    void (async () => {
-      try {
-        const res = await clientApi.categories()
-        setCategories(res.data || [])
-      } catch (err) {
-        setGlobalError(errorMessage(err))
-      }
-    })()
-  }, [])
-
-  useEffect(() => {
-    void (async () => {
-      try {
-        const res = await clientApi.banners()
-        setBanners(res.data || [])
-      } catch {
-        setBanners([])
-      }
-    })()
-  }, [])
-
-  // 高分推荐 + 最新上架
-  useEffect(() => {
-    void (async () => {
-      try {
-        const res = await clientApi.videos({ page: 1, page_size: SECTION_PAGE_SIZE, sort: 'rating_desc' })
-        setHot({ loading: false, items: res.data.list || [], error: '' })
-      } catch (err) {
-        setHot({ loading: false, items: [], error: errorMessage(err) })
-      }
-    })()
-
-    void (async () => {
-      try {
-        const res = await clientApi.videos({ page: 1, page_size: SECTION_PAGE_SIZE, sort: 'created_at_desc' })
-        setLatest({ loading: false, items: res.data.list || [], error: '' })
-      } catch (err) {
-        setLatest({ loading: false, items: [], error: errorMessage(err) })
-      }
-    })()
-  }, [])
 
   const roots = categories
     .slice()
     .sort((a, b) => a.sort_order - b.sort_order)
 
-  // 每个一级分类的推荐
   useEffect(() => {
     if (!roots.length) return
     const initial: Record<number, SectionState> = {}

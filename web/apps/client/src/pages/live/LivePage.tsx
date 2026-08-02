@@ -1,53 +1,44 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
+import { useLoaderData } from 'react-router'
 import type { LiveChannel } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
 import { VideoPlayer } from '@/components/Player'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { cn } from '@/lib/utils'
 import { AlertCircleIcon, ChevronRightIcon, TvIcon } from 'lucide-react'
+
+type LiveLoaderData = {
+  channels: LiveChannel[]
+  error: string
+}
 
 type ChannelGroup = {
   category: string
   channels: LiveChannel[]
 }
 
-export default function LivePage() {
-  const [channels, setChannels] = useState<LiveChannel[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [expanded, setExpanded] = useState<Set<string>>(new Set())
-  const [selectedId, setSelectedId] = useState<number | null>(null)
+export async function loader(): Promise<LiveLoaderData> {
+  try {
+    const res = await clientApi.live()
+    const list = res.data.list || []
+    return { channels: list, error: '' }
+  } catch (err) {
+    return { channels: [], error: errorMessage(err) }
+  }
+}
 
-  // 一次性加载所有在线频道
-  useEffect(() => {
-    void (async () => {
-      setLoading(true)
-      try {
-        const res = await clientApi.live()
-        const list = res.data.list || []
-        setChannels(list)
-        if (list.length > 0) {
-          setSelectedId(list[0].id)
-          // 默认展开第一个频道所属分类
-          setExpanded(new Set([list[0].category]))
-        }
-      } catch (err) {
-        setError(errorMessage(err))
-      } finally {
-        setLoading(false)
-      }
-    })()
-  }, [])
+export function Component() {
+  const data = useLoaderData<LiveLoaderData>()
+  const { channels, error } = data
+  const [expanded, setExpanded] = useState<Set<string>>(() => {
+    const first = channels[0]
+    return new Set(first ? [first.category] : [])
+  })
+  const [selectedId, setSelectedId] = useState<number | null>(() => channels[0]?.id ?? null)
 
-  // 前端按 category 分组
   const groups = useMemo<ChannelGroup[]>(() => {
     const map = new Map<string, LiveChannel[]>()
     for (const ch of channels) {
@@ -80,30 +71,12 @@ export default function LivePage() {
 
   const handleChannelClick = (ch: LiveChannel) => {
     setSelectedId(ch.id)
-    // 播放某频道时确保其分类展开
     setExpanded((prev) => {
       if (prev.has(ch.category)) return prev
       const next = new Set(prev)
       next.add(ch.category)
       return next
     })
-  }
-
-  if (loading) {
-    return (
-      <div className="flex h-[calc(100vh-8rem)] flex-col gap-4 lg:flex-row">
-        <aside className="flex h-auto max-h-48 w-full shrink-0 flex-col gap-2 lg:h-full lg:max-h-none lg:w-44">
-          <Skeleton className="h-6 w-32" />
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-9 w-full" />
-          ))}
-        </aside>
-        <section className="flex min-h-0 flex-1 flex-col gap-4 lg:h-full">
-          <Skeleton className="aspect-video w-full rounded-xl" />
-          <Skeleton className="h-7 w-1/3" />
-        </section>
-      </div>
-    )
   }
 
   if (error) {
@@ -138,10 +111,7 @@ export default function LivePage() {
               <Collapsible
                 key={group.category}
                 open={isExpanded}
-                onOpenChange={(open) => {
-                  if (open) toggleCategory(group.category)
-                  else toggleCategory(group.category)
-                }}
+                onOpenChange={() => toggleCategory(group.category)}
               >
                 <CollapsibleTrigger
                   render={

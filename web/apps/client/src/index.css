@@ -97,3 +97,17 @@
     cursor: pointer;
   }
 }
+
+/* NProgress 主题化覆盖 */
+#nprogress .bar {
+  background: var(--primary) !important;
+  height: 2px;
+}
+
+#nprogress .peg {
+  box-shadow: 0 0 10px var(--primary), 0 0 5px var(--primary) !important;
+}
+
+#nprogress .spinner {
+  display: none !important;
+}

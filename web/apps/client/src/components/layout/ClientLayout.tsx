@@ -54,6 +54,8 @@ import {
   TvIcon,
   FilmIcon,
 } from "lucide-react";
+import { TopLoader } from "@/components/TopLoader";
+import { LoginDialog } from "@/components/auth/LoginDialog";
 
 // 统一展示类型：本地与远端历史映射为同一结构
 type HistoryEntry = {
@@ -379,6 +381,8 @@ export function ClientLayout() {
   };
 
   return (
+    <>
+    <TopLoader />
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
         <div className="flex h-14 w-full items-center justify-between gap-4 px-4">
@@ -593,5 +597,7 @@ export function ClientLayout() {
         </div>
       </footer>
     </div>
+    <LoginDialog />
+  </>
   );
 }

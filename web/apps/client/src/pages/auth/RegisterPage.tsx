@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Spinner } from '@/components/ui/spinner'
 import { AlertCircleIcon } from 'lucide-react'
 
-export default function RegisterPage() {
+export function Component() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -101,7 +101,7 @@ export default function RegisterPage() {
                 ) : null}
               </Field>
               <Button type="submit" disabled={submitting} className="w-full">
-                {submitting ? <Spinner className="size-4" /> : null}
+                {submitting ? <Spinner data-icon="inline-start" /> : null}
                 注册
               </Button>
             </FieldGroup>
