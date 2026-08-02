@@ -10,7 +10,7 @@ import { AlertCircleIcon } from 'lucide-react'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
 function dayKey(iso: string): string {
-  const d = new Date(iso)
+  const d = new Date(iso.replace(' ', 'T'))
   if (Number.isNaN(d.getTime())) return '未知日期'
   const y = d.getFullYear()
   const m = String(d.getMonth() + 1).padStart(2, '0')
@@ -85,7 +85,7 @@ export function Component() {
       map.set(k, arr)
     }
     for (const arr of map.values()) {
-      arr.sort((a, b) => new Date(b.last_played_at).getTime() - new Date(a.last_played_at).getTime())
+      arr.sort((a, b) => new Date(b.last_played_at.replace(' ', 'T')).getTime() - new Date(a.last_played_at.replace(' ', 'T')).getTime())
     }
     return Array.from(map.entries()).sort((a, b) => (a[0] < b[0] ? 1 : -1))
   }, [history])

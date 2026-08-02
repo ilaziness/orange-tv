@@ -292,7 +292,7 @@ func (s *userService) ListFavorites(ctx context.Context, userID int64, req *clie
 		v, _ := s.videoRepo.GetByID(ctx, f.VideoID)
 		item := clientdto.FavoriteItem{
 			VideoID:   f.VideoID,
-			CreatedAt: f.CreatedAt.Format(time.RFC3339),
+			CreatedAt: utils.FormatTimeStr(&f.CreatedAt),
 		}
 		if v != nil {
 			item.Title = v.Title
@@ -372,7 +372,7 @@ func (s *userService) ListHistory(ctx context.Context, userID int64, req *client
 			EpisodeID:    h.EpisodeID,
 			Progress:     h.Progress,
 			Duration:     h.Duration,
-			LastPlayedAt: h.LastPlayedAt.Format(time.RFC3339),
+			LastPlayedAt: utils.FormatTimeStr(&h.LastPlayedAt),
 		}
 		if v != nil {
 			item.Title = v.Title
@@ -406,7 +406,7 @@ func (s *userService) GetHistory(ctx context.Context, userID, videoID int64) (*c
 		EpisodeID:    h.EpisodeID,
 		Progress:     h.Progress,
 		Duration:     h.Duration,
-		LastPlayedAt: h.LastPlayedAt.Format(time.RFC3339),
+		LastPlayedAt: utils.FormatTimeStr(&h.LastPlayedAt),
 	}
 	v, _ := s.videoRepo.GetByID(ctx, h.VideoID)
 	if v != nil {
@@ -471,7 +471,7 @@ func (s *userService) ListComments(ctx context.Context, videoID int64, req *clie
 			Content:      c.Content,
 			LikeCount:    c.LikeCount,
 			DislikeCount: c.DislikeCount,
-			CreatedAt:    c.CreatedAt.Format(time.RFC3339),
+			CreatedAt:    utils.FormatTimeStr(&c.CreatedAt),
 		}
 		if c.User != nil {
 			item.Username = c.User.Username
@@ -534,7 +534,7 @@ func (s *userService) CreateComment(ctx context.Context, userID int64, req *clie
 		Content:      c.Content,
 		LikeCount:    c.LikeCount,
 		DislikeCount: c.DislikeCount,
-		CreatedAt:    c.CreatedAt.Format(time.RFC3339),
+		CreatedAt:    utils.FormatTimeStr(&c.CreatedAt),
 	}
 	if u, _ := s.adminRepo.GetUserByID(ctx, userID); u != nil {
 		item.Username = u.Username

@@ -84,7 +84,7 @@ function fromRemote(it: HistoryItem): HistoryEntry {
     episodeId: it.episode_id,
     progress: it.progress,
     title: it.title,
-    updatedAt: new Date(it.last_played_at).getTime(),
+    updatedAt: new Date(it.last_played_at.replace(' ', 'T')).getTime(),
   };
 }
 

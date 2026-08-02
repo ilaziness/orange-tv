@@ -94,7 +94,7 @@ export function CommentSection({ videoId, comments, onRefresh }: CommentSectionP
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium">{c.username}</span>
                     <span className="text-xs text-muted-foreground">
-                      {new Date(c.created_at).toLocaleString()}
+                      {c.created_at}
                     </span>
                   </div>
                   <p className="text-sm">{c.content}</p>
