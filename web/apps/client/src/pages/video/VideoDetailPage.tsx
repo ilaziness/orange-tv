@@ -28,7 +28,7 @@ export async function loader({ params }: { params: Record<string, string | undef
   try {
     const [res, rel, com] = await Promise.all([
       clientApi.video(Number(id)),
-      clientApi.related(Number(id), 6),
+      clientApi.related(Number(id), 8),
       clientApi.listComments(Number(id), 1),
     ])
     return {
