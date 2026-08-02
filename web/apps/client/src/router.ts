@@ -1,11 +1,12 @@
 import { createBrowserRouter, type RouteObject } from 'react-router'
-import { ClientLayout } from '@/components/layout/ClientLayout'
+import { ClientLayout, loader as clientLayoutLoader } from '@/components/layout/ClientLayout'
 import { RequireAuth } from '@/components/auth/RequireAuth'
 
 const routes: RouteObject[] = [
   {
     path: '/',
     Component: ClientLayout,
+    loader: clientLayoutLoader,
     children: [
       { index: true, lazy: () => import('@/pages/home/HomePage') },
       { path: 'videos', lazy: () => import('@/pages/videos/VideosPage') },

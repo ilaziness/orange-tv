@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { Link, Outlet, useNavigate, useSearchParams } from "react-router";
+import { useCallback, useState } from "react";
+import { Link, Outlet, useLoaderData, useNavigate, useSearchParams } from "react-router";
 import type { Category } from "@orange-tv/shared";
 import { sanitizeSearchInput } from "@orange-tv/shared";
 import { useAuth } from "@/hooks/useAuth";
@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/input-group";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -89,11 +88,24 @@ function fromRemote(it: HistoryItem): HistoryEntry {
   };
 }
 
+type ClientLayoutLoaderData = {
+  categories: Category[]
+}
+
+export async function loader(): Promise<ClientLayoutLoaderData> {
+  try {
+    const res = await clientApi.categories()
+    return { categories: res.data || [] }
+  } catch {
+    return { categories: [] }
+  }
+}
+
 export function ClientLayout() {
+  const data = useLoaderData<ClientLayoutLoaderData>()
+  const categories = data.categories
   const [keyword, setKeyword] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyList, setHistoryList] = useState<HistoryEntry[]>([]);
@@ -120,17 +132,6 @@ export function ClientLayout() {
       setHistoryList(getHistory().slice(0, 8).map(fromLocal));
     }
   }, [profile]);
-
-  useEffect(() => {
-    if (!categories.length && !categoriesLoading) {
-      setCategoriesLoading(true);
-      clientApi
-        .categories()
-        .then((res) => setCategories(res.data || []))
-        .catch(() => undefined)
-        .finally(() => setCategoriesLoading(false));
-    }
-  }, [categories.length, categoriesLoading]);
 
   const roots = categories.slice().sort((a, b) => a.sort_order - b.sort_order);
 
@@ -192,13 +193,7 @@ export function ClientLayout() {
         }
       />
       <PopoverContent align="start" side="bottom" className="w-80 p-4">
-        {categoriesLoading ? (
-          <div className="flex flex-col gap-2">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-6 w-full" />
-            ))}
-          </div>
-        ) : !roots.length ? (
+        {!roots.length ? (
           <p className="text-sm text-muted-foreground">暂无分类</p>
         ) : (
           <div className="flex flex-col gap-3">
@@ -430,27 +425,21 @@ export function ClientLayout() {
                   {renderSearch()}
                   <Separator />
                   <div className="flex flex-col gap-2">
-                    {categoriesLoading ? (
-                      Array.from({ length: 4 }).map((_, i) => (
-                        <Skeleton key={i} className="h-9 w-full" />
-                      ))
-                    ) : (
-                      <>
-                        {feature.live_enabled ? (
-                          <Button
-                            variant="ghost"
-                            className="justify-start"
-                            nativeButton={false}
-                            render={<Link to="/live" />}
-                            onClick={() => setMobileOpen(false)}
-                          >
-                            电视
-                          </Button>
-                        ) : null}
-                        {roots.map((root) => (
-                          <Button
-                            key={root.id}
-                            variant="ghost"
+                    {feature.live_enabled ? (
+                      <Button
+                        variant="ghost"
+                        className="justify-start"
+                        nativeButton={false}
+                        render={<Link to="/live" />}
+                        onClick={() => setMobileOpen(false)}
+                      >
+                        电视
+                      </Button>
+                    ) : null}
+                    {roots.map((root) => (
+                      <Button
+                        key={root.id}
+                        variant="ghost"
                             className="justify-start"
                             nativeButton={false}
                             render={
@@ -461,8 +450,6 @@ export function ClientLayout() {
                             {root.name}
                           </Button>
                         ))}
-                      </>
-                    )}
                   </div>
                   <Separator />
                   <div className="flex flex-col gap-2">
@@ -581,7 +568,7 @@ export function ClientLayout() {
       </header>
 
       <main className="w-full flex-1 px-4 py-6">
-        <Outlet />
+        <Outlet context={{ categories }} />
       </main>
 
       <footer className="border-t border-border py-6">

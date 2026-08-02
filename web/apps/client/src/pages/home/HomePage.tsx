@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useLoaderData } from 'react-router'
+import { Link, useLoaderData, useOutletContext } from 'react-router'
 import type { Category, ClientBanner, VideoListItem } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
 import { BannerCarousel, VideoGrid } from '@/components/common'
@@ -19,7 +19,6 @@ type SectionState = {
 }
 
 type HomeLoaderData = {
-  categories: Category[]
   banners: ClientBanner[]
   hot: SectionState
   latest: SectionState
@@ -28,14 +27,12 @@ type HomeLoaderData = {
 
 export async function loader(): Promise<HomeLoaderData> {
   try {
-    const [categoriesRes, bannersRes, hotRes, latestRes] = await Promise.all([
-      clientApi.categories(),
+    const [bannersRes, hotRes, latestRes] = await Promise.all([
       clientApi.banners(),
       clientApi.videos({ page: 1, page_size: SECTION_PAGE_SIZE, sort: 'rating_desc' }),
       clientApi.videos({ page: 1, page_size: SECTION_PAGE_SIZE, sort: 'created_at_desc' }),
     ])
     return {
-      categories: categoriesRes.data || [],
       banners: bannersRes.data || [],
       hot: { loading: false, items: hotRes.data.list || [], error: '' },
       latest: { loading: false, items: latestRes.data.list || [], error: '' },
@@ -43,7 +40,6 @@ export async function loader(): Promise<HomeLoaderData> {
     }
   } catch (err) {
     return {
-      categories: [],
       banners: [],
       hot: { loading: false, items: [], error: '' },
       latest: { loading: false, items: [], error: '' },
@@ -53,8 +49,8 @@ export async function loader(): Promise<HomeLoaderData> {
 }
 
 export function Component() {
+  const { categories } = useOutletContext<{ categories: Category[] }>()
   const data = useLoaderData<HomeLoaderData>()
-  const categories = data.categories
   const banners = data.banners
   const hot = data.hot
   const latest = data.latest

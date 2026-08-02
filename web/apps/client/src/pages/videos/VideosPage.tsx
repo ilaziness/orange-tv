@@ -1,4 +1,4 @@
-import { useLoaderData, useSearchParams } from 'react-router'
+import { useLoaderData, useOutletContext, useSearchParams } from 'react-router'
 import type { Category, VideoListItem } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
 import { VideoGrid } from '@/components/common'
@@ -23,7 +23,6 @@ type FilterParams = {
 }
 
 type VideosLoaderData = {
-  categories: Category[]
   videos: VideoListItem[]
   total: number
   pageSize: number
@@ -55,29 +54,25 @@ export async function loader({ request }: { request: Request }): Promise<VideosL
   const { page, keyword, parentCategoryId, categoryId, yearStart, yearEnd, region } = filters
 
   try {
-    const [categoriesRes, listRes] = await Promise.all([
-      clientApi.categories(),
-      keyword
-        ? clientApi.search(keyword, page, {
-            page_size: pageSize,
-            parent_category_id: parentCategoryId || undefined,
-            category_id: categoryId || undefined,
-            year_start: yearStart || undefined,
-            year_end: yearEnd || undefined,
-            region: region || undefined,
-          })
-        : clientApi.videos({
-            page,
-            page_size: pageSize,
-            parent_category_id: parentCategoryId || undefined,
-            category_id: categoryId || undefined,
-            year_start: yearStart || undefined,
-            year_end: yearEnd || undefined,
-            region: region || undefined,
-          }),
-    ])
+    const listRes = keyword
+      ? await clientApi.search(keyword, page, {
+          page_size: pageSize,
+          parent_category_id: parentCategoryId || undefined,
+          category_id: categoryId || undefined,
+          year_start: yearStart || undefined,
+          year_end: yearEnd || undefined,
+          region: region || undefined,
+        })
+      : await clientApi.videos({
+          page,
+          page_size: pageSize,
+          parent_category_id: parentCategoryId || undefined,
+          category_id: categoryId || undefined,
+          year_start: yearStart || undefined,
+          year_end: yearEnd || undefined,
+          region: region || undefined,
+        })
     return {
-      categories: categoriesRes.data || [],
       videos: listRes.data.list || [],
       total: listRes.data.total || 0,
       pageSize,
@@ -86,7 +81,6 @@ export async function loader({ request }: { request: Request }): Promise<VideosL
     }
   } catch (err) {
     return {
-      categories: [],
       videos: [],
       total: 0,
       pageSize,
@@ -97,10 +91,10 @@ export async function loader({ request }: { request: Request }): Promise<VideosL
 }
 
 export function Component() {
+  const { categories } = useOutletContext<{ categories: Category[] }>()
   const data = useLoaderData<VideosLoaderData>()
   const [params, setParams] = useSearchParams()
 
-  const categories = data.categories
   const videos = data.videos
   const total = data.total
   const pageSize = data.pageSize
