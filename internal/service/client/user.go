@@ -2,10 +2,13 @@ package client
 
 import (
 	"context"
+	"html"
 	"math"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/ilaziness/orange-tv/internal/auth"
 	"github.com/ilaziness/orange-tv/internal/constant"
@@ -18,6 +21,9 @@ import (
 	"github.com/uptrace/bun"
 	"go.uber.org/zap"
 )
+
+// htmlTagRegex matches both opening and closing HTML tags.
+var htmlTagRegex = regexp.MustCompile(`<(/)?[a-zA-Z][^>]*>`)
 
 // UserService handles client user auth, favorites, history, comments.
 type UserService interface {
@@ -93,6 +99,7 @@ func NewUserService(
 
 func (s *userService) Register(ctx context.Context, req *clientdto.RegisterRequest) (*clientdto.Profile, error) {
 	username := strings.TrimSpace(req.Username)
+	password := strings.TrimSpace(req.Password)
 	exists, err := s.adminRepo.ExistsUserUsername(ctx, username)
 	if err != nil {
 		s.log.Error("client user: check username exists failed", zap.String("username", username), zap.Error(err))
@@ -101,7 +108,7 @@ func (s *userService) Register(ctx context.Context, req *clientdto.RegisterReque
 	if exists {
 		return nil, errcode.UserAlreadyExists
 	}
-	hash, err := crypto.HashPassword(req.Password)
+	hash, err := crypto.HashPassword(password)
 	if err != nil {
 		s.log.Error("client user: hash password for register failed", zap.String("username", username), zap.Error(err))
 		return nil, errcode.Wrap(errcode.InternalError, err)
@@ -124,6 +131,7 @@ func (s *userService) Login(ctx context.Context, req *clientdto.LoginRequest, ip
 		return nil, errcode.WithMessage(errcode.ServiceUnavailable, "JWT 未配置")
 	}
 	username := strings.TrimSpace(req.Username)
+	password := strings.TrimSpace(req.Password)
 	u, err := s.adminRepo.GetUserByUsername(ctx, username)
 	if err != nil {
 		s.log.Error("client user: get user by username for login failed", zap.String("username", username), zap.Error(err))
@@ -150,7 +158,7 @@ func (s *userService) Login(ctx context.Context, req *clientdto.LoginRequest, ip
 		recordLog(false)
 		return nil, errcode.UserDisabled
 	}
-	if err := crypto.CheckPassword(req.Password, u.Password); err != nil {
+	if err := crypto.CheckPassword(password, u.Password); err != nil {
 		recordLog(false)
 		return nil, errcode.InvalidCredentials
 	}
@@ -405,7 +413,11 @@ func (s *userService) CreateComment(ctx context.Context, userID int64, req *clie
 	if v == nil {
 		return nil, errcode.VideoNotFound
 	}
-	if len(req.Content) > 500 {
+	content := strings.TrimSpace(htmlTagRegex.ReplaceAllString(html.UnescapeString(req.Content), ""))
+	if content == "" {
+		return nil, errcode.ParamError
+	}
+	if utf8.RuneCountInString(content) > 200 {
 		return nil, errcode.CommentTooLong
 	}
 
@@ -419,7 +431,7 @@ func (s *userService) CreateComment(ctx context.Context, userID int64, req *clie
 		VideoID:  req.VideoID,
 		UserID:   uint64(userID),
 		ParentID: req.ParentID,
-		Content:  strings.TrimSpace(req.Content),
+		Content:  content,
 		Status:   status,
 	}
 	if err := s.userRepo.CreateComment(ctx, c); err != nil {

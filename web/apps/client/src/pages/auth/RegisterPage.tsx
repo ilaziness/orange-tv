@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router'
+import { isValidUsername, sanitizeUsernameInput } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -20,13 +21,24 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    if (password !== confirmPassword) {
+    const u = username.trim()
+    const p = password.trim()
+    const cp = confirmPassword.trim()
+    if (!isValidUsername(u)) {
+      setError('用户名只能由 2-15 位字母或数字组成')
+      return
+    }
+    if (p.length < 6) {
+      setError('密码至少 6 位')
+      return
+    }
+    if (p !== cp) {
       setError('两次密码不一致')
       return
     }
     setSubmitting(true)
     try {
-      await clientApi.register(username, password)
+      await clientApi.register(u, p)
       navigate('/login')
     } catch (err) {
       setError(errorMessage(err))
@@ -56,8 +68,10 @@ export default function RegisterPage() {
                 <Input
                   id="username"
                   placeholder="请输入用户名"
+                  maxLength={15}
+                  pattern="[a-zA-Z0-9]{2,15}"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => setUsername(sanitizeUsernameInput(e.target.value))}
                   required
                 />
               </Field>

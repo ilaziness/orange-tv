@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router'
+import { isValidUsername, sanitizeUsernameInput } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
 import { useAuthStore } from '@/store/auth'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -22,9 +23,15 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    const u = username.trim()
+    const p = password.trim()
+    if (!isValidUsername(u) || p.length < 6) {
+      setError('用户名或密码格式不正确')
+      return
+    }
     setSubmitting(true)
     try {
-      const res = await clientApi.login(username, password)
+      const res = await clientApi.login(u, p)
       setToken(res.data.access_token)
       await loadProfile()
       navigate('/')
@@ -56,8 +63,10 @@ export default function LoginPage() {
                 <Input
                   id="username"
                   placeholder="请输入用户名"
+                  maxLength={15}
+                  pattern="[a-zA-Z0-9]{2,15}"
                   value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  onChange={(e) => setUsername(sanitizeUsernameInput(e.target.value))}
                   required
                 />
               </Field>

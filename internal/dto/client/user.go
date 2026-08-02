@@ -6,14 +6,14 @@ import "github.com/ilaziness/orange-tv/internal/dto"
 
 // RegisterRequest is the user registration payload.
 type RegisterRequest struct {
-	Username string `json:"username" validate:"required,min=3,max=50"`
+	Username string `json:"username" validate:"required,min=2,max=15,alphanum"`
 	Password string `json:"password" validate:"required,min=6,max=72"`
 	Email    string `json:"email" validate:"omitempty,email,max=128"`
 }
 
 // LoginRequest is the user login payload.
 type LoginRequest struct {
-	Username string `json:"username" validate:"required,min=3,max=50"`
+	Username string `json:"username" validate:"required,min=2,max=15,alphanum"`
 	Password string `json:"password" validate:"required,min=6,max=72"`
 }
 
@@ -112,7 +112,7 @@ type CommentItem struct {
 type CreateCommentRequest struct {
 	VideoID  uint64 `json:"video_id" validate:"required,min=1"`
 	ParentID uint64 `json:"parent_id" validate:"omitempty,min=1"`
-	Content  string `json:"content" validate:"required,min=1,max=500"`
+	Content  string `json:"content" validate:"required,min=1,max=200"`
 }
 
 // ===== Banner (C1) =====

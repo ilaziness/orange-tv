@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"unicode"
 
 	"github.com/go-playground/locales/zh"
 	ut "github.com/go-playground/universal-translator"
@@ -40,6 +41,10 @@ func init() {
 		}
 		return jsonTag
 	})
+
+	// 注册搜索关键词校验：中英文、数字、空格及常见文本符号
+	_ = validate.RegisterValidation("search", searchKeyword)
+	_ = RegisterTranslation("search", "{0}只能包含中英文、数字及常见文本符号")
 }
 
 // Validate validates a struct and returns translated error messages.
@@ -91,4 +96,18 @@ func RegisterTranslation(tag string, message string) error {
 	}, func(ut ut.Translator, fe validator.FieldError) string {
 		return fe.Translate(ut)
 	})
+}
+
+// searchKeyword validates that a keyword contains only Chinese/English characters,
+// numbers, spaces and common Chinese/English punctuation.
+func searchKeyword(fl validator.FieldLevel) bool {
+	v := fl.Field().String()
+	allowed := " .,!?;:'\"()[]{}@#&*_-~。，、；：？！…—·（）【】《》“”‘’"
+	for _, r := range v {
+		if unicode.Is(unicode.Han, r) || unicode.Is(unicode.Latin, r) || unicode.IsNumber(r) || r == ' ' || strings.ContainsRune(allowed, r) {
+			continue
+		}
+		return false
+	}
+	return true
 }

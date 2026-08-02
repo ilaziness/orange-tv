@@ -23,10 +23,14 @@ export function CommentSection({ videoId, comments, onRefresh }: CommentSectionP
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!text.trim()) return
+    const content = text.trim()
+    if (!content || content.length > 200) {
+      toast.error('评论内容不能为空且最多 200 字')
+      return
+    }
     setSubmitting(true)
     try {
-      await clientApi.createComment(videoId, text)
+      await clientApi.createComment(videoId, content)
       setText('')
       onRefresh()
       toast.success('评论发表成功')
@@ -50,7 +54,8 @@ export function CommentSection({ videoId, comments, onRefresh }: CommentSectionP
                 <FieldLabel htmlFor="comment">发表评论</FieldLabel>
                 <Textarea
                   id="comment"
-                  placeholder="写下你的评论..."
+                  placeholder="写下你的评论（最多 200 字）"
+                  maxLength={200}
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   className="min-h-20"

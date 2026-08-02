@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, Outlet, useNavigate, useSearchParams } from "react-router";
 import type { Category } from "@orange-tv/shared";
+import { sanitizeSearchInput } from "@orange-tv/shared";
 import { useAuth } from "@/hooks/useAuth";
 import { useSettings } from "@/hooks/useSettings";
 import { clientApi } from "@/lib/api";
@@ -132,9 +133,10 @@ export function ClientLayout() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (keyword.trim()) {
+    const q = keyword.trim()
+    if (q && q.length <= 10) {
       const newParams = new URLSearchParams(params);
-      newParams.set('keyword', keyword.trim());
+      newParams.set('keyword', q);
       newParams.set('page', '1');
       navigate(`/videos?${newParams.toString()}`);
       setMobileOpen(false);
@@ -162,8 +164,9 @@ export function ClientLayout() {
       <InputGroup className="w-full md:w-64">
         <InputGroupInput
           placeholder="搜索影视"
+          maxLength={10}
           value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
+          onChange={(e) => setKeyword(sanitizeSearchInput(e.target.value))}
         />
         <InputGroupAddon align="inline-end">
           <Button type="submit" size="icon-sm" variant="ghost">

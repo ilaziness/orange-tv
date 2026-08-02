@@ -16,7 +16,7 @@ type VideoListRequest struct {
 // SearchRequest is the public search query with optional filters.
 type SearchRequest struct {
 	dto.PaginationRequest
-	Keyword          string `form:"keyword" validate:"required,min=1,max=100"`
+	Keyword          string `form:"keyword" validate:"required,min=1,max=10,search"`
 	CategoryID       uint64 `form:"category_id"`
 	ParentCategoryID uint64 `form:"parent_category_id"`
 	YearStart        uint32 `form:"year_start"`
