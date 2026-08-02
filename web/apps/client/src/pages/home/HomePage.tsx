@@ -8,8 +8,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { AlertCircleIcon, ChevronRightIcon } from 'lucide-react'
 
-const ROWS = 3
-const COLS = 6
+const ROWS = 4
+const COLS = 8
 const SECTION_PAGE_SIZE = ROWS * COLS
 
 type SectionState = {
