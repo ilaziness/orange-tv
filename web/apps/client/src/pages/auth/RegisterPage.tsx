@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, Link } from 'react-router'
 import { isValidUsername, sanitizeUsernameInput } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
+import { useAuthStore } from '@/store/auth'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,6 +10,7 @@ import { Field, FieldGroup, FieldLabel, FieldError } from '@/components/ui/field
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Spinner } from '@/components/ui/spinner'
 import { AlertCircleIcon } from 'lucide-react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 export function Component() {
   const [username, setUsername] = useState('')
@@ -17,6 +19,18 @@ export function Component() {
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const navigate = useNavigate()
+  const token = useAuthStore((s) => s.token)
+
+  usePageTitle('注册')
+
+  const hasRedirected = useRef(false)
+  useEffect(() => {
+    if (hasRedirected.current) return
+    hasRedirected.current = true
+    if (token) {
+      navigate('/', { replace: true })
+    }
+  }, [token, navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { AlertCircleIcon, FilmIcon } from 'lucide-react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 type VideoDetailLoaderData = {
   detail: ClientVideoDetail | null
@@ -49,6 +50,8 @@ export function Component() {
   const [comments, setComments] = useState<CommentItem[]>(initialComments)
   const [posterError, setPosterError] = useState(false)
   const { feature } = useSettings()
+
+  usePageTitle(detail ? detail.title : '影视详情')
 
   const loadComments = () => {
     if (!id) return

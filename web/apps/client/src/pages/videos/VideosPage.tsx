@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { AlertCircleIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 const MOBILE_PAGE_SIZE = 24
 const PC_PAGE_SIZE = 64
@@ -128,6 +129,8 @@ export function Component() {
     : currentCategory
       ? currentCategory.name
       : '影视列表'
+
+  usePageTitle(title)
 
   const hasMore = videos.length < total
 

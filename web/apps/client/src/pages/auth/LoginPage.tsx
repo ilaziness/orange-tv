@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, Link } from 'react-router'
 import { isValidUsername, sanitizeUsernameInput } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
@@ -10,6 +10,7 @@ import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Spinner } from '@/components/ui/spinner'
 import { AlertCircleIcon } from 'lucide-react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 export function Component() {
   const [username, setUsername] = useState('')
@@ -19,6 +20,18 @@ export function Component() {
   const navigate = useNavigate()
   const setToken = useAuthStore((s) => s.setToken)
   const loadProfile = useAuthStore((s) => s.loadProfile)
+  const token = useAuthStore((s) => s.token)
+
+  usePageTitle('登录')
+
+  const hasRedirected = useRef(false)
+  useEffect(() => {
+    if (hasRedirected.current) return
+    hasRedirected.current = true
+    if (token) {
+      navigate('/', { replace: true })
+    }
+  }, [token, navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,7 +47,7 @@ export function Component() {
       const res = await clientApi.login(u, p)
       setToken(res.data.access_token)
       await loadProfile()
-      navigate('/')
+      navigate('/', { replace: true })
     } catch (err) {
       setError(errorMessage(err))
     } finally {

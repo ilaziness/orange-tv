@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { cn } from '@/lib/utils'
 import { AlertCircleIcon, ChevronRightIcon, TvIcon } from 'lucide-react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 type LiveLoaderData = {
   channels: LiveChannel[]
@@ -38,6 +39,8 @@ export function Component() {
     return new Set(first ? [first.category] : [])
   })
   const [selectedId, setSelectedId] = useState<number | null>(() => channels[0]?.id ?? null)
+
+  usePageTitle('电视直播')
 
   const groups = useMemo<ChannelGroup[]>(() => {
     const map = new Map<string, LiveChannel[]>()

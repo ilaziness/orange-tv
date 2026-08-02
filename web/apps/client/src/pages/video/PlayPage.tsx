@@ -12,6 +12,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { AlertCircleIcon } from 'lucide-react'
 import { FavoriteButton, RatingStars } from '@/components/common'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 type PlayLoaderData = {
   detail: ClientVideoDetail | null
@@ -52,6 +53,12 @@ export function Component() {
   const sourceIdNum = Number(sourceId || 0)
   const epIdNum = Number(episodeId || 0)
   const videoIdNum = Number(id || 0)
+
+  const currentEpNumber = detail?.sources
+    ?.flatMap((s) => s.episodes)
+    ?.find((e) => e.id === epIdNum)?.episode
+
+  usePageTitle(detail ? `${detail.title}${currentEpNumber ? ` 第${currentEpNumber}集` : ''} - 播放` : '视频播放')
 
   const handleProgress = useCallback(
     (currentTime: number, duration: number) => {
@@ -138,9 +145,6 @@ export function Component() {
     episodeId: ep.id,
     title: ep.title || `第${ep.episode}集`,
   }))
-  const currentEpNumber = detail.sources
-    ?.flatMap((s) => s.episodes)
-    .find((e) => e.id === epIdNum)?.episode
 
   return (
     <div className="flex flex-col gap-6">

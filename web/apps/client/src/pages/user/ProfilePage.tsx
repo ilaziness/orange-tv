@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import type { LoginHistoryItem, UserProfile } from '@orange-tv/shared'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 const statusMap: Record<number, string> = {
   1: '正常',
@@ -28,6 +29,8 @@ export function Component() {
   const profile = useAuthStore((s) => s.profile)
   const loadProfile = useAuthStore((s) => s.loadProfile)
   const [tab, setTab] = useState<Tab>('basic')
+
+  usePageTitle('个人中心')
 
   useEffect(() => {
     void loadProfile()

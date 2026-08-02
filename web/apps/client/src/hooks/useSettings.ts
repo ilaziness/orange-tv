@@ -16,11 +16,5 @@ export function useSettings() {
     }
   }, [loaded, loadSettings])
 
-  useEffect(() => {
-    if (name) {
-      document.title = name
-    }
-  }, [name])
-
   return { site: { name, logo, copyright, icp }, feature, loaded }
 }

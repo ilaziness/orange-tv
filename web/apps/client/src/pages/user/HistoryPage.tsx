@@ -7,6 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Button } from '@/components/ui/button'
 import { AlertCircleIcon } from 'lucide-react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 function dayKey(iso: string): string {
   const d = new Date(iso)
@@ -72,6 +73,8 @@ export function Component() {
   }
 
   const [displayError, setError] = useState(error)
+
+  usePageTitle('观看历史')
 
   const groups = useMemo(() => {
     const map = new Map<string, HistoryItem[]>()

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { AlertCircleIcon, ChevronRightIcon } from 'lucide-react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 const ROWS = 4
 const COLS = 8
@@ -55,6 +56,8 @@ export function Component() {
   const hot = data.hot
   const latest = data.latest
   const globalError = data.globalError
+
+  usePageTitle('首页')
 
   const [categorySections, setCategorySections] = useState<Record<number, SectionState>>({})
 

@@ -6,6 +6,7 @@ import { FavoriteCard } from '@/components/common'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { AlertCircleIcon } from 'lucide-react'
+import { usePageTitle } from '@/hooks/usePageTitle'
 
 type FavoritesLoaderData = {
   favorites: FavoriteItem[]
@@ -25,6 +26,8 @@ export function Component() {
   const data = useLoaderData<FavoritesLoaderData>()
   const [favorites, setFavorites] = useState<FavoriteItem[]>(data.favorites)
   const { error } = data
+
+  usePageTitle('我的收藏')
 
   const handleRemoved = (videoId: number) => {
     setFavorites((prev) => prev.filter((f) => f.video_id !== videoId))
