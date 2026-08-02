@@ -17,9 +17,6 @@ type FilterBarProps = {
 // 主要地区筛选项（后端用 LIKE 模糊匹配，"大陆"可同时命中"大陆"和"中国大陆"）
 const REGIONS = ['大陆', '中国香港', '美国', '日本', '韩国', '英国']
 
-// 体育分类（id=8）仅展示年份筛选，不展示地区
-const SPORTS_CATEGORY_ID = 8
-
 type YearOption = { label: string; start: number; end: number }
 
 function buildYearOptions(): YearOption[] {
@@ -43,15 +40,12 @@ function buildYearOptions(): YearOption[] {
 
 export function FilterBar({
   categoryId,
-  parentCategoryId,
   subCategories,
   yearStart,
   yearEnd,
   region,
   onChange,
 }: FilterBarProps) {
-  // 判断是否为体育分类（根分类或其子分类）
-  const isSports = categoryId === SPORTS_CATEGORY_ID || parentCategoryId === SPORTS_CATEGORY_ID
   const yearOptions = buildYearOptions()
 
   const isYearActive = (opt: YearOption) =>
@@ -105,29 +99,27 @@ export function FilterBar({
         ))}
       </div>
 
-      {/* 地区行：体育分类不展示 */}
-      {!isSports ? (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm text-muted-foreground">地区：</span>
+      {/* 地区行 */}
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-sm text-muted-foreground">地区：</span>
+        <Button
+          variant={!region ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => onChange({ region: null })}
+        >
+          全部
+        </Button>
+        {REGIONS.map((r) => (
           <Button
-            variant={!region ? 'default' : 'outline'}
+            key={r}
+            variant={region === r ? 'default' : 'outline'}
             size="sm"
-            onClick={() => onChange({ region: null })}
+            onClick={() => onChange({ region: r })}
           >
-            全部
+            {r}
           </Button>
-          {REGIONS.map((r) => (
-            <Button
-              key={r}
-              variant={region === r ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => onChange({ region: r })}
-            >
-              {r}
-            </Button>
-          ))}
-        </div>
-      ) : null}
+        ))}
+      </div>
     </div>
   )
 }

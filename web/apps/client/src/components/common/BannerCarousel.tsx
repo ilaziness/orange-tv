@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import type { ClientBanner } from '@orange-tv/shared'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { PlayIcon } from 'lucide-react'
 
@@ -48,7 +49,7 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
           {banners.map((_, i) => (
             <button
               key={i}
-              className={`size-2.5 rounded-full transition-colors ${i === bannerIdx ? 'bg-primary' : 'bg-muted-foreground/40'}`}
+              className={cn('size-2.5 rounded-full transition-colors', i === bannerIdx ? 'bg-primary' : 'bg-muted-foreground/40')}
               onClick={() => setBannerIdx(i)}
             >
               <span className="sr-only">Banner {i + 1}</span>

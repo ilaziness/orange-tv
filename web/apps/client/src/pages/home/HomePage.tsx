@@ -30,14 +30,21 @@ export default function HomePage() {
   useEffect(() => {
     void (async () => {
       try {
-        const [cats, bannerRes] = await Promise.all([
-          clientApi.categories(),
-          clientApi.banners().catch(() => ({ data: [] as ClientBanner[] })),
-        ])
-        setCategories(cats.data || [])
-        setBanners(bannerRes.data || [])
+        const res = await clientApi.categories()
+        setCategories(res.data || [])
       } catch (err) {
         setGlobalError(errorMessage(err))
+      }
+    })()
+  }, [])
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const res = await clientApi.banners()
+        setBanners(res.data || [])
+      } catch {
+        setBanners([])
       }
     })()
   }, [])
@@ -82,7 +89,7 @@ export default function HomePage() {
           const res = await clientApi.videos({
             page: 1,
             page_size: SECTION_PAGE_SIZE,
-            category_id: r.id,
+            parent_category_id: r.id,
             sort: 'created_at_desc',
           })
           setCategorySections((prev) => ({
@@ -104,7 +111,7 @@ export default function HomePage() {
     <div className="flex items-center justify-between">
       <h2 className="text-lg font-semibold">{title}</h2>
       {categoryId ? (
-        <Button variant="ghost" size="sm" nativeButton={false} render={<Link to={`/videos?category_id=${categoryId}`} />}>
+        <Button variant="ghost" size="sm" nativeButton={false} render={<Link to={`/videos?parent_category_id=${categoryId}`} />}>
           查看更多
           <ChevronRightIcon data-icon="inline-end" />
         </Button>
@@ -120,6 +127,7 @@ export default function HomePage() {
       return (
         <Alert variant="destructive">
           <AlertCircleIcon />
+          <AlertTitle>加载失败</AlertTitle>
           <AlertDescription>{state.error}</AlertDescription>
         </Alert>
       )

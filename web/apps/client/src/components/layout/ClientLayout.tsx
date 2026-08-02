@@ -12,6 +12,7 @@ import {
 } from "@/lib/playbackHistory";
 import type { HistoryItem } from "@orange-tv/shared";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   InputGroup,
@@ -182,13 +183,10 @@ export function ClientLayout() {
     <Popover open={categoryOpen} onOpenChange={(open) => setCategoryOpen(open)}>
       <PopoverTrigger
         render={
-          <button
-            type="button"
-            className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          >
-            <FilterIcon className="size-4" />
+          <Button variant="ghost" size="sm">
+            <FilterIcon data-icon="inline-start" />
             筛选
-          </button>
+          </Button>
         }
       />
       <PopoverContent align="start" side="bottom" className="w-80 p-4">
@@ -211,7 +209,7 @@ export function ClientLayout() {
                   <Link
                     to={`/videos?parent_category_id=${root.id}&page=1`}
                     onClick={() => setCategoryOpen(false)}
-                    className={`text-sm font-semibold transition-colors ${selectedParentId === root.id ? 'text-primary' : 'text-foreground hover:text-primary'}`}
+                    className={cn('text-sm font-semibold transition-colors', selectedParentId === root.id ? 'text-primary' : 'text-foreground hover:text-primary')}
                   >
                     {root.name}
                   </Link>
@@ -222,7 +220,7 @@ export function ClientLayout() {
                           key={sub.id}
                           to={`/videos?parent_category_id=${root.id}&category_id=${sub.id}&page=1`}
                           onClick={() => setCategoryOpen(false)}
-                          className={`text-sm transition-colors ${selectedCategoryId === sub.id ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                          className={cn('text-sm transition-colors', selectedCategoryId === sub.id ? 'text-primary' : 'text-muted-foreground hover:text-foreground')}
                         >
                           {sub.name}
                         </Link>
@@ -242,13 +240,10 @@ export function ClientLayout() {
     <>
       {renderCategoryPopover()}
       {feature.live_enabled ? (
-        <Link
-          to="/live"
-          className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-primary"
-        >
-          <TvIcon className="size-4" />
+        <Button variant="ghost" size="sm" nativeButton={false} render={<Link to="/live" />}>
+          <TvIcon data-icon="inline-start" />
           电视
-        </Link>
+        </Button>
       ) : null}
     </>
   );
