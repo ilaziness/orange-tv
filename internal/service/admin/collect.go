@@ -466,9 +466,6 @@ func (s *collectService) ReloadScheduler(ctx context.Context) error {
 // validateCollectPrecondition checks that a source is ready for collection.
 // Called before launching the goroutine so errors are returned to the user.
 func (s *collectService) validateCollectPrecondition(ctx context.Context, source *model.CollectSources) error {
-	if source.Type != constant.CollectTypeAppleCMS {
-		return errcode.CollectDefaultNotSupported
-	}
 	maps, err := s.repo.ListCategories(ctx, int64(source.ID))
 	if err != nil {
 		s.log.Error("collect: list categories for precondition failed", zap.Int64("source_id", int64(source.ID)), zap.Error(err))
@@ -555,30 +552,21 @@ func (s *collectService) FetchRemoteCategories(ctx context.Context, sourceID int
 	if err != nil {
 		return nil, err
 	}
-	if source.Type != constant.CollectTypeAppleCMS {
-		return nil, errcode.CollectSourceNotAppleCMS
-	}
-	// Apple CMS class is returned on ac=list; use FetchList with dataRange="all" to get classes.
-	fetcher := collect.NewFetcher(s.log)
-	body, err := fetcher.FetchList(ctx, source.CollectURL, source.APIKey, 1, "all")
+	// Both Apple CMS (class) and default (Open API /categories) formats expose remote categories.
+	cats, err := collect.FetchCategories(ctx, source, s.log)
 	if err != nil {
 		s.log.Error("collect: fetch remote categories failed", zap.Int64("source_id", sourceID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.CollectFetchFailed, err)
 	}
-	listPage, err := collect.ParseAppleCMSList(body)
-	if err != nil {
-		s.log.Error("collect: parse remote categories failed", zap.Int64("source_id", sourceID), zap.Error(err))
-		return nil, errcode.Wrap(errcode.CollectParseFailed, err)
-	}
-	items := make([]admindto.RemoteCategoryItem, 0, len(listPage.Classes))
-	for _, c := range listPage.Classes {
-		if c.TypeID <= 0 {
+	items := make([]admindto.RemoteCategoryItem, 0, len(cats))
+	for _, c := range cats {
+		if c.ID <= 0 {
 			continue
 		}
 		items = append(items, admindto.RemoteCategoryItem{
-			TypeID:   c.TypeID,
-			TypeName: c.TypeName,
-			TypePID:  c.TypePID,
+			TypeID:   c.ID,
+			TypeName: c.Name,
+			TypePID:  c.ParentID,
 		})
 	}
 	return &admindto.RemoteCategoryResponse{List: items}, nil

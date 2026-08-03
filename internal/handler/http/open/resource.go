@@ -30,6 +30,8 @@ func (h *ResourceHandler) Service() opensvc.ResourceService {
 // @Param page query int false "页码" default(1)
 // @Param page_size query int false "每页数量" default(20)
 // @Param limit query int false "每页数量（兼容）" default(20)
+// @Param data_range query string false "数据范围（today/last1d/last3d/last1w/last1m/all）" default(all)
+// @Param source query string false "播放源名称（精确匹配）"
 // @Success 200 {object} response.Response{data=response.PageData}
 // @Router /api/open/v1/videos [get]
 func (h *ResourceHandler) ListVideos(c *gin.Context) {
@@ -37,7 +39,7 @@ func (h *ResourceHandler) ListVideos(c *gin.Context) {
 	if !httphandler.BindQuery(c, &req) {
 		return
 	}
-	list, total, err := h.svc.ListVideos(c.Request.Context(), req.GetPage(), req.GetLimit())
+	list, total, err := h.svc.ListVideos(c.Request.Context(), req.GetPage(), req.GetLimit(), req.DataRange, req.Source)
 	if err != nil {
 		response.Error(c, err)
 		return

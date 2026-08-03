@@ -80,9 +80,7 @@ var (
 	CollectCategoryMapEmpty     = &Code{4000087, "请先绑定分类", 400, nil}
 	CollectNoSchedule           = &Code{4000088, "未开启定时采集", 400, nil}
 	CollectRemoteCategoryFailed = &Code{4000089, "获取远程分类失败", 502, nil}
-	CollectSourceNotAppleCMS    = &Code{4000090, "仅苹果CMS源支持远程分类获取", 400, nil}
 	CollectInvalidDataRange     = &Code{4000091, "数据范围参数无效", 400, nil}
-	CollectDefaultNotSupported  = &Code{4000092, "默认格式暂不支持，请使用苹果CMS格式", 400, nil}
 
 	// 系统模块 (900xxxx)
 	InternalError        = &Code{9000001, "服务器内部错误", 500, nil}

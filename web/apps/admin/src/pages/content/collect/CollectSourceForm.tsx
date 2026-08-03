@@ -59,6 +59,10 @@ export function CollectSourceForm({
     label: source.name,
   }))
   const rangeOptions = dataRangeOptions.map((o) => ({ value: o.value, label: o.label }))
+  const collectUrlPlaceholder =
+    form.type === '1'
+      ? 'Open API 基础路径，如 https://example.com/api/open/v1'
+      : '数据列表接口，如 https://example.com/api.php/provide/vod/from/m3u8/at/json/'
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!submitting) onOpenChange(v) }}>
@@ -106,7 +110,7 @@ export function CollectSourceForm({
               <FieldLabel htmlFor="collect_url">采集地址<RequiredMark /></FieldLabel>
               <Input
                 id="collect_url"
-                placeholder="数据列表接口，如 https://example.com/api.php/provide/vod/from/m3u8/at/json/"
+                placeholder={collectUrlPlaceholder}
                 value={form.collect_url}
                 onChange={(e) => setForm((prev) => ({ ...prev, collect_url: e.target.value }))}
                 required

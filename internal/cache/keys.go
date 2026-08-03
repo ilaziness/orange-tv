@@ -23,8 +23,8 @@ const (
 	KeyOpenCategories = "open:categories"
 	TTLOpenCategories = 5 * time.Minute
 
-	// Open - 视频列表（动态键）
-	KeyTplOpenVideoList = "open:videos:list:%d:%d"
+	// Open - 视频列表（动态键，含 data_range + source 维度）
+	KeyTplOpenVideoList = "open:videos:list:%d:%d:%s:%s"
 	TTLOpenVideoList    = 2 * time.Minute
 
 	// Video (client) - 视频列表（动态键）
@@ -43,6 +43,7 @@ func VideoListKey(categoryID, parentCategoryID uint64, sort string, page, limit 
 }
 
 // OpenVideoListKey 生成 Open API 视频列表缓存键。
-func OpenVideoListKey(page, pageSize int) string {
-	return fmt.Sprintf(KeyTplOpenVideoList, page, pageSize)
+// dataRange 和 source 为筛选维度，空字符串表示无筛选。
+func OpenVideoListKey(page, pageSize int, dataRange, source string) string {
+	return fmt.Sprintf(KeyTplOpenVideoList, page, pageSize, dataRange, source)
 }

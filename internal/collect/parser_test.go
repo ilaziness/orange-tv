@@ -18,21 +18,21 @@ func TestParseAppleCMSList(t *testing.T) {
 			{"type_id":"6","type_pid":"1","type_name":"动作片"}
 		]
 	}`)
-	lp, err := ParseAppleCMSList(body)
+	lp, err := parseAppleCMSList(body)
 	require.NoError(t, err)
 	require.Equal(t, 1, lp.Page)
 	require.Equal(t, 2, lp.PageCount)
 	require.Equal(t, 100, lp.Total)
-	require.Len(t, lp.VodIDs, 2)
-	require.Equal(t, int64(123), lp.VodIDs[0])
-	require.Equal(t, int64(456), lp.VodIDs[1])
-	require.Len(t, lp.VodTimes, 2)
-	require.Equal(t, "2025-07-20 10:30:00", lp.VodTimes[0])
+	require.Len(t, lp.IDs, 2)
+	require.Equal(t, int64(123), lp.IDs[0])
+	require.Equal(t, int64(456), lp.IDs[1])
+	require.Len(t, lp.Times, 2)
+	require.Equal(t, "2025-07-20 10:30:00", lp.Times[0])
 
-	require.Len(t, lp.Classes, 2)
-	require.Equal(t, int64(1), lp.Classes[0].TypeID)
-	require.Equal(t, "电影片", lp.Classes[0].TypeName)
-	require.Equal(t, int64(6), lp.Classes[1].TypeID)
+	require.Len(t, lp.Categories, 2)
+	require.Equal(t, int64(1), lp.Categories[0].ID)
+	require.Equal(t, "电影片", lp.Categories[0].Name)
+	require.Equal(t, int64(6), lp.Categories[1].ID)
 }
 
 func TestParseAppleCMSDetail(t *testing.T) {
@@ -50,7 +50,7 @@ func TestParseAppleCMSDetail(t *testing.T) {
 			{"type_id":1,"type_pid":0,"type_name":"电影片"}
 		]
 	}`)
-	page, err := ParseAppleCMSDetail(body)
+	page, err := parseAppleCMSDetail(body)
 	require.NoError(t, err)
 	require.Equal(t, 1, page.Page)
 	require.Len(t, page.Items, 1)
@@ -71,7 +71,7 @@ func TestParseAppleCMSDetail(t *testing.T) {
 	require.Equal(t, "2024-01-01", it.ReleaseDate)
 
 	require.Len(t, page.Classes, 1)
-	require.Equal(t, int64(1), page.Classes[0].TypeID)
+	require.Equal(t, int64(1), page.Classes[0].ID)
 }
 
 func TestParseAppleCMSDetailNumericIDs(t *testing.T) {
@@ -82,13 +82,13 @@ func TestParseAppleCMSDetailNumericIDs(t *testing.T) {
 		}],
 		"class":[{"type_id":29,"type_pid":4,"type_name":"国产动漫"}]
 	}`)
-	page, err := ParseAppleCMSDetail(body)
+	page, err := parseAppleCMSDetail(body)
 	require.NoError(t, err)
 	require.Len(t, page.Items, 1)
 	require.Equal(t, "120334", page.Items[0].ExternalID)
 	require.Equal(t, int64(29), page.Items[0].ExternalCategoryID)
 	require.Len(t, page.Classes, 1)
-	require.Equal(t, int64(29), page.Classes[0].TypeID)
+	require.Equal(t, int64(29), page.Classes[0].ID)
 }
 
 func TestParseApplePlayURLsM3u8Only(t *testing.T) {
@@ -97,20 +97,4 @@ func TestParseApplePlayURLsM3u8Only(t *testing.T) {
 	require.Len(t, eps, 2)
 	require.Equal(t, "http://a.m3u8", eps[0].URL)
 	require.Equal(t, "http://b.m3u8", eps[1].URL)
-}
-
-func TestParseDefaultJSON(t *testing.T) {
-	body := []byte(`{
-		"code":0,"page":1,"page_count":1,"total":1,
-		"list":[{
-			"title":"系统格式片","year":2023,"category_id":12,
-			"play_urls":[{"episode":1,"title":"全集","url":"http://c.mp4","format":"mp4"}]
-		}]
-	}`)
-	page, err := ParseDefaultJSON(body)
-	require.NoError(t, err)
-	require.Len(t, page.Items, 1)
-	require.Equal(t, "系统格式片", page.Items[0].Title)
-	require.Equal(t, int64(12), page.Items[0].ExternalCategoryID)
-	require.Equal(t, "mp4", page.Items[0].Episodes[0].Format)
 }

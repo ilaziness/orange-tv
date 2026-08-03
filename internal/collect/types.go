@@ -27,15 +27,16 @@ type Item struct {
 	Actors             []string
 	Tags               []string
 	Episodes           []Episode
-	VodTime            string // raw vod_time string for time range filtering
+	VodTime            string // raw time string (vod_time / created_at) for time range filtering
 	Remarks            string // vod_remarks, used to determine serial status
 }
 
-// AppleCMSClass is one category from Apple CMS class field.
-type AppleCMSClass struct {
-	TypeID   int64  `json:"type_id"`
-	TypeName string `json:"type_name"`
-	TypePID  int64  `json:"type_pid"`
+// RemoteCategory is one external category from a collect source.
+// Generic across formats: Apple CMS class / Open API category.
+type RemoteCategory struct {
+	ID       int64
+	Name     string
+	ParentID int64
 }
 
 // Page is one page of collected items.
@@ -44,16 +45,16 @@ type Page struct {
 	PageCount int
 	Total     int
 	Items     []Item
-	Classes   []AppleCMSClass
+	Classes   []RemoteCategory
 }
 
-// ListPage is the parsed result of an Apple CMS list API response.
-// It only extracts vod_id list and class info; detailed fields come from the detail API.
+// ListPage is the parsed result of a list API response.
+// It only extracts IDs and time list; detailed fields come from the detail API.
 type ListPage struct {
-	Page      int
-	PageCount int
-	Total     int
-	VodIDs    []int64  // vod_id list (integer IDs)
-	VodTimes  []string // vod_time list, parallel to VodIDs, for time range filtering
-	Classes   []AppleCMSClass
+	Page       int
+	PageCount  int
+	Total      int
+	IDs        []int64  // external ID list (vod_id for Apple CMS, video id for default)
+	Times      []string // time list (vod_time / created_at), parallel to IDs, for time range filtering
+	Categories []RemoteCategory
 }

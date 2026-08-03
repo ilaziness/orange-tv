@@ -114,7 +114,7 @@ func (m *Manager) InvalidateVideo(ctx context.Context) {
 		for _, page := range []int{1, 2} {
 			for _, limit := range []int{12, 20, 24} {
 				_ = m.cache.Delete(ctx, VideoListKey(0, 0, sort, page, limit))
-				_ = m.cache.Delete(ctx, OpenVideoListKey(page, limit))
+				_ = m.cache.Delete(ctx, OpenVideoListKey(page, limit, "", ""))
 			}
 		}
 	}

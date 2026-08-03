@@ -7,6 +7,10 @@ import (
 // VideoListRequest is the query parameter for the open video list.
 type VideoListRequest struct {
 	shareddto.PaginationRequest
+	// DataRange filters by created_at (today/last1d/last3d/last1w/last1m/all). Empty = all.
+	DataRange string `form:"data_range" json:"data_range" binding:"omitempty,oneof=today last1d last3d last1w last1m all"`
+	// Source filters videos by play source name (exact match). Empty = no filter.
+	Source string `form:"source" json:"source" binding:"omitempty,max=10"`
 }
 
 // VideoDetailRequest is the query parameter for the open video detail (multiple ids).

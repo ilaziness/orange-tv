@@ -9,6 +9,7 @@ import (
 	"github.com/ilaziness/orange-tv/internal/constant"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
+	"github.com/ilaziness/orange-tv/internal/utils"
 	"github.com/uptrace/bun"
 	"go.uber.org/zap"
 )
@@ -60,9 +61,10 @@ type Result struct {
 func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRange string, logID uint64) Result {
 	res := Result{}
 
-	if source.Type != constant.CollectTypeAppleCMS {
+	collector, err := newCollector(source, e.fetcher, e.log)
+	if err != nil {
 		res.HasError = true
-		res.Message = "仅支持苹果CMS采集源"
+		res.Message = err.Error()
 		return res
 	}
 
@@ -93,10 +95,10 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRang
 		parentMap[c.ID] = c.ParentID
 	}
 
-	cutoffTime := dataRangeCutoff(dataRange)
+	cutoffTime := utils.DataRangeCutoff(dataRange)
 
-	// Phase 1: collect all vod_ids from list pages
-	var allVodIDs []int64
+	// Phase 1: collect all ids from list pages
+	var allIDs []int64
 	pageNo := 1
 	maxPages := 50
 	for pageNo <= maxPages {
@@ -104,40 +106,33 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRang
 			res.Message = "采集已取消"
 			return res
 		}
-		body, err := e.fetcher.FetchList(ctx, source.CollectURL, source.APIKey, pageNo, dataRange)
+		listPage, err := collector.FetchListPage(ctx, source, pageNo, dataRange)
 		if err != nil {
 			e.log.Error("collect: fetch list failed", zap.Int64("source_id", int64(source.ID)), zap.Int("page", pageNo), zap.Error(err))
 			res.HasError = true
 			res.Message = fmt.Sprintf("拉取列表第%d页失败: %v", pageNo, err)
 			return res
 		}
-		listPage, err := ParseAppleCMSList(body)
-		if err != nil {
-			e.log.Error("collect: parse list failed", zap.Int64("source_id", int64(source.ID)), zap.Int("page", pageNo), zap.Error(err))
-			res.HasError = true
-			res.Message = fmt.Sprintf("解析列表第%d页失败: %v", pageNo, err)
-			return res
-		}
-		if len(listPage.VodIDs) == 0 {
+		if len(listPage.IDs) == 0 {
 			break
 		}
 
-		// check vod_time for time range filtering: stop if the last item is before cutoff
-		if cutoffTime != nil && len(listPage.VodTimes) > 0 {
-			lastTime := listPage.VodTimes[len(listPage.VodTimes)-1]
-			if lastTime != "" && isVodTimeBefore(lastTime, cutoffTime) {
-				// still add IDs whose vod_time is within range
-				for i, t := range listPage.VodTimes {
-					if t != "" && isVodTimeBefore(t, cutoffTime) {
+		// check time for time range filtering: stop if the last item is before cutoff
+		if cutoffTime != nil && len(listPage.Times) > 0 {
+			lastTime := listPage.Times[len(listPage.Times)-1]
+			if lastTime != "" && isTimeBefore(lastTime, cutoffTime) {
+				// still add IDs whose time is within range
+				for i, t := range listPage.Times {
+					if t != "" && isTimeBefore(t, cutoffTime) {
 						break
 					}
-					allVodIDs = append(allVodIDs, listPage.VodIDs[i])
+					allIDs = append(allIDs, listPage.IDs[i])
 				}
 				break
 			}
 		}
 
-		allVodIDs = append(allVodIDs, listPage.VodIDs...)
+		allIDs = append(allIDs, listPage.IDs...)
 
 		if pageNo >= listPage.PageCount || pageNo >= maxPages {
 			break
@@ -145,35 +140,28 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRang
 		pageNo++
 	}
 
-	if len(allVodIDs) == 0 {
+	if len(allIDs) == 0 {
 		return res
 	}
 
 	// Phase 2: fetch details in batches of 25 and process
 	batchSize := 25
-	for i := 0; i < len(allVodIDs); i += batchSize {
+	for i := 0; i < len(allIDs); i += batchSize {
 		if err := ctx.Err(); err != nil {
 			res.Message = "采集已取消"
 			return res
 		}
 		end := i + batchSize
-		if end > len(allVodIDs) {
-			end = len(allVodIDs)
+		if end > len(allIDs) {
+			end = len(allIDs)
 		}
-		batch := allVodIDs[i:end]
+		batch := allIDs[i:end]
 
-		body, err := e.fetcher.FetchDetail(ctx, source.CollectURL, source.APIKey, batch)
+		page, err := collector.FetchDetail(ctx, source, batch)
 		if err != nil {
 			e.log.Error("collect: fetch detail failed", zap.Int64("source_id", int64(source.ID)), zap.Int("batch_start", i), zap.Int("batch_end", end), zap.Error(err))
 			res.HasError = true
 			res.Message = fmt.Sprintf("拉取详情失败(batch %d-%d): %v", i, end, err)
-			return res
-		}
-		page, err := ParseAppleCMSDetail(body)
-		if err != nil {
-			e.log.Error("collect: parse detail failed", zap.Int64("source_id", int64(source.ID)), zap.Int("batch_start", i), zap.Int("batch_end", end), zap.Error(err))
-			res.HasError = true
-			res.Message = fmt.Sprintf("解析详情失败(batch %d-%d): %v", i, end, err)
 			return res
 		}
 
@@ -186,9 +174,9 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRang
 				break
 			}
 
-			// vod_time filtering: if item time is before cutoff, stop all subsequent processing
+			// time filtering: if item time is before cutoff, stop all subsequent processing
 			if cutoffTime != nil && item.VodTime != "" {
-				if isVodTimeBefore(item.VodTime, cutoffTime) {
+				if isTimeBefore(item.VodTime, cutoffTime) {
 					stopCollection = true
 					break
 				}
@@ -219,37 +207,12 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRang
 	return res
 }
 
-// dataRangeCutoff returns the earliest time for the given data range.
-// Returns nil for "all" or empty (no filtering).
-func dataRangeCutoff(dataRange string) *time.Time {
-	now := time.Now()
-	switch strings.TrimSpace(dataRange) {
-	case "today":
-		t := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-		return &t
-	case "last1d":
-		t := now.AddDate(0, 0, -1)
-		return &t
-	case "last3d":
-		t := now.AddDate(0, 0, -3)
-		return &t
-	case "last1w":
-		t := now.AddDate(0, 0, -7)
-		return &t
-	case "last1m":
-		t := now.AddDate(0, -1, 0)
-		return &t
-	default:
-		return nil
-	}
-}
-
-// isVodTimeBefore checks if vod_time (format "2006-01-02 15:04:05") is before cutoff.
-func isVodTimeBefore(vodTime string, cutoff *time.Time) bool {
-	t, err := time.ParseInLocation("2006-01-02 15:04:05", strings.TrimSpace(vodTime), time.Local)
+// isTimeBefore checks if a time string (format "2006-01-02 15:04:05" or "2006-01-02") is before cutoff.
+func isTimeBefore(v string, cutoff *time.Time) bool {
+	t, err := time.ParseInLocation("2006-01-02 15:04:05", strings.TrimSpace(v), time.Local)
 	if err != nil {
 		// try date-only format
-		t, err = time.ParseInLocation("2006-01-02", strings.TrimSpace(vodTime), time.Local)
+		t, err = time.ParseInLocation("2006-01-02", strings.TrimSpace(v), time.Local)
 		if err != nil {
 			return false
 		}

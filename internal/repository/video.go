@@ -38,6 +38,8 @@ type VideoListFilter struct {
 	ActorID          uint64
 	TagID            uint64
 	OnlyOnline       bool
+	CreatedAfter     *time.Time // open API: created_at >= cutoff (data_range filter)
+	SourceName       string     // open API: play source name exact match
 	Offset           int
 	Limit            int
 }
@@ -155,6 +157,12 @@ func (r *videoRepo) List(ctx context.Context, f VideoListFilter) ([]model.Videos
 	}
 	if f.TagID > 0 {
 		q = q.Where("id IN (SELECT video_id FROM video_tags WHERE tag_id = ?)", f.TagID)
+	}
+	if f.CreatedAfter != nil {
+		q = q.Where("created_at >= ?", *f.CreatedAfter)
+	}
+	if name := strings.TrimSpace(f.SourceName); name != "" {
+		q = q.Where("id IN (SELECT pe.video_id FROM play_episodes pe JOIN play_sources ps ON ps.id = pe.source_id WHERE ps.name = ? AND pe.deleted_at IS NULL AND ps.deleted_at IS NULL)", name)
 	}
 
 	total, err := q.Count(ctx)

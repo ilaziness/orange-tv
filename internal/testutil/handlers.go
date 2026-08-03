@@ -283,7 +283,7 @@ type openResourceSvc struct{}
 func (s openResourceSvc) Enabled(ctx context.Context) bool {
 	return true
 }
-func (s openResourceSvc) ListVideos(ctx context.Context, page, pageSize int) ([]opendto.VideoListItem, int, error) {
+func (s openResourceSvc) ListVideos(ctx context.Context, page, pageSize int, dataRange, sourceName string) ([]opendto.VideoListItem, int, error) {
 	return nil, 0, nil
 }
 func (s openResourceSvc) GetVideo(ctx context.Context, ids []int64) ([]opendto.VideoDetailItem, error) {

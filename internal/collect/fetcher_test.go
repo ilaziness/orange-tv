@@ -6,10 +6,12 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/ilaziness/orange-tv/internal/constant"
+	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/stretchr/testify/require"
 )
 
-func TestFetchListUsesListMode(t *testing.T) {
+func TestAppleCMSFetchListUsesListMode(t *testing.T) {
 	var gotURL string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gotURL = r.URL.String()
@@ -19,9 +21,14 @@ func TestFetchListUsesListMode(t *testing.T) {
 	t.Cleanup(srv.Close)
 
 	f := NewFetcher(nil)
-	body, err := f.FetchList(t.Context(), srv.URL+"/api.php/provide/vod/?ac=detail&pg=2&h=24", "k1", 1, "today")
+	c := &appleCMSCollector{fetcher: f, log: nil}
+	source := &model.CollectSources{
+		Type:       constant.CollectTypeAppleCMS,
+		CollectURL: srv.URL + "/api.php/provide/vod/?ac=detail&pg=2&h=24",
+		APIKey:     "k1",
+	}
+	_, err := c.FetchListPage(t.Context(), source, 1, "today")
 	require.NoError(t, err)
-	require.Contains(t, string(body), `"class"`)
 
 	u, err := url.Parse(gotURL)
 	require.NoError(t, err)
@@ -32,7 +39,7 @@ func TestFetchListUsesListMode(t *testing.T) {
 	require.Equal(t, "k1", q.Get("key"))
 }
 
-func TestFetchDetailUsesDetailMode(t *testing.T) {
+func TestAppleCMSFetchDetailUsesDetailMode(t *testing.T) {
 	var gotAC string
 	var gotIDs string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -44,7 +51,12 @@ func TestFetchDetailUsesDetailMode(t *testing.T) {
 	t.Cleanup(srv.Close)
 
 	f := NewFetcher(nil)
-	_, err := f.FetchDetail(t.Context(), srv.URL+"/api.php/provide/vod/", "", []int64{101, 202, 303})
+	c := &appleCMSCollector{fetcher: f, log: nil}
+	source := &model.CollectSources{
+		Type:       constant.CollectTypeAppleCMS,
+		CollectURL: srv.URL + "/api.php/provide/vod/",
+	}
+	_, err := c.FetchDetail(t.Context(), source, []int64{101, 202, 303})
 	require.NoError(t, err)
 	require.Equal(t, "detail", gotAC)
 	require.Equal(t, "101,202,303", gotIDs)

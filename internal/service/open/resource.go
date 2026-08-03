@@ -2,6 +2,7 @@ package open
 
 import (
 	"context"
+	"strings"
 
 	"github.com/ilaziness/orange-tv/internal/cache"
 	"github.com/ilaziness/orange-tv/internal/constant"
@@ -19,7 +20,7 @@ import (
 type ResourceService interface {
 	// Enabled reports whether third-party collect is enabled.
 	Enabled(ctx context.Context) bool
-	ListVideos(ctx context.Context, page, pageSize int) ([]opendto.VideoListItem, int, error)
+	ListVideos(ctx context.Context, page, pageSize int, dataRange, sourceName string) ([]opendto.VideoListItem, int, error)
 	GetVideo(ctx context.Context, ids []int64) ([]opendto.VideoDetailItem, error)
 	ListCategories(ctx context.Context) ([]opendto.CategoryItem, error)
 }
@@ -79,28 +80,42 @@ type openVideoListCache struct {
 	Total int
 }
 
-func (s *resourceService) ListVideos(ctx context.Context, page, pageSize int) ([]opendto.VideoListItem, int, error) {
+func (s *resourceService) ListVideos(ctx context.Context, page, pageSize int, dataRange, sourceName string) ([]opendto.VideoListItem, int, error) {
 	if page < 1 {
 		page = 1
 	}
 	if pageSize < 1 || pageSize > 100 {
 		pageSize = 20
 	}
-	cacheKey := cache.OpenVideoListKey(page, pageSize)
-	if v, err := s.cache.GetOpenVideoList(ctx, cacheKey); err == nil && v != nil {
-		if cached, ok := v.(*openVideoListCache); ok {
-			return cached.Items, cached.Total, nil
+	dataRange = strings.TrimSpace(dataRange)
+	sourceName = strings.TrimSpace(sourceName)
+	// Skip cache when filters are active: combinations are numerous, hit rate is low,
+	// and caching would risk cross-filter data leakage.
+	useCache := dataRange == "" && sourceName == ""
+	cacheKey := cache.OpenVideoListKey(page, pageSize, dataRange, sourceName)
+	if useCache {
+		if v, err := s.cache.GetOpenVideoList(ctx, cacheKey); err == nil && v != nil {
+			if cached, ok := v.(*openVideoListCache); ok {
+				return cached.Items, cached.Total, nil
+			}
 		}
 	}
 
-	items, total, err := s.videoRepo.List(ctx, repository.VideoListFilter{
+	f := repository.VideoListFilter{
 		OnlyOnline: true,
 		Sort:       "id_desc",
 		Offset:     (page - 1) * pageSize,
 		Limit:      pageSize,
-	})
+	}
+	if dataRange != "" && dataRange != "all" {
+		f.CreatedAfter = utils.DataRangeCutoff(dataRange)
+	}
+	if sourceName != "" {
+		f.SourceName = sourceName
+	}
+	items, total, err := s.videoRepo.List(ctx, f)
 	if err != nil {
-		s.log.Error("open resource: list videos failed", zap.Int("page", page), zap.Int("page_size", pageSize), zap.Error(err))
+		s.log.Error("open resource: list videos failed", zap.Int("page", page), zap.Int("page_size", pageSize), zap.String("data_range", dataRange), zap.String("source", sourceName), zap.Error(err))
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
 
@@ -108,7 +123,9 @@ func (s *resourceService) ListVideos(ctx context.Context, page, pageSize int) ([
 	for _, it := range items {
 		list = append(list, mapDefaultListItem(&it))
 	}
-	_ = s.cache.SetOpenVideoList(ctx, cacheKey, &openVideoListCache{Items: list, Total: total})
+	if useCache {
+		_ = s.cache.SetOpenVideoList(ctx, cacheKey, &openVideoListCache{Items: list, Total: total})
+	}
 	return list, total, nil
 }
 
