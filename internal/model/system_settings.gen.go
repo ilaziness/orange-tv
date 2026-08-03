@@ -14,19 +14,19 @@ import (
 type SystemSettings struct {
 	bun.BaseModel `bun:"table:system_settings,alias:ss"`
 
-	ID uint64 `bun:"id,pk,autoincrement" json:"id"`
+	ID uint32 `bun:"id,pk,autoincrement" json:"id"`
 	// 设置键
 	SettingKey string `bun:"setting_key,notnull,unique" json:"setting_key"`
 	// 设置分组
 	SettingGroup string `bun:"setting_group,notnull" json:"setting_group"`
 	// 设置值
-	SettingValue *string `bun:"setting_value" json:"setting_value"`
+	SettingValue string `bun:"setting_value,notnull" json:"setting_value"`
 	// 设置类型：1string 2number 3boolean 4json
 	SettingType uint8 `bun:"setting_type,notnull" json:"setting_type"`
 	// 描述
-	Description string     `bun:"description,notnull" json:"description"`
-	CreatedAt   *time.Time `bun:"created_at" json:"created_at"`
-	UpdatedAt   *time.Time `bun:"updated_at" json:"updated_at"`
+	Description string    `bun:"description,notnull" json:"description"`
+	CreatedAt   time.Time `bun:"created_at,notnull" json:"created_at"`
+	UpdatedAt   time.Time `bun:"updated_at,notnull" json:"updated_at"`
 }
 
 var _ bun.BeforeAppendModelHook = (*SystemSettings)(nil)
@@ -35,10 +35,10 @@ func (m *SystemSettings) BeforeAppendModel(ctx context.Context, query bun.Query)
 	now := time.Now()
 	switch query.(type) {
 	case *bun.InsertQuery:
-		m.CreatedAt = &now
-		m.UpdatedAt = &now
+		m.CreatedAt = now
+		m.UpdatedAt = now
 	case *bun.UpdateQuery:
-		m.UpdatedAt = &now
+		m.UpdatedAt = now
 	}
 	return nil
 }

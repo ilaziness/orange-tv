@@ -14,11 +14,11 @@ import (
 type UserCommentVotes struct {
 	bun.BaseModel `bun:"table:user_comment_votes,alias:ucv"`
 
-	ID uint64 `bun:"id,pk,autoincrement" json:"id"`
+	ID uint32 `bun:"id,pk,autoincrement" json:"id"`
 	// Relation: user_id -> Users(ID)
-	UserID uint64 `bun:"user_id,notnull,unique:uk_user_comment" json:"user_id"`
+	UserID uint32 `bun:"user_id,notnull,unique:uk_user_comment" json:"user_id"`
 	// Relation: comment_id -> VideoComments(ID)
-	CommentID uint64 `bun:"comment_id,notnull,unique:uk_user_comment" json:"comment_id"`
+	CommentID uint32 `bun:"comment_id,notnull,unique:uk_user_comment" json:"comment_id"`
 	// 1顶 -1踩
 	Direction    int8           `bun:"direction,notnull" json:"direction"`
 	CreatedAt    time.Time      `bun:"created_at,notnull" json:"created_at"`

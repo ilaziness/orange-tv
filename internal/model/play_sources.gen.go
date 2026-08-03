@@ -14,15 +14,15 @@ import (
 type PlaySources struct {
 	bun.BaseModel `bun:"table:play_sources,alias:ps"`
 
-	ID uint64 `bun:"id,pk,autoincrement" json:"id"`
+	ID uint32 `bun:"id,pk,autoincrement" json:"id"`
 	// 源名称（如"播放源1"、"采集源A"）
 	Name string `bun:"name,notnull" json:"name"`
 	// 排序
 	SortOrder uint32 `bun:"sort_order,notnull" json:"sort_order"`
 	// 状态：1启用 0禁用
-	Status    uint8      `bun:"status,notnull" json:"status"`
-	CreatedAt *time.Time `bun:"created_at" json:"created_at"`
-	UpdatedAt *time.Time `bun:"updated_at" json:"updated_at"`
+	Status    uint8     `bun:"status,notnull" json:"status"`
+	CreatedAt time.Time `bun:"created_at,notnull" json:"created_at"`
+	UpdatedAt time.Time `bun:"updated_at,notnull" json:"updated_at"`
 	// 软删除时间
 	DeletedAt         *time.Time         `bun:"deleted_at" json:"deleted_at"`
 	CollectSources    []*CollectSources  `bun:"rel:has-many,join:id=play_source_id" json:"-"`
@@ -36,10 +36,10 @@ func (m *PlaySources) BeforeAppendModel(ctx context.Context, query bun.Query) er
 	now := time.Now()
 	switch query.(type) {
 	case *bun.InsertQuery:
-		m.CreatedAt = &now
-		m.UpdatedAt = &now
+		m.CreatedAt = now
+		m.UpdatedAt = now
 	case *bun.UpdateQuery:
-		m.UpdatedAt = &now
+		m.UpdatedAt = now
 	}
 	return nil
 }

@@ -14,7 +14,7 @@ import (
 type Users struct {
 	bun.BaseModel `bun:"table:users,alias:us"`
 
-	ID uint64 `bun:"id,pk,autoincrement" json:"id"`
+	ID uint32 `bun:"id,pk,autoincrement" json:"id"`
 	// 用户名
 	Username string `bun:"username,notnull,unique" json:"username"`
 	// 密码（加密存储）
@@ -31,8 +31,8 @@ type Users struct {
 	Status uint8 `bun:"status,notnull" json:"status"`
 	// 最后登录时间
 	LastLoginAt *time.Time `bun:"last_login_at" json:"last_login_at"`
-	CreatedAt   *time.Time `bun:"created_at" json:"created_at"`
-	UpdatedAt   *time.Time `bun:"updated_at" json:"updated_at"`
+	CreatedAt   time.Time  `bun:"created_at,notnull" json:"created_at"`
+	UpdatedAt   time.Time  `bun:"updated_at,notnull" json:"updated_at"`
 	// 软删除时间
 	DeletedAt         *time.Time          `bun:"deleted_at" json:"deleted_at"`
 	UserCommentVotes  []*UserCommentVotes `bun:"rel:has-many,join:id=user_id" json:"-"`
@@ -49,10 +49,10 @@ func (m *Users) BeforeAppendModel(ctx context.Context, query bun.Query) error {
 	now := time.Now()
 	switch query.(type) {
 	case *bun.InsertQuery:
-		m.CreatedAt = &now
-		m.UpdatedAt = &now
+		m.CreatedAt = now
+		m.UpdatedAt = now
 	case *bun.UpdateQuery:
-		m.UpdatedAt = &now
+		m.UpdatedAt = now
 	}
 	return nil
 }

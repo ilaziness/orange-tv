@@ -14,18 +14,18 @@ import (
 type Videos struct {
 	bun.BaseModel `bun:"table:videos,alias:vi"`
 
-	ID uint64 `bun:"id,pk,autoincrement" json:"id"`
+	ID uint32 `bun:"id,pk,autoincrement" json:"id"`
 	// 标题
 	Title string `bun:"title,notnull" json:"title"`
 	// 副标题
 	Subtitle string `bun:"subtitle,notnull" json:"subtitle"`
 	// 描述
-	Description *string `bun:"description" json:"description"`
+	Description string `bun:"description,notnull" json:"description"`
 	// 分类ID
 	// Relation: category_id -> Categories(ID)
-	CategoryID uint64 `bun:"category_id,notnull" json:"category_id"`
+	CategoryID uint32 `bun:"category_id,notnull" json:"category_id"`
 	// 父分类ID，方便大分类筛选，0表示无父分类
-	ParentCategoryID uint64 `bun:"parent_category_id,notnull" json:"parent_category_id"`
+	ParentCategoryID uint32 `bun:"parent_category_id,notnull" json:"parent_category_id"`
 	// 上下架状态：1上架 0下架
 	PublishStatus uint8 `bun:"publish_status,notnull" json:"publish_status"`
 	// 连载状态：1连载中 2已完结 3即将上线
@@ -49,11 +49,11 @@ type Videos struct {
 	// 语言
 	Language string `bun:"language,notnull" json:"language"`
 	// 采集源ID，标识最初由哪个采集源采集
-	CollectSourceID uint64 `bun:"collect_source_id,notnull" json:"collect_source_id"`
+	CollectSourceID uint32 `bun:"collect_source_id,notnull" json:"collect_source_id"`
 	// 上映日期
-	ReleaseDate string     `bun:"release_date,notnull" json:"release_date"`
-	CreatedAt   *time.Time `bun:"created_at" json:"created_at"`
-	UpdatedAt   *time.Time `bun:"updated_at" json:"updated_at"`
+	ReleaseDate string    `bun:"release_date,notnull" json:"release_date"`
+	CreatedAt   time.Time `bun:"created_at,notnull" json:"created_at"`
+	UpdatedAt   time.Time `bun:"updated_at,notnull" json:"updated_at"`
 	// 软删除时间
 	DeletedAt         *time.Time         `bun:"deleted_at" json:"deleted_at"`
 	Banners           []*Banners         `bun:"rel:has-many,join:id=video_id" json:"-"`
@@ -74,10 +74,10 @@ func (m *Videos) BeforeAppendModel(ctx context.Context, query bun.Query) error {
 	now := time.Now()
 	switch query.(type) {
 	case *bun.InsertQuery:
-		m.CreatedAt = &now
-		m.UpdatedAt = &now
+		m.CreatedAt = now
+		m.UpdatedAt = now
 	case *bun.UpdateQuery:
-		m.UpdatedAt = &now
+		m.UpdatedAt = now
 	}
 	return nil
 }

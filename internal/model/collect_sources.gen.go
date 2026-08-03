@@ -14,7 +14,7 @@ import (
 type CollectSources struct {
 	bun.BaseModel `bun:"table:collect_sources,alias:cs"`
 
-	ID uint64 `bun:"id,pk,autoincrement" json:"id"`
+	ID uint32 `bun:"id,pk,autoincrement" json:"id"`
 	// 采集源名称
 	Name string `bun:"name,notnull" json:"name"`
 	// 采集源格式：1默认(系统格式) 2苹果CMS格式
@@ -31,13 +31,13 @@ type CollectSources struct {
 	DataRange string `bun:"data_range,notnull" json:"data_range"`
 	// 绑定播放源ID，采集到的播放链接存入该播放源
 	// Relation: play_source_id -> PlaySources(ID)
-	PlaySourceID uint64 `bun:"play_source_id,notnull" json:"play_source_id"`
+	PlaySourceID uint32 `bun:"play_source_id,notnull" json:"play_source_id"`
 	// 最后采集时间
 	LastCollectAt *time.Time `bun:"last_collect_at" json:"last_collect_at"`
 	// 状态：1启用 0禁用
-	Status    uint8      `bun:"status,notnull" json:"status"`
-	CreatedAt *time.Time `bun:"created_at" json:"created_at"`
-	UpdatedAt *time.Time `bun:"updated_at" json:"updated_at"`
+	Status    uint8     `bun:"status,notnull" json:"status"`
+	CreatedAt time.Time `bun:"created_at,notnull" json:"created_at"`
+	UpdatedAt time.Time `bun:"updated_at,notnull" json:"updated_at"`
 	// 软删除时间
 	DeletedAt               *time.Time                 `bun:"deleted_at" json:"deleted_at"`
 	CollectLogs             []*CollectLogs             `bun:"rel:has-many,join:id=source_id" json:"-"`
@@ -51,10 +51,10 @@ func (m *CollectSources) BeforeAppendModel(ctx context.Context, query bun.Query)
 	now := time.Now()
 	switch query.(type) {
 	case *bun.InsertQuery:
-		m.CreatedAt = &now
-		m.UpdatedAt = &now
+		m.CreatedAt = now
+		m.UpdatedAt = now
 	case *bun.UpdateQuery:
-		m.UpdatedAt = &now
+		m.UpdatedAt = now
 	}
 	return nil
 }

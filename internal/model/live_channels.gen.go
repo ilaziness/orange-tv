@@ -14,7 +14,7 @@ import (
 type LiveChannels struct {
 	bun.BaseModel `bun:"table:live_channels,alias:lc"`
 
-	ID uint64 `bun:"id,pk,autoincrement" json:"id"`
+	ID uint32 `bun:"id,pk,autoincrement" json:"id"`
 	// 频道名称
 	Name string `bun:"name,notnull" json:"name"`
 	// 频道分类
@@ -24,13 +24,13 @@ type LiveChannels struct {
 	// 频道Logo
 	Logo string `bun:"logo,notnull" json:"logo"`
 	// 频道描述
-	Description *string `bun:"description" json:"description"`
+	Description string `bun:"description,notnull" json:"description"`
 	// 排序
 	SortOrder uint32 `bun:"sort_order,notnull" json:"sort_order"`
 	// 状态：1启用 0禁用
-	Status    uint8      `bun:"status,notnull" json:"status"`
-	CreatedAt *time.Time `bun:"created_at" json:"created_at"`
-	UpdatedAt *time.Time `bun:"updated_at" json:"updated_at"`
+	Status    uint8     `bun:"status,notnull" json:"status"`
+	CreatedAt time.Time `bun:"created_at,notnull" json:"created_at"`
+	UpdatedAt time.Time `bun:"updated_at,notnull" json:"updated_at"`
 }
 
 var _ bun.BeforeAppendModelHook = (*LiveChannels)(nil)
@@ -39,10 +39,10 @@ func (m *LiveChannels) BeforeAppendModel(ctx context.Context, query bun.Query) e
 	now := time.Now()
 	switch query.(type) {
 	case *bun.InsertQuery:
-		m.CreatedAt = &now
-		m.UpdatedAt = &now
+		m.CreatedAt = now
+		m.UpdatedAt = now
 	case *bun.UpdateQuery:
-		m.UpdatedAt = &now
+		m.UpdatedAt = now
 	}
 	return nil
 }

@@ -14,11 +14,11 @@ import (
 type UserRatings struct {
 	bun.BaseModel `bun:"table:user_ratings,alias:ur"`
 
-	ID uint64 `bun:"id,pk,autoincrement" json:"id"`
+	ID uint32 `bun:"id,pk,autoincrement" json:"id"`
 	// Relation: user_id -> Users(ID)
-	UserID uint64 `bun:"user_id,notnull,unique:uk_user_video" json:"user_id"`
+	UserID uint32 `bun:"user_id,notnull,unique:uk_user_video" json:"user_id"`
 	// Relation: video_id -> Videos(ID)
-	VideoID uint64 `bun:"video_id,notnull,unique:uk_user_video" json:"video_id"`
+	VideoID uint32 `bun:"video_id,notnull,unique:uk_user_video" json:"video_id"`
 	// 评分 0.5-10.0
 	Score     float64   `bun:"score,notnull" json:"score"`
 	CreatedAt time.Time `bun:"created_at,notnull" json:"created_at"`

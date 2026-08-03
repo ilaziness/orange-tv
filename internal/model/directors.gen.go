@@ -14,11 +14,11 @@ import (
 type Directors struct {
 	bun.BaseModel `bun:"table:directors,alias:di"`
 
-	ID uint64 `bun:"id,pk,autoincrement" json:"id"`
+	ID uint32 `bun:"id,pk,autoincrement" json:"id"`
 	// 导演名称
-	Name      string     `bun:"name,notnull,unique" json:"name"`
-	CreatedAt *time.Time `bun:"created_at" json:"created_at"`
-	UpdatedAt *time.Time `bun:"updated_at" json:"updated_at"`
+	Name      string    `bun:"name,notnull,unique" json:"name"`
+	CreatedAt time.Time `bun:"created_at,notnull" json:"created_at"`
+	UpdatedAt time.Time `bun:"updated_at,notnull" json:"updated_at"`
 	// 软删除时间
 	DeletedAt      *time.Time        `bun:"deleted_at" json:"deleted_at"`
 	VideoDirectors []*VideoDirectors `bun:"rel:has-many,join:id=director_id" json:"-"`
@@ -30,10 +30,10 @@ func (m *Directors) BeforeAppendModel(ctx context.Context, query bun.Query) erro
 	now := time.Now()
 	switch query.(type) {
 	case *bun.InsertQuery:
-		m.CreatedAt = &now
-		m.UpdatedAt = &now
+		m.CreatedAt = now
+		m.UpdatedAt = now
 	case *bun.UpdateQuery:
-		m.UpdatedAt = &now
+		m.UpdatedAt = now
 	}
 	return nil
 }

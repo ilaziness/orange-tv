@@ -12,7 +12,7 @@ import (
 type SiteStatsDaily struct {
 	bun.BaseModel `bun:"table:site_stats_daily,alias:ssd"`
 
-	ID       uint64    `bun:"id,pk,autoincrement" json:"id"`
+	ID       uint32    `bun:"id,pk,autoincrement" json:"id"`
 	StatDate time.Time `bun:"stat_date,notnull,unique" json:"stat_date"`
 	// 页面浏览量
 	PV uint64 `bun:"pv,notnull" json:"pv"`

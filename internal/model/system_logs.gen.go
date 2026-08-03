@@ -14,7 +14,7 @@ import (
 type SystemLogs struct {
 	bun.BaseModel `bun:"table:system_logs,alias:sl"`
 
-	ID uint64 `bun:"id,pk,autoincrement" json:"id"`
+	ID uint32 `bun:"id,pk,autoincrement" json:"id"`
 	// 日志级别：1info 2warning 3error 4critical
 	Level uint8 `bun:"level,notnull" json:"level"`
 	// 模块
@@ -23,13 +23,13 @@ type SystemLogs struct {
 	Action string `bun:"action,notnull" json:"action"`
 	// 操作管理员ID
 	// Relation: admin_id -> Admins(ID)
-	AdminID uint64 `bun:"admin_id,notnull" json:"admin_id"`
+	AdminID uint32 `bun:"admin_id,notnull" json:"admin_id"`
 	// 日志内容
-	Content *string `bun:"content" json:"content"`
+	Content string `bun:"content,notnull" json:"content"`
 	// IP地址
-	IPAddress string     `bun:"ip_address,notnull" json:"ip_address"`
-	CreatedAt *time.Time `bun:"created_at" json:"created_at"`
-	Admin     *Admins    `bun:"rel:belongs-to,join:admin_id=id" json:"-"`
+	IPAddress string    `bun:"ip_address,notnull" json:"ip_address"`
+	CreatedAt time.Time `bun:"created_at,notnull" json:"created_at"`
+	Admin     *Admins   `bun:"rel:belongs-to,join:admin_id=id" json:"-"`
 }
 
 var _ bun.BeforeAppendModelHook = (*SystemLogs)(nil)
@@ -38,7 +38,7 @@ func (m *SystemLogs) BeforeAppendModel(ctx context.Context, query bun.Query) err
 	now := time.Now()
 	switch query.(type) {
 	case *bun.InsertQuery:
-		m.CreatedAt = &now
+		m.CreatedAt = now
 	}
 	return nil
 }

@@ -14,10 +14,10 @@ import (
 type AdminLoginLogs struct {
 	bun.BaseModel `bun:"table:admin_login_logs,alias:all"`
 
-	ID uint64 `bun:"id,pk,autoincrement" json:"id"`
+	ID uint32 `bun:"id,pk,autoincrement" json:"id"`
 	// 管理员ID
 	// Relation: user_id -> Admins(ID)
-	UserID uint64 `bun:"user_id,notnull" json:"user_id"`
+	UserID uint32 `bun:"user_id,notnull" json:"user_id"`
 	// 用户名
 	Username string `bun:"username,notnull" json:"username"`
 	// IP地址
@@ -25,9 +25,9 @@ type AdminLoginLogs struct {
 	// User-Agent
 	UserAgent string `bun:"user_agent,notnull" json:"user_agent"`
 	// 登录状态：1成功 2失败
-	Status    uint8      `bun:"status,notnull" json:"status"`
-	CreatedAt *time.Time `bun:"created_at" json:"created_at"`
-	Admin     *Admins    `bun:"rel:belongs-to,join:user_id=id" json:"-"`
+	Status    uint8     `bun:"status,notnull" json:"status"`
+	CreatedAt time.Time `bun:"created_at,notnull" json:"created_at"`
+	Admin     *Admins   `bun:"rel:belongs-to,join:user_id=id" json:"-"`
 }
 
 var _ bun.BeforeAppendModelHook = (*AdminLoginLogs)(nil)
@@ -36,7 +36,7 @@ func (m *AdminLoginLogs) BeforeAppendModel(ctx context.Context, query bun.Query)
 	now := time.Now()
 	switch query.(type) {
 	case *bun.InsertQuery:
-		m.CreatedAt = &now
+		m.CreatedAt = now
 	}
 	return nil
 }

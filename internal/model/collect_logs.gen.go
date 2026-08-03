@@ -14,17 +14,17 @@ import (
 type CollectLogs struct {
 	bun.BaseModel `bun:"table:collect_logs,alias:cl"`
 
-	ID uint64 `bun:"id,pk,autoincrement" json:"id"`
+	ID uint32 `bun:"id,pk,autoincrement" json:"id"`
 	// 采集源ID
 	// Relation: source_id -> CollectSources(ID)
-	SourceID uint64 `bun:"source_id,notnull" json:"source_id"`
+	SourceID uint32 `bun:"source_id,notnull" json:"source_id"`
 	// 采集状态：1完成 2采集中
 	Status uint8 `bun:"status,notnull" json:"status"`
 	// 采集数量（累加）
 	CollectCount uint32 `bun:"collect_count,notnull" json:"collect_count"`
 	// 耗时(秒)
 	DurationSec   uint32          `bun:"duration_sec,notnull" json:"duration_sec"`
-	CreatedAt     *time.Time      `bun:"created_at" json:"created_at"`
+	CreatedAt     time.Time       `bun:"created_at,notnull" json:"created_at"`
 	CollectSource *CollectSources `bun:"rel:belongs-to,join:source_id=id" json:"-"`
 }
 
@@ -34,7 +34,7 @@ func (m *CollectLogs) BeforeAppendModel(ctx context.Context, query bun.Query) er
 	now := time.Now()
 	switch query.(type) {
 	case *bun.InsertQuery:
-		m.CreatedAt = &now
+		m.CreatedAt = now
 	}
 	return nil
 }

@@ -14,15 +14,15 @@ import (
 type UserGroups struct {
 	bun.BaseModel `bun:"table:user_groups,alias:ug"`
 
-	ID uint64 `bun:"id,pk,autoincrement" json:"id"`
+	ID uint32 `bun:"id,pk,autoincrement" json:"id"`
 	// 用户组名称
 	Name string `bun:"name,notnull,unique" json:"name"`
 	// 权限列表
 	Permissions *string `bun:"permissions" json:"permissions"`
 	// 描述
-	Description string     `bun:"description,notnull" json:"description"`
-	CreatedAt   *time.Time `bun:"created_at" json:"created_at"`
-	UpdatedAt   *time.Time `bun:"updated_at" json:"updated_at"`
+	Description string    `bun:"description,notnull" json:"description"`
+	CreatedAt   time.Time `bun:"created_at,notnull" json:"created_at"`
+	UpdatedAt   time.Time `bun:"updated_at,notnull" json:"updated_at"`
 	// 软删除时间
 	DeletedAt *time.Time `bun:"deleted_at" json:"deleted_at"`
 	Admins    []*Admins  `bun:"rel:has-many,join:id=group_id" json:"-"`
@@ -34,10 +34,10 @@ func (m *UserGroups) BeforeAppendModel(ctx context.Context, query bun.Query) err
 	now := time.Now()
 	switch query.(type) {
 	case *bun.InsertQuery:
-		m.CreatedAt = &now
-		m.UpdatedAt = &now
+		m.CreatedAt = now
+		m.UpdatedAt = now
 	case *bun.UpdateQuery:
-		m.UpdatedAt = &now
+		m.UpdatedAt = now
 	}
 	return nil
 }

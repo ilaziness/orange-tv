@@ -14,14 +14,14 @@ import (
 type VideoComments struct {
 	bun.BaseModel `bun:"table:video_comments,alias:vc"`
 
-	ID uint64 `bun:"id,pk,autoincrement" json:"id"`
+	ID uint32 `bun:"id,pk,autoincrement" json:"id"`
 	// Relation: video_id -> Videos(ID)
-	VideoID uint64 `bun:"video_id,notnull" json:"video_id"`
+	VideoID uint32 `bun:"video_id,notnull" json:"video_id"`
 	// Relation: user_id -> Users(ID)
-	UserID uint64 `bun:"user_id,notnull" json:"user_id"`
+	UserID uint32 `bun:"user_id,notnull" json:"user_id"`
 	// 父评论ID，0为顶级
 	// Relation: parent_id -> VideoComments(ID)
-	ParentID uint64 `bun:"parent_id,notnull" json:"parent_id"`
+	ParentID uint32 `bun:"parent_id,notnull" json:"parent_id"`
 	Content  string `bun:"content,notnull" json:"content"`
 	// 0隐藏 1正常
 	Status           uint8               `bun:"status,notnull" json:"status"`
