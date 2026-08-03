@@ -5,14 +5,15 @@ import {
   apiGet,
   apiPost,
   apiPut,
-  type Category,
   type ClientBanner,
+  type ClientCategory,
+  type ClientLiveChannel,
   type ClientVideoDetail,
+  type ClientVideoListItem,
   type CommentItem,
   type FavoriteItem,
   type FavoriteCheckResult,
   type HistoryItem,
-  type LiveChannel,
   type LoginHistoryItem,
   type PageData,
   type PlayEpisodeResponse,
@@ -20,7 +21,6 @@ import {
   type SettingsResponse,
   type UserLoginResult,
   type UserProfile,
-  type VideoListItem,
 } from "@orange-tv/shared";
 
 const TOKEN_KEY = "orange_tv_user_token";
@@ -52,9 +52,9 @@ async function withAuth<T>(
 }
 
 export const clientApi = {
-  categories: () => apiGet<Category[]>(CLIENT_API_BASE, "/categories"),
+  categories: () => apiGet<ClientCategory[]>(CLIENT_API_BASE, "/categories"),
   videos: (query?: Record<string, string | number | undefined>) =>
-    apiGet<PageData<VideoListItem>>(CLIENT_API_BASE, "/videos", { query }),
+    apiGet<PageData<ClientVideoListItem>>(CLIENT_API_BASE, "/videos", { query }),
   video: (id: number) =>
     apiGet<ClientVideoDetail>(CLIENT_API_BASE, `/videos/${id}`),
   playEpisode: (id: number, sourceId: number, episodeId: number) =>
@@ -63,7 +63,7 @@ export const clientApi = {
       `/videos/${id}/episodes/${sourceId}/${episodeId}`,
     ),
   related: (id: number, limit = 12) =>
-    apiGet<VideoListItem[]>(CLIENT_API_BASE, `/videos/${id}/related`, {
+    apiGet<ClientVideoListItem[]>(CLIENT_API_BASE, `/videos/${id}/related`, {
       query: { limit },
     }),
   search: (
@@ -71,13 +71,13 @@ export const clientApi = {
     page = 1,
     extra?: Record<string, string | number | undefined>,
   ) =>
-    apiGet<PageData<VideoListItem>>(CLIENT_API_BASE, "/search", {
+    apiGet<PageData<ClientVideoListItem>>(CLIENT_API_BASE, "/search", {
       query: { keyword, page, page_size: 30, ...extra },
     }),
   live: (query?: Record<string, string | number | undefined>) =>
-    apiGet<PageData<LiveChannel>>(CLIENT_API_BASE, "/live", { query }),
+    apiGet<PageData<ClientLiveChannel>>(CLIENT_API_BASE, "/live", { query }),
   liveChannelDetail: (id: number) =>
-    apiGet<LiveChannel>(CLIENT_API_BASE, `/live/${id}`),
+    apiGet<ClientLiveChannel>(CLIENT_API_BASE, `/live/${id}`),
   // liveStreamUrl 返回直播流的代理播放地址，前端不接触真实 stream_url。
   liveStreamUrl: (id: number) => `${CLIENT_API_BASE}/live/play/${id}`,
   banners: () => apiGet<ClientBanner[]>(CLIENT_API_BASE, "/banners"),

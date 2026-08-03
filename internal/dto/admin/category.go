@@ -1,5 +1,15 @@
 package admin
 
+// CategoryResponse is a category tree node for admin (includes status & sort_order).
+type CategoryResponse struct {
+	ID        uint64             `json:"id"`
+	Name      string             `json:"name"`
+	ParentID  uint64             `json:"parent_id"`
+	SortOrder uint32             `json:"sort_order"`
+	Status    uint8              `json:"status"`
+	Children  []CategoryResponse `json:"children"`
+}
+
 // CreateCategoryRequest creates a category.
 type CreateCategoryRequest struct {
 	Name      string `json:"name" validate:"required,min=1,max=100"`

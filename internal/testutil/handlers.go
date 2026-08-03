@@ -7,7 +7,6 @@ import (
 	"io"
 
 	"github.com/gin-gonic/gin"
-	shareddto "github.com/ilaziness/orange-tv/internal/dto"
 	admindto "github.com/ilaziness/orange-tv/internal/dto/admin"
 	clientdto "github.com/ilaziness/orange-tv/internal/dto/client"
 	opendto "github.com/ilaziness/orange-tv/internal/dto/open"
@@ -62,30 +61,30 @@ func (s authSvc) ChangePassword(ctx context.Context, adminID int64, req *admindt
 
 type adminCategorySvc struct{}
 
-func (s adminCategorySvc) ListTree(ctx context.Context, onlyEnabled bool) ([]shareddto.CategoryResponse, error) {
-	return []shareddto.CategoryResponse{}, nil
+func (s adminCategorySvc) ListTree(ctx context.Context, onlyEnabled bool) ([]admindto.CategoryResponse, error) {
+	return []admindto.CategoryResponse{}, nil
 }
-func (s adminCategorySvc) Create(ctx context.Context, req *admindto.CreateCategoryRequest) (*shareddto.CategoryResponse, error) {
-	return &shareddto.CategoryResponse{}, nil
+func (s adminCategorySvc) Create(ctx context.Context, req *admindto.CreateCategoryRequest) (*admindto.CategoryResponse, error) {
+	return &admindto.CategoryResponse{}, nil
 }
-func (s adminCategorySvc) Update(ctx context.Context, id int64, req *admindto.UpdateCategoryRequest) (*shareddto.CategoryResponse, error) {
-	return &shareddto.CategoryResponse{ID: uint64(id)}, nil
+func (s adminCategorySvc) Update(ctx context.Context, id int64, req *admindto.UpdateCategoryRequest) (*admindto.CategoryResponse, error) {
+	return &admindto.CategoryResponse{ID: uint64(id)}, nil
 }
 func (s adminCategorySvc) Delete(ctx context.Context, id int64) error { return nil }
 
 type adminVideoSvc struct{}
 
-func (s adminVideoSvc) List(ctx context.Context, req *admindto.VideoListRequest) ([]shareddto.VideoListItem, int, error) {
-	return []shareddto.VideoListItem{}, 0, nil
+func (s adminVideoSvc) List(ctx context.Context, req *admindto.VideoListRequest) ([]admindto.VideoListItem, int, error) {
+	return []admindto.VideoListItem{}, 0, nil
 }
-func (s adminVideoSvc) Get(ctx context.Context, id int64) (*shareddto.VideoDetailResponse, error) {
-	return &shareddto.VideoDetailResponse{ID: uint64(id)}, nil
+func (s adminVideoSvc) Get(ctx context.Context, id int64) (*admindto.VideoDetailResponse, error) {
+	return &admindto.VideoDetailResponse{ID: uint64(id)}, nil
 }
-func (s adminVideoSvc) Create(ctx context.Context, req *admindto.CreateVideoRequest) (*shareddto.VideoDetailResponse, error) {
-	return &shareddto.VideoDetailResponse{}, nil
+func (s adminVideoSvc) Create(ctx context.Context, req *admindto.CreateVideoRequest) (*admindto.VideoDetailResponse, error) {
+	return &admindto.VideoDetailResponse{}, nil
 }
-func (s adminVideoSvc) Update(ctx context.Context, id int64, req *admindto.UpdateVideoRequest) (*shareddto.VideoDetailResponse, error) {
-	return &shareddto.VideoDetailResponse{ID: uint64(id)}, nil
+func (s adminVideoSvc) Update(ctx context.Context, id int64, req *admindto.UpdateVideoRequest) (*admindto.VideoDetailResponse, error) {
+	return &admindto.VideoDetailResponse{ID: uint64(id)}, nil
 }
 func (s adminVideoSvc) Delete(ctx context.Context, id int64) error { return nil }
 
@@ -150,18 +149,18 @@ func (s adminPlaySvc) BatchUpdateEpisodeStatus(ctx context.Context, req *admindt
 
 type adminLiveSvc struct{}
 
-func (s adminLiveSvc) List(ctx context.Context, req *admindto.LiveListRequest) ([]shareddto.LiveChannelItem, int, error) {
+func (s adminLiveSvc) List(ctx context.Context, req *admindto.LiveListRequest) ([]admindto.LiveChannelItem, int, error) {
 	return nil, 0, nil
 }
-func (s adminLiveSvc) Create(ctx context.Context, req *admindto.CreateLiveRequest) (*shareddto.LiveChannelItem, error) {
-	return &shareddto.LiveChannelItem{}, nil
+func (s adminLiveSvc) Create(ctx context.Context, req *admindto.CreateLiveRequest) (*admindto.LiveChannelItem, error) {
+	return &admindto.LiveChannelItem{}, nil
 }
-func (s adminLiveSvc) Update(ctx context.Context, id int64, req *admindto.UpdateLiveRequest) (*shareddto.LiveChannelItem, error) {
-	return &shareddto.LiveChannelItem{ID: uint64(id)}, nil
+func (s adminLiveSvc) Update(ctx context.Context, id int64, req *admindto.UpdateLiveRequest) (*admindto.LiveChannelItem, error) {
+	return &admindto.LiveChannelItem{ID: uint64(id)}, nil
 }
 func (s adminLiveSvc) Delete(ctx context.Context, id int64) error { return nil }
-func (s adminLiveSvc) SyncFromSource(ctx context.Context) (*shareddto.LiveSyncResult, error) {
-	return &shareddto.LiveSyncResult{}, nil
+func (s adminLiveSvc) SyncFromSource(ctx context.Context) (*admindto.LiveSyncResult, error) {
+	return &admindto.LiveSyncResult{}, nil
 }
 
 type adminCommentSvc struct{}
@@ -179,23 +178,23 @@ func (s adminCommentSvc) GetParents(ctx context.Context, id int64) ([]admindto.C
 
 type adminCollectSvc struct{}
 
-func (s adminCollectSvc) ListSources(ctx context.Context, req *admindto.CollectSourceListRequest) ([]shareddto.CollectSourceItem, int, error) {
+func (s adminCollectSvc) ListSources(ctx context.Context, req *admindto.CollectSourceListRequest) ([]admindto.CollectSourceItem, int, error) {
 	return nil, 0, nil
 }
-func (s adminCollectSvc) CreateSource(ctx context.Context, req *admindto.CreateCollectSourceRequest) (*shareddto.CollectSourceItem, error) {
-	return &shareddto.CollectSourceItem{}, nil
+func (s adminCollectSvc) CreateSource(ctx context.Context, req *admindto.CreateCollectSourceRequest) (*admindto.CollectSourceItem, error) {
+	return &admindto.CollectSourceItem{}, nil
 }
-func (s adminCollectSvc) UpdateSource(ctx context.Context, id int64, req *admindto.UpdateCollectSourceRequest) (*shareddto.CollectSourceItem, error) {
-	return &shareddto.CollectSourceItem{ID: uint64(id)}, nil
+func (s adminCollectSvc) UpdateSource(ctx context.Context, id int64, req *admindto.UpdateCollectSourceRequest) (*admindto.CollectSourceItem, error) {
+	return &admindto.CollectSourceItem{ID: uint64(id)}, nil
 }
 func (s adminCollectSvc) DeleteSource(ctx context.Context, id int64) error { return nil }
-func (s adminCollectSvc) ListCategories(ctx context.Context, sourceID int64) ([]shareddto.CollectCategoryMapItem, error) {
+func (s adminCollectSvc) ListCategories(ctx context.Context, sourceID int64) ([]admindto.CollectCategoryMapItem, error) {
 	return nil, nil
 }
-func (s adminCollectSvc) SetCategories(ctx context.Context, sourceID int64, req *admindto.SetCollectCategoriesRequest) ([]shareddto.CollectCategoryMapItem, error) {
+func (s adminCollectSvc) SetCategories(ctx context.Context, sourceID int64, req *admindto.SetCollectCategoriesRequest) ([]admindto.CollectCategoryMapItem, error) {
 	return nil, nil
 }
-func (s adminCollectSvc) ListLogs(ctx context.Context, req *admindto.CollectLogListRequest) ([]shareddto.CollectLogItem, int, error) {
+func (s adminCollectSvc) ListLogs(ctx context.Context, req *admindto.CollectLogListRequest) ([]admindto.CollectLogItem, int, error) {
 	return nil, 0, nil
 }
 func (s adminCollectSvc) FetchRemoteCategories(ctx context.Context, sourceID int64) (*admindto.RemoteCategoryResponse, error) {
@@ -233,31 +232,31 @@ func (s adminLogSvc) ListAppLogs(ctx context.Context, req *admindto.AppLogListRe
 
 type clientCategorySvc struct{}
 
-func (s clientCategorySvc) ListTree(ctx context.Context) ([]shareddto.CategoryResponse, error) {
-	return []shareddto.CategoryResponse{}, nil
+func (s clientCategorySvc) ListTree(ctx context.Context) ([]clientdto.CategoryResponse, error) {
+	return []clientdto.CategoryResponse{}, nil
 }
 
 type clientVideoSvc struct{}
 
-func (s clientVideoSvc) List(ctx context.Context, req *clientdto.VideoListRequest) ([]shareddto.VideoListItem, int, error) {
+func (s clientVideoSvc) List(ctx context.Context, req *clientdto.VideoListRequest) ([]clientdto.VideoListItem, int, error) {
 	return nil, 0, nil
 }
-func (s clientVideoSvc) Search(ctx context.Context, req *clientdto.SearchRequest) ([]shareddto.VideoListItem, int, error) {
+func (s clientVideoSvc) Search(ctx context.Context, req *clientdto.SearchRequest) ([]clientdto.VideoListItem, int, error) {
 	return nil, 0, nil
 }
-func (s clientVideoSvc) Get(ctx context.Context, id int64) (*clientdto.ClientVideoDetailResponse, error) {
-	return &clientdto.ClientVideoDetailResponse{ID: uint64(id)}, nil
+func (s clientVideoSvc) Get(ctx context.Context, id int64) (*clientdto.VideoDetailResponse, error) {
+	return &clientdto.VideoDetailResponse{ID: uint64(id)}, nil
 }
-func (s clientVideoSvc) Related(ctx context.Context, id int64, limit int) ([]shareddto.VideoListItem, error) {
+func (s clientVideoSvc) Related(ctx context.Context, id int64, limit int) ([]clientdto.VideoListItem, error) {
 	return nil, nil
 }
-func (s clientVideoSvc) GetEpisode(ctx context.Context, videoID, episodeID int64) (*shareddto.PlayEpisodeResponse, error) {
-	return &shareddto.PlayEpisodeResponse{}, nil
+func (s clientVideoSvc) GetEpisode(ctx context.Context, videoID, episodeID int64) (*clientdto.PlayEpisodeResponse, error) {
+	return &clientdto.PlayEpisodeResponse{}, nil
 }
 
 type clientLiveSvc struct{}
 
-func (s clientLiveSvc) List(ctx context.Context, req *clientdto.LiveListRequest) ([]shareddto.LiveChannelItem, int, error) {
+func (s clientLiveSvc) List(ctx context.Context, req *clientdto.LiveListRequest) ([]clientdto.LiveChannelItem, int, error) {
 	return nil, 0, nil
 }
 

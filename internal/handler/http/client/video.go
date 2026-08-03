@@ -82,7 +82,7 @@ func (h *VideoHandler) Related(c *gin.Context) {
 // @Param id path int true "影视ID"
 // @Param source_id path int true "播放源ID"
 // @Param episode_id path int true "剧集主键ID"
-// @Success 200 {object} response.Response{data=dto.PlayEpisodeResponse}
+// @Success 200 {object} response.Response{data=clientdto.PlayEpisodeResponse}
 // @Router /api/client/v1/videos/{id}/episodes/{source_id}/{episode_id} [get]
 func (h *VideoHandler) GetEpisode(c *gin.Context) {
 	var uri clientdto.EpisodeURI

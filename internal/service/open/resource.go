@@ -167,7 +167,7 @@ type detailBundle struct {
 	Directors []model.Directors
 	Actors    []shareddto.NamedItem
 	Tags      []model.Tags
-	Sources   []shareddto.VideoSourceGroup
+	Sources   []opendto.VideoSource
 }
 
 func (s *resourceService) buildDetail(ctx context.Context, video *model.Videos) (*detailBundle, error) {
@@ -230,7 +230,7 @@ func (s *resourceService) buildDetail(ctx context.Context, video *model.Videos) 
 		}
 		sourceMap[src.ID] = src
 	}
-	groups := map[uint64]*shareddto.VideoSourceGroup{}
+	groups := map[uint64]*opendto.VideoSource{}
 	order := make([]uint64, 0)
 	for _, ep := range episodes {
 		src, ok := sourceMap[ep.SourceID]
@@ -239,15 +239,15 @@ func (s *resourceService) buildDetail(ctx context.Context, video *model.Videos) 
 		}
 		g, ok := groups[ep.SourceID]
 		if !ok {
-			g = &shareddto.VideoSourceGroup{ID: src.ID, Name: src.Name, Episodes: []shareddto.VideoSourceEpisode{}}
+			g = &opendto.VideoSource{ID: src.ID, Name: src.Name, Episodes: []opendto.VideoSourceEpisode{}}
 			groups[ep.SourceID] = g
 			order = append(order, ep.SourceID)
 		}
-		g.Episodes = append(g.Episodes, shareddto.VideoSourceEpisode{
-			ID: ep.ID, Episode: ep.EpisodeNumber, Title: ep.Title, URL: ep.PlayURL, Quality: ep.Quality, Format: ep.Format, Status: ep.Status,
+		g.Episodes = append(g.Episodes, opendto.VideoSourceEpisode{
+			Episode: ep.EpisodeNumber, Title: ep.Title, URL: ep.PlayURL,
 		})
 	}
-	sourceGroups := make([]shareddto.VideoSourceGroup, 0, len(order))
+	sourceGroups := make([]opendto.VideoSource, 0, len(order))
 	for _, sid := range order {
 		sourceGroups = append(sourceGroups, *groups[sid])
 	}
@@ -271,22 +271,6 @@ func mapDefaultDetail(d *detailBundle) opendto.VideoDetailItem {
 	if v.Description != nil {
 		desc = *v.Description
 	}
-	sources := make([]opendto.VideoSource, 0, len(d.Sources))
-	for _, src := range d.Sources {
-		eps := make([]opendto.VideoSourceEpisode, 0, len(src.Episodes))
-		for _, ep := range src.Episodes {
-			eps = append(eps, opendto.VideoSourceEpisode{
-				Episode: ep.Episode,
-				Title:   ep.Title,
-				URL:     ep.URL,
-			})
-		}
-		sources = append(sources, opendto.VideoSource{
-			ID:       src.ID,
-			Name:     src.Name,
-			Episodes: eps,
-		})
-	}
 	dirs := make([]string, 0, len(d.Directors))
 	for _, d0 := range d.Directors {
 		dirs = append(dirs, d0.Name)
@@ -309,7 +293,7 @@ func mapDefaultDetail(d *detailBundle) opendto.VideoDetailItem {
 		Description: desc,
 		Directors:   dirs,
 		Actors:      acts,
-		Sources:     sources,
+		Sources:     d.Sources,
 		CreatedAt:   utils.FormatTimeStr(v.CreatedAt),
 	}
 }

@@ -1,40 +1,34 @@
 package utils
 
 import (
-	shareddto "github.com/ilaziness/orange-tv/internal/dto"
 	"github.com/ilaziness/orange-tv/internal/model"
 )
 
-// BuildCategoryTree builds a tree of CategoryResponse from a flat list of Categories.
-func BuildCategoryTree(items []model.Categories) []shareddto.CategoryResponse {
+// BuildCategoryTree builds a tree from a flat list of Categories using the provided mapper.
+// The mapper receives a category model and its already-built child nodes, and returns
+// the endpoint-specific tree node. This allows admin and client to produce their own
+// DTO types without sharing a response struct.
+func BuildCategoryTree[T any](items []model.Categories, mapper func(c model.Categories, children []T) T) []T {
 	byParent := make(map[uint64][]model.Categories, len(items))
 	for _, item := range items {
 		byParent[item.ParentID] = append(byParent[item.ParentID], item)
 	}
-	var build func(parentID uint64) []shareddto.CategoryResponse
-	build = func(parentID uint64) []shareddto.CategoryResponse {
+	var build func(parentID uint64) []T
+	build = func(parentID uint64) []T {
 		children := byParent[parentID]
-		out := make([]shareddto.CategoryResponse, 0, len(children))
+		out := make([]T, 0, len(children))
 		for _, c := range children {
 			childNodes := build(c.ID)
 			if childNodes == nil {
-				childNodes = []shareddto.CategoryResponse{}
+				childNodes = []T{}
 			}
-			node := shareddto.CategoryResponse{
-				ID:        c.ID,
-				Name:      c.Name,
-				ParentID:  c.ParentID,
-				SortOrder: c.SortOrder,
-				Status:    c.Status,
-				Children:  childNodes,
-			}
-			out = append(out, node)
+			out = append(out, mapper(c, childNodes))
 		}
 		return out
 	}
 	roots := build(0)
 	if roots == nil {
-		return []shareddto.CategoryResponse{}
+		return []T{}
 	}
 	return roots
 }

@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	shareddto "github.com/ilaziness/orange-tv/internal/dto"
 	clientdto "github.com/ilaziness/orange-tv/internal/dto/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -164,7 +163,7 @@ type mockLiveService struct {
 	domainsHook    func()
 }
 
-func (m *mockLiveService) List(ctx context.Context, req *clientdto.LiveListRequest) ([]shareddto.LiveChannelItem, int, error) {
+func (m *mockLiveService) List(ctx context.Context, req *clientdto.LiveListRequest) ([]clientdto.LiveChannelItem, int, error) {
 	return nil, 0, nil
 }
 

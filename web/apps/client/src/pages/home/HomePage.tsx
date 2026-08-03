@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useLoaderData, useOutletContext } from 'react-router'
-import type { Category, ClientBanner, VideoListItem } from '@orange-tv/shared'
+import type { ClientBanner, ClientCategory, ClientVideoListItem } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
 import { BannerCarousel, VideoGrid } from '@/components/common'
 import { Button } from '@/components/ui/button'
@@ -15,7 +15,7 @@ const SECTION_PAGE_SIZE = ROWS * COLS
 
 type SectionState = {
   loading: boolean
-  items: VideoListItem[]
+  items: ClientVideoListItem[]
   error: string
 }
 
@@ -50,7 +50,7 @@ export async function loader(): Promise<HomeLoaderData> {
 }
 
 export function Component() {
-  const { categories } = useOutletContext<{ categories: Category[] }>()
+  const { categories } = useOutletContext<{ categories: ClientCategory[] }>()
   const data = useLoaderData<HomeLoaderData>()
   const banners = data.banners
   const hot = data.hot

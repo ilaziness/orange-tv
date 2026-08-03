@@ -6,7 +6,7 @@ import (
 	"context"
 
 	"github.com/ilaziness/orange-tv/internal/constant"
-	shareddto "github.com/ilaziness/orange-tv/internal/dto"
+	clientdto "github.com/ilaziness/orange-tv/internal/dto/client"
 	opendto "github.com/ilaziness/orange-tv/internal/dto/open"
 	"github.com/ilaziness/orange-tv/internal/model"
 	pkgcache "github.com/ilaziness/orange-tv/pkg/cache"
@@ -14,7 +14,7 @@ import (
 
 // VideoListCacheEntry 客户端视频列表缓存条目。
 type VideoListCacheEntry struct {
-	Items []shareddto.VideoListItem
+	Items []clientdto.VideoListItem
 	Total int
 }
 
@@ -40,12 +40,12 @@ func (m *Manager) Clear(ctx context.Context) error { return m.cache.Clear(ctx) }
 // --- Category ---
 
 // GetCategoryTreeClient 获取客户端分类树缓存。
-func (m *Manager) GetCategoryTreeClient(ctx context.Context) ([]shareddto.CategoryResponse, error) {
+func (m *Manager) GetCategoryTreeClient(ctx context.Context) ([]clientdto.CategoryResponse, error) {
 	v, err := m.cache.Get(ctx, KeyCategoryTreeClient)
 	if err != nil {
 		return nil, err
 	}
-	tree, ok := v.([]shareddto.CategoryResponse)
+	tree, ok := v.([]clientdto.CategoryResponse)
 	if !ok {
 		return nil, nil
 	}
@@ -53,7 +53,7 @@ func (m *Manager) GetCategoryTreeClient(ctx context.Context) ([]shareddto.Catego
 }
 
 // SetCategoryTreeClient 设置客户端分类树缓存。
-func (m *Manager) SetCategoryTreeClient(ctx context.Context, tree []shareddto.CategoryResponse) error {
+func (m *Manager) SetCategoryTreeClient(ctx context.Context, tree []clientdto.CategoryResponse) error {
 	return m.cache.Set(ctx, KeyCategoryTreeClient, tree, TTLCategoryTree)
 }
 
@@ -66,12 +66,12 @@ func (m *Manager) InvalidateCategory(ctx context.Context) {
 // --- Live ---
 
 // GetLiveListClient 获取客户端直播列表缓存。
-func (m *Manager) GetLiveListClient(ctx context.Context) ([]shareddto.LiveChannelItem, error) {
+func (m *Manager) GetLiveListClient(ctx context.Context) ([]clientdto.LiveChannelItem, error) {
 	v, err := m.cache.Get(ctx, KeyLiveListClient)
 	if err != nil {
 		return nil, err
 	}
-	items, ok := v.([]shareddto.LiveChannelItem)
+	items, ok := v.([]clientdto.LiveChannelItem)
 	if !ok {
 		return nil, nil
 	}
@@ -79,7 +79,7 @@ func (m *Manager) GetLiveListClient(ctx context.Context) ([]shareddto.LiveChanne
 }
 
 // SetLiveListClient 设置客户端直播列表缓存。
-func (m *Manager) SetLiveListClient(ctx context.Context, items []shareddto.LiveChannelItem) error {
+func (m *Manager) SetLiveListClient(ctx context.Context, items []clientdto.LiveChannelItem) error {
 	return m.cache.Set(ctx, KeyLiveListClient, items, TTLLiveList)
 }
 

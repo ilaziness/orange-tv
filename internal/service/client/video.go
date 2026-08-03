@@ -16,11 +16,11 @@ import (
 
 // VideoService provides client video queries.
 type VideoService interface {
-	List(ctx context.Context, req *clientdto.VideoListRequest) ([]shareddto.VideoListItem, int, error)
-	Search(ctx context.Context, req *clientdto.SearchRequest) ([]shareddto.VideoListItem, int, error)
-	Get(ctx context.Context, id int64) (*clientdto.ClientVideoDetailResponse, error)
-	Related(ctx context.Context, id int64, limit int) ([]shareddto.VideoListItem, error)
-	GetEpisode(ctx context.Context, videoID, episodeID int64) (*shareddto.PlayEpisodeResponse, error)
+	List(ctx context.Context, req *clientdto.VideoListRequest) ([]clientdto.VideoListItem, int, error)
+	Search(ctx context.Context, req *clientdto.SearchRequest) ([]clientdto.VideoListItem, int, error)
+	Get(ctx context.Context, id int64) (*clientdto.VideoDetailResponse, error)
+	Related(ctx context.Context, id int64, limit int) ([]clientdto.VideoListItem, error)
+	GetEpisode(ctx context.Context, videoID, episodeID int64) (*clientdto.PlayEpisodeResponse, error)
 }
 
 type videoService struct {
@@ -45,7 +45,7 @@ func NewVideoService(
 	return &videoService{videoRepo: videoRepo, metaRepo: metaRepo, playRepo: playRepo, cache: c, log: log}
 }
 
-func (s *videoService) List(ctx context.Context, req *clientdto.VideoListRequest) ([]shareddto.VideoListItem, int, error) {
+func (s *videoService) List(ctx context.Context, req *clientdto.VideoListRequest) ([]clientdto.VideoListItem, int, error) {
 	// 默认按年份倒序；首页等场景可通过 sort 参数指定其他排序
 	sort := strings.TrimSpace(req.Sort)
 	if sort == "" {
@@ -83,7 +83,7 @@ func (s *videoService) List(ctx context.Context, req *clientdto.VideoListRequest
 	return out, total, nil
 }
 
-func (s *videoService) Search(ctx context.Context, req *clientdto.SearchRequest) ([]shareddto.VideoListItem, int, error) {
+func (s *videoService) Search(ctx context.Context, req *clientdto.SearchRequest) ([]clientdto.VideoListItem, int, error) {
 	sort := strings.TrimSpace(req.Sort)
 	if sort == "" {
 		sort = "year_desc"
@@ -107,7 +107,7 @@ func (s *videoService) Search(ctx context.Context, req *clientdto.SearchRequest)
 	return mapVideoList(items, s.loadVideoTags(ctx, videoIDsFromItems(items))), total, nil
 }
 
-func (s *videoService) Related(ctx context.Context, id int64, limit int) ([]shareddto.VideoListItem, error) {
+func (s *videoService) Related(ctx context.Context, id int64, limit int) ([]clientdto.VideoListItem, error) {
 	if limit <= 0 {
 		limit = 12
 	}
@@ -174,7 +174,7 @@ func (s *videoService) Related(ctx context.Context, id int64, limit int) ([]shar
 	return mapVideoList(out, s.loadVideoTags(ctx, videoIDsFromItems(out))), nil
 }
 
-func (s *videoService) Get(ctx context.Context, id int64) (*clientdto.ClientVideoDetailResponse, error) {
+func (s *videoService) Get(ctx context.Context, id int64) (*clientdto.VideoDetailResponse, error) {
 	video, err := s.videoRepo.GetByID(ctx, uint64(id))
 	if err != nil {
 		s.log.Error("client video: get by id failed", zap.Int64("video_id", id), zap.Error(err))
@@ -240,7 +240,7 @@ func (s *videoService) Get(ctx context.Context, id int64) (*clientdto.ClientVide
 		sourceMap[src.ID] = src
 	}
 
-	groups := map[uint64]*shareddto.VideoDetailSourceGroup{}
+	groups := map[uint64]*clientdto.VideoDetailSourceGroup{}
 	order := make([]uint64, 0)
 	for _, ep := range episodes {
 		src, ok := sourceMap[ep.SourceID]
@@ -249,17 +249,17 @@ func (s *videoService) Get(ctx context.Context, id int64) (*clientdto.ClientVide
 		}
 		g, ok := groups[ep.SourceID]
 		if !ok {
-			g = &shareddto.VideoDetailSourceGroup{ID: src.ID, Name: src.Name, Episodes: []shareddto.VideoDetailEpisode{}}
+			g = &clientdto.VideoDetailSourceGroup{ID: src.ID, Name: src.Name, Episodes: []clientdto.VideoDetailEpisode{}}
 			groups[ep.SourceID] = g
 			order = append(order, ep.SourceID)
 		}
-		g.Episodes = append(g.Episodes, shareddto.VideoDetailEpisode{
+		g.Episodes = append(g.Episodes, clientdto.VideoDetailEpisode{
 			ID:      ep.ID,
 			Episode: ep.EpisodeNumber,
 			Title:   ep.Title,
 		})
 	}
-	sourceGroups := make([]shareddto.VideoDetailSourceGroup, 0, len(order))
+	sourceGroups := make([]clientdto.VideoDetailSourceGroup, 0, len(order))
 	for _, sid := range order {
 		sourceGroups = append(sourceGroups, *groups[sid])
 	}
@@ -280,7 +280,7 @@ func (s *videoService) Get(ctx context.Context, id int64) (*clientdto.ClientVide
 	if video.Description != nil {
 		desc = *video.Description
 	}
-	return &clientdto.ClientVideoDetailResponse{
+	return &clientdto.VideoDetailResponse{
 		ID: video.ID, Title: video.Title, Subtitle: video.Subtitle, Description: desc,
 		CategoryID: video.CategoryID, SerialStatus: video.SerialStatus, Cover: video.CoverImage, Poster: video.PosterImage,
 		Year: video.Year, Region: video.Region, Language: video.Language, Duration: video.Duration,
@@ -289,7 +289,7 @@ func (s *videoService) Get(ctx context.Context, id int64) (*clientdto.ClientVide
 	}, nil
 }
 
-func (s *videoService) GetEpisode(ctx context.Context, videoID, episodeID int64) (*shareddto.PlayEpisodeResponse, error) {
+func (s *videoService) GetEpisode(ctx context.Context, videoID, episodeID int64) (*clientdto.PlayEpisodeResponse, error) {
 	video, err := s.videoRepo.GetByID(ctx, uint64(videoID))
 	if err != nil {
 		s.log.Error("client video: get episode - get video failed", zap.Int64("video_id", videoID), zap.Error(err))
@@ -306,17 +306,17 @@ func (s *videoService) GetEpisode(ctx context.Context, videoID, episodeID int64)
 	if ep == nil {
 		return nil, errcode.PlayEpisodeNotFound
 	}
-	return &shareddto.PlayEpisodeResponse{
+	return &clientdto.PlayEpisodeResponse{
 		URL:     ep.PlayURL,
 		Quality: ep.Quality,
 		Format:  ep.Format,
 	}, nil
 }
 
-func mapVideoList(items []model.Videos, tagMap map[uint64][]shareddto.NamedItem) []shareddto.VideoListItem {
-	out := make([]shareddto.VideoListItem, 0, len(items))
+func mapVideoList(items []model.Videos, tagMap map[uint64][]shareddto.NamedItem) []clientdto.VideoListItem {
+	out := make([]clientdto.VideoListItem, 0, len(items))
 	for _, v := range items {
-		out = append(out, shareddto.VideoListItem{
+		out = append(out, clientdto.VideoListItem{
 			ID: v.ID, Title: v.Title, Subtitle: v.Subtitle, Cover: v.CoverImage, Poster: v.PosterImage,
 			Year: v.Year, Region: v.Region, Language: v.Language, Rating: v.Rating, CategoryID: v.CategoryID,
 			SerialStatus: v.SerialStatus, Duration: v.Duration, ViewCount: v.ViewCount,

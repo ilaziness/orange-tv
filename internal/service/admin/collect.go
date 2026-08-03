@@ -10,7 +10,6 @@ import (
 	"github.com/ilaziness/orange-tv/internal/cache"
 	"github.com/ilaziness/orange-tv/internal/collect"
 	"github.com/ilaziness/orange-tv/internal/constant"
-	shareddto "github.com/ilaziness/orange-tv/internal/dto"
 	admindto "github.com/ilaziness/orange-tv/internal/dto/admin"
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
@@ -22,13 +21,13 @@ import (
 
 // CollectService manages collect sources and jobs.
 type CollectService interface {
-	ListSources(ctx context.Context, req *admindto.CollectSourceListRequest) ([]shareddto.CollectSourceItem, int, error)
-	CreateSource(ctx context.Context, req *admindto.CreateCollectSourceRequest) (*shareddto.CollectSourceItem, error)
-	UpdateSource(ctx context.Context, id int64, req *admindto.UpdateCollectSourceRequest) (*shareddto.CollectSourceItem, error)
+	ListSources(ctx context.Context, req *admindto.CollectSourceListRequest) ([]admindto.CollectSourceItem, int, error)
+	CreateSource(ctx context.Context, req *admindto.CreateCollectSourceRequest) (*admindto.CollectSourceItem, error)
+	UpdateSource(ctx context.Context, id int64, req *admindto.UpdateCollectSourceRequest) (*admindto.CollectSourceItem, error)
 	DeleteSource(ctx context.Context, id int64) error
-	ListCategories(ctx context.Context, sourceID int64) ([]shareddto.CollectCategoryMapItem, error)
-	SetCategories(ctx context.Context, sourceID int64, req *admindto.SetCollectCategoriesRequest) ([]shareddto.CollectCategoryMapItem, error)
-	ListLogs(ctx context.Context, req *admindto.CollectLogListRequest) ([]shareddto.CollectLogItem, int, error)
+	ListCategories(ctx context.Context, sourceID int64) ([]admindto.CollectCategoryMapItem, error)
+	SetCategories(ctx context.Context, sourceID int64, req *admindto.SetCollectCategoriesRequest) ([]admindto.CollectCategoryMapItem, error)
+	ListLogs(ctx context.Context, req *admindto.CollectLogListRequest) ([]admindto.CollectLogItem, int, error)
 	FetchRemoteCategories(ctx context.Context, sourceID int64) (*admindto.RemoteCategoryResponse, error)
 	EnableSchedule(ctx context.Context, sourceID int64) error
 	DisableSchedule(ctx context.Context, sourceID int64) error
@@ -86,7 +85,7 @@ func NewCollectService(
 	}
 }
 
-func (s *collectService) ListSources(ctx context.Context, req *admindto.CollectSourceListRequest) ([]shareddto.CollectSourceItem, int, error) {
+func (s *collectService) ListSources(ctx context.Context, req *admindto.CollectSourceListRequest) ([]admindto.CollectSourceItem, int, error) {
 	items, total, err := s.repo.ListSources(ctx, repository.CollectSourceListFilter{
 		Status: req.Status,
 		Offset: req.GetOffset(),
@@ -110,7 +109,7 @@ func (s *collectService) ListSources(ctx context.Context, req *admindto.CollectS
 			psourceNames[pid] = psrc.Name
 		}
 	}
-	out := make([]shareddto.CollectSourceItem, 0, len(items))
+	out := make([]admindto.CollectSourceItem, 0, len(items))
 	for i := range items {
 		item := toCollectSource(&items[i])
 		item.PlaySourceName = psourceNames[items[i].PlaySourceID]
@@ -119,7 +118,7 @@ func (s *collectService) ListSources(ctx context.Context, req *admindto.CollectS
 	return out, total, nil
 }
 
-func (s *collectService) CreateSource(ctx context.Context, req *admindto.CreateCollectSourceRequest) (*shareddto.CollectSourceItem, error) {
+func (s *collectService) CreateSource(ctx context.Context, req *admindto.CreateCollectSourceRequest) (*admindto.CollectSourceItem, error) {
 	if err := s.validateSourceInput(ctx, req.Type, req.CollectURL, req.CronExpr, req.PlaySourceID); err != nil {
 		return nil, err
 	}
@@ -147,7 +146,7 @@ func (s *collectService) CreateSource(ctx context.Context, req *admindto.CreateC
 	return &out, nil
 }
 
-func (s *collectService) UpdateSource(ctx context.Context, id int64, req *admindto.UpdateCollectSourceRequest) (*shareddto.CollectSourceItem, error) {
+func (s *collectService) UpdateSource(ctx context.Context, id int64, req *admindto.UpdateCollectSourceRequest) (*admindto.CollectSourceItem, error) {
 	m, err := s.repo.GetSource(ctx, id)
 	if err != nil {
 		s.log.Error("collect: get source failed", zap.Int64("source_id", id), zap.Error(err))
@@ -222,7 +221,7 @@ func (s *collectService) DeleteSource(ctx context.Context, id int64) error {
 	return s.ReloadScheduler(ctx)
 }
 
-func (s *collectService) ListCategories(ctx context.Context, sourceID int64) ([]shareddto.CollectCategoryMapItem, error) {
+func (s *collectService) ListCategories(ctx context.Context, sourceID int64) ([]admindto.CollectCategoryMapItem, error) {
 	if _, err := s.requireSource(ctx, sourceID); err != nil {
 		return nil, err
 	}
@@ -231,9 +230,9 @@ func (s *collectService) ListCategories(ctx context.Context, sourceID int64) ([]
 		s.log.Error("collect: list categories failed", zap.Int64("source_id", sourceID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	out := make([]shareddto.CollectCategoryMapItem, 0, len(items))
+	out := make([]admindto.CollectCategoryMapItem, 0, len(items))
 	for _, it := range items {
-		out = append(out, shareddto.CollectCategoryMapItem{
+		out = append(out, admindto.CollectCategoryMapItem{
 			ID:                 it.ID,
 			SourceID:           it.SourceID,
 			ExternalCategoryID: it.ExternalCategoryID,
@@ -243,7 +242,7 @@ func (s *collectService) ListCategories(ctx context.Context, sourceID int64) ([]
 	return out, nil
 }
 
-func (s *collectService) SetCategories(ctx context.Context, sourceID int64, req *admindto.SetCollectCategoriesRequest) ([]shareddto.CollectCategoryMapItem, error) {
+func (s *collectService) SetCategories(ctx context.Context, sourceID int64, req *admindto.SetCollectCategoriesRequest) ([]admindto.CollectCategoryMapItem, error) {
 	if _, err := s.requireSource(ctx, sourceID); err != nil {
 		return nil, err
 	}
@@ -307,7 +306,7 @@ func (s *collectService) stopJob(sourceID int64) {
 	s.mu.Unlock()
 }
 
-func (s *collectService) ListLogs(ctx context.Context, req *admindto.CollectLogListRequest) ([]shareddto.CollectLogItem, int, error) {
+func (s *collectService) ListLogs(ctx context.Context, req *admindto.CollectLogListRequest) ([]admindto.CollectLogItem, int, error) {
 	items, total, err := s.repo.ListLogs(ctx, repository.CollectLogListFilter{
 		SourceID: req.SourceID,
 		Offset:   req.GetOffset(),
@@ -329,13 +328,13 @@ func (s *collectService) ListLogs(ctx context.Context, req *admindto.CollectLogL
 			sourceNames[sid] = src.Name
 		}
 	}
-	out := make([]shareddto.CollectLogItem, 0, len(items))
+	out := make([]admindto.CollectLogItem, 0, len(items))
 	for _, it := range items {
 		created := ""
 		if it.CreatedAt != nil {
 			created = it.CreatedAt.Format(time.DateTime)
 		}
-		out = append(out, shareddto.CollectLogItem{
+		out = append(out, admindto.CollectLogItem{
 			ID:           it.ID,
 			SourceID:     it.SourceID,
 			SourceName:   sourceNames[it.SourceID],
@@ -532,12 +531,12 @@ func (s *collectService) requireSource(ctx context.Context, id int64) (*model.Co
 	return m, nil
 }
 
-func toCollectSource(m *model.CollectSources) shareddto.CollectSourceItem {
+func toCollectSource(m *model.CollectSources) admindto.CollectSourceItem {
 	last := ""
 	if m.LastCollectAt != nil {
 		last = m.LastCollectAt.Format(time.DateTime)
 	}
-	return shareddto.CollectSourceItem{
+	return admindto.CollectSourceItem{
 		ID:              m.ID,
 		Name:            m.Name,
 		Type:            m.Type,

@@ -148,6 +148,14 @@ export type Category = {
   children?: Category[]
 }
 
+export type ClientCategory = {
+  id: number
+  name: string
+  parent_id: number
+  sort_order: number
+  children?: ClientCategory[]
+}
+
 export type NamedItem = { id: number; name: string }
 
 export type VideoListItem = {
@@ -162,13 +170,30 @@ export type VideoListItem = {
   rating: number
   category_id: number
   category_name?: string
-  publish_status?: number
+  publish_status: number
   serial_status: number
   duration: number
   view_count: number
   tags?: NamedItem[]
   created_at?: string
   updated_at?: string
+}
+
+export type ClientVideoListItem = {
+  id: number
+  title: string
+  subtitle: string
+  cover: string
+  poster: string
+  year: number
+  region: string
+  language: string
+  rating: number
+  category_id: number
+  serial_status: number
+  duration: number
+  view_count: number
+  tags?: NamedItem[]
 }
 
 export type VideoSourceEpisode = {
@@ -211,7 +236,7 @@ export type VideoDetail = {
   subtitle: string
   description: string
   category_id: number
-  publish_status?: number
+  publish_status: number
   serial_status: number
   cover: string
   poster: string
@@ -279,7 +304,16 @@ export type LiveChannel = {
   logo: string
   description: string
   sort_order: number
-  status?: number
+  status: number
+}
+
+export type ClientLiveChannel = {
+  id: number
+  name: string
+  category: string
+  logo: string
+  description: string
+  sort_order: number
 }
 
 export type LiveSyncResult = {

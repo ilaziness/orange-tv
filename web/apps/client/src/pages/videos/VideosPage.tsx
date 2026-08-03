@@ -1,5 +1,5 @@
 import { useLoaderData, useOutletContext, useSearchParams } from 'react-router'
-import type { Category, VideoListItem } from '@orange-tv/shared'
+import type { ClientCategory, ClientVideoListItem } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
 import { VideoGrid } from '@/components/common'
 import { FilterBar } from '@/components/FilterBar'
@@ -24,7 +24,7 @@ type FilterParams = {
 }
 
 type VideosLoaderData = {
-  videos: VideoListItem[]
+  videos: ClientVideoListItem[]
   total: number
   pageSize: number
   filters: FilterParams
@@ -92,7 +92,7 @@ export async function loader({ request }: { request: Request }): Promise<VideosL
 }
 
 export function Component() {
-  const { categories } = useOutletContext<{ categories: Category[] }>()
+  const { categories } = useOutletContext<{ categories: ClientCategory[] }>()
   const data = useLoaderData<VideosLoaderData>()
   const [params, setParams] = useSearchParams()
 

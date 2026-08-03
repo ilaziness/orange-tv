@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/ilaziness/orange-tv/internal/cache"
-	shareddto "github.com/ilaziness/orange-tv/internal/dto"
 	clientdto "github.com/ilaziness/orange-tv/internal/dto/client"
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
@@ -16,7 +15,7 @@ import (
 
 // LiveService provides public live channel queries.
 type LiveService interface {
-	List(ctx context.Context, req *clientdto.LiveListRequest) ([]shareddto.LiveChannelItem, int, error)
+	List(ctx context.Context, req *clientdto.LiveListRequest) ([]clientdto.LiveChannelItem, int, error)
 	GetStreamURL(ctx context.Context, id int64) (string, error)
 	// AllowedStreamDomains 返回所有在线频道的流地址域名集合，用于代理 ts 分片时的 SSRF 校验。
 	AllowedStreamDomains(ctx context.Context) (map[string]struct{}, error)
@@ -38,7 +37,7 @@ func NewLiveService(repo repository.LiveRepository, c *cache.Manager, log *zap.L
 
 // List 返回所有在线直播频道，前端按 category 自行分组展示。
 // stream_url 不返回给前端，前端通过 /live/play/:id 代理播放。
-func (s *liveService) List(ctx context.Context, req *clientdto.LiveListRequest) ([]shareddto.LiveChannelItem, int, error) {
+func (s *liveService) List(ctx context.Context, req *clientdto.LiveListRequest) ([]clientdto.LiveChannelItem, int, error) {
 	if items, err := s.cache.GetLiveListClient(ctx); err == nil && items != nil {
 		return filterByCategory(items, strings.TrimSpace(req.Category)), len(items), nil
 	}
@@ -47,7 +46,7 @@ func (s *liveService) List(ctx context.Context, req *clientdto.LiveListRequest) 
 		s.log.Error("client live: list all failed", zap.Error(err))
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	out := make([]shareddto.LiveChannelItem, 0, len(items))
+	out := make([]clientdto.LiveChannelItem, 0, len(items))
 	for i := range items {
 		m := &items[i]
 		if m.Status != 1 {
@@ -90,11 +89,11 @@ func (s *liveService) AllowedStreamDomains(ctx context.Context) (map[string]stru
 	return domains, nil
 }
 
-func filterByCategory(items []shareddto.LiveChannelItem, category string) []shareddto.LiveChannelItem {
+func filterByCategory(items []clientdto.LiveChannelItem, category string) []clientdto.LiveChannelItem {
 	if category == "" {
 		return items
 	}
-	filtered := make([]shareddto.LiveChannelItem, 0, len(items))
+	filtered := make([]clientdto.LiveChannelItem, 0, len(items))
 	for _, item := range items {
 		if item.Category == category {
 			filtered = append(filtered, item)
@@ -104,16 +103,15 @@ func filterByCategory(items []shareddto.LiveChannelItem, category string) []shar
 }
 
 // toPublicLiveItem 将模型转为对外 DTO，stream_url 不返回给前端。
-func toPublicLiveItem(m *model.LiveChannels) shareddto.LiveChannelItem {
+func toPublicLiveItem(m *model.LiveChannels) clientdto.LiveChannelItem {
 	desc := ""
 	if m.Description != nil {
 		desc = *m.Description
 	}
-	return shareddto.LiveChannelItem{
+	return clientdto.LiveChannelItem{
 		ID:          m.ID,
 		Name:        m.Name,
 		Category:    m.Category,
-		StreamURL:   "",
 		Logo:        m.Logo,
 		Description: desc,
 		SortOrder:   m.SortOrder,

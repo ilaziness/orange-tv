@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
-import type { VideoListItem } from '@orange-tv/shared'
+import type { ClientVideoListItem } from '@orange-tv/shared'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { FilmIcon } from 'lucide-react'
 
-export function VideoCard({ item }: { item: VideoListItem }) {
+export function VideoCard({ item }: { item: ClientVideoListItem }) {
   const [error, setError] = useState(false)
   const hasCover = item.cover && !error
   const metaParts = [item.year ? String(item.year) : null, item.region || null].filter(

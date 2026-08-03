@@ -6,7 +6,6 @@ import (
 
 	"github.com/ilaziness/orange-tv/internal/cache"
 	"github.com/ilaziness/orange-tv/internal/constant"
-	shareddto "github.com/ilaziness/orange-tv/internal/dto"
 	dto "github.com/ilaziness/orange-tv/internal/dto/admin"
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
@@ -17,9 +16,9 @@ import (
 
 // CategoryService manages categories.
 type CategoryService interface {
-	ListTree(ctx context.Context, onlyEnabled bool) ([]shareddto.CategoryResponse, error)
-	Create(ctx context.Context, req *dto.CreateCategoryRequest) (*shareddto.CategoryResponse, error)
-	Update(ctx context.Context, id int64, req *dto.UpdateCategoryRequest) (*shareddto.CategoryResponse, error)
+	ListTree(ctx context.Context, onlyEnabled bool) ([]dto.CategoryResponse, error)
+	Create(ctx context.Context, req *dto.CreateCategoryRequest) (*dto.CategoryResponse, error)
+	Update(ctx context.Context, id int64, req *dto.UpdateCategoryRequest) (*dto.CategoryResponse, error)
 	Delete(ctx context.Context, id int64) error
 }
 
@@ -37,16 +36,25 @@ func NewCategoryService(repo repository.CategoryRepository, c *cache.Manager, lo
 	return &categoryService{repo: repo, cache: c, log: log}
 }
 
-func (s *categoryService) ListTree(ctx context.Context, onlyEnabled bool) ([]shareddto.CategoryResponse, error) {
+func (s *categoryService) ListTree(ctx context.Context, onlyEnabled bool) ([]dto.CategoryResponse, error) {
 	items, err := s.repo.List(ctx, onlyEnabled)
 	if err != nil {
 		s.log.Error("category: list failed", zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	return utils.BuildCategoryTree(items), nil
+	return utils.BuildCategoryTree(items, func(c model.Categories, children []dto.CategoryResponse) dto.CategoryResponse {
+		return dto.CategoryResponse{
+			ID:        c.ID,
+			Name:      c.Name,
+			ParentID:  c.ParentID,
+			SortOrder: c.SortOrder,
+			Status:    c.Status,
+			Children:  children,
+		}
+	}), nil
 }
 
-func (s *categoryService) Create(ctx context.Context, req *dto.CreateCategoryRequest) (*shareddto.CategoryResponse, error) {
+func (s *categoryService) Create(ctx context.Context, req *dto.CreateCategoryRequest) (*dto.CategoryResponse, error) {
 	name := strings.TrimSpace(req.Name)
 	if name == "" {
 		return nil, errcode.WithMessage(errcode.ParamError, "分类名称不能为空")
@@ -88,7 +96,7 @@ func (s *categoryService) Create(ctx context.Context, req *dto.CreateCategoryReq
 	return toCategoryDTO(item), nil
 }
 
-func (s *categoryService) Update(ctx context.Context, id int64, req *dto.UpdateCategoryRequest) (*shareddto.CategoryResponse, error) {
+func (s *categoryService) Update(ctx context.Context, id int64, req *dto.UpdateCategoryRequest) (*dto.CategoryResponse, error) {
 	item, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		s.log.Error("category: get by id failed", zap.Int64("category_id", id), zap.Error(err))
@@ -186,8 +194,8 @@ func (s *categoryService) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-func toCategoryDTO(item *model.Categories) *shareddto.CategoryResponse {
-	return &shareddto.CategoryResponse{
+func toCategoryDTO(item *model.Categories) *dto.CategoryResponse {
+	return &dto.CategoryResponse{
 		ID:        item.ID,
 		Name:      item.Name,
 		ParentID:  item.ParentID,

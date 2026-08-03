@@ -30,6 +30,22 @@ type UpdateCollectSourceRequest struct {
 	DataRange    *string `json:"data_range" validate:"omitempty,max=20"`
 }
 
+// CollectSourceItem is an admin collect source payload.
+// API key is never returned in list/detail responses.
+type CollectSourceItem struct {
+	ID              uint64 `json:"id"`
+	Name            string `json:"name"`
+	Type            uint8  `json:"type"`
+	CollectURL      string `json:"collect_url"`
+	CronExpr        string `json:"cron_expr"`
+	PlaySourceID    uint64 `json:"play_source_id"`
+	PlaySourceName  string `json:"play_source_name,omitempty"`
+	LastCollectAt   string `json:"last_collect_at,omitempty"`
+	Status          uint8  `json:"status"`
+	ScheduleEnabled uint8  `json:"schedule_enabled"`
+	DataRange       string `json:"data_range,omitempty"`
+}
+
 // SetCollectCategoriesRequest replaces category mappings for a source.
 // Empty items clears all mappings.
 type SetCollectCategoriesRequest struct {
@@ -42,10 +58,29 @@ type CollectCategoryInput struct {
 	CategoryID         uint64 `json:"category_id" validate:"required,gt=0"`
 }
 
+// CollectCategoryMapItem is an external→internal category mapping.
+type CollectCategoryMapItem struct {
+	ID                 uint64 `json:"id"`
+	SourceID           uint64 `json:"source_id"`
+	ExternalCategoryID uint64 `json:"external_category_id"`
+	CategoryID         uint64 `json:"category_id"`
+}
+
 // CollectLogListRequest filters collect logs.
 type CollectLogListRequest struct {
 	dto.PaginationRequest
 	SourceID uint64 `form:"source_id"`
+}
+
+// CollectLogItem is one collect run log entry.
+type CollectLogItem struct {
+	ID           uint64 `json:"id"`
+	SourceID     uint64 `json:"source_id"`
+	SourceName   string `json:"source_name,omitempty"`
+	Status       uint8  `json:"status"`
+	CollectCount uint32 `json:"collect_count"`
+	DurationSec  uint32 `json:"duration_sec"`
+	CreatedAt    string `json:"created_at,omitempty"`
 }
 
 // CollectNowRequest triggers an immediate collection.

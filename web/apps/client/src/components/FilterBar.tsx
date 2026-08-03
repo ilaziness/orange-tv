@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button'
-import type { Category } from '@orange-tv/shared'
+import type { ClientCategory } from '@orange-tv/shared'
 
 type FilterBarProps = {
   /** 当前选中分类 ID（可能是子分类） */
@@ -7,7 +7,7 @@ type FilterBarProps = {
   /** 当前选中分类的父分类 ID（子分类时为父级，根分类时为 0） */
   parentCategoryId: number
   /** 当前选中父分类下的二级分类列表 */
-  subCategories: Category[]
+  subCategories: ClientCategory[]
   yearStart: number
   yearEnd: number
   region: string

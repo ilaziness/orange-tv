@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	shareddto "github.com/ilaziness/orange-tv/internal/dto"
 	clientdto "github.com/ilaziness/orange-tv/internal/dto/client"
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/stretchr/testify/assert"
@@ -54,7 +53,7 @@ func TestLiveHandler_Play_ProxyError(t *testing.T) {
 
 type stubLiveService struct{}
 
-func (s *stubLiveService) List(ctx context.Context, req *clientdto.LiveListRequest) ([]shareddto.LiveChannelItem, int, error) {
+func (s *stubLiveService) List(ctx context.Context, req *clientdto.LiveListRequest) ([]clientdto.LiveChannelItem, int, error) {
 	return nil, 0, nil
 }
 

@@ -6,7 +6,6 @@ import (
 
 	"github.com/ilaziness/orange-tv/internal/cache"
 	"github.com/ilaziness/orange-tv/internal/constant"
-	shareddto "github.com/ilaziness/orange-tv/internal/dto"
 	admindto "github.com/ilaziness/orange-tv/internal/dto/admin"
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
@@ -16,11 +15,11 @@ import (
 
 // LiveService manages live channels for admin.
 type LiveService interface {
-	List(ctx context.Context, req *admindto.LiveListRequest) ([]shareddto.LiveChannelItem, int, error)
-	Create(ctx context.Context, req *admindto.CreateLiveRequest) (*shareddto.LiveChannelItem, error)
-	Update(ctx context.Context, id int64, req *admindto.UpdateLiveRequest) (*shareddto.LiveChannelItem, error)
+	List(ctx context.Context, req *admindto.LiveListRequest) ([]admindto.LiveChannelItem, int, error)
+	Create(ctx context.Context, req *admindto.CreateLiveRequest) (*admindto.LiveChannelItem, error)
+	Update(ctx context.Context, id int64, req *admindto.UpdateLiveRequest) (*admindto.LiveChannelItem, error)
 	Delete(ctx context.Context, id int64) error
-	SyncFromSource(ctx context.Context) (*shareddto.LiveSyncResult, error)
+	SyncFromSource(ctx context.Context) (*admindto.LiveSyncResult, error)
 }
 
 type liveService struct {
@@ -37,7 +36,7 @@ func NewLiveService(repo repository.LiveRepository, c *cache.Manager, log *zap.L
 	return &liveService{repo: repo, cache: c, log: log}
 }
 
-func (s *liveService) List(ctx context.Context, req *admindto.LiveListRequest) ([]shareddto.LiveChannelItem, int, error) {
+func (s *liveService) List(ctx context.Context, req *admindto.LiveListRequest) ([]admindto.LiveChannelItem, int, error) {
 	items, total, err := s.repo.List(ctx, repository.LiveListFilter{
 		Category: strings.TrimSpace(req.Category),
 		Keyword:  strings.TrimSpace(req.Keyword),
@@ -52,7 +51,7 @@ func (s *liveService) List(ctx context.Context, req *admindto.LiveListRequest) (
 	return mapLiveItems(items, true), total, nil
 }
 
-func (s *liveService) Create(ctx context.Context, req *admindto.CreateLiveRequest) (*shareddto.LiveChannelItem, error) {
+func (s *liveService) Create(ctx context.Context, req *admindto.CreateLiveRequest) (*admindto.LiveChannelItem, error) {
 	name := strings.TrimSpace(req.Name)
 	streamURL := strings.TrimSpace(req.StreamURL)
 	if name == "" {
@@ -88,7 +87,7 @@ func (s *liveService) Create(ctx context.Context, req *admindto.CreateLiveReques
 	return &out, nil
 }
 
-func (s *liveService) Update(ctx context.Context, id int64, req *admindto.UpdateLiveRequest) (*shareddto.LiveChannelItem, error) {
+func (s *liveService) Update(ctx context.Context, id int64, req *admindto.UpdateLiveRequest) (*admindto.LiveChannelItem, error) {
 	item, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		s.log.Error("live: get by id failed", zap.Int64("live_id", id), zap.Error(err))
@@ -157,20 +156,20 @@ func (s *liveService) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-func mapLiveItems(items []model.LiveChannels, withStatus bool) []shareddto.LiveChannelItem {
-	out := make([]shareddto.LiveChannelItem, 0, len(items))
+func mapLiveItems(items []model.LiveChannels, withStatus bool) []admindto.LiveChannelItem {
+	out := make([]admindto.LiveChannelItem, 0, len(items))
 	for i := range items {
 		out = append(out, toLiveItem(&items[i], withStatus))
 	}
 	return out
 }
 
-func toLiveItem(m *model.LiveChannels, withStatus bool) shareddto.LiveChannelItem {
+func toLiveItem(m *model.LiveChannels, withStatus bool) admindto.LiveChannelItem {
 	desc := ""
 	if m.Description != nil {
 		desc = *m.Description
 	}
-	item := shareddto.LiveChannelItem{
+	item := admindto.LiveChannelItem{
 		ID:          m.ID,
 		Name:        m.Name,
 		Category:    m.Category,
@@ -185,7 +184,7 @@ func toLiveItem(m *model.LiveChannels, withStatus bool) shareddto.LiveChannelIte
 	return item
 }
 
-func (s *liveService) SyncFromSource(ctx context.Context) (*shareddto.LiveSyncResult, error) {
+func (s *liveService) SyncFromSource(ctx context.Context) (*admindto.LiveSyncResult, error) {
 	fetcher := &defaultLiveSourceFetcher{url: liveSourceURL}
 	entries, err := fetcher.Fetch(ctx)
 	if err != nil {
@@ -245,7 +244,7 @@ func (s *liveService) SyncFromSource(ctx context.Context) (*shareddto.LiveSyncRe
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 
-	result := &shareddto.LiveSyncResult{
+	result := &admindto.LiveSyncResult{
 		Total:   len(entries),
 		Created: len(toCreate),
 		Updated: len(entries) - len(toCreate),

@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { Link, Outlet, useLoaderData, useNavigate, useSearchParams } from "react-router";
-import type { Category } from "@orange-tv/shared";
+import type { ClientCategory } from "@orange-tv/shared";
 import { sanitizeSearchInput } from "@orange-tv/shared";
 import { useAuth } from "@/hooks/useAuth";
 import { useSettings } from "@/hooks/useSettings";
@@ -89,7 +89,7 @@ function fromRemote(it: HistoryItem): HistoryEntry {
 }
 
 type ClientLayoutLoaderData = {
-  categories: Category[]
+  categories: ClientCategory[]
 }
 
 export async function loader(): Promise<ClientLayoutLoaderData> {

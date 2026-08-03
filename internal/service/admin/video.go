@@ -18,10 +18,10 @@ import (
 
 // VideoService manages videos and associations.
 type VideoService interface {
-	List(ctx context.Context, req *dto.VideoListRequest) ([]shareddto.VideoListItem, int, error)
-	Get(ctx context.Context, id int64) (*shareddto.VideoDetailResponse, error)
-	Create(ctx context.Context, req *dto.CreateVideoRequest) (*shareddto.VideoDetailResponse, error)
-	Update(ctx context.Context, id int64, req *dto.UpdateVideoRequest) (*shareddto.VideoDetailResponse, error)
+	List(ctx context.Context, req *dto.VideoListRequest) ([]dto.VideoListItem, int, error)
+	Get(ctx context.Context, id int64) (*dto.VideoDetailResponse, error)
+	Create(ctx context.Context, req *dto.CreateVideoRequest) (*dto.VideoDetailResponse, error)
+	Update(ctx context.Context, id int64, req *dto.UpdateVideoRequest) (*dto.VideoDetailResponse, error)
 	Delete(ctx context.Context, id int64) error
 }
 
@@ -56,7 +56,7 @@ func NewVideoService(
 	}
 }
 
-func (s *videoService) List(ctx context.Context, req *dto.VideoListRequest) ([]shareddto.VideoListItem, int, error) {
+func (s *videoService) List(ctx context.Context, req *dto.VideoListRequest) ([]dto.VideoListItem, int, error) {
 	cats, err := s.categoryRepo.List(ctx, false)
 	if err != nil {
 		s.log.Error("video: list categories failed", zap.Error(err))
@@ -73,7 +73,7 @@ func (s *videoService) List(ctx context.Context, req *dto.VideoListRequest) ([]s
 		Year:          req.Year,
 		Region:        strings.TrimSpace(req.Region),
 		Language:      strings.TrimSpace(req.Language),
-		Sort:          req.Sort,
+		Sort:          "id_desc",
 		DirectorID:    req.DirectorID,
 		ActorID:       req.ActorID,
 		TagID:         req.TagID,
@@ -93,11 +93,11 @@ func (s *videoService) List(ctx context.Context, req *dto.VideoListRequest) ([]s
 	return mapVideoList(items, catMap), total, nil
 }
 
-func (s *videoService) Get(ctx context.Context, id int64) (*shareddto.VideoDetailResponse, error) {
+func (s *videoService) Get(ctx context.Context, id int64) (*dto.VideoDetailResponse, error) {
 	return s.getDetail(ctx, id, false)
 }
 
-func (s *videoService) Create(ctx context.Context, req *dto.CreateVideoRequest) (*shareddto.VideoDetailResponse, error) {
+func (s *videoService) Create(ctx context.Context, req *dto.CreateVideoRequest) (*dto.VideoDetailResponse, error) {
 	if err := s.ensureCategory(ctx, int64(req.CategoryID)); err != nil {
 		return nil, err
 	}
@@ -161,7 +161,7 @@ func (s *videoService) Create(ctx context.Context, req *dto.CreateVideoRequest) 
 	return s.getDetail(ctx, int64(video.ID), false)
 }
 
-func (s *videoService) Update(ctx context.Context, id int64, req *dto.UpdateVideoRequest) (*shareddto.VideoDetailResponse, error) {
+func (s *videoService) Update(ctx context.Context, id int64, req *dto.UpdateVideoRequest) (*dto.VideoDetailResponse, error) {
 	video, err := s.videoRepo.GetByID(ctx, uint64(id))
 	if err != nil {
 		s.log.Error("video: get by id for update failed", zap.Int64("video_id", id), zap.Error(err))
@@ -291,7 +291,7 @@ func (s *videoService) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (s *videoService) getDetail(ctx context.Context, id int64, clientOnly bool) (*shareddto.VideoDetailResponse, error) {
+func (s *videoService) getDetail(ctx context.Context, id int64, clientOnly bool) (*dto.VideoDetailResponse, error) {
 	video, err := s.videoRepo.GetByID(ctx, uint64(id))
 	if err != nil {
 		s.log.Error("video: get by id for detail failed", zap.Int64("video_id", id), zap.Error(err))
@@ -361,7 +361,7 @@ func (s *videoService) getDetail(ctx context.Context, id int64, clientOnly bool)
 		sourceMap[src.ID] = src
 	}
 
-	groups := map[uint64]*shareddto.VideoSourceGroup{}
+	groups := map[uint64]*dto.VideoSourceGroup{}
 	order := make([]uint64, 0)
 	for _, ep := range episodes {
 		src, ok := sourceMap[ep.SourceID]
@@ -370,11 +370,11 @@ func (s *videoService) getDetail(ctx context.Context, id int64, clientOnly bool)
 		}
 		g, ok := groups[ep.SourceID]
 		if !ok {
-			g = &shareddto.VideoSourceGroup{ID: src.ID, Name: src.Name, Episodes: []shareddto.VideoSourceEpisode{}}
+			g = &dto.VideoSourceGroup{ID: src.ID, Name: src.Name, Episodes: []dto.VideoSourceEpisode{}}
 			groups[ep.SourceID] = g
 			order = append(order, ep.SourceID)
 		}
-		g.Episodes = append(g.Episodes, shareddto.VideoSourceEpisode{
+		g.Episodes = append(g.Episodes, dto.VideoSourceEpisode{
 			ID:      ep.ID,
 			Episode: ep.EpisodeNumber,
 			Title:   ep.Title,
@@ -384,7 +384,7 @@ func (s *videoService) getDetail(ctx context.Context, id int64, clientOnly bool)
 			Status:  ep.Status,
 		})
 	}
-	sourceGroups := make([]shareddto.VideoSourceGroup, 0, len(order))
+	sourceGroups := make([]dto.VideoSourceGroup, 0, len(order))
 	for _, sid := range order {
 		sourceGroups = append(sourceGroups, *groups[sid])
 	}
@@ -409,7 +409,7 @@ func (s *videoService) getDetail(ctx context.Context, id int64, clientOnly bool)
 	if video.Description != nil {
 		desc = *video.Description
 	}
-	resp := &shareddto.VideoDetailResponse{
+	resp := &dto.VideoDetailResponse{
 		ID:           video.ID,
 		Title:        video.Title,
 		Subtitle:     video.Subtitle,
@@ -504,10 +504,10 @@ func (s *videoService) ensureTags(ctx context.Context, ids []uint64) error {
 	return nil
 }
 
-func mapVideoList(items []model.Videos, catMap map[uint64]*model.Categories) []shareddto.VideoListItem {
-	out := make([]shareddto.VideoListItem, 0, len(items))
+func mapVideoList(items []model.Videos, catMap map[uint64]*model.Categories) []dto.VideoListItem {
+	out := make([]dto.VideoListItem, 0, len(items))
 	for _, v := range items {
-		out = append(out, shareddto.VideoListItem{
+		out = append(out, dto.VideoListItem{
 			ID:            v.ID,
 			Title:         v.Title,
 			Subtitle:      v.Subtitle,

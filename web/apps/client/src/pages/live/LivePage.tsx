@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useLoaderData } from 'react-router'
-import type { LiveChannel } from '@orange-tv/shared'
+import type { ClientLiveChannel } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
 import { VideoPlayer } from '@/components/Player'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -12,13 +12,13 @@ import { AlertCircleIcon, ChevronRightIcon, TvIcon } from 'lucide-react'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
 type LiveLoaderData = {
-  channels: LiveChannel[]
+  channels: ClientLiveChannel[]
   error: string
 }
 
 type ChannelGroup = {
   category: string
-  channels: LiveChannel[]
+  channels: ClientLiveChannel[]
 }
 
 export async function loader(): Promise<LiveLoaderData> {
@@ -43,7 +43,7 @@ export function Component() {
   usePageTitle('电视直播')
 
   const groups = useMemo<ChannelGroup[]>(() => {
-    const map = new Map<string, LiveChannel[]>()
+    const map = new Map<string, ClientLiveChannel[]>()
     for (const ch of channels) {
       if (!map.has(ch.category)) {
         map.set(ch.category, [])
@@ -56,7 +56,7 @@ export function Component() {
     return Array.from(map.keys()).map((key) => ({ category: key, channels: map.get(key)! }))
   }, [channels])
 
-  const selectedChannel = useMemo<LiveChannel | null>(() => {
+  const selectedChannel = useMemo<ClientLiveChannel | null>(() => {
     return channels.find((ch) => ch.id === selectedId) || null
   }, [channels, selectedId])
 
@@ -72,7 +72,7 @@ export function Component() {
     })
   }
 
-  const handleChannelClick = (ch: LiveChannel) => {
+  const handleChannelClick = (ch: ClientLiveChannel) => {
     setSelectedId(ch.id)
     setExpanded((prev) => {
       if (prev.has(ch.category)) return prev

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useParams, useLoaderData } from 'react-router'
-import type { CommentItem, ClientVideoDetail, VideoListItem } from '@orange-tv/shared'
+import type { CommentItem, ClientVideoDetail, ClientVideoListItem } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
 import { VideoGrid, FavoriteButton, RatingStars } from '@/components/common'
 import { CommentSection } from '@/components/CommentSection'
@@ -15,7 +15,7 @@ import { usePageTitle } from '@/hooks/usePageTitle'
 
 type VideoDetailLoaderData = {
   detail: ClientVideoDetail | null
-  related: VideoListItem[]
+  related: ClientVideoListItem[]
   comments: CommentItem[]
   error: string
 }
