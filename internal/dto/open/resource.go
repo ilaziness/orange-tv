@@ -45,7 +45,7 @@ type VideoDetailItem struct {
 	CategoryID  uint64        `json:"category_id"`
 	Year        uint32        `json:"year"`
 	Rating      float64       `json:"rating"`
-	ReleaseDate string        `json:"release_date,omitempty"`
+	ReleaseDate string        `json:"release_date"`
 	Region      string        `json:"region"`
 	Language    string        `json:"language"`
 	Description string        `json:"description"`
