@@ -51,7 +51,12 @@ export function PromptDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!loading) onOpenChange(v) }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!loading) onOpenChange(v)
+      }}
+    >
       <DialogContent className="sm:max-w-md" showCloseButton={!loading}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>

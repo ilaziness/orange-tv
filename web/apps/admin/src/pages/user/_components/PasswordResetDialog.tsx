@@ -11,7 +11,12 @@ interface PasswordResetDialogProps {
   onConfirm: (password: string) => void
 }
 
-export function PasswordResetDialog({ open, onOpenChange, loading = false, onConfirm }: PasswordResetDialogProps) {
+export function PasswordResetDialog({
+  open,
+  onOpenChange,
+  loading = false,
+  onConfirm,
+}: PasswordResetDialogProps) {
   function handleConfirm(pwd: string) {
     const result = pwdSchema.safeParse(pwd)
     if (!result.success) {

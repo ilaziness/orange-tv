@@ -2,21 +2,9 @@ import { usePlaySources } from './usePlaySources'
 import { PlaySourceList } from './PlaySourceList'
 import { PlaySourceDialog } from './PlaySourceDialog'
 import { PageContainer, ConfirmDialog } from '@/components/shared'
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty'
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Plus, Radio, RefreshCw } from 'lucide-react'
@@ -55,7 +43,11 @@ export default function PlaySourcesPage() {
           <CardAction>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={() => void load()} disabled={loading}>
-                {loading ? <Spinner data-icon="inline-start" /> : <RefreshCw data-icon="inline-start" />}
+                {loading ? (
+                  <Spinner data-icon="inline-start" />
+                ) : (
+                  <RefreshCw data-icon="inline-start" />
+                )}
                 刷新
               </Button>
               <Button size="sm" onClick={openCreate}>
@@ -114,7 +106,9 @@ export default function PlaySourcesPage() {
 
       <ConfirmDialog
         open={deleteId !== null}
-        onOpenChange={(open) => { if (!open && !deleting) setDeleteId(null) }}
+        onOpenChange={(open) => {
+          if (!open && !deleting) setDeleteId(null)
+        }}
         title="删除播放源"
         description="确认删除该播放源？此操作不可撤销。"
         destructive

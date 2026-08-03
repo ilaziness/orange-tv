@@ -51,13 +51,16 @@ export function BannerFormDialog({
 }: BannerFormDialogProps) {
   return (
     <>
-      <Dialog open={open} onOpenChange={(v) => { if (!submitting) onOpenChange(v) }}>
+      <Dialog
+        open={open}
+        onOpenChange={(v) => {
+          if (!submitting) onOpenChange(v)
+        }}
+      >
         <DialogContent className="sm:max-w-md" showCloseButton={!submitting}>
           <DialogHeader>
             <DialogTitle>{editingId ? '编辑 Banner' : '新增 Banner'}</DialogTitle>
-            <DialogDescription className="sr-only">
-              填写 Banner 信息后保存
-            </DialogDescription>
+            <DialogDescription className="sr-only">填写 Banner 信息后保存</DialogDescription>
           </DialogHeader>
           <form onSubmit={onSubmit} className="flex flex-col gap-5">
             <FieldGroup>
@@ -160,7 +163,10 @@ export function BannerFormDialog({
               <Field data-disabled={submitting ? true : undefined}>
                 <FieldLabel>状态</FieldLabel>
                 <Select
-                  items={[{ value: '1', label: '启用' }, { value: '0', label: '禁用' }]}
+                  items={[
+                    { value: '1', label: '启用' },
+                    { value: '0', label: '禁用' },
+                  ]}
                   value={form.status}
                   onValueChange={(v) => setForm((prev) => ({ ...prev, status: v ?? '' }))}
                 >
@@ -175,7 +181,12 @@ export function BannerFormDialog({
               </Field>
             </FieldGroup>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={submitting}
+              >
                 取消
               </Button>
               <Button type="submit" disabled={submitting}>

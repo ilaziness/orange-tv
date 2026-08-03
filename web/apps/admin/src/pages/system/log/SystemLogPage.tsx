@@ -2,13 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { adminApi, errorMessage } from '@/lib/api'
 import { PageContainer, Pagination } from '@/components/shared'
 import type { AppLogItem, SystemLogItem } from '@orange-tv/shared'
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -67,13 +61,21 @@ function OperationLogTab() {
   const moduleRef = useRef(module)
   const pageRef = useRef(page)
 
-  useEffect(() => { moduleRef.current = module }, [module])
-  useEffect(() => { pageRef.current = page }, [page])
+  useEffect(() => {
+    moduleRef.current = module
+  }, [module])
+  useEffect(() => {
+    pageRef.current = page
+  }, [page])
 
   const load = useCallback(async (p = pageRef.current, m = moduleRef.current) => {
     setLoading(true)
     try {
-      const res = await adminApi.listSystemLogs({ page: p, page_size: DEFAULT_PAGE_SIZE, module: m || undefined })
+      const res = await adminApi.listSystemLogs({
+        page: p,
+        page_size: DEFAULT_PAGE_SIZE,
+        module: m || undefined,
+      })
       setList(res.data.list || [])
       setTotal(res.data.total || 0)
       setPage(res.data.page || p)
@@ -84,7 +86,9 @@ function OperationLogTab() {
     }
   }, [])
 
-  useEffect(() => { void load(1) }, [load])
+  useEffect(() => {
+    void load(1)
+  }, [load])
 
   const hasNext = page * DEFAULT_PAGE_SIZE < total
 
@@ -94,7 +98,11 @@ function OperationLogTab() {
         <CardTitle>操作日志</CardTitle>
         <CardAction>
           <Button size="sm" variant="outline" onClick={() => void load(page)} disabled={loading}>
-            {loading ? <Spinner data-icon="inline-start" /> : <RefreshCw data-icon="inline-start" />}
+            {loading ? (
+              <Spinner data-icon="inline-start" />
+            ) : (
+              <RefreshCw data-icon="inline-start" />
+            )}
             刷新
           </Button>
         </CardAction>
@@ -106,7 +114,9 @@ function OperationLogTab() {
             value={module}
             onChange={(e) => setModule(e.target.value)}
             className="max-w-xs"
-            onKeyDown={(e) => { if (e.key === 'Enter') void load(1) }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') void load(1)
+            }}
           />
           <Button variant="outline" size="sm" onClick={() => void load(1)} disabled={loading}>
             {loading ? <Spinner data-icon="inline-start" /> : <Search data-icon="inline-start" />}
@@ -152,9 +162,15 @@ function OperationLogTab() {
                       <TableCell>{l.module || '-'}</TableCell>
                       <TableCell>{l.action || '-'}</TableCell>
                       <TableCell>{l.admin_id}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{l.ip_address || '-'}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{l.created_at || '-'}</TableCell>
-                      <TableCell className="max-w-xs truncate text-sm">{l.content || '-'}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {l.ip_address || '-'}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {l.created_at || '-'}
+                      </TableCell>
+                      <TableCell className="max-w-xs truncate text-sm">
+                        {l.content || '-'}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -221,7 +237,9 @@ function AppLogTab() {
     }
   }, [hasMore, loadingMore, nextOffset])
 
-  useEffect(() => { void loadInitial() }, [loadInitial])
+  useEffect(() => {
+    void loadInitial()
+  }, [loadInitial])
 
   return (
     <Card>
@@ -229,7 +247,11 @@ function AppLogTab() {
         <CardTitle>应用日志</CardTitle>
         <CardAction>
           <Button size="sm" variant="outline" onClick={() => void loadInitial()} disabled={loading}>
-            {loading ? <Spinner data-icon="inline-start" /> : <RefreshCw data-icon="inline-start" />}
+            {loading ? (
+              <Spinner data-icon="inline-start" />
+            ) : (
+              <RefreshCw data-icon="inline-start" />
+            )}
             刷新
           </Button>
         </CardAction>
@@ -261,11 +283,11 @@ function AppLogTab() {
                 <TableBody>
                   {list.map((l, i) => (
                     <TableRow key={i}>
-                      <TableCell className="text-xs text-muted-foreground">{l.time || '-'}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {l.time || '-'}
+                      </TableCell>
                       <TableCell>
-                        <Badge variant={levelVariant(l.level)}>
-                          {levelLabel(l.level)}
-                        </Badge>
+                        <Badge variant={levelVariant(l.level)}>{levelLabel(l.level)}</Badge>
                       </TableCell>
                       <TableCell className="text-sm">{l.msg || '-'}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">
@@ -273,7 +295,8 @@ function AppLogTab() {
                           <div className="flex flex-col gap-0.5">
                             {Object.entries(l.fields).map(([k, v]) => (
                               <span key={k}>
-                                <span className="text-foreground/70">{k}</span>: {formatFieldValue(v)}
+                                <span className="text-foreground/70">{k}</span>:{' '}
+                                {formatFieldValue(v)}
                               </span>
                             ))}
                           </div>
@@ -288,8 +311,17 @@ function AppLogTab() {
             </div>
             {hasMore && (
               <div className="mt-4 flex justify-center">
-                <Button variant="outline" size="sm" onClick={() => void loadMore()} disabled={loadingMore}>
-                  {loadingMore ? <Spinner data-icon="inline-start" /> : <ChevronDown data-icon="inline-start" />}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void loadMore()}
+                  disabled={loadingMore}
+                >
+                  {loadingMore ? (
+                    <Spinner data-icon="inline-start" />
+                  ) : (
+                    <ChevronDown data-icon="inline-start" />
+                  )}
                   加载更多
                 </Button>
               </div>

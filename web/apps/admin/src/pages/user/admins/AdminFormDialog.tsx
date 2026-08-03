@@ -47,7 +47,12 @@ export function AdminFormDialog({
   onSubmit,
 }: AdminFormDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!submitting) onOpenChange(v) }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!submitting) onOpenChange(v)
+      }}
+    >
       <DialogContent className="sm:max-w-md" showCloseButton={!submitting}>
         <DialogHeader>
           <DialogTitle>{editId > 0 ? '编辑管理员' : '新增管理员'}</DialogTitle>
@@ -65,7 +70,9 @@ export function AdminFormDialog({
                     id="username"
                     placeholder="请输入用户名（3-50个字符）"
                     value={createForm.username}
-                    onChange={(e) => setCreateForm((prev) => ({ ...prev, username: e.target.value }))}
+                    onChange={(e) =>
+                      setCreateForm((prev) => ({ ...prev, username: e.target.value }))
+                    }
                     required
                     minLength={3}
                     disabled={submitting}
@@ -79,7 +86,9 @@ export function AdminFormDialog({
                     type="password"
                     placeholder="请输入密码（至少6位）"
                     value={createForm.password}
-                    onChange={(e) => setCreateForm((prev) => ({ ...prev, password: e.target.value }))}
+                    onChange={(e) =>
+                      setCreateForm((prev) => ({ ...prev, password: e.target.value }))
+                    }
                     required
                     minLength={6}
                     disabled={submitting}
@@ -108,7 +117,9 @@ export function AdminFormDialog({
                     </SelectTrigger>
                     <SelectContent>
                       {groups.map((g) => (
-                        <SelectItem key={g.id} value={String(g.id)}>{g.name}</SelectItem>
+                        <SelectItem key={g.id} value={String(g.id)}>
+                          {g.name}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -116,7 +127,10 @@ export function AdminFormDialog({
                 <Field data-disabled={submitting ? true : undefined}>
                   <FieldLabel>状态</FieldLabel>
                   <Select
-                    items={[{ value: '1', label: '启用' }, { value: '0', label: '禁用' }]}
+                    items={[
+                      { value: '1', label: '启用' },
+                      { value: '0', label: '禁用' },
+                    ]}
                     value={createForm.status}
                     onValueChange={(v) => setCreateForm((prev) => ({ ...prev, status: v ?? '1' }))}
                   >
@@ -169,7 +183,9 @@ export function AdminFormDialog({
                     </SelectTrigger>
                     <SelectContent>
                       {groups.map((g) => (
-                        <SelectItem key={g.id} value={String(g.id)}>{g.name}</SelectItem>
+                        <SelectItem key={g.id} value={String(g.id)}>
+                          {g.name}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -177,7 +193,10 @@ export function AdminFormDialog({
                 <Field data-disabled={submitting ? true : undefined}>
                   <FieldLabel>状态</FieldLabel>
                   <Select
-                    items={[{ value: '1', label: '启用' }, { value: '0', label: '禁用' }]}
+                    items={[
+                      { value: '1', label: '启用' },
+                      { value: '0', label: '禁用' },
+                    ]}
                     value={editForm.status}
                     onValueChange={(v) => setEditForm((prev) => ({ ...prev, status: v ?? '1' }))}
                   >
@@ -194,7 +213,12 @@ export function AdminFormDialog({
             )}
           </FieldGroup>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={submitting}
+            >
               取消
             </Button>
             <Button type="submit" disabled={submitting}>

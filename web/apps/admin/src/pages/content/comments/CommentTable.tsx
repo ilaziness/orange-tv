@@ -57,9 +57,13 @@ export function CommentTable({
               <TableRow key={item.id}>
                 <TableCell>{item.id}</TableCell>
                 <TableCell>{item.video_id}</TableCell>
-                <TableCell className="max-w-xs truncate" title={item.video_title}>{item.video_title || '-'}</TableCell>
+                <TableCell className="max-w-xs truncate" title={item.video_title}>
+                  {item.video_title || '-'}
+                </TableCell>
                 <TableCell className="max-w-xs">
-                  <div className="line-clamp-2" title={item.content}>{item.content}</div>
+                  <div className="line-clamp-2" title={item.content}>
+                    {item.content}
+                  </div>
                 </TableCell>
                 <TableCell>{item.user_id}</TableCell>
                 <TableCell>{item.username || '-'}</TableCell>
@@ -89,14 +93,21 @@ export function CommentTable({
                       onClick={() => onToggleStatus(item.id, isVisible ? 0 : 1)}
                       title={isVisible ? '隐藏' : '显示'}
                     >
-                      {toggling
-                        ? <Spinner data-icon="inline-start" />
-                        : isVisible
-                          ? <EyeOff data-icon="inline-start" />
-                          : <Eye data-icon="inline-start" />}
+                      {toggling ? (
+                        <Spinner data-icon="inline-start" />
+                      ) : isVisible ? (
+                        <EyeOff data-icon="inline-start" />
+                      ) : (
+                        <Eye data-icon="inline-start" />
+                      )}
                       {isVisible ? '隐藏' : '显示'}
                     </Button>
-                    <Button size="sm" variant="ghost" disabled={toggling} onClick={() => onDelete(item.id)}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={toggling}
+                      onClick={() => onDelete(item.id)}
+                    >
                       <Trash2 data-icon="inline-start" />
                       删除
                     </Button>

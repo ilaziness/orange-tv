@@ -17,11 +17,12 @@ export function RequireAuth() {
     loadProfile().finally(() => setReady(true))
   }, [token])
 
-  if (!ready) return (
-    <div className="flex items-center justify-center py-20">
-      <Spinner className="size-6" />
-    </div>
-  )
+  if (!ready)
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Spinner className="size-6" />
+      </div>
+    )
   if (!token) return <Navigate to="/login" replace />
   if (!profile) return <Navigate to="/login" replace />
   return <Outlet />

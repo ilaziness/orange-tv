@@ -130,7 +130,10 @@ export function LiveDialog({
             <Field>
               <FieldLabel htmlFor="live-status">状态</FieldLabel>
               <Select
-                items={[{ value: '1', label: '启用' }, { value: '0', label: '禁用' }]}
+                items={[
+                  { value: '1', label: '启用' },
+                  { value: '0', label: '禁用' },
+                ]}
                 value={form.status}
                 onValueChange={(v) => setForm((prev) => ({ ...prev, status: v ?? '1' }))}
                 disabled={submitting}
@@ -146,7 +149,12 @@ export function LiveDialog({
             </Field>
           </FieldGroup>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={submitting}
+            >
               取消
             </Button>
             <Button type="submit" disabled={submitting}>

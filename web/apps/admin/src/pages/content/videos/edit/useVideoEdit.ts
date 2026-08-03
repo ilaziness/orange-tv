@@ -11,7 +11,10 @@ const videoFormSchema = z.object({
   title: z.string().min(1, '请输入影视标题'),
   subtitle: z.string(),
   description: z.string(),
-  category_id: z.string().refine((v) => v !== '' && v !== '0', '请选择分类').transform((v) => Number(v)),
+  category_id: z
+    .string()
+    .refine((v) => v !== '' && v !== '0', '请选择分类')
+    .transform((v) => Number(v)),
   publish_status: z.union([z.string(), z.number()]).transform((v) => Number(v)),
   serial_status: z.union([z.string(), z.number()]).transform((v) => Number(v)),
   cover_image: z.string(),

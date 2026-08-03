@@ -33,7 +33,9 @@ type VideosLoaderData = {
 
 function getPageSize(): number {
   if (typeof window === 'undefined') return PC_PAGE_SIZE
-  return window.matchMedia(`(min-width: ${PC_BREAKPOINT}px)`).matches ? PC_PAGE_SIZE : MOBILE_PAGE_SIZE
+  return window.matchMedia(`(min-width: ${PC_BREAKPOINT}px)`).matches
+    ? PC_PAGE_SIZE
+    : MOBILE_PAGE_SIZE
 }
 
 function parseFilters(params: URLSearchParams): FilterParams {
@@ -124,11 +126,7 @@ export function Component() {
   const subCategoriesToShow = currentRoot?.children || []
   const filterParentCategoryId = currentRoot?.id || 0
 
-  const title = keyword
-    ? `搜索：${keyword}`
-    : currentCategory
-      ? currentCategory.name
-      : '影视列表'
+  const title = keyword ? `搜索：${keyword}` : currentCategory ? currentCategory.name : '影视列表'
 
   usePageTitle(title)
 

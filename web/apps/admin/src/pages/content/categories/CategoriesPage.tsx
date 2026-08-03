@@ -2,12 +2,7 @@ import { useCategories, statusOptions } from './useCategories'
 import { CategoryTree } from './CategoryTree'
 import { CategoryDialog } from './CategoryDialog'
 import { PageContainer, ConfirmDialog } from '@/components/shared'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function CategoriesPage() {
   const {
@@ -68,7 +63,9 @@ export default function CategoriesPage() {
 
       <ConfirmDialog
         open={deleteId !== null}
-        onOpenChange={(open) => { if (!open && !deleting) setDeleteId(null) }}
+        onOpenChange={(open) => {
+          if (!open && !deleting) setDeleteId(null)
+        }}
         title="删除分类"
         description="确认删除该分类？此操作不可撤销。"
         destructive

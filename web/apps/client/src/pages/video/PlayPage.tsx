@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate, Link, useLoaderData } from 'react-router'
-import type { ClientVideoDetail, PlayEpisodeResponse, VideoDetailSourceGroup } from '@orange-tv/shared'
+import type {
+  ClientVideoDetail,
+  PlayEpisodeResponse,
+  VideoDetailSourceGroup,
+} from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
 import { useAuth } from '@/hooks/useAuth'
 import { useSettingsStore } from '@/store/settings'
@@ -20,7 +24,11 @@ type PlayLoaderData = {
   error: string
 }
 
-export async function loader({ params }: { params: Record<string, string | undefined> }): Promise<PlayLoaderData> {
+export async function loader({
+  params,
+}: {
+  params: Record<string, string | undefined>
+}): Promise<PlayLoaderData> {
   const { id, sourceId, episodeId } = params
   if (!id || !sourceId || !episodeId) {
     return { detail: null, episode: null, error: '' }
@@ -58,7 +66,11 @@ export function Component() {
     ?.flatMap((s) => s.episodes)
     ?.find((e) => e.id === epIdNum)?.episode
 
-  usePageTitle(detail ? `${detail.title}${currentEpNumber ? ` 第${currentEpNumber}集` : ''} - 播放` : '视频播放')
+  usePageTitle(
+    detail
+      ? `${detail.title}${currentEpNumber ? ` 第${currentEpNumber}集` : ''} - 播放`
+      : '视频播放',
+  )
 
   const handleProgress = useCallback(
     (currentTime: number, duration: number) => {
@@ -164,9 +176,7 @@ export function Component() {
             adConfig={ad.enabled ? ad : null}
             playlist={playlist}
             currentEpisodeId={epIdNum}
-            onEpisodeChange={(epId) =>
-              navigate(`/play/${id}/${sourceIdNum}/${epId}`)
-            }
+            onEpisodeChange={(epId) => navigate(`/play/${id}/${sourceIdNum}/${epId}`)}
             onProgress={handleProgress}
           />
         </div>
@@ -201,14 +211,10 @@ export function Component() {
                       <Button
                         key={ep.id}
                         variant={
-                          source.id === sourceIdNum && ep.id === epIdNum
-                            ? 'default'
-                            : 'outline'
+                          source.id === sourceIdNum && ep.id === epIdNum ? 'default' : 'outline'
                         }
                         size="sm"
-                        onClick={() =>
-                          navigate(`/play/${id}/${source.id}/${ep.id}`)
-                        }
+                        onClick={() => navigate(`/play/${id}/${source.id}/${ep.id}`)}
                       >
                         {ep.title || `第${ep.episode}集`}
                       </Button>

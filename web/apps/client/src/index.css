@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -93,7 +93,7 @@
     @apply bg-background text-foreground;
   }
   button:not(:disabled),
-  [role="button"]:not(:disabled) {
+  [role='button']:not(:disabled) {
     cursor: pointer;
   }
 }
@@ -105,7 +105,9 @@
 }
 
 #nprogress .peg {
-  box-shadow: 0 0 10px var(--primary), 0 0 5px var(--primary) !important;
+  box-shadow:
+    0 0 10px var(--primary),
+    0 0 5px var(--primary) !important;
 }
 
 #nprogress .spinner {

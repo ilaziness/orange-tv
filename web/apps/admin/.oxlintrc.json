@@ -7,9 +7,7 @@
   },
   "overrides": [
     {
-      "files": [
-        "src/components/ui/**/*.{ts,tsx}"
-      ],
+      "files": ["src/components/ui/**/*.{ts,tsx}"],
       "rules": {
         "react/only-export-components": [
           "warn",

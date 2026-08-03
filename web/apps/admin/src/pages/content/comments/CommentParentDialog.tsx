@@ -15,7 +15,12 @@ interface CommentParentDialogProps {
   loading?: boolean
 }
 
-export function CommentParentDialog({ open, onOpenChange, parents, loading }: CommentParentDialogProps) {
+export function CommentParentDialog({
+  open,
+  onOpenChange,
+  parents,
+  loading,
+}: CommentParentDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
@@ -35,8 +40,12 @@ export function CommentParentDialog({ open, onOpenChange, parents, loading }: Co
             {parents.map((p, idx) => (
               <div key={p.id} className="rounded-lg border p-3">
                 <div className="mb-1 flex items-center justify-between text-sm text-muted-foreground">
-                  <span>#{idx + 1} 用户: {p.username || '-'} (ID:{p.user_id})</span>
-                  <span>ID: {p.id} {p.parent_id ? `→ 父ID: ${p.parent_id}` : ''}</span>
+                  <span>
+                    #{idx + 1} 用户: {p.username || '-'} (ID:{p.user_id})
+                  </span>
+                  <span>
+                    ID: {p.id} {p.parent_id ? `→ 父ID: ${p.parent_id}` : ''}
+                  </span>
                 </div>
                 <p className="text-sm">{p.content}</p>
                 <div className="mt-1 text-xs text-muted-foreground">{p.created_at || '-'}</div>

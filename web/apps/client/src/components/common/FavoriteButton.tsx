@@ -1,76 +1,67 @@
-import { useEffect, useState } from "react";
-import { clientApi, errorMessage } from "@/lib/api";
-import { useAuth } from "@/hooks/useAuth";
-import { useLoginDialogStore } from "@/store/loginDialog";
-import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
-import { HeartIcon } from "lucide-react";
-import { toast } from "sonner";
+import { useEffect, useState } from 'react'
+import { clientApi, errorMessage } from '@/lib/api'
+import { useAuth } from '@/hooks/useAuth'
+import { useLoginDialogStore } from '@/store/loginDialog'
+import { Button } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { cn } from '@/lib/utils'
+import { HeartIcon } from 'lucide-react'
+import { toast } from 'sonner'
 
 export function FavoriteButton({ videoId }: { videoId: number }) {
-  const { profile } = useAuth();
-  const openLoginDialog = useLoginDialogStore((s) => s.open);
-  const [favorited, setFavorited] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const { profile } = useAuth()
+  const openLoginDialog = useLoginDialogStore((s) => s.open)
+  const [favorited, setFavorited] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    if (!profile || !videoId) return;
+    if (!profile || !videoId) return
     clientApi
       .checkFavorite(videoId)
       .then((res) => setFavorited(res.data.favorited))
-      .catch(() => undefined);
-  }, [profile, videoId]);
+      .catch(() => undefined)
+  }, [profile, videoId])
 
   const handleClick = async () => {
     if (!profile) {
-      openLoginDialog();
-      return;
+      openLoginDialog()
+      return
     }
-    if (!videoId) return;
-    setLoading(true);
+    if (!videoId) return
+    setLoading(true)
     try {
       if (favorited) {
-        await clientApi.removeFavorite(videoId);
-        setFavorited(false);
-        toast.success("已取消收藏");
+        await clientApi.removeFavorite(videoId)
+        setFavorited(false)
+        toast.success('已取消收藏')
       } else {
-        await clientApi.addFavorite(videoId);
-        setFavorited(true);
-        toast.success("收藏成功");
+        await clientApi.addFavorite(videoId)
+        setFavorited(true)
+        toast.success('收藏成功')
       }
     } catch (err) {
-      toast.error(errorMessage(err));
+      toast.error(errorMessage(err))
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <Tooltip>
       <TooltipTrigger
         render={
           <Button
-            variant={favorited ? "default" : "outline"}
+            variant={favorited ? 'default' : 'outline'}
             size="sm"
             disabled={loading}
             onClick={handleClick}
           >
-            <HeartIcon
-              data-icon="inline-start"
-              className={cn(favorited && "fill-current")}
-            />
-            {favorited ? "已收藏" : "收藏"}
+            <HeartIcon data-icon="inline-start" className={cn(favorited && 'fill-current')} />
+            {favorited ? '已收藏' : '收藏'}
           </Button>
         }
       />
-      <TooltipContent>
-        {favorited ? "点击取消收藏" : "点击收藏"}
-      </TooltipContent>
+      <TooltipContent>{favorited ? '点击取消收藏' : '点击收藏'}</TooltipContent>
     </Tooltip>
-  );
+  )
 }

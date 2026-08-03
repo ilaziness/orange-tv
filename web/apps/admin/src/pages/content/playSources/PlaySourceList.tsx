@@ -20,7 +20,13 @@ interface PlaySourceListProps {
   onDelete: (id: number) => void
 }
 
-export function PlaySourceList({ items, togglingId, onEdit, onToggle, onDelete }: PlaySourceListProps) {
+export function PlaySourceList({
+  items,
+  togglingId,
+  onEdit,
+  onToggle,
+  onDelete,
+}: PlaySourceListProps) {
   return (
     <div className="rounded-md border">
       <Table>
@@ -41,7 +47,9 @@ export function PlaySourceList({ items, togglingId, onEdit, onToggle, onDelete }
                 <TableCell>{item.id}</TableCell>
                 <TableCell className="font-medium">{item.name}</TableCell>
                 <TableCell>{item.sort_order}</TableCell>
-                <TableCell><StatusBadge status={item.status} /></TableCell>
+                <TableCell>
+                  <StatusBadge status={item.status} />
+                </TableCell>
                 <TableCell>
                   <div className="flex gap-1">
                     <Button size="sm" variant="ghost" onClick={() => onEdit(item)}>

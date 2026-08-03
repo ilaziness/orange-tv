@@ -2,13 +2,7 @@ import { useGroups } from './useGroups'
 import { GroupFormDialog } from './GroupFormDialog'
 import { GroupList } from './GroupList'
 import { PageContainer, ConfirmDialog, Pagination } from '@/components/shared'
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from '@/components/ui/empty'
@@ -46,8 +40,17 @@ export default function UserGroupsPage() {
           <CardTitle>用户组管理</CardTitle>
           <CardAction>
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={() => void load(page)} disabled={loading}>
-                {loading ? <Spinner data-icon="inline-start" /> : <RefreshCw data-icon="inline-start" />}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => void load(page)}
+                disabled={loading}
+              >
+                {loading ? (
+                  <Spinner data-icon="inline-start" />
+                ) : (
+                  <RefreshCw data-icon="inline-start" />
+                )}
                 刷新
               </Button>
               <Button size="sm" onClick={openCreate}>
@@ -66,12 +69,7 @@ export default function UserGroupsPage() {
             </div>
           ) : list.length > 0 ? (
             <>
-              <GroupList
-                list={list}
-                loading={loading}
-                onEdit={openEdit}
-                onDelete={setDeleteId}
-              />
+              <GroupList list={list} loading={loading} onEdit={openEdit} onDelete={setDeleteId} />
               <Pagination
                 page={page}
                 total={total}
@@ -107,7 +105,9 @@ export default function UserGroupsPage() {
 
       <ConfirmDialog
         open={deleteId !== null}
-        onOpenChange={(open) => { if (!open && !deleting) setDeleteId(null) }}
+        onOpenChange={(open) => {
+          if (!open && !deleting) setDeleteId(null)
+        }}
         title="删除用户组"
         description="确认删除该用户组？此操作不可撤销。"
         destructive

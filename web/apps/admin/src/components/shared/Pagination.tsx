@@ -13,7 +13,17 @@ interface PaginationProps {
   onLast: () => void
 }
 
-export function Pagination({ page, total, pageSize = 20, hasNext, loading, onFirst, onPrev, onNext, onLast }: PaginationProps) {
+export function Pagination({
+  page,
+  total,
+  pageSize = 20,
+  hasNext,
+  loading,
+  onFirst,
+  onPrev,
+  onNext,
+  onLast,
+}: PaginationProps) {
   const totalPages = Math.ceil(total / pageSize)
   return (
     <div className="mt-4 flex items-center justify-between">

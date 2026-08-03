@@ -19,7 +19,10 @@ export function useVideos() {
   const [page, setPage] = useState(1)
   const [total, setTotal] = useState(0)
   const [selected, setSelected] = useState<Set<number>>(new Set())
-  const [batchAction, setBatchAction] = useState<{ type: 'publish' | 'unpublish' | 'delete'; status?: number } | null>(null)
+  const [batchAction, setBatchAction] = useState<{
+    type: 'publish' | 'unpublish' | 'delete'
+    status?: number
+  } | null>(null)
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [toggleId, setToggleId] = useState<number | null>(null)
   const [detailId, setDetailId] = useState<number | null>(null)
@@ -30,41 +33,53 @@ export function useVideos() {
   const categoryIdRef = useRef(categoryId)
   const pageRef = useRef(page)
 
-  useEffect(() => { keywordRef.current = keyword }, [keyword])
-  useEffect(() => { categoryIdRef.current = categoryId }, [categoryId])
-  useEffect(() => { pageRef.current = page }, [page])
+  useEffect(() => {
+    keywordRef.current = keyword
+  }, [keyword])
+  useEffect(() => {
+    categoryIdRef.current = categoryId
+  }, [categoryId])
+  useEffect(() => {
+    pageRef.current = page
+  }, [page])
 
-  const load = useCallback(async (p = pageRef.current) => {
-    setLoading(true)
-    try {
-      const res = await adminApi.listVideos({
-        keyword: keywordRef.current,
-        category_id: categoryIdRef.current || undefined,
-        page: p,
-        page_size: DEFAULT_PAGE_SIZE,
-        director_id: directorId ? Number(directorId) : undefined,
-        actor_id: actorId ? Number(actorId) : undefined,
-        tag_id: tagId ? Number(tagId) : undefined,
-      })
-      setItems(res.data.list || [])
-      setTotal(res.data.total || 0)
-      setPage(res.data.page || p)
-      setSelected(new Set())
-    } catch (err) {
-      toast.error(errorMessage(err))
-    } finally {
-      setLoading(false)
-    }
-  }, [directorId, actorId, tagId])
+  const load = useCallback(
+    async (p = pageRef.current) => {
+      setLoading(true)
+      try {
+        const res = await adminApi.listVideos({
+          keyword: keywordRef.current,
+          category_id: categoryIdRef.current || undefined,
+          page: p,
+          page_size: DEFAULT_PAGE_SIZE,
+          director_id: directorId ? Number(directorId) : undefined,
+          actor_id: actorId ? Number(actorId) : undefined,
+          tag_id: tagId ? Number(tagId) : undefined,
+        })
+        setItems(res.data.list || [])
+        setTotal(res.data.total || 0)
+        setPage(res.data.page || p)
+        setSelected(new Set())
+      } catch (err) {
+        toast.error(errorMessage(err))
+      } finally {
+        setLoading(false)
+      }
+    },
+    [directorId, actorId, tagId],
+  )
 
   useEffect(() => {
     void load(1)
   }, [load, categoryId])
 
   useEffect(() => {
-    adminApi.listCategories().then((res) => {
-      setCategories(flattenCategories(res.data || []))
-    }).catch(() => {})
+    adminApi
+      .listCategories()
+      .then((res) => {
+        setCategories(flattenCategories(res.data || []))
+      })
+      .catch(() => {})
   }, [])
 
   function toggleSelect(id: number) {
@@ -125,7 +140,7 @@ export function useVideos() {
     setToggleId(id)
     try {
       await adminApi.batchUpdatePublishStatus([id], next)
-      setItems((prev) => prev.map((it) => it.id === id ? { ...it, publish_status: next } : it))
+      setItems((prev) => prev.map((it) => (it.id === id ? { ...it, publish_status: next } : it)))
       toast.success(`已${next === 1 ? '上架' : '下架'}`)
     } catch (err) {
       toast.error(errorMessage(err))

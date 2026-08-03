@@ -18,7 +18,10 @@ const playSourceSchema = z.object({
   sort_order: z
     .string()
     .transform((v) => (v.trim() === '' ? 0 : Number(v)))
-    .refine((v) => Number.isSafeInteger(v) && v >= 0 && v <= 4294967295, '排序必须为 0 至 4294967295 的整数'),
+    .refine(
+      (v) => Number.isSafeInteger(v) && v >= 0 && v <= 4294967295,
+      '排序必须为 0 至 4294967295 的整数',
+    ),
   status: z
     .string()
     .min(1, '请选择状态')

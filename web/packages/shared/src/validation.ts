@@ -8,9 +8,7 @@ const SEARCH_ALLOWED_CHARS =
 
 /** Sanitizes a live search input by removing invalid characters and capping to 10 chars. */
 export function sanitizeSearchInput(value: string): string {
-  return value
-    .replace(new RegExp(`[^${SEARCH_ALLOWED_CHARS}]`, 'gu'), '')
-    .slice(0, 10)
+  return value.replace(new RegExp(`[^${SEARCH_ALLOWED_CHARS}]`, 'gu'), '').slice(0, 10)
 }
 
 /** Returns true if the username (after trim) is exactly 2-15 letters/digits. */

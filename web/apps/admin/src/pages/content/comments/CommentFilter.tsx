@@ -38,7 +38,9 @@ export function CommentFilter({
         value={keyword}
         onChange={(e) => setKeyword(e.target.value)}
         className="max-w-xs"
-        onKeyDown={(e) => { if (e.key === 'Enter') onSearch() }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') onSearch()
+        }}
         disabled={loading}
       />
       {(() => {
@@ -49,16 +51,15 @@ export function CommentFilter({
         ]
         const selectedLabel = statusOptions.find((o) => o.value === status)?.label
         return (
-          <Select
-            value={status}
-            onValueChange={(v) => setStatus((v ?? '') as '' | '0' | '1')}
-          >
+          <Select value={status} onValueChange={(v) => setStatus((v ?? '') as '' | '0' | '1')}>
             <SelectTrigger className="w-32" disabled={loading}>
               <SelectValue placeholder="状态">{selectedLabel}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               {statusOptions.map((o) => (
-                <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -69,7 +70,9 @@ export function CommentFilter({
         value={videoId}
         onChange={(e) => setVideoId(e.target.value.replace(/[^0-9]/g, ''))}
         className="w-32"
-        onKeyDown={(e) => { if (e.key === 'Enter') onSearch() }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') onSearch()
+        }}
         disabled={loading}
       />
       <Button variant="outline" size="sm" onClick={onSearch} disabled={loading}>

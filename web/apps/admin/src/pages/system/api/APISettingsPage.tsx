@@ -3,12 +3,7 @@ import type * as React from 'react'
 import { z } from 'zod'
 import { adminApi, errorMessage } from '@/lib/api'
 import { PageContainer } from '@/components/shared'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
@@ -43,7 +38,9 @@ export default function APISettingsPage() {
     }
   }
 
-  useEffect(() => { void load() }, [])
+  useEffect(() => {
+    void load()
+  }, [])
 
   async function save(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -89,12 +86,18 @@ export default function APISettingsPage() {
               <FieldGroup>
                 <Field data-disabled={submitting ? true : undefined}>
                   <FieldLabel htmlFor="enable_third_party_collect">第三方采集</FieldLabel>
-                  <label htmlFor="enable_third_party_collect" className="flex items-center gap-2 text-sm">
+                  <label
+                    htmlFor="enable_third_party_collect"
+                    className="flex items-center gap-2 text-sm"
+                  >
                     <Checkbox
                       id="enable_third_party_collect"
                       checked={form.enable_third_party_collect}
                       onCheckedChange={(checked) =>
-                        setForm((prev) => ({ ...prev, enable_third_party_collect: checked === true }))
+                        setForm((prev) => ({
+                          ...prev,
+                          enable_third_party_collect: checked === true,
+                        }))
                       }
                       disabled={submitting}
                     />
@@ -104,7 +107,11 @@ export default function APISettingsPage() {
               </FieldGroup>
               <div className="flex justify-end">
                 <Button type="submit" disabled={submitting}>
-                  {submitting ? <Spinner data-icon="inline-start" /> : <Save data-icon="inline-start" />}
+                  {submitting ? (
+                    <Spinner data-icon="inline-start" />
+                  ) : (
+                    <Save data-icon="inline-start" />
+                  )}
                   {submitting ? '保存中...' : '保存'}
                 </Button>
               </div>

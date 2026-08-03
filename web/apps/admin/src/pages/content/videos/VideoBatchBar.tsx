@@ -8,7 +8,13 @@ interface VideoBatchBarProps {
   onDelete: () => void
 }
 
-export function VideoBatchBar({ count, loading, onPublish, onUnpublish, onDelete }: VideoBatchBarProps) {
+export function VideoBatchBar({
+  count,
+  loading,
+  onPublish,
+  onUnpublish,
+  onDelete,
+}: VideoBatchBarProps) {
   if (count === 0) return null
   return (
     <div className="mb-4 flex items-center gap-2 rounded-md border bg-muted/50 p-2">

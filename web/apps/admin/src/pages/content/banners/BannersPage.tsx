@@ -2,13 +2,7 @@ import { useBanners } from './useBanners'
 import { BannerFormDialog } from './BannerForm'
 import { BannerList } from './BannerList'
 import { PageContainer, ConfirmDialog, Pagination } from '@/components/shared'
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -51,8 +45,17 @@ export default function BannersPage() {
           <CardTitle>首页Banner</CardTitle>
           <CardAction>
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={() => void load(page)} disabled={loading}>
-                {loading ? <Spinner data-icon="inline-start" /> : <RefreshCw data-icon="inline-start" />}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => void load(page)}
+                disabled={loading}
+              >
+                {loading ? (
+                  <Spinner data-icon="inline-start" />
+                ) : (
+                  <RefreshCw data-icon="inline-start" />
+                )}
                 刷新
               </Button>
               <Button size="sm" onClick={openCreate}>
@@ -77,7 +80,12 @@ export default function BannersPage() {
                     <Spinner />
                   </div>
                 )}
-                <BannerList list={list} onEdit={openEdit} onToggle={onToggle} onDelete={setDeleteId} />
+                <BannerList
+                  list={list}
+                  onEdit={openEdit}
+                  onToggle={onToggle}
+                  onDelete={setDeleteId}
+                />
               </div>
               <Pagination
                 page={page}
@@ -126,7 +134,9 @@ export default function BannersPage() {
 
       <ConfirmDialog
         open={deleteId !== null}
-        onOpenChange={(open) => { if (!open && !deleting) setDeleteId(null) }}
+        onOpenChange={(open) => {
+          if (!open && !deleting) setDeleteId(null)
+        }}
         title="删除 Banner"
         description="确认删除该 Banner？此操作不可撤销。"
         destructive

@@ -20,13 +20,7 @@ interface AdminTableProps {
   onDelete: (id: number) => void
 }
 
-export function AdminTable({
-  list,
-  loading,
-  onEdit,
-  onReset,
-  onDelete,
-}: AdminTableProps) {
+export function AdminTable({ list, loading, onEdit, onReset, onDelete }: AdminTableProps) {
   return (
     <div className="relative rounded-md border">
       {loading && (
@@ -53,8 +47,12 @@ export function AdminTable({
               <TableCell className="font-medium">{a.username}</TableCell>
               <TableCell>{a.email || '-'}</TableCell>
               <TableCell>{a.group_name}</TableCell>
-              <TableCell><StatusBadge status={a.status} /></TableCell>
-              <TableCell className="text-xs text-muted-foreground">{a.last_login_at || '-'}</TableCell>
+              <TableCell>
+                <StatusBadge status={a.status} />
+              </TableCell>
+              <TableCell className="text-xs text-muted-foreground">
+                {a.last_login_at || '-'}
+              </TableCell>
               <TableCell>
                 <div className="flex gap-1">
                   <Button size="sm" variant="ghost" onClick={() => onEdit(a)}>

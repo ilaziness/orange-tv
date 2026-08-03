@@ -31,11 +31,13 @@ const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage'))
 
 function Lazy({ children }: { children: ReactNode }) {
   return (
-    <Suspense fallback={
-      <div className="flex h-full items-center justify-center p-8">
-        <Skeleton className="h-8 w-48" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex h-full items-center justify-center p-8">
+          <Skeleton className="h-8 w-48" />
+        </div>
+      }
+    >
       {children}
     </Suspense>
   )
@@ -44,32 +46,200 @@ function Lazy({ children }: { children: ReactNode }) {
 export function AppRoutes() {
   return (
     <Routes>
-      <Route path="/login" element={<Lazy><LoginPage /></Lazy>} />
+      <Route
+        path="/login"
+        element={
+          <Lazy>
+            <LoginPage />
+          </Lazy>
+        }
+      />
       <Route element={<RequireAuth />}>
         <Route element={<AdminLayout />}>
-          <Route path="/" element={<Lazy><DashboardPage /></Lazy>} />
-          <Route path="/content/categories" element={<Lazy><CategoriesPage /></Lazy>} />
-          <Route path="/content/videos" element={<Lazy><VideosPage /></Lazy>} />
-          <Route path="/content/videos/new" element={<Lazy><VideoEditPage /></Lazy>} />
-          <Route path="/content/videos/:id" element={<Lazy><VideoEditPage /></Lazy>} />
-          <Route path="/content/directors" element={<Lazy><DirectorsPage /></Lazy>} />
-          <Route path="/content/actors" element={<Lazy><ActorsPage /></Lazy>} />
-          <Route path="/content/tags" element={<Lazy><TagsPage /></Lazy>} />
-          <Route path="/content/play-sources" element={<Lazy><PlaySourcesPage /></Lazy>} />
-          <Route path="/content/live" element={<Lazy><LivePage /></Lazy>} />
-          <Route path="/content/comments" element={<Lazy><CommentsPage /></Lazy>} />
-          <Route path="/content/collect" element={<Lazy><CollectPage /></Lazy>} />
-          <Route path="/content/banners" element={<Lazy><BannersPage /></Lazy>} />
-          <Route path="/user/admins" element={<Lazy><AdminsPage /></Lazy>} />
-          <Route path="/user/groups" element={<Lazy><UserGroupsPage /></Lazy>} />
-          <Route path="/user/users" element={<Lazy><UsersPage /></Lazy>} />
-          <Route path="/user/login-logs" element={<Lazy><LoginLogsPage /></Lazy>} />
-          <Route path="/system/site" element={<Lazy><SiteSettingsPage /></Lazy>} />
-          <Route path="/system/api" element={<Lazy><APISettingsPage /></Lazy>} />
-          <Route path="/system/ad" element={<Lazy><AdSettingsPage /></Lazy>} />
-          <Route path="/system/log" element={<Lazy><SystemLogPage /></Lazy>} />
-          <Route path="/system/data-management" element={<Lazy><DataManagementPage /></Lazy>} />
-          <Route path="/settings" element={<Lazy><SettingsPage /></Lazy>} />
+          <Route
+            path="/"
+            element={
+              <Lazy>
+                <DashboardPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/content/categories"
+            element={
+              <Lazy>
+                <CategoriesPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/content/videos"
+            element={
+              <Lazy>
+                <VideosPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/content/videos/new"
+            element={
+              <Lazy>
+                <VideoEditPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/content/videos/:id"
+            element={
+              <Lazy>
+                <VideoEditPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/content/directors"
+            element={
+              <Lazy>
+                <DirectorsPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/content/actors"
+            element={
+              <Lazy>
+                <ActorsPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/content/tags"
+            element={
+              <Lazy>
+                <TagsPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/content/play-sources"
+            element={
+              <Lazy>
+                <PlaySourcesPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/content/live"
+            element={
+              <Lazy>
+                <LivePage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/content/comments"
+            element={
+              <Lazy>
+                <CommentsPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/content/collect"
+            element={
+              <Lazy>
+                <CollectPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/content/banners"
+            element={
+              <Lazy>
+                <BannersPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/user/admins"
+            element={
+              <Lazy>
+                <AdminsPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/user/groups"
+            element={
+              <Lazy>
+                <UserGroupsPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/user/users"
+            element={
+              <Lazy>
+                <UsersPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/user/login-logs"
+            element={
+              <Lazy>
+                <LoginLogsPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/system/site"
+            element={
+              <Lazy>
+                <SiteSettingsPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/system/api"
+            element={
+              <Lazy>
+                <APISettingsPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/system/ad"
+            element={
+              <Lazy>
+                <AdSettingsPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/system/log"
+            element={
+              <Lazy>
+                <SystemLogPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/system/data-management"
+            element={
+              <Lazy>
+                <DataManagementPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <Lazy>
+                <SettingsPage />
+              </Lazy>
+            }
+          />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

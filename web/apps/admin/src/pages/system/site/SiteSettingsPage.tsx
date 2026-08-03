@@ -3,12 +3,7 @@ import type * as React from 'react'
 import { z } from 'zod'
 import { adminApi, errorMessage } from '@/lib/api'
 import { PageContainer } from '@/components/shared'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
@@ -57,7 +52,9 @@ function FeatureSettingsTab() {
     }
   }
 
-  useEffect(() => { void load() }, [])
+  useEffect(() => {
+    void load()
+  }, [])
 
   async function save(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -95,7 +92,9 @@ function FeatureSettingsTab() {
                   <Switch
                     id="live_enabled"
                     checked={form.live_enabled}
-                    onCheckedChange={(checked) => setForm((prev) => ({ ...prev, live_enabled: checked }))}
+                    onCheckedChange={(checked) =>
+                      setForm((prev) => ({ ...prev, live_enabled: checked }))
+                    }
                     disabled={submitting}
                   />
                   <span>开启用户端电视直播功能</span>
@@ -107,7 +106,13 @@ function FeatureSettingsTab() {
                   <Switch
                     id="comment_enabled"
                     checked={form.comment_enabled}
-                    onCheckedChange={(checked) => setForm((prev) => ({ ...prev, comment_enabled: checked, ...(!checked ? { comment_review: false } : {}) }))}
+                    onCheckedChange={(checked) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        comment_enabled: checked,
+                        ...(!checked ? { comment_review: false } : {}),
+                      }))
+                    }
                     disabled={submitting}
                   />
                   <span>开启用户端视频评论功能</span>
@@ -120,7 +125,9 @@ function FeatureSettingsTab() {
                     <Switch
                       id="comment_review"
                       checked={form.comment_review}
-                      onCheckedChange={(checked) => setForm((prev) => ({ ...prev, comment_review: checked }))}
+                      onCheckedChange={(checked) =>
+                        setForm((prev) => ({ ...prev, comment_review: checked }))
+                      }
                       disabled={submitting}
                     />
                     <span>评论需要审核后才能显示</span>
@@ -133,7 +140,9 @@ function FeatureSettingsTab() {
                   <Switch
                     id="rating_enabled"
                     checked={form.rating_enabled}
-                    onCheckedChange={(checked) => setForm((prev) => ({ ...prev, rating_enabled: checked }))}
+                    onCheckedChange={(checked) =>
+                      setForm((prev) => ({ ...prev, rating_enabled: checked }))
+                    }
                     disabled={submitting}
                   />
                   <span>开启用户端视频评分功能</span>
@@ -142,7 +151,11 @@ function FeatureSettingsTab() {
             </FieldGroup>
             <div className="flex justify-end">
               <Button type="submit" disabled={submitting}>
-                {submitting ? <Spinner data-icon="inline-start" /> : <Save data-icon="inline-start" />}
+                {submitting ? (
+                  <Spinner data-icon="inline-start" />
+                ) : (
+                  <Save data-icon="inline-start" />
+                )}
                 {submitting ? '保存中...' : '保存'}
               </Button>
             </div>
@@ -155,7 +168,12 @@ function FeatureSettingsTab() {
 
 export default function SiteSettingsPage() {
   const [form, setForm] = useState({
-    name: '', logo: '', copyright: '', icp: '', seo_keywords: '', description: '',
+    name: '',
+    logo: '',
+    copyright: '',
+    icp: '',
+    seo_keywords: '',
+    description: '',
   })
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -180,7 +198,9 @@ export default function SiteSettingsPage() {
     }
   }
 
-  useEffect(() => { void load() }, [])
+  useEffect(() => {
+    void load()
+  }, [])
 
   async function save(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -226,32 +246,79 @@ export default function SiteSettingsPage() {
                   <FieldGroup>
                     <Field data-disabled={submitting ? true : undefined}>
                       <FieldLabel htmlFor="name">站点名称</FieldLabel>
-                      <Input id="name" placeholder="请输入站点名称" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} disabled={submitting} />
+                      <Input
+                        id="name"
+                        placeholder="请输入站点名称"
+                        value={form.name}
+                        onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+                        disabled={submitting}
+                      />
                     </Field>
                     <Field data-disabled={submitting ? true : undefined}>
                       <FieldLabel htmlFor="logo">Logo URL</FieldLabel>
-                      <Input id="logo" placeholder="请输入 Logo 图片地址（可选）" value={form.logo} onChange={(e) => setForm((prev) => ({ ...prev, logo: e.target.value }))} disabled={submitting} />
+                      <Input
+                        id="logo"
+                        placeholder="请输入 Logo 图片地址（可选）"
+                        value={form.logo}
+                        onChange={(e) => setForm((prev) => ({ ...prev, logo: e.target.value }))}
+                        disabled={submitting}
+                      />
                     </Field>
                     <Field data-disabled={submitting ? true : undefined}>
                       <FieldLabel htmlFor="copyright">版权信息</FieldLabel>
-                      <Input id="copyright" placeholder="请输入版权信息，如 © 2024 YourSite" value={form.copyright} onChange={(e) => setForm((prev) => ({ ...prev, copyright: e.target.value }))} disabled={submitting} />
+                      <Input
+                        id="copyright"
+                        placeholder="请输入版权信息，如 © 2024 YourSite"
+                        value={form.copyright}
+                        onChange={(e) =>
+                          setForm((prev) => ({ ...prev, copyright: e.target.value }))
+                        }
+                        disabled={submitting}
+                      />
                     </Field>
                     <Field data-disabled={submitting ? true : undefined}>
                       <FieldLabel htmlFor="icp">备案号</FieldLabel>
-                      <Input id="icp" placeholder="请输入 ICP 备案号（可选）" value={form.icp} onChange={(e) => setForm((prev) => ({ ...prev, icp: e.target.value }))} disabled={submitting} />
+                      <Input
+                        id="icp"
+                        placeholder="请输入 ICP 备案号（可选）"
+                        value={form.icp}
+                        onChange={(e) => setForm((prev) => ({ ...prev, icp: e.target.value }))}
+                        disabled={submitting}
+                      />
                     </Field>
                     <Field data-disabled={submitting ? true : undefined}>
                       <FieldLabel htmlFor="seo_keywords">SEO 关键词</FieldLabel>
-                      <Input id="seo_keywords" placeholder="请输入 SEO 关键词，逗号分隔" value={form.seo_keywords} onChange={(e) => setForm((prev) => ({ ...prev, seo_keywords: e.target.value }))} disabled={submitting} />
+                      <Input
+                        id="seo_keywords"
+                        placeholder="请输入 SEO 关键词，逗号分隔"
+                        value={form.seo_keywords}
+                        onChange={(e) =>
+                          setForm((prev) => ({ ...prev, seo_keywords: e.target.value }))
+                        }
+                        disabled={submitting}
+                      />
                     </Field>
                     <Field data-disabled={submitting ? true : undefined}>
                       <FieldLabel htmlFor="description">站点描述</FieldLabel>
-                      <Textarea id="description" rows={3} placeholder="请输入站点描述（可选）" value={form.description} onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))} disabled={submitting} />
+                      <Textarea
+                        id="description"
+                        rows={3}
+                        placeholder="请输入站点描述（可选）"
+                        value={form.description}
+                        onChange={(e) =>
+                          setForm((prev) => ({ ...prev, description: e.target.value }))
+                        }
+                        disabled={submitting}
+                      />
                     </Field>
                   </FieldGroup>
                   <div className="flex justify-end">
                     <Button type="submit" disabled={submitting}>
-                      {submitting ? <Spinner data-icon="inline-start" /> : <Save data-icon="inline-start" />}
+                      {submitting ? (
+                        <Spinner data-icon="inline-start" />
+                      ) : (
+                        <Save data-icon="inline-start" />
+                      )}
                       {submitting ? '保存中...' : '保存'}
                     </Button>
                   </div>

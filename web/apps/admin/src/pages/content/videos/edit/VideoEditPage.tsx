@@ -5,13 +5,7 @@ import { VideoBasicForm } from './VideoBasicForm'
 import { NamedItemPicker } from './NamedItemPicker'
 import { EpisodeManager } from './EpisodeManager'
 import { PageContainer } from '@/components/shared'
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
@@ -75,13 +69,38 @@ export default function VideoEditPage() {
           ) : (
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
               <VideoBasicForm form={form} setForm={setForm} categories={categories} />
-              <NamedItemPicker title="导演" selected={selectedDirectors} onChange={setSelectedDirectors} searchFn={adminApi.listDirectors} />
-              <NamedItemPicker title="演员" selected={selectedActors} onChange={setSelectedActors} searchFn={adminApi.listActors} />
-              <NamedItemPicker title="标签" selected={selectedTags} onChange={setSelectedTags} searchFn={adminApi.listTags} />
-              <EpisodeManager episodes={episodes} sources={sources} onAdd={addEpisode} onUpdate={updateEpisode} onRemove={removeEpisode} />
+              <NamedItemPicker
+                title="导演"
+                selected={selectedDirectors}
+                onChange={setSelectedDirectors}
+                searchFn={adminApi.listDirectors}
+              />
+              <NamedItemPicker
+                title="演员"
+                selected={selectedActors}
+                onChange={setSelectedActors}
+                searchFn={adminApi.listActors}
+              />
+              <NamedItemPicker
+                title="标签"
+                selected={selectedTags}
+                onChange={setSelectedTags}
+                searchFn={adminApi.listTags}
+              />
+              <EpisodeManager
+                episodes={episodes}
+                sources={sources}
+                onAdd={addEpisode}
+                onUpdate={updateEpisode}
+                onRemove={removeEpisode}
+              />
               <div className="flex justify-end">
                 <Button type="submit" disabled={submitting}>
-                  {submitting ? <Spinner data-icon="inline-start" /> : <Save data-icon="inline-start" />}
+                  {submitting ? (
+                    <Spinner data-icon="inline-start" />
+                  ) : (
+                    <Save data-icon="inline-start" />
+                  )}
                   {submitting ? '保存中...' : '保存'}
                 </Button>
               </div>

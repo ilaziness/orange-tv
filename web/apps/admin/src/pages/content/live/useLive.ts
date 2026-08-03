@@ -16,7 +16,15 @@ const liveSchema = z.object({
   status: z.union([z.string(), z.number()]).transform((v) => Number(v)),
 })
 
-export const emptyForm = { name: '', category: '', stream_url: '', logo: '', description: '', sort_order: '', status: '1' }
+export const emptyForm = {
+  name: '',
+  category: '',
+  stream_url: '',
+  logo: '',
+  description: '',
+  sort_order: '',
+  status: '1',
+}
 
 export type LiveFormState = typeof emptyForm
 
@@ -29,7 +37,9 @@ export function useLive() {
   const [total, setTotal] = useState(0)
   const pageRef = useRef(page)
 
-  useEffect(() => { pageRef.current = page }, [page])
+  useEffect(() => {
+    pageRef.current = page
+  }, [page])
   const [form, setForm] = useState(emptyForm)
   const [editId, setEditId] = useState(0)
   const [deleteId, setDeleteId] = useState<number | null>(null)
@@ -53,7 +63,9 @@ export function useLive() {
     }
   }, [])
 
-  useEffect(() => { void load(1) }, [load])
+  useEffect(() => {
+    void load(1)
+  }, [load])
 
   async function onSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -102,7 +114,9 @@ export function useLive() {
     setSyncing(true)
     try {
       const res = await adminApi.syncLiveSource()
-      toast.success(`同步完成：共 ${res.data.total} 条，新增 ${res.data.created}，更新 ${res.data.updated}，删除 ${res.data.deleted}`)
+      toast.success(
+        `同步完成：共 ${res.data.total} 条，新增 ${res.data.created}，更新 ${res.data.updated}，删除 ${res.data.deleted}`,
+      )
       await load(1)
     } catch (err) {
       toast.error(errorMessage(err))

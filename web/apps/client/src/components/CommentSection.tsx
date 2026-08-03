@@ -109,17 +109,10 @@ function CommentNode({ comment, videoId, depth = 0 }: CommentNodeProps) {
   const dislikeActive = data.my_vote === -1
 
   return (
-    <div
-      className={cn(
-        'flex gap-3',
-        depth > 0 && 'mt-3 border-l-2 border-muted pl-4',
-      )}
-    >
+    <div className={cn('flex gap-3', depth > 0 && 'mt-3 border-l-2 border-muted pl-4')}>
       <Avatar size="sm">
         {data.avatar ? <AvatarImage src={data.avatar} /> : null}
-        <AvatarFallback>
-          {data.username?.[0]?.toUpperCase() || 'U'}
-        </AvatarFallback>
+        <AvatarFallback>{data.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
       </Avatar>
       <div className="flex flex-1 flex-col gap-1">
         <div className="flex items-center gap-2">
@@ -186,11 +179,7 @@ function CommentNode({ comment, videoId, depth = 0 }: CommentNodeProps) {
               className="min-h-16"
             />
             <div className="flex gap-2">
-              <Button
-                type="submit"
-                size="sm"
-                disabled={submitting || !replyText.trim()}
-              >
+              <Button type="submit" size="sm" disabled={submitting || !replyText.trim()}>
                 {submitting ? '发表中...' : '回复'}
               </Button>
               <Button
@@ -208,12 +197,7 @@ function CommentNode({ comment, videoId, depth = 0 }: CommentNodeProps) {
         {expanded && replies.length > 0 && (
           <div className="mt-2 flex flex-col gap-3">
             {replies.map((reply) => (
-              <CommentNode
-                key={reply.id}
-                comment={reply}
-                videoId={videoId}
-                depth={depth + 1}
-              />
+              <CommentNode key={reply.id} comment={reply} videoId={videoId} depth={depth + 1} />
             ))}
             {hasMore && (
               <Button
@@ -233,11 +217,7 @@ function CommentNode({ comment, videoId, depth = 0 }: CommentNodeProps) {
   )
 }
 
-export function CommentSection({
-  videoId,
-  comments,
-  onRefresh,
-}: CommentSectionProps) {
+export function CommentSection({ videoId, comments, onRefresh }: CommentSectionProps) {
   const [text, setText] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const isLoggedIn = !!getToken()
@@ -291,10 +271,7 @@ export function CommentSection({
           </form>
         ) : (
           <p className="text-sm text-muted-foreground">
-            <Link
-              to="/login"
-              className="text-primary underline-offset-4 hover:underline"
-            >
+            <Link to="/login" className="text-primary underline-offset-4 hover:underline">
               登录
             </Link>{' '}
             后发表评论
@@ -310,9 +287,7 @@ export function CommentSection({
               </EmptyHeader>
             </Empty>
           ) : (
-            comments.map((c) => (
-              <CommentNode key={c.id} comment={c} videoId={videoId} />
-            ))
+            comments.map((c) => <CommentNode key={c.id} comment={c} videoId={videoId} />)
           )}
         </div>
       </CardContent>

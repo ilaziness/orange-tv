@@ -37,10 +37,14 @@ export function LiveList({ list, onEdit, onDelete }: LiveListProps) {
               <TableCell>{item.id}</TableCell>
               <TableCell>
                 <div className="font-medium">{item.name}</div>
-                <div className="max-w-[360px] truncate text-xs text-muted-foreground">{item.stream_url}</div>
+                <div className="max-w-[360px] truncate text-xs text-muted-foreground">
+                  {item.stream_url}
+                </div>
               </TableCell>
               <TableCell>{item.category || '-'}</TableCell>
-              <TableCell><StatusBadge status={item.status ?? 1} /></TableCell>
+              <TableCell>
+                <StatusBadge status={item.status ?? 1} />
+              </TableCell>
               <TableCell>{item.sort_order}</TableCell>
               <TableCell>
                 <div className="flex gap-1">

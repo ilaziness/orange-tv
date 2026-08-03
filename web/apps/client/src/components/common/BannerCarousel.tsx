@@ -34,15 +34,11 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
               key={banner.id}
               className={cn(
                 'absolute inset-0 transition-opacity duration-700 ease-in-out',
-                i === bannerIdx ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                i === bannerIdx ? 'opacity-100' : 'opacity-0 pointer-events-none',
               )}
             >
               {banner.cover ? (
-                <img
-                  src={banner.cover}
-                  alt={banner.title}
-                  className="h-full w-full object-cover"
-                />
+                <img src={banner.cover} alt={banner.title} className="h-full w-full object-cover" />
               ) : (
                 <div className="h-full w-full bg-muted" />
               )}
@@ -59,13 +55,22 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
               </h1>
               <div className="flex flex-wrap gap-3">
                 {activeBanner.video_id ? (
-                  <Button nativeButton={false} size="lg" render={<Link to={`/video/${activeBanner.video_id}`} />}>
+                  <Button
+                    nativeButton={false}
+                    size="lg"
+                    render={<Link to={`/video/${activeBanner.video_id}`} />}
+                  >
                     <PlayIcon data-icon="inline-start" />
                     立即播放
                   </Button>
                 ) : null}
                 {activeBanner.link ? (
-                  <Button nativeButton={false} variant="secondary" size="lg" render={<a href={activeBanner.link} />}>
+                  <Button
+                    nativeButton={false}
+                    variant="secondary"
+                    size="lg"
+                    render={<a href={activeBanner.link} />}
+                  >
                     查看详情
                   </Button>
                 ) : null}
@@ -96,7 +101,9 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
                       key={i}
                       className={cn(
                         'h-1.5 rounded-full transition-all duration-300',
-                        i === bannerIdx ? 'w-6 bg-primary' : 'w-1.5 bg-foreground/40 hover:bg-foreground/80'
+                        i === bannerIdx
+                          ? 'w-6 bg-primary'
+                          : 'w-1.5 bg-foreground/40 hover:bg-foreground/80',
                       )}
                       onClick={() => setBannerIdx(i)}
                     >

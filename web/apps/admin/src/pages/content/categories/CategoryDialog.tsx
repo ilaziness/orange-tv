@@ -1,7 +1,6 @@
 import type * as React from 'react'
 import type { CategoryForm } from './useCategories'
 
-
 import {
   Dialog,
   DialogContent,
@@ -65,37 +64,79 @@ export function CategoryDialog({
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="category-name">分类名称</FieldLabel>
-              <Input id="category-name" value={form.name} onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))} maxLength={100} required disabled={submitting} />
+              <Input
+                id="category-name"
+                value={form.name}
+                onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+                maxLength={100}
+                required
+                disabled={submitting}
+              />
             </Field>
             <Field>
               <FieldLabel htmlFor="category-parent">父级分类</FieldLabel>
-              <Select items={parentOptions} value={form.parentId} onValueChange={(value) => setForm((prev) => ({ ...prev, parentId: value ?? '0' }))} disabled={submitting}>
+              <Select
+                items={parentOptions}
+                value={form.parentId}
+                onValueChange={(value) => setForm((prev) => ({ ...prev, parentId: value ?? '0' }))}
+                disabled={submitting}
+              >
                 <SelectTrigger id="category-parent">
                   <SelectValue placeholder="请选择父级分类" />
                 </SelectTrigger>
                 <SelectContent>
-                  {parentOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
+                  {parentOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </Field>
             <Field>
               <FieldLabel htmlFor="category-sort-order">排序</FieldLabel>
-              <Input id="category-sort-order" type="number" min="0" max="4294967295" step="1" value={form.sortOrder} onChange={(e) => setForm((prev) => ({ ...prev, sortOrder: e.target.value }))} required disabled={submitting} />
+              <Input
+                id="category-sort-order"
+                type="number"
+                min="0"
+                max="4294967295"
+                step="1"
+                value={form.sortOrder}
+                onChange={(e) => setForm((prev) => ({ ...prev, sortOrder: e.target.value }))}
+                required
+                disabled={submitting}
+              />
             </Field>
             <Field>
               <FieldLabel htmlFor="category-status">状态</FieldLabel>
-              <Select items={statusOptions} value={form.status} onValueChange={(value) => setForm((prev) => ({ ...prev, status: value ?? '1' }))} disabled={submitting}>
+              <Select
+                items={statusOptions}
+                value={form.status}
+                onValueChange={(value) => setForm((prev) => ({ ...prev, status: value ?? '1' }))}
+                disabled={submitting}
+              >
                 <SelectTrigger id="category-status">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {statusOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
+                  {statusOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </Field>
           </FieldGroup>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>取消</Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={submitting}
+            >
+              取消
+            </Button>
             <Button type="submit" disabled={submitting}>
               {submitting && <Spinner data-icon="inline-start" />}
               {submitting ? '保存中...' : '保存'}

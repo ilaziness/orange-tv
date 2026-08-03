@@ -48,8 +48,7 @@ export function FilterBar({
 }: FilterBarProps) {
   const yearOptions = buildYearOptions()
 
-  const isYearActive = (opt: YearOption) =>
-    yearStart === opt.start && yearEnd === opt.end
+  const isYearActive = (opt: YearOption) => yearStart === opt.start && yearEnd === opt.end
 
   return (
     <div className="flex flex-col gap-3">

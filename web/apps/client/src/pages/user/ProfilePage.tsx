@@ -5,7 +5,13 @@ import { Button } from '@/components/ui/button'
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Separator } from '@/components/ui/separator'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -163,24 +169,14 @@ function BasicInfo({
         <>
           <div className="flex items-center gap-4">
             <Avatar className="size-20">
-              {profile.avatar ? (
-                <AvatarImage src={profile.avatar} alt={displayName} />
-              ) : null}
+              {profile.avatar ? <AvatarImage src={profile.avatar} alt={displayName} /> : null}
               <AvatarFallback>{fallback}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col gap-1">
-              <p className="text-lg font-semibold">
-                {displayName || profile.email}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                用户名：{profile.username}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                用户ID：{profile.str_id}
-              </p>
-              <Badge
-                variant={profile.status === 1 ? 'default' : 'secondary'}
-              >
+              <p className="text-lg font-semibold">{displayName || profile.email}</p>
+              <p className="text-sm text-muted-foreground">用户名：{profile.username}</p>
+              <p className="text-sm text-muted-foreground">用户ID：{profile.str_id}</p>
+              <Badge variant={profile.status === 1 ? 'default' : 'secondary'}>
                 {statusMap[profile.status] || '未知'}
               </Badge>
             </div>
@@ -388,9 +384,7 @@ function LoginHistory() {
                     {item.ip} · {item.user_agent.slice(0, 60)}
                   </p>
                 </div>
-                <Badge
-                  variant={item.status === 1 ? 'default' : 'destructive'}
-                >
+                <Badge variant={item.status === 1 ? 'default' : 'destructive'}>
                   {loginStatusMap[item.status] || '未知'}
                 </Badge>
               </div>

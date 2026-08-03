@@ -2,13 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { adminApi, errorMessage } from '@/lib/api'
 import { PageContainer, Pagination } from '@/components/shared'
 import type { AdminLoginLogItem, ApiResponse, PageData, UserLoginLogItem } from '@orange-tv/shared'
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -64,7 +58,9 @@ function LoginLogTabContent({
 }: {
   title: string
   emptyDescription: string
-  fetchFn: (query: Record<string, string | number | undefined>) => Promise<ApiResponse<PageData<LoginLogRow>>>
+  fetchFn: (
+    query: Record<string, string | number | undefined>,
+  ) => Promise<ApiResponse<PageData<LoginLogRow>>>
 }) {
   const [list, setList] = useState<LoginLogRow[]>([])
   const [username, setUsername] = useState('')
@@ -74,28 +70,37 @@ function LoginLogTabContent({
   const usernameRef = useRef(username)
   const pageRef = useRef(page)
 
-  useEffect(() => { usernameRef.current = username }, [username])
-  useEffect(() => { pageRef.current = page }, [page])
+  useEffect(() => {
+    usernameRef.current = username
+  }, [username])
+  useEffect(() => {
+    pageRef.current = page
+  }, [page])
 
-  const load = useCallback(async (p = pageRef.current, u = usernameRef.current) => {
-    setLoading(true)
-    try {
-      const res = await fetchFn({
-        page: p,
-        page_size: DEFAULT_PAGE_SIZE,
-        username: u || undefined,
-      })
-      setList(res.data.list || [])
-      setTotal(res.data.total || 0)
-      setPage(res.data.page || p)
-    } catch (err) {
-      toast.error(errorMessage(err))
-    } finally {
-      setLoading(false)
-    }
-  }, [fetchFn])
+  const load = useCallback(
+    async (p = pageRef.current, u = usernameRef.current) => {
+      setLoading(true)
+      try {
+        const res = await fetchFn({
+          page: p,
+          page_size: DEFAULT_PAGE_SIZE,
+          username: u || undefined,
+        })
+        setList(res.data.list || [])
+        setTotal(res.data.total || 0)
+        setPage(res.data.page || p)
+      } catch (err) {
+        toast.error(errorMessage(err))
+      } finally {
+        setLoading(false)
+      }
+    },
+    [fetchFn],
+  )
 
-  useEffect(() => { void load(1) }, [load])
+  useEffect(() => {
+    void load(1)
+  }, [load])
 
   const hasNext = page * DEFAULT_PAGE_SIZE < total
 
@@ -105,7 +110,11 @@ function LoginLogTabContent({
         <CardTitle>{title}</CardTitle>
         <CardAction>
           <Button size="sm" variant="outline" onClick={() => void load(page)} disabled={loading}>
-            {loading ? <Spinner data-icon="inline-start" /> : <RefreshCw data-icon="inline-start" />}
+            {loading ? (
+              <Spinner data-icon="inline-start" />
+            ) : (
+              <RefreshCw data-icon="inline-start" />
+            )}
             刷新
           </Button>
         </CardAction>
@@ -117,7 +126,9 @@ function LoginLogTabContent({
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             className="max-w-xs"
-            onKeyDown={(e) => { if (e.key === 'Enter') void load(1) }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') void load(1)
+            }}
           />
           <Button variant="outline" size="sm" onClick={() => void load(1)} disabled={loading}>
             {loading ? <Spinner data-icon="inline-start" /> : <Search data-icon="inline-start" />}
@@ -160,8 +171,12 @@ function LoginLogTabContent({
                         </Badge>
                       </TableCell>
                       <TableCell className="text-xs text-muted-foreground">{l.ip || '-'}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{l.created_at || '-'}</TableCell>
-                      <TableCell className="max-w-xs truncate text-xs text-muted-foreground">{l.user_agent || '-'}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">
+                        {l.created_at || '-'}
+                      </TableCell>
+                      <TableCell className="max-w-xs truncate text-xs text-muted-foreground">
+                        {l.user_agent || '-'}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

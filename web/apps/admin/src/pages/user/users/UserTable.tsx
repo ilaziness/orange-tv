@@ -21,14 +21,7 @@ interface UserTableProps {
   onDelete: (id: number) => void
 }
 
-export function UserTable({
-  list,
-  loading,
-  onEdit,
-  onToggle,
-  onReset,
-  onDelete,
-}: UserTableProps) {
+export function UserTable({ list, loading, onEdit, onToggle, onReset, onDelete }: UserTableProps) {
   return (
     <div className="relative rounded-md border">
       {loading && (
@@ -54,8 +47,12 @@ export function UserTable({
               <TableCell>{u.id}</TableCell>
               <TableCell className="font-medium">{u.username}</TableCell>
               <TableCell>{u.email || '-'}</TableCell>
-              <TableCell><StatusBadge status={u.status} /></TableCell>
-              <TableCell className="text-xs text-muted-foreground">{u.last_login_at || '-'}</TableCell>
+              <TableCell>
+                <StatusBadge status={u.status} />
+              </TableCell>
+              <TableCell className="text-xs text-muted-foreground">
+                {u.last_login_at || '-'}
+              </TableCell>
               <TableCell className="text-xs text-muted-foreground">{u.created_at || '-'}</TableCell>
               <TableCell>
                 <div className="flex gap-1">

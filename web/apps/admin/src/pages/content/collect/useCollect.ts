@@ -3,7 +3,14 @@ import type * as React from 'react'
 import { z } from 'zod'
 import { adminApi, errorMessage } from '@/lib/api'
 import { flattenCategories } from '@/lib/categories'
-import type { Category, CollectCategoryMap, CollectLog, CollectSource, PlaySource, RemoteCategory } from '@orange-tv/shared'
+import type {
+  Category,
+  CollectCategoryMap,
+  CollectLog,
+  CollectSource,
+  PlaySource,
+  RemoteCategory,
+} from '@orange-tv/shared'
 import { toast } from 'sonner'
 import { DEFAULT_PAGE_SIZE } from '@/lib/constants'
 
@@ -47,7 +54,10 @@ export function formatCronFriendly(expr: string): string {
     return `每${stepMatch[1]}小时 ${m}分`
   }
 
-  const hours = hour.split(',').map((h) => h.trim()).filter(Boolean)
+  const hours = hour
+    .split(',')
+    .map((h) => h.trim())
+    .filter(Boolean)
   if (hours.length === 0) return '未设置'
   const times = hours.map((h) => `${h.padStart(2, '0')}:${m}`)
   return `每天 ${times.join(', ')}`
@@ -60,7 +70,10 @@ const collectSchema = z.object({
   api_key: z.string(),
   cron_minute: z.string(),
   cron_hour: z.string(),
-  play_source_id: z.union([z.string(), z.number()]).transform((v) => Number(v)).refine((v) => v > 0, '请选择播放源'),
+  play_source_id: z
+    .union([z.string(), z.number()])
+    .transform((v) => Number(v))
+    .refine((v) => v > 0, '请选择播放源'),
   data_range: z.string(),
 })
 
@@ -125,49 +138,58 @@ export function useCollect() {
   const [collectDataRange, setCollectDataRange] = useState('today')
   const [deleteId, setDeleteId] = useState<number | null>(null)
 
-  const fetchSources = useCallback(async (page: number) => {
-    const s = await adminApi.listCollectSources({ page, page_size: sourcesPageSize })
-    setSources(s.data.list || [])
-    setSourcesTotal(s.data.total || 0)
-    setSourcesPage(page)
-  }, [sourcesPageSize])
+  const fetchSources = useCallback(
+    async (page: number) => {
+      const s = await adminApi.listCollectSources({ page, page_size: sourcesPageSize })
+      setSources(s.data.list || [])
+      setSourcesTotal(s.data.total || 0)
+      setSourcesPage(page)
+    },
+    [sourcesPageSize],
+  )
 
-  const fetchLogs = useCallback(async (page: number) => {
-    const l = await adminApi.listCollectLogs({ page, page_size: logsPageSize })
-    setLogs(l.data.list || [])
-    setLogsTotal(l.data.total || 0)
-    setLogsPage(page)
-  }, [logsPageSize])
+  const fetchLogs = useCallback(
+    async (page: number) => {
+      const l = await adminApi.listCollectLogs({ page, page_size: logsPageSize })
+      setLogs(l.data.list || [])
+      setLogsTotal(l.data.total || 0)
+      setLogsPage(page)
+    },
+    [logsPageSize],
+  )
 
-  const loadSources = useCallback(async (page: number) => {
-    setLoading(true)
-    try {
-      await fetchSources(page)
-    } catch (err) {
-      toast.error(errorMessage(err))
-    } finally {
-      setLoading(false)
-    }
-  }, [fetchSources])
+  const loadSources = useCallback(
+    async (page: number) => {
+      setLoading(true)
+      try {
+        await fetchSources(page)
+      } catch (err) {
+        toast.error(errorMessage(err))
+      } finally {
+        setLoading(false)
+      }
+    },
+    [fetchSources],
+  )
 
-  const loadLogs = useCallback(async (page: number) => {
-    setLogsLoading(true)
-    try {
-      await fetchLogs(page)
-    } catch (err) {
-      toast.error(errorMessage(err))
-    } finally {
-      setLogsLoading(false)
-    }
-  }, [fetchLogs])
+  const loadLogs = useCallback(
+    async (page: number) => {
+      setLogsLoading(true)
+      try {
+        await fetchLogs(page)
+      } catch (err) {
+        toast.error(errorMessage(err))
+      } finally {
+        setLogsLoading(false)
+      }
+    },
+    [fetchLogs],
+  )
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const [p, c] = await Promise.all([
-        adminApi.listPlaySources(),
-        adminApi.listCategories(),
-      ])
+      const [p, c] = await Promise.all([adminApi.listPlaySources(), adminApi.listCategories()])
       setPlaySources(p.data.list || [])
       setCategories(c.data || [])
       await Promise.all([fetchSources(1), fetchLogs(1)])
@@ -178,7 +200,9 @@ export function useCollect() {
     }
   }, [fetchSources, fetchLogs])
 
-  useEffect(() => { void load() }, [load])
+  useEffect(() => {
+    void load()
+  }, [load])
 
   const flatCats = flattenCategories(categories)
 

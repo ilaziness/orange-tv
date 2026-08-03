@@ -19,13 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -96,7 +90,11 @@ export default function CollectPage() {
           <CardAction>
             <div className="flex gap-2">
               <Button size="sm" variant="outline" onClick={() => void load()} disabled={loading}>
-                {loading ? <Spinner data-icon="inline-start" /> : <RefreshCw data-icon="inline-start" />}
+                {loading ? (
+                  <Spinner data-icon="inline-start" />
+                ) : (
+                  <RefreshCw data-icon="inline-start" />
+                )}
                 刷新
               </Button>
               <Button size="sm" onClick={openCreate}>
@@ -108,7 +106,8 @@ export default function CollectPage() {
         </CardHeader>
         <CardContent>
           <p className="mb-4 text-sm text-muted-foreground">
-            优先支持苹果CMS格式，采集地址需为视频列表API。可配置定时采集和数据范围，采集时按 vod_time 过滤。
+            优先支持苹果CMS格式，采集地址需为视频列表API。可配置定时采集和数据范围，采集时按
+            vod_time 过滤。
           </p>
           {loading && sources.length === 0 ? (
             <div className="flex flex-col gap-2">
@@ -176,7 +175,12 @@ export default function CollectPage() {
         onSave={saveCategoryBinding}
       />
 
-      <Dialog open={collectOpen} onOpenChange={(v) => { if (!collecting) setCollectOpen(v) }}>
+      <Dialog
+        open={collectOpen}
+        onOpenChange={(v) => {
+          if (!collecting) setCollectOpen(v)
+        }}
+      >
         <DialogContent className="sm:max-w-md" showCloseButton={!collecting}>
           <DialogHeader>
             <DialogTitle>立即采集 — 源 #{collectSourceId}</DialogTitle>
@@ -195,14 +199,21 @@ export default function CollectPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {DATA_RANGE_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </Field>
           </FieldGroup>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setCollectOpen(false)} disabled={collecting}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setCollectOpen(false)}
+              disabled={collecting}
+            >
               取消
             </Button>
             <Button onClick={() => void submitCollectNow()} disabled={collecting}>
@@ -217,8 +228,17 @@ export default function CollectPage() {
         <CardHeader>
           <CardTitle>采集日志</CardTitle>
           <CardAction>
-            <Button size="sm" variant="outline" onClick={() => void loadLogs(logsPage)} disabled={logsLoading}>
-              {logsLoading ? <Spinner data-icon="inline-start" /> : <RefreshCw data-icon="inline-start" />}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => void loadLogs(logsPage)}
+              disabled={logsLoading}
+            >
+              {logsLoading ? (
+                <Spinner data-icon="inline-start" />
+              ) : (
+                <RefreshCw data-icon="inline-start" />
+              )}
               刷新
             </Button>
           </CardAction>
@@ -250,7 +270,9 @@ export default function CollectPage() {
 
       <ConfirmDialog
         open={deleteId !== null}
-        onOpenChange={(open) => { if (!open && !deleting) setDeleteId(null) }}
+        onOpenChange={(open) => {
+          if (!open && !deleting) setDeleteId(null)
+        }}
         title="删除采集源"
         description="确认删除该采集源？此操作不可撤销。"
         destructive

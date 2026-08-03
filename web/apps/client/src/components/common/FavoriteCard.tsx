@@ -1,25 +1,21 @@
-import { useState } from "react";
-import { Link } from "react-router";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { FilmIcon, HeartIcon } from "lucide-react";
-import { clientApi, errorMessage } from "@/lib/api";
-import { toast } from "sonner";
+import { useState } from 'react'
+import { Link } from 'react-router'
+import { Card } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { FilmIcon, HeartIcon } from 'lucide-react'
+import { clientApi, errorMessage } from '@/lib/api'
+import { toast } from 'sonner'
 
 type Props = {
-  videoId: number;
-  title: string;
-  cover?: string;
-  year?: number;
-  categoryName?: string;
-  rating?: number;
-  onRemoved?: (videoId: number) => void;
-};
+  videoId: number
+  title: string
+  cover?: string
+  year?: number
+  categoryName?: string
+  rating?: number
+  onRemoved?: (videoId: number) => void
+}
 
 export function FavoriteCard({
   videoId,
@@ -30,29 +26,29 @@ export function FavoriteCard({
   rating,
   onRemoved,
 }: Props) {
-  const [error, setError] = useState(false);
-  const [removing, setRemoving] = useState(false);
-  const hasCover = cover && !error;
-  const to = `/video/${videoId}`;
+  const [error, setError] = useState(false)
+  const [removing, setRemoving] = useState(false)
+  const hasCover = cover && !error
+  const to = `/video/${videoId}`
   const metaParts = [categoryName || null, year ? String(year) : null].filter(
     (v): v is string => v !== null,
-  );
+  )
 
   const handleRemove = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (removing) return;
-    setRemoving(true);
+    e.preventDefault()
+    e.stopPropagation()
+    if (removing) return
+    setRemoving(true)
     try {
-      await clientApi.removeFavorite(videoId);
-      toast.success("已取消收藏");
-      onRemoved?.(videoId);
+      await clientApi.removeFavorite(videoId)
+      toast.success('已取消收藏')
+      onRemoved?.(videoId)
     } catch (err) {
-      toast.error(errorMessage(err));
+      toast.error(errorMessage(err))
     } finally {
-      setRemoving(false);
+      setRemoving(false)
     }
-  };
+  }
 
   return (
     <div className="block w-28 shrink-0">
@@ -80,9 +76,7 @@ export function FavoriteCard({
           <div className="flex flex-col gap-0.5 p-1.5">
             <h3 className="truncate text-xs font-medium">{title}</h3>
             {metaParts.length > 0 && (
-              <p className="truncate text-xs text-muted-foreground">
-                {metaParts.join(" · ")}
-              </p>
+              <p className="truncate text-xs text-muted-foreground">{metaParts.join(' · ')}</p>
             )}
           </div>
         </Link>
@@ -104,5 +98,5 @@ export function FavoriteCard({
         </Tooltip>
       </Card>
     </div>
-  );
+  )
 }

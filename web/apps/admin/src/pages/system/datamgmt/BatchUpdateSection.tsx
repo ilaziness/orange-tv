@@ -1,13 +1,7 @@
 import { useState } from 'react'
 import { z } from 'zod'
 import { adminApi, errorMessage } from '@/lib/api'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
@@ -154,7 +148,8 @@ export default function BatchUpdateSection() {
               <SelectTrigger id="target" className="w-full" aria-invalid={!!errors.target}>
                 <SelectValue>
                   {form.target
-                    ? targetOptions.find((o) => o.value === form.target)?.label ?? '请选择目标字段'
+                    ? (targetOptions.find((o) => o.value === form.target)?.label ??
+                      '请选择目标字段')
                     : '请选择目标字段'}
                 </SelectValue>
               </SelectTrigger>
@@ -234,8 +229,8 @@ export default function BatchUpdateSection() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>确认执行批量更新？</AlertDialogTitle>
                   <AlertDialogDescription>
-                    该操作将更新 <strong>{previewRows}</strong> 条记录，把包含
-                    「{form.oldValue}」的字段值替换为「{form.newValue}」。此操作不可撤销，请确认。
+                    该操作将更新 <strong>{previewRows}</strong> 条记录，把包含 「{form.oldValue}
+                    」的字段值替换为「{form.newValue}」。此操作不可撤销，请确认。
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

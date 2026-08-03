@@ -29,7 +29,9 @@ export function useGroups() {
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const pageRef = useRef(page)
 
-  useEffect(() => { pageRef.current = page }, [page])
+  useEffect(() => {
+    pageRef.current = page
+  }, [page])
 
   const load = useCallback(async (p = pageRef.current) => {
     setLoading(true)
@@ -45,7 +47,9 @@ export function useGroups() {
     }
   }, [])
 
-  useEffect(() => { void load(1) }, [load])
+  useEffect(() => {
+    void load(1)
+  }, [load])
 
   function openCreate() {
     setEditId(0)

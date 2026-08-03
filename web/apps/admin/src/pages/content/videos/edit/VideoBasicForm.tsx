@@ -27,7 +27,8 @@ export function VideoBasicForm({ form, setForm, categories }: VideoBasicFormProp
     <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <Field>
         <FieldLabel htmlFor="title">
-          标题<RequiredMark />
+          标题
+          <RequiredMark />
         </FieldLabel>
         <Input
           id="title"
@@ -48,10 +49,14 @@ export function VideoBasicForm({ form, setForm, categories }: VideoBasicFormProp
       </Field>
       <Field>
         <FieldLabel htmlFor="category">
-          分类<RequiredMark />
+          分类
+          <RequiredMark />
         </FieldLabel>
         <Select
-          items={categories.map((category) => ({ value: String(category.id), label: `${'—'.repeat(category.depth)} ${category.name}` }))}
+          items={categories.map((category) => ({
+            value: String(category.id),
+            label: `${'—'.repeat(category.depth)} ${category.name}`,
+          }))}
           value={form.category_id}
           onValueChange={(v) => setForm((prev) => ({ ...prev, category_id: v ?? '' }))}
         >
@@ -70,7 +75,10 @@ export function VideoBasicForm({ form, setForm, categories }: VideoBasicFormProp
       <Field>
         <FieldLabel htmlFor="publish_status">上下架</FieldLabel>
         <Select
-          items={[{ value: '0', label: '下架' }, { value: '1', label: '上架' }]}
+          items={[
+            { value: '0', label: '下架' },
+            { value: '1', label: '上架' },
+          ]}
           value={form.publish_status}
           onValueChange={(v) => setForm((prev) => ({ ...prev, publish_status: v ?? '0' }))}
         >
@@ -86,7 +94,11 @@ export function VideoBasicForm({ form, setForm, categories }: VideoBasicFormProp
       <Field>
         <FieldLabel htmlFor="serial_status">连载状态</FieldLabel>
         <Select
-          items={[{ value: '1', label: '连载中' }, { value: '2', label: '已完结' }, { value: '3', label: '即将上线' }]}
+          items={[
+            { value: '1', label: '连载中' },
+            { value: '2', label: '已完结' },
+            { value: '3', label: '即将上线' },
+          ]}
           value={form.serial_status}
           onValueChange={(v) => setForm((prev) => ({ ...prev, serial_status: v ?? '1' }))}
         >

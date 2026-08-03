@@ -85,7 +85,11 @@ export function Component() {
       map.set(k, arr)
     }
     for (const arr of map.values()) {
-      arr.sort((a, b) => new Date(b.last_played_at.replace(' ', 'T')).getTime() - new Date(a.last_played_at.replace(' ', 'T')).getTime())
+      arr.sort(
+        (a, b) =>
+          new Date(b.last_played_at.replace(' ', 'T')).getTime() -
+          new Date(a.last_played_at.replace(' ', 'T')).getTime(),
+      )
     }
     return Array.from(map.entries()).sort((a, b) => (a[0] < b[0] ? 1 : -1))
   }, [history])
@@ -144,7 +148,12 @@ export function Component() {
 
         {hasMore ? (
           <div className="flex justify-center">
-            <Button variant="outline" size="sm" onClick={() => void loadMore()} disabled={loadingMore}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void loadMore()}
+              disabled={loadingMore}
+            >
               {loadingMore ? '加载中…' : '加载更多'}
             </Button>
           </div>

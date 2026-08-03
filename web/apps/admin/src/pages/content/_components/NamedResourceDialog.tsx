@@ -37,13 +37,16 @@ export function NamedResourceDialog({
   onSubmit,
 }: NamedResourceDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!submitting) onOpenChange(v) }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!submitting) onOpenChange(v)
+      }}
+    >
       <DialogContent className="sm:max-w-md" showCloseButton={!submitting}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription className="sr-only">
-            输入名称后保存
-          </DialogDescription>
+          <DialogDescription className="sr-only">输入名称后保存</DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="flex flex-col gap-5">
           {error && (
@@ -75,7 +78,12 @@ export function NamedResourceDialog({
             </Field>
           </FieldGroup>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={submitting}
+            >
               取消
             </Button>
             <Button type="submit" disabled={submitting}>

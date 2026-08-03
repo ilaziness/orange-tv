@@ -34,7 +34,9 @@ export function useBanners() {
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const pageRef = useRef(page)
 
-  useEffect(() => { pageRef.current = page }, [page])
+  useEffect(() => {
+    pageRef.current = page
+  }, [page])
 
   const load = useCallback(async (p = pageRef.current) => {
     setLoading(true)
@@ -50,7 +52,9 @@ export function useBanners() {
     }
   }, [])
 
-  useEffect(() => { void load(1) }, [load])
+  useEffect(() => {
+    void load(1)
+  }, [load])
 
   function openCreate() {
     setEditingId(0)

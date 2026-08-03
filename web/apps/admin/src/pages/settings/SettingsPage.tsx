@@ -4,12 +4,7 @@ import { z } from 'zod'
 import { adminApi, errorMessage } from '@/lib/api'
 import { useAuthStore } from '@/store/auth'
 import { PageContainer } from '@/components/shared'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
@@ -20,10 +15,10 @@ import { toast } from 'sonner'
 
 const profileSchema = z.object({
   nickname: z.string().max(50, '昵称长度不能超过50'),
-  email: z.string().max(100, '邮箱长度不能超过100').refine(
-    (v) => v === '' || z.string().email().safeParse(v).success,
-    '邮箱格式不正确',
-  ),
+  email: z
+    .string()
+    .max(100, '邮箱长度不能超过100')
+    .refine((v) => v === '' || z.string().email().safeParse(v).success, '邮箱格式不正确'),
   avatar: z.string().max(500, '头像URL长度不能超过500'),
 })
 
@@ -142,11 +137,7 @@ export default function SettingsPage() {
               <FieldGroup>
                 <Field data-disabled={true}>
                   <FieldLabel htmlFor="username">用户名</FieldLabel>
-                  <Input
-                    id="username"
-                    value={profile?.username || ''}
-                    disabled
-                  />
+                  <Input id="username" value={profile?.username || ''} disabled />
                 </Field>
                 <Field data-disabled={submitting ? true : undefined}>
                   <FieldLabel htmlFor="nickname">昵称</FieldLabel>
@@ -182,7 +173,11 @@ export default function SettingsPage() {
               </FieldGroup>
               <div className="flex justify-end">
                 <Button type="submit" disabled={submitting}>
-                  {submitting ? <Spinner data-icon="inline-start" /> : <Save data-icon="inline-start" />}
+                  {submitting ? (
+                    <Spinner data-icon="inline-start" />
+                  ) : (
+                    <Save data-icon="inline-start" />
+                  )}
                   {submitting ? '保存中...' : '保存'}
                 </Button>
               </div>
@@ -205,7 +200,9 @@ export default function SettingsPage() {
                   type="password"
                   placeholder="请输入旧密码"
                   value={pwdForm.old_password}
-                  onChange={(e) => setPwdForm((prev) => ({ ...prev, old_password: e.target.value }))}
+                  onChange={(e) =>
+                    setPwdForm((prev) => ({ ...prev, old_password: e.target.value }))
+                  }
                   disabled={pwdSubmitting}
                   required
                   minLength={6}
@@ -218,7 +215,9 @@ export default function SettingsPage() {
                   type="password"
                   placeholder="请输入新密码（至少 6 位）"
                   value={pwdForm.new_password}
-                  onChange={(e) => setPwdForm((prev) => ({ ...prev, new_password: e.target.value }))}
+                  onChange={(e) =>
+                    setPwdForm((prev) => ({ ...prev, new_password: e.target.value }))
+                  }
                   disabled={pwdSubmitting}
                   required
                   minLength={6}
@@ -231,7 +230,9 @@ export default function SettingsPage() {
                   type="password"
                   placeholder="请再次输入新密码"
                   value={pwdForm.confirm_password}
-                  onChange={(e) => setPwdForm((prev) => ({ ...prev, confirm_password: e.target.value }))}
+                  onChange={(e) =>
+                    setPwdForm((prev) => ({ ...prev, confirm_password: e.target.value }))
+                  }
                   disabled={pwdSubmitting}
                   required
                   minLength={6}
@@ -240,7 +241,11 @@ export default function SettingsPage() {
             </FieldGroup>
             <div className="flex justify-end">
               <Button type="submit" disabled={pwdSubmitting}>
-                {pwdSubmitting ? <Spinner data-icon="inline-start" /> : <KeyRound data-icon="inline-start" />}
+                {pwdSubmitting ? (
+                  <Spinner data-icon="inline-start" />
+                ) : (
+                  <KeyRound data-icon="inline-start" />
+                )}
                 {pwdSubmitting ? '修改中...' : '修改密码'}
               </Button>
             </div>

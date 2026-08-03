@@ -1,10 +1,5 @@
 import { PageContainer, Pagination, ConfirmDialog } from '@/components/shared'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CommentFilter } from './CommentFilter'
 import { CommentTable } from './CommentTable'
 import { CommentParentDialog } from './CommentParentDialog'
@@ -78,7 +73,9 @@ export default function CommentsPage() {
 
       <ConfirmDialog
         open={deleteId !== null}
-        onOpenChange={(open) => { if (!open) setDeleteId(null) }}
+        onOpenChange={(open) => {
+          if (!open) setDeleteId(null)
+        }}
         title="删除评论"
         description="确认删除该评论？此操作不可撤销。"
         destructive
@@ -88,7 +85,9 @@ export default function CommentsPage() {
 
       <CommentParentDialog
         open={parentId !== null}
-        onOpenChange={(open) => { if (!open) setParentId(null) }}
+        onOpenChange={(open) => {
+          if (!open) setParentId(null)
+        }}
         parents={parents}
         loading={parentsLoading}
       />

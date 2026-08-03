@@ -15,9 +15,21 @@ export type CategoryForm = {
 
 const categorySchema = z.object({
   name: z.string().trim().min(1, '分类名称不能为空').max(100, '分类名称不能超过 100 个字符'),
-  parentId: z.string().transform((v) => Number(v)).refine((v) => Number.isSafeInteger(v) && v >= 0, '请选择有效的父级分类'),
-  sortOrder: z.string().transform((v) => Number(v)).refine((v) => Number.isSafeInteger(v) && v >= 0 && v <= 4294967295, '排序必须为 0 至 4294967295 的整数'),
-  status: z.string().transform((v) => Number(v)).refine((v) => v === 0 || v === 1, '请选择有效状态'),
+  parentId: z
+    .string()
+    .transform((v) => Number(v))
+    .refine((v) => Number.isSafeInteger(v) && v >= 0, '请选择有效的父级分类'),
+  sortOrder: z
+    .string()
+    .transform((v) => Number(v))
+    .refine(
+      (v) => Number.isSafeInteger(v) && v >= 0 && v <= 4294967295,
+      '排序必须为 0 至 4294967295 的整数',
+    ),
+  status: z
+    .string()
+    .transform((v) => Number(v))
+    .refine((v) => v === 0 || v === 1, '请选择有效状态'),
 })
 
 const emptyForm: CategoryForm = { name: '', parentId: '0', sortOrder: '0', status: '1' }
@@ -77,19 +89,27 @@ export function useCategories() {
     }
   }
 
-  useEffect(() => { void load() }, [])
+  useEffect(() => {
+    void load()
+  }, [])
 
   const flat = flattenCategories(tree)
   const excludedParentIDs = useMemo(
     () => (editing ? categoryAndDescendantIDs(tree, editing.id) : new Set<number>()),
     [editing, tree],
   )
-  const parentOptions = useMemo(() => [
-    { value: '0', label: '无父级' },
-    ...flat
-      .filter((item) => !excludedParentIDs.has(item.id))
-      .map((item) => ({ value: String(item.id), label: `${'—'.repeat(item.depth)} ${item.name}` })),
-  ], [excludedParentIDs, flat])
+  const parentOptions = useMemo(
+    () => [
+      { value: '0', label: '无父级' },
+      ...flat
+        .filter((item) => !excludedParentIDs.has(item.id))
+        .map((item) => ({
+          value: String(item.id),
+          label: `${'—'.repeat(item.depth)} ${item.name}`,
+        })),
+    ],
+    [excludedParentIDs, flat],
+  )
 
   function openCreate() {
     setError('')

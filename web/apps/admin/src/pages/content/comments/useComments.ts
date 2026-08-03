@@ -26,10 +26,18 @@ export function useComments() {
   const videoIdRef = useRef(videoId)
   const pageRef = useRef(page)
 
-  useEffect(() => { keywordRef.current = keyword }, [keyword])
-  useEffect(() => { statusRef.current = status }, [status])
-  useEffect(() => { videoIdRef.current = videoId }, [videoId])
-  useEffect(() => { pageRef.current = page }, [page])
+  useEffect(() => {
+    keywordRef.current = keyword
+  }, [keyword])
+  useEffect(() => {
+    statusRef.current = status
+  }, [status])
+  useEffect(() => {
+    videoIdRef.current = videoId
+  }, [videoId])
+  useEffect(() => {
+    pageRef.current = page
+  }, [page])
 
   const load = useCallback(async (p = pageRef.current) => {
     setLoading(true)
@@ -56,7 +64,9 @@ export function useComments() {
     }
   }, [])
 
-  useEffect(() => { void load(1) }, [load])
+  useEffect(() => {
+    void load(1)
+  }, [load])
 
   async function confirmDelete() {
     if (deleteId === null) return
@@ -77,7 +87,7 @@ export function useComments() {
     setToggleId(id)
     try {
       await adminApi.updateCommentStatus(id, nextStatus)
-      setItems((prev) => prev.map((it) => it.id === id ? { ...it, status: nextStatus } : it))
+      setItems((prev) => prev.map((it) => (it.id === id ? { ...it, status: nextStatus } : it)))
       toast.success(nextStatus === 1 ? '评论已显示' : '评论已隐藏')
     } catch (err) {
       toast.error(errorMessage(err))

@@ -2,12 +2,7 @@ import { useLive } from './useLive'
 import { LiveDialog } from './LiveDialog'
 import { LiveList } from './LiveList'
 import { PageContainer, ConfirmDialog, Pagination } from '@/components/shared'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Empty, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Button } from '@/components/ui/button'
@@ -47,11 +42,24 @@ export default function LivePage() {
           <CardTitle>直播管理</CardTitle>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => void load(page)} disabled={loading}>
-              {loading ? <Spinner data-icon="inline-start" /> : <RefreshCw data-icon="inline-start" />}
+              {loading ? (
+                <Spinner data-icon="inline-start" />
+              ) : (
+                <RefreshCw data-icon="inline-start" />
+              )}
               刷新
             </Button>
-            <Button variant="outline" size="sm" onClick={() => void syncLiveSource()} disabled={syncing}>
-              {syncing ? <Spinner data-icon="inline-start" /> : <RefreshCw data-icon="inline-start" />}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void syncLiveSource()}
+              disabled={syncing}
+            >
+              {syncing ? (
+                <Spinner data-icon="inline-start" />
+              ) : (
+                <RefreshCw data-icon="inline-start" />
+              )}
               同步直播源
             </Button>
             <Button size="sm" onClick={openCreate}>
@@ -104,7 +112,9 @@ export default function LivePage() {
 
       <ConfirmDialog
         open={deleteId !== null}
-        onOpenChange={(open) => { if (!open) setDeleteId(null) }}
+        onOpenChange={(open) => {
+          if (!open) setDeleteId(null)
+        }}
         title="删除直播频道"
         description="确认删除该直播频道？此操作不可撤销。"
         destructive

@@ -4,13 +4,7 @@ import { VideoTable } from './VideoTable'
 import { VideoBatchBar } from './VideoBatchBar'
 import { VideoDetailDialog } from './VideoDetailDialog'
 import { PageContainer, ConfirmDialog, Pagination } from '@/components/shared'
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Plus, X } from 'lucide-react'
@@ -128,7 +122,9 @@ export default function VideosPage() {
 
       <ConfirmDialog
         open={batchAction !== null}
-        onOpenChange={(open) => { if (!open) setBatchAction(null) }}
+        onOpenChange={(open) => {
+          if (!open) setBatchAction(null)
+        }}
         title="批量操作确认"
         description={
           batchAction?.type === 'delete'
@@ -142,7 +138,9 @@ export default function VideosPage() {
 
       <ConfirmDialog
         open={deleteId !== null}
-        onOpenChange={(open) => { if (!open) setDeleteId(null) }}
+        onOpenChange={(open) => {
+          if (!open) setDeleteId(null)
+        }}
         title="删除影视"
         description="确认删除该影视？此操作不可撤销。"
         destructive
@@ -153,7 +151,9 @@ export default function VideosPage() {
       <VideoDetailDialog
         open={detailId !== null}
         videoId={detailId}
-        onOpenChange={(open) => { if (!open) setDetailId(null) }}
+        onOpenChange={(open) => {
+          if (!open) setDetailId(null)
+        }}
       />
     </PageContainer>
   )

@@ -78,13 +78,22 @@ export function VideoTable({
                 <TableCell>{item.year || '-'}</TableCell>
                 <TableCell>{item.rating}</TableCell>
                 <TableCell>
-                  <StatusBadge status={item.publish_status ?? 0} activeText="上架" inactiveText="下架" />
+                  <StatusBadge
+                    status={item.publish_status ?? 0}
+                    activeText="上架"
+                    inactiveText="下架"
+                  />
                 </TableCell>
                 <TableCell className="text-muted-foreground">{item.created_at || '-'}</TableCell>
                 <TableCell className="text-muted-foreground">{item.updated_at || '-'}</TableCell>
                 <TableCell>
                   <div className="flex gap-1">
-                    <Button size="sm" variant="ghost" onClick={() => onView(item.id)} title="查看详情">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => onView(item.id)}
+                      title="查看详情"
+                    >
                       <Eye data-icon="inline-start" />
                       查看
                     </Button>
@@ -95,18 +104,29 @@ export function VideoTable({
                       onClick={() => onTogglePublish(item.id)}
                       title={isPublished ? '下架' : '上架'}
                     >
-                      {toggling
-                        ? <Spinner data-icon="inline-start" />
-                        : isPublished
-                          ? <ArrowDownCircle data-icon="inline-start" />
-                          : <ArrowUpCircle data-icon="inline-start" />}
+                      {toggling ? (
+                        <Spinner data-icon="inline-start" />
+                      ) : isPublished ? (
+                        <ArrowDownCircle data-icon="inline-start" />
+                      ) : (
+                        <ArrowUpCircle data-icon="inline-start" />
+                      )}
                       {isPublished ? '下架' : '上架'}
                     </Button>
-                    <Button size="sm" variant="ghost" render={<Link to={`/content/videos/${item.id}`} />}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      render={<Link to={`/content/videos/${item.id}`} />}
+                    >
                       <Pencil data-icon="inline-start" />
                       编辑
                     </Button>
-                    <Button size="sm" variant="ghost" disabled={toggling} onClick={() => onDelete(item.id)}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={toggling}
+                      onClick={() => onDelete(item.id)}
+                    >
                       <Trash2 data-icon="inline-start" />
                       删除
                     </Button>

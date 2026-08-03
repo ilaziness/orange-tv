@@ -15,7 +15,16 @@ type Props = {
   progress: number
 }
 
-export function HistoryCard({ videoId, sourceId, episodeId, title, categoryName, year, cover, progress }: Props) {
+export function HistoryCard({
+  videoId,
+  sourceId,
+  episodeId,
+  title,
+  categoryName,
+  year,
+  cover,
+  progress,
+}: Props) {
   const [error, setError] = useState(false)
   const hasCover = cover && !error
   const to = `/play/${videoId}/${sourceId}/${episodeId}`
@@ -42,7 +51,9 @@ export function HistoryCard({ videoId, sourceId, episodeId, title, categoryName,
         </div>
         <div className="flex flex-col gap-0.5 p-1.5">
           <h3 className="truncate text-xs font-medium">{title}</h3>
-          {metaParts.length > 0 && <p className="truncate text-xs text-muted-foreground">{metaParts.join(' · ')}</p>}
+          {metaParts.length > 0 && (
+            <p className="truncate text-xs text-muted-foreground">{metaParts.join(' · ')}</p>
+          )}
         </div>
       </Card>
     </Link>

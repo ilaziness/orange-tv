@@ -37,13 +37,18 @@ export function VideoFilter({
         value={keyword}
         onChange={(e) => setKeyword(e.target.value)}
         className="max-w-xs"
-        onKeyDown={(e) => { if (e.key === 'Enter') onSearch() }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') onSearch()
+        }}
         disabled={loading}
       />
       <Select
         items={[
           { value: '0', label: '全部分类' },
-          ...categories.map((c) => ({ value: String(c.id), label: `${'—'.repeat(c.depth)} ${c.name}` })),
+          ...categories.map((c) => ({
+            value: String(c.id),
+            label: `${'—'.repeat(c.depth)} ${c.name}`,
+          })),
         ]}
         value={categoryId || '0'}
         onValueChange={(v) => onCategoryChange(v === '0' ? '' : (v ?? ''))}

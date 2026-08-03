@@ -10,7 +10,5 @@ export default function App() {
     void loadSettings()
   }, [loadSettings])
 
-  return (
-    <RouterProvider router={router} />
-  )
+  return <RouterProvider router={router} />
 }

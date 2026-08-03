@@ -33,17 +33,22 @@ function isHlsSrc(format?: string, src?: string): boolean {
 }
 
 function escapeAttr(str: string): string {
-  return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
 }
 
 function buildAdLayer(adConfig: AdSettings) {
   const url = escapeAttr(adConfig.url)
   const link = escapeAttr(adConfig.link)
-  const adHTML = adConfig.type === 'image'
-    ? `<img src="${url}" style="width:100%;height:100%;object-fit:contain" />`
-    : adConfig.type === 'video'
-      ? `<video src="${url}" autoplay muted playsinline style="width:100%;height:100%;object-fit:contain" />`
-      : `<iframe src="${url}" style="width:100%;height:100%;border:0" allowfullscreen></iframe>`
+  const adHTML =
+    adConfig.type === 'image'
+      ? `<img src="${url}" style="width:100%;height:100%;object-fit:contain" />`
+      : adConfig.type === 'video'
+        ? `<video src="${url}" autoplay muted playsinline style="width:100%;height:100%;object-fit:contain" />`
+        : `<iframe src="${url}" style="width:100%;height:100%;border:0" allowfullscreen></iframe>`
 
   const skipBtn = adConfig.skipable
     ? `<div class="ad-skip-btn" style="position:absolute;bottom:12px;right:12px;padding:6px 16px;background:rgba(0,0,0,0.7);color:#fff;border-radius:4px;cursor:pointer;font-size:14px">跳过广告</div>`
@@ -64,7 +69,8 @@ function buildAdLayer(adConfig: AdSettings) {
   }
 }
 
-const SVG_LIST = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>'
+const SVG_LIST =
+  '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>'
 
 function playlistPlugin(option: {
   playlistRef: React.MutableRefObject<PlaylistItem[] | undefined>
@@ -132,7 +138,21 @@ function playlistPlugin(option: {
   }
 }
 
-export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sourceId, episodeId, resumeAt, adConfig, playlist, currentEpisodeId, onEpisodeChange, onProgress }: Props) {
+export function VideoPlayer({
+  src,
+  format,
+  poster,
+  autoplay = true,
+  videoId,
+  sourceId,
+  episodeId,
+  resumeAt,
+  adConfig,
+  playlist,
+  currentEpisodeId,
+  onEpisodeChange,
+  onProgress,
+}: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [playlistVisible, setPlaylistVisible] = useState(false)
 
@@ -150,11 +170,13 @@ export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sou
   const currentEpRef = useRef<number | undefined>(currentEpisodeId)
   const onChangeRef = useRef<((episodeId: number) => void) | undefined>(onEpisodeChange)
   const onToggleRef = useRef<() => void>(() => {})
-  const onProgressRef = useRef<((currentTime: number, duration: number) => void) | undefined>(onProgress)
+  const onProgressRef = useRef<((currentTime: number, duration: number) => void) | undefined>(
+    onProgress,
+  )
   playlistRef.current = playlist
   currentEpRef.current = currentEpisodeId
   onChangeRef.current = onEpisodeChange
-  onToggleRef.current = () => setPlaylistVisible(v => !v)
+  onToggleRef.current = () => setPlaylistVisible((v) => !v)
   onProgressRef.current = onProgress
 
   // Serialize adConfig to a stable string so the effect doesn't re-run on object identity changes
@@ -172,10 +194,26 @@ export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sou
     // (e.g. from a previous cleanup that threw before completing)
     for (const inst of Artplayer.instances) {
       if (inst.template?.$container === el) {
-        try { inst.muted = true } catch { /* ignore */ }
-        try { if (inst.video) inst.video.muted = true } catch { /* ignore */ }
-        try { inst.pause() } catch { /* ignore */ }
-        try { inst.destroy(true) } catch { /* ignore */ }
+        try {
+          inst.muted = true
+        } catch {
+          /* ignore */
+        }
+        try {
+          if (inst.video) inst.video.muted = true
+        } catch {
+          /* ignore */
+        }
+        try {
+          inst.pause()
+        } catch {
+          /* ignore */
+        }
+        try {
+          inst.destroy(true)
+        } catch {
+          /* ignore */
+        }
       }
     }
 
@@ -190,9 +228,10 @@ export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sou
       layers.push(buildAdLayer(ad) as NonNullable<Artplayer['option']['layers']>[number])
     }
 
-    const playbackId = videoId != null && sourceId != null && episodeId != null
-      ? `video_${videoId}_source_${sourceId}_ep_${episodeId}`
-      : undefined
+    const playbackId =
+      videoId != null && sourceId != null && episodeId != null
+        ? `video_${videoId}_source_${sourceId}_ep_${episodeId}`
+        : undefined
 
     const art = new Artplayer({
       container: el,
@@ -211,9 +250,7 @@ export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sou
       fullscreenWeb: true,
       setting: false,
       hotkey: true,
-      ...(playbackId
-        ? { autoPlayback: !resumeAt, id: playbackId }
-        : { autoPlayback: false }),
+      ...(playbackId ? { autoPlayback: !resumeAt, id: playbackId } : { autoPlayback: false }),
       layers,
       customType: {
         m3u8: (video: HTMLVideoElement, url: string, art: Artplayer) => {
@@ -287,7 +324,9 @@ export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sou
           if (art.duration && art.duration > resumeAt) {
             art.currentTime = resumeAt
           }
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
       }
       art.once('video:loadedmetadata', seekToResume)
       art.once('video:canplay', seekToResume)
@@ -297,7 +336,11 @@ export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sou
     art.on('ready', () => {
       const hlsInstance = (art as unknown as { hls?: Hls }).hls
       if (hlsInstance && hlsInstance.levels.length <= 1) {
-        try { art.controls.remove('hls-quality') } catch { /* ignore */ }
+        try {
+          art.controls.remove('hls-quality')
+        } catch {
+          /* ignore */
+        }
       }
     })
 
@@ -324,8 +367,16 @@ export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sou
       }
 
       // Mute first to immediately stop audio, even if later steps fail
-      try { art.muted = true } catch { /* ignore */ }
-      try { if (art.video) art.video.muted = true } catch { /* ignore */ }
+      try {
+        art.muted = true
+      } catch {
+        /* ignore */
+      }
+      try {
+        if (art.video) art.video.muted = true
+      } catch {
+        /* ignore */
+      }
 
       const artHls = (art as unknown as { hls?: Hls }).hls
       if (artHls) {
@@ -335,11 +386,31 @@ export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sou
       // Use the local `art` variable, not artRef.current, to ensure we destroy
       // the exact instance created in this effect run (StrictMode double-invoke safe)
       if (art) {
-        try { art.pause() } catch { /* ignore */ }
-        try { art.video?.pause() } catch { /* ignore */ }
-        try { art.video?.removeAttribute('src') } catch { /* ignore */ }
-        try { art.video?.load() } catch { /* ignore */ }
-        try { art.destroy(true) } catch { /* ignore */ }
+        try {
+          art.pause()
+        } catch {
+          /* ignore */
+        }
+        try {
+          art.video?.pause()
+        } catch {
+          /* ignore */
+        }
+        try {
+          art.video?.removeAttribute('src')
+        } catch {
+          /* ignore */
+        }
+        try {
+          art.video?.load()
+        } catch {
+          /* ignore */
+        }
+        try {
+          art.destroy(true)
+        } catch {
+          /* ignore */
+        }
       }
 
       // Final safety net: clear any remaining DOM
@@ -357,7 +428,11 @@ export function VideoPlayer({ src, format, poster, autoplay = true, videoId, sou
     // Find the ArtPlayer instance for this container
     for (const inst of Artplayer.instances) {
       if (inst.template?.$container === el) {
-        try { (inst as unknown as { resize?: () => void }).resize?.() } catch { /* ignore */ }
+        try {
+          ;(inst as unknown as { resize?: () => void }).resize?.()
+        } catch {
+          /* ignore */
+        }
         break
       }
     }

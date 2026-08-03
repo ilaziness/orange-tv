@@ -34,7 +34,10 @@ export type RequestOptions = RequestInit & {
 }
 
 function buildURL(base: string, path: string, query?: RequestOptions['query']): string {
-  const url = new URL(`${base}${path}`, typeof window !== 'undefined' ? window.location.origin : 'http://localhost')
+  const url = new URL(
+    `${base}${path}`,
+    typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
+  )
   if (query) {
     Object.entries(query).forEach(([key, value]) => {
       if (value === undefined || value === null || value === '') return
@@ -75,7 +78,11 @@ export async function apiRequest<T>(
   }
 
   if (!res.ok) {
-    throw new ApiError(payload?.message || `HTTP ${res.status}`, payload?.code ?? res.status, res.status)
+    throw new ApiError(
+      payload?.message || `HTTP ${res.status}`,
+      payload?.code ?? res.status,
+      res.status,
+    )
   }
   if (!payload) {
     throw new ApiError(`空响应 HTTP ${res.status}`, -1, res.status)
@@ -86,11 +93,20 @@ export async function apiRequest<T>(
   return payload
 }
 
-export async function apiGet<T>(base: string, path: string, options?: RequestOptions): Promise<ApiResponse<T>> {
+export async function apiGet<T>(
+  base: string,
+  path: string,
+  options?: RequestOptions,
+): Promise<ApiResponse<T>> {
   return apiRequest<T>(base, path, { ...options, method: 'GET' })
 }
 
-export async function apiPost<T>(base: string, path: string, body?: unknown, options?: RequestOptions): Promise<ApiResponse<T>> {
+export async function apiPost<T>(
+  base: string,
+  path: string,
+  body?: unknown,
+  options?: RequestOptions,
+): Promise<ApiResponse<T>> {
   return apiRequest<T>(base, path, {
     ...options,
     method: 'POST',
@@ -98,7 +114,12 @@ export async function apiPost<T>(base: string, path: string, body?: unknown, opt
   })
 }
 
-export async function apiPut<T>(base: string, path: string, body?: unknown, options?: RequestOptions): Promise<ApiResponse<T>> {
+export async function apiPut<T>(
+  base: string,
+  path: string,
+  body?: unknown,
+  options?: RequestOptions,
+): Promise<ApiResponse<T>> {
   return apiRequest<T>(base, path, {
     ...options,
     method: 'PUT',
@@ -106,7 +127,11 @@ export async function apiPut<T>(base: string, path: string, body?: unknown, opti
   })
 }
 
-export async function apiDelete<T>(base: string, path: string, options?: RequestOptions): Promise<ApiResponse<T>> {
+export async function apiDelete<T>(
+  base: string,
+  path: string,
+  options?: RequestOptions,
+): Promise<ApiResponse<T>> {
   return apiRequest<T>(base, path, { ...options, method: 'DELETE' })
 }
 
@@ -393,7 +418,11 @@ export type FeatureSettings = {
   rating_enabled: boolean
 }
 
-export type SettingsResponse = SiteSettings | AdSettings | FeatureSettings | Record<string, SiteSettings | AdSettings | FeatureSettings>
+export type SettingsResponse =
+  | SiteSettings
+  | AdSettings
+  | FeatureSettings
+  | Record<string, SiteSettings | AdSettings | FeatureSettings>
 
 export type UpdateSettingsRequest = {
   group: string

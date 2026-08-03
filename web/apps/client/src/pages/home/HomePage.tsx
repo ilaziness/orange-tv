@@ -61,9 +61,7 @@ export function Component() {
 
   const [categorySections, setCategorySections] = useState<Record<number, SectionState>>({})
 
-  const roots = categories
-    .slice()
-    .sort((a, b) => a.sort_order - b.sort_order)
+  const roots = categories.slice().sort((a, b) => a.sort_order - b.sort_order)
 
   useEffect(() => {
     if (!roots.length) return
@@ -101,7 +99,12 @@ export function Component() {
     <div className="flex items-center justify-between">
       <h2 className="text-lg font-semibold">{title}</h2>
       {categoryId ? (
-        <Button variant="ghost" size="sm" nativeButton={false} render={<Link to={`/videos?parent_category_id=${categoryId}`} />}>
+        <Button
+          variant="ghost"
+          size="sm"
+          nativeButton={false}
+          render={<Link to={`/videos?parent_category_id=${categoryId}`} />}
+        >
           查看更多
           <ChevronRightIcon data-icon="inline-end" />
         </Button>

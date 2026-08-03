@@ -133,7 +133,9 @@ export function VideoDetailDialog({ open, videoId, onOpenChange }: VideoDetailDi
         if (!cancelled) setLoading(false)
       }
     })()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }
 
   useEffect(() => {
@@ -186,7 +188,9 @@ export function VideoDetailDialog({ open, videoId, onOpenChange }: VideoDetailDi
                             src={detail.cover}
                             alt="封面"
                             className="h-24 w-16 rounded border object-cover"
-                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                            onError={(e) => {
+                              ;(e.target as HTMLImageElement).style.display = 'none'
+                            }}
                           />
                         )}
                         {detail.poster && (
@@ -194,24 +198,59 @@ export function VideoDetailDialog({ open, videoId, onOpenChange }: VideoDetailDi
                             src={detail.poster}
                             alt="海报"
                             className="h-24 w-16 rounded border object-cover"
-                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                            onError={(e) => {
+                              ;(e.target as HTMLImageElement).style.display = 'none'
+                            }}
                           />
                         )}
                       </div>
                     )}
                     <div className="grid flex-1 grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3">
-                      <div><span className="text-muted-foreground">标题：</span>{detail.title}</div>
-                      {detail.subtitle && <div><span className="text-muted-foreground">副标题：</span>{detail.subtitle}</div>}
-                      <div><span className="text-muted-foreground">年份：</span>{detail.year || '-'}</div>
-                      <div><span className="text-muted-foreground">地区：</span>{detail.region || '-'}</div>
-                      <div><span className="text-muted-foreground">语言：</span>{detail.language || '-'}</div>
-                      <div><span className="text-muted-foreground">评分：</span>{detail.rating || '-'}</div>
-                      <div><span className="text-muted-foreground">时长：</span>{detail.duration ? `${detail.duration} 分钟` : '-'}</div>
-                      <div><span className="text-muted-foreground">上映日期：</span>{detail.release_date || '-'}</div>
-                      <div><span className="text-muted-foreground">播放数：</span>{detail.view_count}</div>
+                      <div>
+                        <span className="text-muted-foreground">标题：</span>
+                        {detail.title}
+                      </div>
+                      {detail.subtitle && (
+                        <div>
+                          <span className="text-muted-foreground">副标题：</span>
+                          {detail.subtitle}
+                        </div>
+                      )}
+                      <div>
+                        <span className="text-muted-foreground">年份：</span>
+                        {detail.year || '-'}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">地区：</span>
+                        {detail.region || '-'}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">语言：</span>
+                        {detail.language || '-'}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">评分：</span>
+                        {detail.rating || '-'}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">时长：</span>
+                        {detail.duration ? `${detail.duration} 分钟` : '-'}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">上映日期：</span>
+                        {detail.release_date || '-'}
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">播放数：</span>
+                        {detail.view_count}
+                      </div>
                       <div>
                         <span className="text-muted-foreground">上下架：</span>
-                        <StatusBadge status={detail.publish_status ?? 0} activeText="上架" inactiveText="下架" />
+                        <StatusBadge
+                          status={detail.publish_status ?? 0}
+                          activeText="上架"
+                          inactiveText="下架"
+                        />
                       </div>
                       <div>
                         <span className="text-muted-foreground">连载状态：</span>
@@ -222,30 +261,40 @@ export function VideoDetailDialog({ open, videoId, onOpenChange }: VideoDetailDi
                   {detail.description && (
                     <div className="mt-3 text-sm">
                       <span className="text-muted-foreground">简介：</span>
-                      <p className="mt-1 whitespace-pre-wrap text-foreground">{detail.description}</p>
+                      <p className="mt-1 whitespace-pre-wrap text-foreground">
+                        {detail.description}
+                      </p>
                     </div>
                   )}
                 </section>
 
                 {/* 导演 / 演员 / 标签 */}
                 <section>
-                  <h3 className="mb-2 text-sm font-semibold text-muted-foreground">演职人员 / 标签</h3>
+                  <h3 className="mb-2 text-sm font-semibold text-muted-foreground">
+                    演职人员 / 标签
+                  </h3>
                   <div className="flex flex-col gap-2 text-sm">
                     <div>
                       <span className="text-muted-foreground">导演：</span>
-                      {detail.directors.length ? detail.directors.map((d) => d.name).join('、') : '暂无'}
+                      {detail.directors.length
+                        ? detail.directors.map((d) => d.name).join('、')
+                        : '暂无'}
                     </div>
                     <div>
                       <span className="text-muted-foreground">演员：</span>
-                      {detail.actors.length
-                        ? detail.actors.map((a) => a.name).join('、')
-                        : '暂无'}
+                      {detail.actors.length ? detail.actors.map((a) => a.name).join('、') : '暂无'}
                     </div>
                     <div className="flex flex-wrap items-center gap-1.5">
                       <span className="text-muted-foreground">标签：</span>
-                      {detail.tags.length
-                        ? detail.tags.map((t) => <Badge key={t.id} variant="outline">{t.name}</Badge>)
-                        : <span>暂无</span>}
+                      {detail.tags.length ? (
+                        detail.tags.map((t) => (
+                          <Badge key={t.id} variant="outline">
+                            {t.name}
+                          </Badge>
+                        ))
+                      ) : (
+                        <span>暂无</span>
+                      )}
                     </div>
                   </div>
                 </section>

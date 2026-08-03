@@ -38,11 +38,20 @@ export function BannerList({ list, onEdit, onToggle, onDelete }: BannerListProps
             <TableCell className="font-medium">{b.title}</TableCell>
             <TableCell>
               {b.cover ? (
-                <img src={b.cover} alt={b.title} className="rounded object-cover" style={{ width: 60, height: 34 }} />
-              ) : '-'}
+                <img
+                  src={b.cover}
+                  alt={b.title}
+                  className="rounded object-cover"
+                  style={{ width: 60, height: 34 }}
+                />
+              ) : (
+                '-'
+              )}
             </TableCell>
             <TableCell>{b.sort}</TableCell>
-            <TableCell><StatusBadge status={b.status} /></TableCell>
+            <TableCell>
+              <StatusBadge status={b.status} />
+            </TableCell>
             <TableCell>
               <div className="flex gap-1">
                 <Button size="sm" variant="ghost" onClick={() => onEdit(b)}>

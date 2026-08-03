@@ -86,7 +86,11 @@ export function AppSidebar() {
           <SidebarGroupLabel>首页</SidebarGroupLabel>
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton tooltip="仪表盘" isActive={location.pathname === '/'} render={<Link to="/" />}>
+              <SidebarMenuButton
+                tooltip="仪表盘"
+                isActive={location.pathname === '/'}
+                render={<Link to="/" />}
+              >
                 <LayoutDashboard />
                 <span>仪表盘</span>
               </SidebarMenuButton>

@@ -23,7 +23,11 @@ interface NamedItemPickerProps {
   title: string
   selected: NamedItem[]
   onChange: (items: NamedItem[]) => void
-  searchFn: (query: { keyword: string; page: number; page_size: number }) => Promise<{ data: PageData<NamedItem> }>
+  searchFn: (query: {
+    keyword: string
+    page: number
+    page_size: number
+  }) => Promise<{ data: PageData<NamedItem> }>
 }
 
 export function NamedItemPicker({ title, selected, onChange, searchFn }: NamedItemPickerProps) {
@@ -41,9 +45,15 @@ export function NamedItemPicker({ title, selected, onChange, searchFn }: NamedIt
   const selectedRef = useRef(selected)
   const reqIdRef = useRef(0)
 
-  useEffect(() => { keywordRef.current = keyword }, [keyword])
-  useEffect(() => { searchFnRef.current = searchFn }, [searchFn])
-  useEffect(() => { selectedRef.current = selected }, [selected])
+  useEffect(() => {
+    keywordRef.current = keyword
+  }, [keyword])
+  useEffect(() => {
+    searchFnRef.current = searchFn
+  }, [searchFn])
+  useEffect(() => {
+    selectedRef.current = selected
+  }, [selected])
 
   const loadFirst = useCallback(async (kw: string) => {
     const reqId = ++reqIdRef.current
@@ -72,7 +82,11 @@ export function NamedItemPicker({ title, selected, onChange, searchFn }: NamedIt
     const reqId = ++reqIdRef.current
     setLoadingMore(true)
     try {
-      const res = await searchFnRef.current({ keyword: keywordRef.current, page: nextPage, page_size: DEFAULT_PAGE_SIZE })
+      const res = await searchFnRef.current({
+        keyword: keywordRef.current,
+        page: nextPage,
+        page_size: DEFAULT_PAGE_SIZE,
+      })
       if (reqId !== reqIdRef.current) return
       setResults((prev) => [...prev, ...(res.data.list || [])])
       setTotalPages(res.data.total_pages || 1)
@@ -99,7 +113,9 @@ export function NamedItemPicker({ title, selected, onChange, searchFn }: NamedIt
   // 关键词变化 debounce 300ms 重新搜索
   useEffect(() => {
     if (!open) return
-    const t = setTimeout(() => { void loadFirst(keyword) }, 300)
+    const t = setTimeout(() => {
+      void loadFirst(keyword)
+    }, 300)
     return () => clearTimeout(t)
   }, [keyword, open, loadFirst])
 
@@ -158,9 +174,7 @@ export function NamedItemPicker({ title, selected, onChange, searchFn }: NamedIt
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>选择{title}</DialogTitle>
-            <DialogDescription className="sr-only">
-              搜索并选择关联的{title}
-            </DialogDescription>
+            <DialogDescription className="sr-only">搜索并选择关联的{title}</DialogDescription>
           </DialogHeader>
 
           <div className="relative mb-3">
@@ -190,10 +204,7 @@ export function NamedItemPicker({ title, selected, onChange, searchFn }: NamedIt
                   return (
                     <li key={item.id}>
                       <label className="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-muted">
-                        <Checkbox
-                          checked={checked}
-                          onCheckedChange={() => toggleTemp(item)}
-                        />
+                        <Checkbox checked={checked} onCheckedChange={() => toggleTemp(item)} />
                         <span>{item.name}</span>
                       </label>
                     </li>
@@ -225,7 +236,9 @@ export function NamedItemPicker({ title, selected, onChange, searchFn }: NamedIt
           )}
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>取消</Button>
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              取消
+            </Button>
             <Button onClick={handleConfirm}>确定（已选 {tempSelected.size}）</Button>
           </DialogFooter>
         </DialogContent>

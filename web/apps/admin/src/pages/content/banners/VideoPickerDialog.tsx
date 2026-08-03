@@ -42,8 +42,12 @@ export function VideoPickerDialog({ open, onOpenChange, onSelect }: VideoPickerD
   const keywordRef = useRef(keyword)
   const pageRef = useRef(page)
 
-  useEffect(() => { keywordRef.current = keyword }, [keyword])
-  useEffect(() => { pageRef.current = page }, [page])
+  useEffect(() => {
+    keywordRef.current = keyword
+  }, [keyword])
+  useEffect(() => {
+    pageRef.current = page
+  }, [page])
 
   const load = useCallback(async (p = pageRef.current, k = keywordRef.current) => {
     setLoading(true)
@@ -80,9 +84,7 @@ export function VideoPickerDialog({ open, onOpenChange, onSelect }: VideoPickerD
       <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>选择影视</DialogTitle>
-          <DialogDescription className="sr-only">
-            搜索并选择关联的影视
-          </DialogDescription>
+          <DialogDescription className="sr-only">搜索并选择关联的影视</DialogDescription>
         </DialogHeader>
 
         <div className="mb-4 flex gap-2">
@@ -91,7 +93,9 @@ export function VideoPickerDialog({ open, onOpenChange, onSelect }: VideoPickerD
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             className="max-w-xs"
-            onKeyDown={(e) => { if (e.key === 'Enter') void load(1) }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') void load(1)
+            }}
           />
           <Button variant="outline" size="sm" onClick={() => void load(1)} disabled={loading}>
             {loading ? <Spinner data-icon="inline-start" /> : <Search data-icon="inline-start" />}

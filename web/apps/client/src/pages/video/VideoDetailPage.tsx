@@ -20,7 +20,11 @@ type VideoDetailLoaderData = {
   error: string
 }
 
-export async function loader({ params }: { params: Record<string, string | undefined> }): Promise<VideoDetailLoaderData> {
+export async function loader({
+  params,
+}: {
+  params: Record<string, string | undefined>
+}): Promise<VideoDetailLoaderData> {
   const id = params.id
   if (!id) {
     return { detail: null, related: [], comments: [], error: '' }
@@ -55,9 +59,7 @@ export function Component() {
 
   const loadComments = () => {
     if (!id) return
-    void clientApi
-      .listComments(Number(id), 1)
-      .then((res) => setComments(res.data.list || []))
+    void clientApi.listComments(Number(id), 1).then((res) => setComments(res.data.list || []))
   }
 
   if (error) {
@@ -84,12 +86,8 @@ export function Component() {
   const directorText = detail.directors?.length
     ? detail.directors.map((d) => d.name).join(' / ')
     : '暂无'
-  const actorText = detail.actors?.length
-    ? detail.actors.map((a) => a.name).join(' / ')
-    : '暂无'
-  const tagsText = detail.tags?.length
-    ? detail.tags.map((t) => t.name).join(' / ')
-    : ''
+  const actorText = detail.actors?.length ? detail.actors.map((a) => a.name).join(' / ') : '暂无'
+  const tagsText = detail.tags?.length ? detail.tags.map((t) => t.name).join(' / ') : ''
 
   return (
     <div className="flex flex-col gap-8">
@@ -108,21 +106,13 @@ export function Component() {
         </div>
         <div className="flex max-w-4xl flex-1 flex-col gap-3">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight">
-              {detail.title}
-            </h1>
+            <h1 className="text-2xl font-bold tracking-tight">{detail.title}</h1>
             <FavoriteButton videoId={Number(id)} />
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            {detail.year ? (
-              <Badge variant="secondary">{detail.year}</Badge>
-            ) : null}
-            {detail.region ? (
-              <Badge variant="secondary">{detail.region}</Badge>
-            ) : null}
-            {detail.language ? (
-              <Badge variant="secondary">{detail.language}</Badge>
-            ) : null}
+            {detail.year ? <Badge variant="secondary">{detail.year}</Badge> : null}
+            {detail.region ? <Badge variant="secondary">{detail.region}</Badge> : null}
+            {detail.language ? <Badge variant="secondary">{detail.language}</Badge> : null}
           </div>
           <RatingStars
             videoId={Number(id)}
@@ -174,9 +164,7 @@ export function Component() {
                         key={ep.id}
                         variant="outline"
                         size="sm"
-                        onClick={() =>
-                          navigate(`/play/${id}/${source.id}/${ep.id}`)
-                        }
+                        onClick={() => navigate(`/play/${id}/${source.id}/${ep.id}`)}
                       >
                         {ep.title || `第${ep.episode}集`}
                       </Button>
@@ -196,11 +184,7 @@ export function Component() {
       </Card>
 
       {feature.comment_enabled ? (
-        <CommentSection
-          videoId={Number(id)}
-          comments={comments}
-          onRefresh={loadComments}
-        />
+        <CommentSection videoId={Number(id)} comments={comments} onRefresh={loadComments} />
       ) : null}
 
       {related.length ? (

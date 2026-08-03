@@ -6,20 +6,28 @@ import type { AdminItem, UserGroupItem } from '@orange-tv/shared'
 import { toast } from 'sonner'
 import { DEFAULT_PAGE_SIZE } from '@/lib/constants'
 
-const optionalEmail = z.string().refine((v) => !v || z.email().safeParse(v).success, '邮箱格式不正确')
+const optionalEmail = z
+  .string()
+  .refine((v) => !v || z.email().safeParse(v).success, '邮箱格式不正确')
 
 const createSchema = z.object({
   username: z.string().min(3, '用户名至少 3 个字符'),
   password: z.string().min(6, '密码至少 6 位'),
   email: optionalEmail,
-  group_id: z.union([z.string(), z.number()]).refine((v) => Number(v) > 0, '请选择用户组').transform((v) => Number(v)),
+  group_id: z
+    .union([z.string(), z.number()])
+    .refine((v) => Number(v) > 0, '请选择用户组')
+    .transform((v) => Number(v)),
   status: z.union([z.string(), z.number()]).transform((v) => Number(v)),
 })
 
 const editSchema = z.object({
   username: z.string().min(3, '用户名至少 3 个字符'),
   email: optionalEmail,
-  group_id: z.union([z.string(), z.number()]).refine((v) => Number(v) > 0, '请选择用户组').transform((v) => Number(v)),
+  group_id: z
+    .union([z.string(), z.number()])
+    .refine((v) => Number(v) > 0, '请选择用户组')
+    .transform((v) => Number(v)),
   status: z.union([z.string(), z.number()]).transform((v) => Number(v)),
 })
 
@@ -48,8 +56,12 @@ export function useAdmins() {
   const keywordRef = useRef(keyword)
   const pageRef = useRef(page)
 
-  useEffect(() => { keywordRef.current = keyword }, [keyword])
-  useEffect(() => { pageRef.current = page }, [page])
+  useEffect(() => {
+    keywordRef.current = keyword
+  }, [keyword])
+  useEffect(() => {
+    pageRef.current = page
+  }, [page])
 
   const loadGroups = useCallback(async () => {
     try {
@@ -63,7 +75,11 @@ export function useAdmins() {
   const load = useCallback(async (p = pageRef.current, k = keywordRef.current) => {
     setLoading(true)
     try {
-      const res = await adminApi.listAdmins({ page: p, page_size: DEFAULT_PAGE_SIZE, keyword: k || undefined })
+      const res = await adminApi.listAdmins({
+        page: p,
+        page_size: DEFAULT_PAGE_SIZE,
+        keyword: k || undefined,
+      })
       setList(res.data.list || [])
       setTotal(res.data.total || 0)
       setPage(res.data.page || p)

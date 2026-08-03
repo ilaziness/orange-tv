@@ -1,60 +1,60 @@
-import { useState } from "react";
-import { Link } from "react-router";
-import { isValidUsername, sanitizeUsernameInput } from "@orange-tv/shared";
-import { clientApi, errorMessage } from "@/lib/api";
-import { useAuthStore } from "@/store/auth";
-import { useLoginDialogStore } from "@/store/loginDialog";
+import { useState } from 'react'
+import { Link } from 'react-router'
+import { isValidUsername, sanitizeUsernameInput } from '@orange-tv/shared'
+import { clientApi, errorMessage } from '@/lib/api'
+import { useAuthStore } from '@/store/auth'
+import { useLoginDialogStore } from '@/store/loginDialog'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Spinner } from "@/components/ui/spinner";
-import { AlertCircleIcon } from "lucide-react";
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Spinner } from '@/components/ui/spinner'
+import { AlertCircleIcon } from 'lucide-react'
 
 export function LoginDialog() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const isOpen = useLoginDialogStore((s) => s.isOpen);
-  const close = useLoginDialogStore((s) => s.close);
-  const setToken = useAuthStore((s) => s.setToken);
-  const loadProfile = useAuthStore((s) => s.loadProfile);
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const isOpen = useLoginDialogStore((s) => s.isOpen)
+  const close = useLoginDialogStore((s) => s.close)
+  const setToken = useAuthStore((s) => s.setToken)
+  const loadProfile = useAuthStore((s) => s.loadProfile)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    const u = username.trim();
-    const p = password.trim();
+    e.preventDefault()
+    setError('')
+    const u = username.trim()
+    const p = password.trim()
     if (!isValidUsername(u) || p.length < 6) {
-      setError("用户名或密码格式不正确");
-      return;
+      setError('用户名或密码格式不正确')
+      return
     }
-    setSubmitting(true);
+    setSubmitting(true)
     try {
-      const res = await clientApi.login(u, p);
-      setToken(res.data.access_token);
-      await loadProfile();
-      close();
+      const res = await clientApi.login(u, p)
+      setToken(res.data.access_token)
+      await loadProfile()
+      close()
     } catch (err) {
-      setError(errorMessage(err));
+      setError(errorMessage(err))
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
-  };
+  }
 
   return (
     <Dialog
       open={isOpen}
       onOpenChange={(open) => {
-        if (!open) close();
+        if (!open) close()
       }}
     >
       <DialogContent>
@@ -100,7 +100,7 @@ export function LoginDialog() {
           </FieldGroup>
         </form>
         <p className="text-center text-sm text-muted-foreground">
-          还没有账号？{" "}
+          还没有账号？{' '}
           <Link
             to="/register"
             className="text-primary underline-offset-4 hover:underline"
@@ -111,5 +111,5 @@ export function LoginDialog() {
         </p>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

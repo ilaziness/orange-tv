@@ -3,13 +3,7 @@ import { UserTable } from './UserTable'
 import { UserFormDialog } from './UserFormDialog'
 import { PasswordResetDialog } from '@/pages/user/_components/PasswordResetDialog'
 import { PageContainer, ConfirmDialog, Pagination } from '@/components/shared'
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -57,8 +51,17 @@ export default function UsersPage() {
           <CardTitle>用户管理</CardTitle>
           <CardAction>
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={() => void load(page)} disabled={loading}>
-                {loading ? <Spinner data-icon="inline-start" /> : <RefreshCw data-icon="inline-start" />}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => void load(page)}
+                disabled={loading}
+              >
+                {loading ? (
+                  <Spinner data-icon="inline-start" />
+                ) : (
+                  <RefreshCw data-icon="inline-start" />
+                )}
                 刷新
               </Button>
               <Button size="sm" onClick={openCreate}>
@@ -75,7 +78,9 @@ export default function UsersPage() {
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               className="max-w-xs"
-              onKeyDown={(e) => { if (e.key === 'Enter') void load(1) }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') void load(1)
+              }}
             />
             <Button variant="outline" size="sm" onClick={() => void load(1)} disabled={loading}>
               {loading ? <Spinner data-icon="inline-start" /> : <Search data-icon="inline-start" />}
@@ -135,7 +140,9 @@ export default function UsersPage() {
 
       <ConfirmDialog
         open={deleteId !== null}
-        onOpenChange={(open) => { if (!open && !deleting) setDeleteId(null) }}
+        onOpenChange={(open) => {
+          if (!open && !deleting) setDeleteId(null)
+        }}
         title="删除用户"
         description="确认删除该用户？此操作不可撤销。"
         destructive
@@ -145,7 +152,9 @@ export default function UsersPage() {
 
       <PasswordResetDialog
         open={resetId !== null}
-        onOpenChange={(open) => { if (!open && !resetting) setResetId(null) }}
+        onOpenChange={(open) => {
+          if (!open && !resetting) setResetId(null)
+        }}
         loading={resetting}
         onConfirm={confirmResetPwd}
       />

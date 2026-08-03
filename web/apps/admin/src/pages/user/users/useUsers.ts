@@ -6,7 +6,9 @@ import type { UserItem } from '@orange-tv/shared'
 import { toast } from 'sonner'
 import { DEFAULT_PAGE_SIZE } from '@/lib/constants'
 
-const optionalEmail = z.string().refine((v) => !v || z.email().safeParse(v).success, '邮箱格式不正确')
+const optionalEmail = z
+  .string()
+  .refine((v) => !v || z.email().safeParse(v).success, '邮箱格式不正确')
 
 const createSchema = z.object({
   username: z.string().min(3, '用户名至少 3 个字符'),
@@ -45,13 +47,21 @@ export function useUsers() {
   const keywordRef = useRef(keyword)
   const pageRef = useRef(page)
 
-  useEffect(() => { keywordRef.current = keyword }, [keyword])
-  useEffect(() => { pageRef.current = page }, [page])
+  useEffect(() => {
+    keywordRef.current = keyword
+  }, [keyword])
+  useEffect(() => {
+    pageRef.current = page
+  }, [page])
 
   const load = useCallback(async (p = pageRef.current, k = keywordRef.current) => {
     setLoading(true)
     try {
-      const res = await adminApi.listUsers({ page: p, page_size: DEFAULT_PAGE_SIZE, keyword: k || undefined })
+      const res = await adminApi.listUsers({
+        page: p,
+        page_size: DEFAULT_PAGE_SIZE,
+        keyword: k || undefined,
+      })
       setList(res.data.list || [])
       setTotal(res.data.total || 0)
       setPage(res.data.page || p)
@@ -62,7 +72,9 @@ export function useUsers() {
     }
   }, [])
 
-  useEffect(() => { void load(1) }, [load])
+  useEffect(() => {
+    void load(1)
+  }, [load])
 
   function openCreate() {
     setEditId(0)

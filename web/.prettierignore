@@ -4,3 +4,17 @@ build
 package-lock.json
 *.min.*
 coverage
+
+# Vite / build artifacts
+.vite
+.next
+.turbo
+
+# Lock files
+pnpm-lock.yaml
+yarn.lock
+
+# Generated files
+*.generated.*
+auto-imports.d.ts
+components.d.ts

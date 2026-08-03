@@ -1,12 +1,6 @@
 import { useState } from 'react'
 import { downloadBackup, errorMessage } from '@/lib/api'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -88,10 +82,7 @@ export default function DataBackupSection() {
         <div className="flex flex-col gap-5">
           <Field>
             <FieldLabel htmlFor="backup-mode">导出方式</FieldLabel>
-            <Select
-              value={mode}
-              onValueChange={(value) => setMode(value as ExportMode)}
-            >
+            <Select value={mode} onValueChange={(value) => setMode(value as ExportMode)}>
               <SelectTrigger id="backup-mode" className="w-full max-w-md">
                 <SelectValue>
                   {modeOptions.find((o) => o.value === mode)?.label ?? '请选择导出方式'}

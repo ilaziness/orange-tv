@@ -87,10 +87,7 @@ export function CollectMapEditor({
     [flatCats],
   )
 
-  const flatRemote = useMemo(
-    () => buildRemoteCategoryTree(remoteCategories),
-    [remoteCategories],
-  )
+  const flatRemote = useMemo(() => buildRemoteCategoryTree(remoteCategories), [remoteCategories])
 
   useEffect(() => {
     if (!open) return
@@ -124,7 +121,12 @@ export function CollectMapEditor({
   const busy = loading || saving
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!busy) onOpenChange(v) }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!busy) onOpenChange(v)
+      }}
+    >
       <DialogContent className="sm:max-w-2xl" showCloseButton={!busy}>
         <DialogHeader>
           <DialogTitle>绑定分类 — 源 #{sourceId}</DialogTitle>
@@ -140,9 +142,7 @@ export function CollectMapEditor({
             <Empty className="py-8">
               <EmptyHeader>
                 <EmptyTitle>暂无远程分类</EmptyTitle>
-                <EmptyDescription>
-                  请确保采集源类型为苹果CMS且地址正确后重试。
-                </EmptyDescription>
+                <EmptyDescription>请确保采集源类型为苹果CMS且地址正确后重试。</EmptyDescription>
               </EmptyHeader>
             </Empty>
           ) : (
@@ -181,7 +181,10 @@ export function CollectMapEditor({
           )}
         </div>
         <DialogFooter>
-          <Button onClick={() => void handleSave()} disabled={busy || remoteCategories.length === 0}>
+          <Button
+            onClick={() => void handleSave()}
+            disabled={busy || remoteCategories.length === 0}
+          >
             {saving && <Spinner data-icon="inline-start" />}
             {saving ? '保存中...' : '保存绑定分类'}
           </Button>

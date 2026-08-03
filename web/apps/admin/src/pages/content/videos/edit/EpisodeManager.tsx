@@ -19,7 +19,13 @@ interface EpisodeManagerProps {
   onRemove: (index: number) => void
 }
 
-export function EpisodeManager({ episodes, sources, onAdd, onUpdate, onRemove }: EpisodeManagerProps) {
+export function EpisodeManager({
+  episodes,
+  sources,
+  onAdd,
+  onUpdate,
+  onRemove,
+}: EpisodeManagerProps) {
   return (
     <div className="rounded-lg border p-4">
       <h3 className="mb-3 font-medium">新增剧集（保存时一并创建）</h3>
@@ -36,7 +42,9 @@ export function EpisodeManager({ episodes, sources, onAdd, onUpdate, onRemove }:
               </SelectTrigger>
               <SelectContent>
                 {sources.map((s) => (
-                  <SelectItem key={s.id} value={String(s.id)}>{s.name}</SelectItem>
+                  <SelectItem key={s.id} value={String(s.id)}>
+                    {s.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -60,7 +68,12 @@ export function EpisodeManager({ episodes, sources, onAdd, onUpdate, onRemove }:
               className="min-w-[220px] flex-1"
             />
             <Select
-              items={[{ value: 'hls', label: 'hls' }, { value: 'mp4', label: 'mp4' }, { value: 'dash', label: 'dash' }, { value: 'flv', label: 'flv' }]}
+              items={[
+                { value: 'hls', label: 'hls' },
+                { value: 'mp4', label: 'mp4' },
+                { value: 'dash', label: 'dash' },
+                { value: 'flv', label: 'flv' },
+              ]}
               value={ep.format}
               onValueChange={(v) => onUpdate(idx, { format: v ?? 'hls' })}
             >

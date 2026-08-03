@@ -3,12 +3,7 @@ import { adminApi, errorMessage } from '@/lib/api'
 import { PageContainer } from '@/components/shared'
 import { Link } from 'react-router'
 import type { DashboardData } from '@orange-tv/shared'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'

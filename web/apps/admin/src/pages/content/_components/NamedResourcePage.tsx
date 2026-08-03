@@ -5,13 +5,7 @@ import { errorMessage } from '@/lib/api'
 import { PageContainer, ConfirmDialog, Pagination } from '@/components/shared'
 import { NamedResourceDialog } from './NamedResourceDialog'
 import type { NamedItem, PageData } from '@orange-tv/shared'
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
@@ -43,7 +37,11 @@ export function NamedResourcePage({
 }: {
   title: string
   resourceType: ResourceType
-  list: (query?: { keyword?: string; page?: number; page_size?: number }) => Promise<{ data: PageData<NamedItem> }>
+  list: (query?: {
+    keyword?: string
+    page?: number
+    page_size?: number
+  }) => Promise<{ data: PageData<NamedItem> }>
   create: (name: string) => Promise<unknown>
   update: (id: number, name: string) => Promise<unknown>
   remove: (id: number) => Promise<unknown>
@@ -65,9 +63,15 @@ export function NamedResourcePage({
   const pageRef = useRef(page)
   const listRef = useRef(list)
 
-  useEffect(() => { keywordRef.current = keyword }, [keyword])
-  useEffect(() => { pageRef.current = page }, [page])
-  useEffect(() => { listRef.current = list }, [list])
+  useEffect(() => {
+    keywordRef.current = keyword
+  }, [keyword])
+  useEffect(() => {
+    pageRef.current = page
+  }, [page])
+  useEffect(() => {
+    listRef.current = list
+  }, [list])
 
   const load = useCallback(async (p = pageRef.current, k = keywordRef.current) => {
     setLoading(true)
@@ -83,7 +87,9 @@ export function NamedResourcePage({
     }
   }, [])
 
-  useEffect(() => { void load(1, '') }, [load])
+  useEffect(() => {
+    void load(1, '')
+  }, [load])
 
   function openCreate() {
     setEditId(0)
@@ -153,8 +159,17 @@ export function NamedResourcePage({
           <CardTitle>{title}</CardTitle>
           <CardAction>
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={() => void load(page)} disabled={loading}>
-                {loading ? <Spinner data-icon="inline-start" /> : <RefreshCw data-icon="inline-start" />}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => void load(page)}
+                disabled={loading}
+              >
+                {loading ? (
+                  <Spinner data-icon="inline-start" />
+                ) : (
+                  <RefreshCw data-icon="inline-start" />
+                )}
                 刷新
               </Button>
               <Button size="sm" onClick={openCreate}>
@@ -171,7 +186,9 @@ export function NamedResourcePage({
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               className="max-w-xs"
-              onKeyDown={(e) => { if (e.key === 'Enter') void load(1) }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') void load(1)
+              }}
             />
             <Button variant="outline" size="sm" onClick={() => void load(1)} disabled={loading}>
               {loading ? <Spinner data-icon="inline-start" /> : <Search data-icon="inline-start" />}
@@ -267,7 +284,9 @@ export function NamedResourcePage({
 
       <ConfirmDialog
         open={deleteId !== null}
-        onOpenChange={(open) => { if (!open && !deleting) setDeleteId(null) }}
+        onOpenChange={(open) => {
+          if (!open && !deleting) setDeleteId(null)
+        }}
         title="删除确认"
         description="确认删除该项？此操作不可撤销。"
         destructive

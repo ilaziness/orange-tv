@@ -35,7 +35,13 @@ export function CategoryTree({
           <Plus data-icon="inline-start" />
           新增分类
         </Button>
-        <Button type="button" variant="outline" size="sm" onClick={() => void onRefresh()} disabled={loading}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => void onRefresh()}
+          disabled={loading}
+        >
           {loading ? <Spinner data-icon="inline-start" /> : <RefreshCw data-icon="inline-start" />}
           刷新
         </Button>
@@ -69,15 +75,30 @@ export function CategoryTree({
                 </div>
                 <div className="flex items-center gap-2">
                   <StatusBadge status={item.status} />
-                  <Button variant="outline" size="sm" onClick={() => onEdit(item)} disabled={updatingId === item.id}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onEdit(item)}
+                    disabled={updatingId === item.id}
+                  >
                     <Edit data-icon="inline-start" />
                     编辑
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => void onToggle(item)} disabled={updatingId === item.id}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void onToggle(item)}
+                    disabled={updatingId === item.id}
+                  >
                     {updatingId === item.id && <Spinner data-icon="inline-start" />}
                     {item.status === 1 ? '禁用' : '启用'}
                   </Button>
-                  <Button variant="destructive" size="sm" onClick={() => onDelete(item.id)} disabled={updatingId === item.id}>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => onDelete(item.id)}
+                    disabled={updatingId === item.id}
+                  >
                     <Trash2 data-icon="inline-start" />
                     删除
                   </Button>

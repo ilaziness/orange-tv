@@ -34,7 +34,12 @@ export function GroupFormDialog({
   onSubmit,
 }: GroupFormDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!submitting) onOpenChange(v) }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!submitting) onOpenChange(v)
+      }}
+    >
       <DialogContent className="sm:max-w-md" showCloseButton={!submitting}>
         <DialogHeader>
           <DialogTitle>{editId > 0 ? '编辑用户组' : '新增用户组'}</DialogTitle>
@@ -79,7 +84,12 @@ export function GroupFormDialog({
             </Field>
           </FieldGroup>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={submitting}
+            >
               取消
             </Button>
             <Button type="submit" disabled={submitting}>

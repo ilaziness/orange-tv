@@ -65,7 +65,12 @@ export function CollectSourceForm({
       : '数据列表接口，如 https://example.com/api.php/provide/vod/from/m3u8/at/json/'
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!submitting) onOpenChange(v) }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!submitting) onOpenChange(v)
+      }}
+    >
       <DialogContent className="sm:max-w-2xl" showCloseButton={!submitting}>
         <DialogHeader>
           <DialogTitle>{editId ? '编辑采集源' : '新增采集源'}</DialogTitle>
@@ -78,7 +83,10 @@ export function CollectSourceForm({
           )}
           <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field>
-              <FieldLabel htmlFor="name">源名称<RequiredMark /></FieldLabel>
+              <FieldLabel htmlFor="name">
+                源名称
+                <RequiredMark />
+              </FieldLabel>
               <Input
                 id="name"
                 placeholder="请输入源名称"
@@ -89,7 +97,10 @@ export function CollectSourceForm({
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="type">类型<RequiredMark /></FieldLabel>
+              <FieldLabel htmlFor="type">
+                类型
+                <RequiredMark />
+              </FieldLabel>
               <Select
                 items={typeOptions}
                 value={form.type}
@@ -101,13 +112,18 @@ export function CollectSourceForm({
                 </SelectTrigger>
                 <SelectContent>
                   {typeOptions.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </Field>
             <Field className="sm:col-span-2">
-              <FieldLabel htmlFor="collect_url">采集地址<RequiredMark /></FieldLabel>
+              <FieldLabel htmlFor="collect_url">
+                采集地址
+                <RequiredMark />
+              </FieldLabel>
               <Input
                 id="collect_url"
                 placeholder={collectUrlPlaceholder}
@@ -128,7 +144,10 @@ export function CollectSourceForm({
               />
             </Field>
             <Field>
-              <FieldLabel htmlFor="play_source_id">绑定播放源<RequiredMark /></FieldLabel>
+              <FieldLabel htmlFor="play_source_id">
+                绑定播放源
+                <RequiredMark />
+              </FieldLabel>
               <Select
                 items={playSourceOptions}
                 value={form.play_source_id === '0' ? '' : form.play_source_id}
@@ -140,7 +159,9 @@ export function CollectSourceForm({
                 </SelectTrigger>
                 <SelectContent>
                   {playSources.map((ps) => (
-                    <SelectItem key={ps.id} value={String(ps.id)}>{ps.name}</SelectItem>
+                    <SelectItem key={ps.id} value={String(ps.id)}>
+                      {ps.name}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -186,7 +207,9 @@ export function CollectSourceForm({
                 </SelectTrigger>
                 <SelectContent>
                   {dataRangeOptions.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -194,7 +217,12 @@ export function CollectSourceForm({
           </FieldGroup>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={submitting}
+            >
               取消
             </Button>
             <Button type="submit" disabled={submitting}>
