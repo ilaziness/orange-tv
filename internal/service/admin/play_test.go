@@ -138,6 +138,9 @@ func (f *fakePlayRepo) UpdateEpisodeStatusBySource(ctx context.Context, videoID,
 	}
 	return n, nil
 }
+func (f *fakePlayRepo) UpdatePlayURLDomainBySource(ctx context.Context, playSourceID uint64, oldHost, newHost string) (int, error) {
+	return 0, nil
+}
 
 func (f *fakePlayRepo) WithTx(tx bun.Tx) repository.PlayRepository { return f }
 
@@ -206,6 +209,9 @@ func (v *videoRepoStub) CountVideosByStatus(ctx context.Context, status uint8) (
 func (v *videoRepoStub) CountCategories(ctx context.Context) (int, error) { return 0, nil }
 func (v *videoRepoStub) ListTagsByVideoIDs(ctx context.Context, videoIDs []uint64) ([]repository.VideoTagRow, error) {
 	return nil, nil
+}
+func (v *videoRepoStub) UpdateCoverDomainByCollectSource(ctx context.Context, collectSourceID uint64, oldHost, newHost string) (int, error) {
+	return 0, nil
 }
 
 func TestPlayService_CreateEpisodeRestoresSoftDeleted(t *testing.T) {

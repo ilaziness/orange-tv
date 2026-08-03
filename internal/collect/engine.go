@@ -3,6 +3,7 @@ package collect
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 	"time"
 
@@ -220,6 +221,21 @@ func isTimeBefore(v string, cutoff *time.Time) bool {
 	return t.Before(*cutoff)
 }
 
+// extractHost parses a URL and returns its host (authority, e.g. "example.com" or "example.com:8080").
+// Returns empty string for empty input, URLs without scheme, or parse errors.
+// Used for detecting remote domain changes between collected data and stored data.
+func extractHost(raw string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return ""
+	}
+	u, err := url.Parse(raw)
+	if err != nil {
+		return ""
+	}
+	return u.Host
+}
+
 func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, catMap map[int64]int64, parentMap map[uint64]uint64, item Item) error {
 	if item.ExternalCategoryID <= 0 {
 		return fmt.Errorf("外部分类ID无效")
@@ -237,15 +253,23 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 		return err
 	}
 
-	// If video was collected by a different source, only add play episodes (no metadata creation)
+	serialStatus := parseSerialStatus(item.Remarks)
+
+	// Cross-source: existing video was collected by a different source.
+	// Supplement empty basic fields (no cover, no associations, no PublishStatus) + upsert episodes.
 	if existing != nil && existing.CollectSourceID != 0 && existing.CollectSourceID != uint64(source.ID) {
 		return e.videoRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
+			vRepo := e.videoRepo.WithTx(tx)
 			pRepo := e.playRepo.WithTx(tx)
+			applySupplementFields(existing, item, categoryID, parentMap, serialStatus, false)
+			if err := vRepo.Update(ctx, existing); err != nil {
+				return err
+			}
 			return e.upsertEpisodes(ctx, pRepo, source, existing.ID, item)
 		})
 	}
 
-	// ensure metadata names (only for same-source updates or new videos)
+	// Same source or manually created (CollectSourceID==0): ensure metadata names
 	directorIDs, err := e.ensureDirectors(ctx, item.Directors)
 	if err != nil {
 		return err
@@ -259,7 +283,17 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 		return err
 	}
 
-	serialStatus := parseSerialStatus(item.Remarks)
+	// Same-source domain migration: detect remote host changes and batch-migrate
+	// all historical records of this source. Non-fatal: warn on failure.
+	if existing != nil {
+		if err := e.migrateDomainIfChanged(ctx, source, existing, item); err != nil {
+			e.log.Warn("collect: domain migration failed",
+				zap.Int64("source_id", int64(source.ID)),
+				zap.String("title", item.Title),
+				zap.Error(err),
+			)
+		}
+	}
 
 	return e.videoRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
 		vRepo := e.videoRepo.WithTx(tx)
@@ -267,41 +301,12 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 		var videoID uint64
 		if existing != nil {
 			videoID = existing.ID
-			// Same source or manually created (CollectSourceID==0): claim it
+			// Manually created (CollectSourceID==0): claim it for this source
 			if existing.CollectSourceID == 0 {
 				existing.CollectSourceID = uint64(source.ID)
 			}
-			// Same source: update video fields
-			existing.Subtitle = item.Subtitle
-			if item.Description != "" {
-				existing.Description = &item.Description
-			}
-			if item.Cover != "" {
-				existing.CoverImage = item.Cover
-			}
-			if item.Year > 0 {
-				existing.Year = uint32(item.Year)
-			}
-			if item.Region != "" {
-				existing.Region = item.Region
-			}
-			if item.Language != "" {
-				existing.Language = item.Language
-			}
-			if item.Duration > 0 {
-				existing.Duration = uint32(item.Duration)
-			}
-			if rd := strings.TrimSpace(item.ReleaseDate); rd != "" {
-				existing.ReleaseDate = rd
-			}
-			if serialStatus > 0 {
-				existing.SerialStatus = serialStatus
-			}
-			existing.CategoryID = uint64(categoryID)
-			existing.ParentCategoryID = parentMap[uint64(categoryID)]
-			if existing.PublishStatus == 0 {
-				existing.PublishStatus = constant.PublishStatusOnline
-			}
+			// Same source: supplement empty basic fields + override cover (capture domain/path changes)
+			applySupplementFields(existing, item, categoryID, parentMap, serialStatus, true)
 			if err := vRepo.Update(ctx, existing); err != nil {
 				return err
 			}
@@ -401,6 +406,115 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 		}
 		return nil
 	})
+}
+
+// applySupplementFields fills empty/zero basic fields of an existing video with values
+// from the collected item (supplement semantics: never overwrite non-empty values).
+// When updateCover is true (same-source), the cover image is overridden with the new
+// value to capture remote domain/path changes; when false (cross-source) the cover is
+// left untouched. PublishStatus is never modified here — it is a system-managed field.
+func applySupplementFields(v *model.Videos, item Item, categoryID int64, parentMap map[uint64]uint64, serialStatus uint8, updateCover bool) {
+	if v.Subtitle == "" && item.Subtitle != "" {
+		v.Subtitle = item.Subtitle
+	}
+	if (v.Description == nil || *v.Description == "") && item.Description != "" {
+		desc := item.Description
+		v.Description = &desc
+	}
+	if updateCover && item.Cover != "" {
+		v.CoverImage = item.Cover
+	}
+	if v.Year == 0 && item.Year > 0 {
+		v.Year = uint32(item.Year)
+	}
+	if v.Region == "" && item.Region != "" {
+		v.Region = item.Region
+	}
+	if v.Language == "" && item.Language != "" {
+		v.Language = item.Language
+	}
+	if v.Duration == 0 && item.Duration > 0 {
+		v.Duration = uint32(item.Duration)
+	}
+	if v.ReleaseDate == "" {
+		if rd := strings.TrimSpace(item.ReleaseDate); rd != "" {
+			v.ReleaseDate = rd
+		}
+	}
+	if v.SerialStatus == 0 && serialStatus > 0 {
+		v.SerialStatus = serialStatus
+	}
+	if v.CategoryID == 0 {
+		v.CategoryID = uint64(categoryID)
+	}
+	if v.ParentCategoryID == 0 {
+		v.ParentCategoryID = parentMap[uint64(categoryID)]
+	}
+}
+
+// migrateDomainIfChanged detects remote domain changes between stored data and newly
+// collected data, then batch-migrates all historical records of the same source.
+// Cover image domain and play URL domain are detected independently. This enables
+// updating all old data to a new domain by collecting just one item.
+func (e *Engine) migrateDomainIfChanged(ctx context.Context, source *model.CollectSources, existing *model.Videos, item Item) error {
+	// Cover image domain migration
+	if existing.CoverImage != "" && item.Cover != "" {
+		oldHost := extractHost(existing.CoverImage)
+		newHost := extractHost(item.Cover)
+		if oldHost != "" && newHost != "" && oldHost != newHost {
+			n, err := e.videoRepo.UpdateCoverDomainByCollectSource(ctx, uint64(source.ID), oldHost, newHost)
+			if err != nil {
+				return fmt.Errorf("migrate cover domain: %w", err)
+			}
+			e.log.Info("collect: migrated cover domain",
+				zap.Int64("source_id", int64(source.ID)),
+				zap.String("old_host", oldHost),
+				zap.String("new_host", newHost),
+				zap.Int("affected", n),
+			)
+		}
+	}
+
+	// Play URL domain migration (independent detection)
+	if len(item.Episodes) == 0 || source.PlaySourceID == 0 {
+		return nil
+	}
+	var newPlayURL string
+	for _, ep := range item.Episodes {
+		if strings.TrimSpace(ep.URL) != "" {
+			newPlayURL = ep.URL
+			break
+		}
+	}
+	if newPlayURL == "" {
+		return nil
+	}
+	newHost := extractHost(newPlayURL)
+	if newHost == "" {
+		return nil
+	}
+	eps, _, err := e.playRepo.ListEpisodes(ctx, int64(existing.ID), int64(source.PlaySourceID), 0, 1)
+	if err != nil {
+		return fmt.Errorf("migrate play url domain: list episodes: %w", err)
+	}
+	if len(eps) == 0 {
+		return nil
+	}
+	oldHost := extractHost(eps[0].PlayURL)
+	if oldHost == "" || oldHost == newHost {
+		return nil
+	}
+	n, err := e.playRepo.UpdatePlayURLDomainBySource(ctx, uint64(source.PlaySourceID), oldHost, newHost)
+	if err != nil {
+		return fmt.Errorf("migrate play url domain: %w", err)
+	}
+	e.log.Info("collect: migrated play url domain",
+		zap.Uint64("play_source_id", uint64(source.PlaySourceID)),
+		zap.String("old_host", oldHost),
+		zap.String("new_host", newHost),
+		zap.Int("affected", n),
+	)
+	return nil
 }
 
 func (e *Engine) ensureDirectors(ctx context.Context, names []string) ([]uint64, error) {

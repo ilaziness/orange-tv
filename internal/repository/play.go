@@ -39,6 +39,11 @@ type PlayRepository interface {
 	SoftDeleteEpisode(ctx context.Context, id int64) error
 	// UpdateEpisodeStatusBySource 批量更新某影视下指定播放源的全部剧集状态。
 	UpdateEpisodeStatusBySource(ctx context.Context, videoID, sourceID int64, status uint8) (int, error)
+	// UpdatePlayURLDomainBySource batch-replaces the host portion of play_url for all
+	// episodes of a play source. Used when a remote source changes its streaming CDN
+	// domain; collecting one item triggers migration of all historical play URLs.
+	// oldHost/newHost are authority strings (e.g. "cdn.old.com").
+	UpdatePlayURLDomainBySource(ctx context.Context, playSourceID uint64, oldHost, newHost string) (int, error)
 	WithTx(tx bun.Tx) PlayRepository
 }
 
@@ -311,6 +316,30 @@ func (r *playRepo) UpdateEpisodeStatusBySource(ctx context.Context, videoID, sou
 		Exec(ctx)
 	if err != nil {
 		return 0, fmt.Errorf("update episode status by source: %w", err)
+	}
+	n, _ := res.RowsAffected()
+	return int(n), nil
+}
+
+// UpdatePlayURLDomainBySource batch-replaces the host portion of play_url for all
+// episodes of a play source. The match uses "://oldHost" prefix to ensure only the
+// URL authority is replaced, not coincidental substrings in the path.
+func (r *playRepo) UpdatePlayURLDomainBySource(ctx context.Context, playSourceID uint64, oldHost, newHost string) (int, error) {
+	if playSourceID == 0 || oldHost == "" || newHost == "" || oldHost == newHost {
+		return 0, nil
+	}
+	oldSeg := "://" + oldHost
+	newSeg := "://" + newHost
+	now := time.Now()
+	res, err := r.db.NewUpdate().Model((*model.PlayEpisodes)(nil)).
+		Set("play_url = REPLACE(play_url, ?, ?)", oldSeg, newSeg).
+		Set("updated_at = ?", now).
+		Where("source_id = ?", playSourceID).
+		Where("play_url LIKE ?", "%"+oldSeg+"%").
+		Where("deleted_at IS NULL").
+		Exec(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("update play url domain by source: %w", err)
 	}
 	n, _ := res.RowsAffected()
 	return int(n), nil

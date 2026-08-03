@@ -73,6 +73,12 @@ type VideoRepository interface {
 	CountVideosToday(ctx context.Context, since time.Time) (int, error)
 	CountVideosByStatus(ctx context.Context, status uint8) (int, error)
 	CountCategories(ctx context.Context) (int, error)
+
+	// UpdateCoverDomainByCollectSource batch-replaces the host portion of cover_image
+	// for all videos collected by the given collect source. Used when a remote source
+	// changes its image CDN domain; collecting one item triggers migration of all
+	// historical covers. oldHost/newHost are authority strings (e.g. "img.old.com").
+	UpdateCoverDomainByCollectSource(ctx context.Context, collectSourceID uint64, oldHost, newHost string) (int, error)
 }
 
 type videoRepo struct {
@@ -454,4 +460,28 @@ func (r *videoRepo) CountCategories(ctx context.Context) (int, error) {
 		return 0, fmt.Errorf("count categories: %w", err)
 	}
 	return count, nil
+}
+
+// UpdateCoverDomainByCollectSource batch-replaces the host portion of cover_image
+// for all videos of a collect source. The match uses "://oldHost" prefix to ensure
+// only the URL authority is replaced, not coincidental substrings in the path.
+func (r *videoRepo) UpdateCoverDomainByCollectSource(ctx context.Context, collectSourceID uint64, oldHost, newHost string) (int, error) {
+	if collectSourceID == 0 || oldHost == "" || newHost == "" || oldHost == newHost {
+		return 0, nil
+	}
+	oldSeg := "://" + oldHost
+	newSeg := "://" + newHost
+	now := time.Now()
+	res, err := r.db.NewUpdate().Model((*model.Videos)(nil)).
+		Set("cover_image = REPLACE(cover_image, ?, ?)", oldSeg, newSeg).
+		Set("updated_at = ?", now).
+		Where("collect_source_id = ?", collectSourceID).
+		Where("cover_image LIKE ?", "%"+oldSeg+"%").
+		Where("deleted_at IS NULL").
+		Exec(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("update cover domain by collect source: %w", err)
+	}
+	n, _ := res.RowsAffected()
+	return int(n), nil
 }
