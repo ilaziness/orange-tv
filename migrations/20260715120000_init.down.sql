@@ -1,107 +1,115 @@
 -- Rollback: drop all tables in reverse order of creation.
 
-DROP TABLE IF EXISTS online_sessions;
+DROP TABLE IF EXISTS `online_sessions`;
 
 --bun:split
 
-DROP TABLE IF EXISTS site_stats_daily;
+DROP TABLE IF EXISTS `site_stats_daily`;
 
 --bun:split
 
-DROP TABLE IF EXISTS banners;
+DROP TABLE IF EXISTS `banners`;
 
 --bun:split
 
-DROP TABLE IF EXISTS video_comments;
+DROP TABLE IF EXISTS `user_ratings`;
 
 --bun:split
 
-DROP TABLE IF EXISTS user_play_history;
+DROP TABLE IF EXISTS `user_comment_votes`;
 
 --bun:split
 
-DROP TABLE IF EXISTS user_favorites;
+DROP TABLE IF EXISTS `video_comments`;
 
 --bun:split
 
-DROP TABLE IF EXISTS user_login_logs;
+DROP TABLE IF EXISTS `user_play_history`;
 
 --bun:split
 
-DROP TABLE IF EXISTS system_logs;
+DROP TABLE IF EXISTS `user_favorites`;
 
 --bun:split
 
-DROP TABLE IF EXISTS login_logs;
+DROP TABLE IF EXISTS `user_login_logs`;
 
 --bun:split
 
-DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS `system_logs`;
 
 --bun:split
 
-DROP TABLE IF EXISTS admins;
+DROP TABLE IF EXISTS `admin_login_logs`;
 
 --bun:split
 
-DROP TABLE IF EXISTS user_groups;
+DROP TABLE IF EXISTS `users`;
 
 --bun:split
 
-DROP TABLE IF EXISTS system_settings;
+DROP TABLE IF EXISTS `admins`;
 
 --bun:split
 
-DROP TABLE IF EXISTS live_channels;
+DROP TABLE IF EXISTS `user_groups`;
 
 --bun:split
 
-DROP TABLE IF EXISTS collect_logs;
+DROP TABLE IF EXISTS `system_settings`;
 
 --bun:split
 
-DROP TABLE IF EXISTS collect_source_categories;
+DROP TABLE IF EXISTS `live_channels`;
 
 --bun:split
 
-DROP TABLE IF EXISTS collect_sources;
+DROP TABLE IF EXISTS `collect_logs`;
 
 --bun:split
 
-DROP TABLE IF EXISTS play_episodes;
+DROP TABLE IF EXISTS `collect_source_categories`;
 
 --bun:split
 
-DROP TABLE IF EXISTS play_sources;
+DROP TABLE IF EXISTS `collect_sources`;
 
 --bun:split
 
-DROP TABLE IF EXISTS video_tags;
+DROP TABLE IF EXISTS `play_episodes`;
 
 --bun:split
 
-DROP TABLE IF EXISTS tags;
+DROP TABLE IF EXISTS `play_sources`;
 
 --bun:split
 
-DROP TABLE IF EXISTS video_actors;
+DROP TABLE IF EXISTS `video_tags`;
 
 --bun:split
 
-DROP TABLE IF EXISTS actors;
+DROP TABLE IF EXISTS `tags`;
 
 --bun:split
 
-DROP TABLE IF EXISTS video_directors;
+DROP TABLE IF EXISTS `video_actors`;
 
 --bun:split
 
-DROP TABLE IF EXISTS directors;
+DROP TABLE IF EXISTS `actors`;
 
 --bun:split
 
-DROP TABLE IF EXISTS videos;
+DROP TABLE IF EXISTS `video_directors`;
 
 --bun:split
 
-DROP TABLE IF EXISTS categories;
+DROP TABLE IF EXISTS `directors`;
+
+--bun:split
+
+DROP TABLE IF EXISTS `videos`;
+
+--bun:split
+
+DROP TABLE IF EXISTS `categories`;

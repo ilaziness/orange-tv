@@ -26,9 +26,9 @@ type VideoComments struct {
 	// 0隐藏 1正常
 	Status           uint8               `bun:"status,notnull" json:"status"`
 	LikeCount        uint32              `bun:"like_count,notnull" json:"like_count"`
+	DislikeCount     uint32              `bun:"dislike_count,notnull" json:"dislike_count"`
 	CreatedAt        time.Time           `bun:"created_at,notnull" json:"created_at"`
 	UpdatedAt        time.Time           `bun:"updated_at,notnull" json:"updated_at"`
-	DislikeCount     uint32              `bun:"dislike_count,notnull" json:"dislike_count"`
 	UserCommentVotes []*UserCommentVotes `bun:"rel:has-many,join:id=comment_id" json:"-"`
 	Parent           *VideoComments      `bun:"rel:belongs-to,join:parent_id=id" json:"-"`
 	Replies          []*VideoComments    `bun:"rel:has-many,join:id=parent_id" json:"-"`

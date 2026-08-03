@@ -19,6 +19,10 @@ type Users struct {
 	Username string `bun:"username,notnull,unique" json:"username"`
 	// 密码（加密存储）
 	Password string `bun:"password,notnull" json:"-"`
+	// 10位数字唯一展示ID
+	StrID string `bun:"str_id,notnull,unique" json:"str_id"`
+	// 昵称
+	Nickname string `bun:"nickname,notnull" json:"nickname"`
 	// 邮箱
 	Email string `bun:"email,notnull" json:"email"`
 	// 头像
@@ -30,10 +34,7 @@ type Users struct {
 	CreatedAt   *time.Time `bun:"created_at" json:"created_at"`
 	UpdatedAt   *time.Time `bun:"updated_at" json:"updated_at"`
 	// 软删除时间
-	DeletedAt *time.Time `bun:"deleted_at" json:"deleted_at"`
-	StrID     string     `bun:"str_id,notnull,unique" json:"str_id"`
-	// 昵称
-	Nickname          string              `bun:"nickname,notnull" json:"nickname"`
+	DeletedAt         *time.Time          `bun:"deleted_at" json:"deleted_at"`
 	UserCommentVotes  []*UserCommentVotes `bun:"rel:has-many,join:id=user_id" json:"-"`
 	UserFavorites     []*UserFavorites    `bun:"rel:has-many,join:id=user_id" json:"-"`
 	UserLoginLogs     []*UserLoginLogs    `bun:"rel:has-many,join:id=user_id" json:"-"`
