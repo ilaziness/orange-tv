@@ -7,6 +7,7 @@ import (
 
 	"github.com/ilaziness/orange-tv/internal/constant"
 	shareddto "github.com/ilaziness/orange-tv/internal/dto"
+	opendto "github.com/ilaziness/orange-tv/internal/dto/open"
 	"github.com/ilaziness/orange-tv/internal/model"
 	pkgcache "github.com/ilaziness/orange-tv/pkg/cache"
 )
@@ -107,22 +108,17 @@ func (m *Manager) SetVideoListClient(ctx context.Context, key string, entry *Vid
 	return m.cache.Set(ctx, key, entry, TTLVideoList)
 }
 
-// InvalidateVideo 失效视频相关缓存（client 列表 + open 列表/详情/分类）。
-func (m *Manager) InvalidateVideo(ctx context.Context, videoID int64) {
+// InvalidateVideo 失效视频相关缓存（client 列表 + open 列表/分类）。
+func (m *Manager) InvalidateVideo(ctx context.Context) {
 	for _, sort := range []string{"", "id_desc", "rating_desc", "view_count_desc", "created_at_desc"} {
 		for _, page := range []int{1, 2} {
 			for _, limit := range []int{12, 20, 24} {
 				_ = m.cache.Delete(ctx, VideoListKey(0, 0, sort, page, limit))
-				_ = m.cache.Delete(ctx, OpenVideoListKey("default", page, limit))
-				_ = m.cache.Delete(ctx, OpenVideoListKey("apple_cms", page, limit))
+				_ = m.cache.Delete(ctx, OpenVideoListKey(page, limit))
 			}
 		}
 	}
 	_ = m.cache.Delete(ctx, KeyOpenCategories)
-	if videoID > 0 {
-		_ = m.cache.Delete(ctx, OpenVideoDetailKey("default", videoID))
-		_ = m.cache.Delete(ctx, OpenVideoDetailKey("apple_cms", videoID))
-	}
 }
 
 // --- Settings ---
@@ -168,34 +164,20 @@ func (m *Manager) SetOpenVideoList(ctx context.Context, key string, value any) e
 	return m.cache.Set(ctx, key, value, TTLOpenVideoList)
 }
 
-// GetOpenVideoDetail 获取 Open API 视频详情缓存。
-func (m *Manager) GetOpenVideoDetail(ctx context.Context, key string) (any, error) {
-	v, err := m.cache.Get(ctx, key)
-	if err != nil {
-		return nil, err
-	}
-	return v, nil
-}
-
-// SetOpenVideoDetail 设置 Open API 视频详情缓存。
-func (m *Manager) SetOpenVideoDetail(ctx context.Context, key string, value any) error {
-	return m.cache.Set(ctx, key, value, TTLOpenVideoDetail)
-}
-
-// GetOpenCategories 获取 Open API 分类树缓存。
-func (m *Manager) GetOpenCategories(ctx context.Context) ([]shareddto.CategoryResponse, error) {
+// GetOpenCategories 获取 Open API 分类列表缓存。
+func (m *Manager) GetOpenCategories(ctx context.Context) ([]opendto.CategoryItem, error) {
 	v, err := m.cache.Get(ctx, KeyOpenCategories)
 	if err != nil {
 		return nil, err
 	}
-	tree, ok := v.([]shareddto.CategoryResponse)
+	items, ok := v.([]opendto.CategoryItem)
 	if !ok {
 		return nil, nil
 	}
-	return tree, nil
+	return items, nil
 }
 
-// SetOpenCategories 设置 Open API 分类树缓存。
-func (m *Manager) SetOpenCategories(ctx context.Context, tree []shareddto.CategoryResponse) error {
-	return m.cache.Set(ctx, KeyOpenCategories, tree, TTLOpenCategories)
+// SetOpenCategories 设置 Open API 分类列表缓存。
+func (m *Manager) SetOpenCategories(ctx context.Context, items []opendto.CategoryItem) error {
+	return m.cache.Set(ctx, KeyOpenCategories, items, TTLOpenCategories)
 }

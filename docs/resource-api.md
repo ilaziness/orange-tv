@@ -1,67 +1,94 @@
 # 资源站开放 API
 
-第四阶段提供第三方采集/资源站数据输出接口。
+第三方采集接口
 
-## 路径前缀
-
-- `GET /api/open/v1/videos` — 影视列表
-- `GET /api/open/v1/videos/:id` — 影视详情（含播放源/剧集）
-- `GET /api/open/v1/categories` — 启用中的分类树
-
-JWT 不校验；密钥由 `system_settings.resource_api_key` 控制。
-
-## 访问控制
-
-| 条件 | 行为 |
-|------|------|
-| `enable_third_party_collect=false` | 返回业务码「资源站 API 已关闭」 |
-| 已配置 `resource_api_key` | 必须携带密钥 |
-| 未配置密钥 | 开放访问（仍受开关控制） |
-
-密钥传递方式（任选其一）：
-
-- Header：`X-API-Key: <key>`
-- Query：`?key=<key>` 或 `?api_key=<key>`
-
-## 输出格式
-
-Query `format`：
-
-| 值 | 说明 |
-|------|------|
-| **不传 / 空 / `default`** | **系统默认格式**（本站自有 JSON） |
-| `apple_cms` | 苹果 CMS 兼容列表/详情 |
-
-其它非空 `format` 值将返回参数错误。
-
-后台「API 输出格式」`api_output_format` 仅允许：`default` | `apple_cms`，作为**请求未带 format 时**的默认。
-
-示例：
+## 影视列表
 
 ```bash
-# 系统默认格式（推荐：不传 format）
-curl "http://localhost:8080/api/open/v1/videos?page=1&page_size=20" \
-  -H "X-API-Key: your-key"
-
-# 或显式 default
-curl "http://localhost:8080/api/open/v1/videos?page=1&page_size=20&format=default" \
-  -H "X-API-Key: your-key"
-
-# 苹果 CMS 兼容
-curl "http://localhost:8080/api/open/v1/videos?page=1&limit=20&format=apple_cms" \
-  -H "X-API-Key: your-key"
-
-curl "http://localhost:8080/api/open/v1/videos/1?format=apple_cms" \
-  -H "X-API-Key: your-key"
+GET /api/open/v1/videos?page=1&page_size=20
 ```
 
-## 管理端配置
+参数：
 
-- 页面：系统设置 → API 配置
-- API：`GET/PUT /api/admin/v1/settings`
-- 字段：`api.site_mode`、`api.api_output_format`（`default` / `apple_cms`）、`api.enable_third_party_collect`、`api.resource_api_key`（更新时空串表示不修改）
+- `page`：页码，默认 `1`
+- `page_size` / `limit`：每页数量，默认 `20`，最大 `100`
 
-## 相关
+响应：
 
-- 站点公开信息：`GET /api/client/v1/site`
-- 缓存：列表/详情短 TTL（约 2 分钟）；配置变更会失效 settings 缓存
+```json
+{
+  "code": 0,
+  "data": {
+    "list": [
+      { "id": 1, "title": "标题", "category_id": 2, "created_at": "2026-08-03 10:00:00" }
+    ],
+    "total": 100,
+    "page": 1,
+    "page_size": 20,
+    "total_pages": 5
+  }
+}
+```
+
+## 影视详情
+
+```bash
+GET /api/open/v1/videos/detail?id=1&id=2&id=3
+```
+
+参数：
+
+- `id`：视频 id，可重复，必填，最多 50 个
+
+响应：
+
+```json
+{
+  "code": 0,
+  "data": [
+    {
+      "id": 1,
+      "title": "标题",
+      "subtitle": "",
+      "cover": "...",
+      "category_id": 2,
+      "year": 2026,
+      "rating": 8.5,
+      "release_date": "2026-08-01",
+      "region": "中国大陆",
+      "language": "国语",
+      "description": "简介",
+      "directors": ["导演"],
+      "actors": ["演员"],
+      "sources": [
+        {
+          "id": 1,
+          "name": "默认源",
+          "episodes": [
+            { "episode": 1, "title": "第1集", "url": "..." }
+          ]
+        }
+      ],
+      "created_at": "2026-08-03 10:00:00"
+    }
+  ]
+}
+```
+
+## 分类列表
+
+```bash
+GET /api/open/v1/categories
+```
+
+响应：
+
+```json
+{
+  "code": 0,
+  "data": [
+    { "id": 1, "name": "电影", "parent_id": 0 },
+    { "id": 2, "name": "动作", "parent_id": 1 }
+  ]
+}
+```

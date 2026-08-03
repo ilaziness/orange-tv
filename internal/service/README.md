@@ -22,7 +22,7 @@ service/
 │   ├── settings.go      # 客户端设置服务（白名单过滤）
 │   └── live.go
 └── open/                # 开放 API 业务
-    └── resource.go      # 第三方资源站接口（自带 ResourceConfig）
+    └── resource.go      # 第三方资源站接口（仅判断是否允许采集）
 ```
 
 ## 约定

@@ -46,8 +46,6 @@ func ClientAllowedGroups() []string {
 
 // System setting keys.
 const (
-	SettingSiteMode                = "site_mode"
-	SettingAPIOutputFormat         = "api_output_format"
 	SettingEnableThirdPartyCollect = "enable_third_party_collect"
 	SettingSiteName                = "site_name"
 	SettingSiteLogo                = "site_logo"
@@ -55,7 +53,6 @@ const (
 	SettingSiteICP                 = "site_icp"
 	SettingSiteSEOKeywords         = "site_seo_keywords"
 	SettingSiteDescription         = "site_description"
-	SettingResourceAPIKey          = "resource_api_key"
 	SettingVideoAdEnabled          = "video_ad_enabled"
 	SettingVideoAdType             = "video_ad_type"
 	SettingVideoAdUrl              = "video_ad_url"
@@ -81,10 +78,7 @@ var GroupKeys = map[string][]string{
 		SettingSiteDescription,
 	},
 	SettingGroupAPI: {
-		SettingSiteMode,
-		SettingAPIOutputFormat,
 		SettingEnableThirdPartyCollect,
-		SettingResourceAPIKey,
 	},
 	SettingGroupAd: {
 		SettingVideoAdEnabled,
@@ -110,10 +104,7 @@ var KeyToGroup = map[string]string{
 	SettingSiteICP:                 SettingGroupSite,
 	SettingSiteSEOKeywords:         SettingGroupSite,
 	SettingSiteDescription:         SettingGroupSite,
-	SettingSiteMode:                SettingGroupAPI,
-	SettingAPIOutputFormat:         SettingGroupAPI,
 	SettingEnableThirdPartyCollect: SettingGroupAPI,
-	SettingResourceAPIKey:          SettingGroupAPI,
 	SettingVideoAdEnabled:          SettingGroupAd,
 	SettingVideoAdType:             SettingGroupAd,
 	SettingVideoAdUrl:              SettingGroupAd,
@@ -125,18 +116,6 @@ var KeyToGroup = map[string]string{
 	SettingFeatureCommentReview:    SettingGroupFeature,
 	SettingFeatureRatingEnabled:    SettingGroupFeature,
 }
-
-// Site mode values.
-const (
-	SiteModeVideoSite    = "video_site"
-	SiteModeResourceSite = "resource_site"
-)
-
-// API output format values for resource open API.
-const (
-	APIOutputDefault  = "default"   // 系统默认/自有 JSON 格式
-	APIOutputAppleCMS = "apple_cms" // 苹果 CMS 兼容
-)
 
 // Video ad type values.
 const (

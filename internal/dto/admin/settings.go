@@ -16,13 +16,8 @@ type AdSettings = dto.AdSettings
 type FeatureSettings = dto.FeatureSettings
 
 // APISettings holds resource-station / API mode settings.
-// ResourceAPIKey is never returned in plain text; ResourceAPIKeySet indicates whether configured.
 type APISettings struct {
-	SiteMode                string `json:"site_mode"`
-	APIOutputFormat         string `json:"api_output_format"`
-	EnableThirdPartyCollect bool   `json:"enable_third_party_collect"`
-	ResourceAPIKeySet       bool   `json:"resource_api_key_set"`
-	ResourceAPIKeyMasked    string `json:"resource_api_key_masked,omitempty"`
+	EnableThirdPartyCollect bool `json:"enable_third_party_collect"`
 }
 
 // UpdateSettingsRequest updates settings for a single group.
@@ -44,11 +39,7 @@ type UpdateSiteSettings struct {
 
 // UpdateAPISettings updates API / resource station fields (all optional).
 type UpdateAPISettings struct {
-	SiteMode                *string `json:"site_mode" validate:"omitempty,oneof=video_site resource_site"`
-	APIOutputFormat         *string `json:"api_output_format" validate:"omitempty,oneof=default apple_cms"`
-	EnableThirdPartyCollect *bool   `json:"enable_third_party_collect"`
-	// ResourceAPIKey empty = leave unchanged; non-empty replaces key.
-	ResourceAPIKey *string `json:"resource_api_key" validate:"omitempty,max=255"`
+	EnableThirdPartyCollect *bool `json:"enable_third_party_collect"`
 }
 
 // UpdateAdSettings updates video ad fields (all optional).

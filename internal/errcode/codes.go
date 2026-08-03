@@ -85,12 +85,11 @@ var (
 	CollectDefaultNotSupported  = &Code{4000092, "默认格式暂不支持，请使用苹果CMS格式", 400, nil}
 
 	// 系统模块 (900xxxx)
-	InternalError         = &Code{9000001, "服务器内部错误", 500, nil}
-	DatabaseError         = &Code{9000002, "数据库错误", 500, nil}
-	CacheError            = &Code{9000003, "缓存错误", 500, nil}
-	ExternalServiceError  = &Code{9000004, "外部服务错误", 502, nil}
-	ServiceUnavailable    = &Code{9000005, "服务不可用", 503, nil}
-	SettingInvalid        = &Code{9000010, "系统设置无效", 400, nil}
-	ResourceAPIDisabled   = &Code{9000011, "资源站 API 已关闭", 403, nil}
-	ResourceAPIKeyInvalid = &Code{9000012, "资源站 API 密钥无效", 401, nil}
+	InternalError        = &Code{9000001, "服务器内部错误", 500, nil}
+	DatabaseError        = &Code{9000002, "数据库错误", 500, nil}
+	CacheError           = &Code{9000003, "缓存错误", 500, nil}
+	ExternalServiceError = &Code{9000004, "外部服务错误", 502, nil}
+	ServiceUnavailable   = &Code{9000005, "服务不可用", 503, nil}
+	SettingInvalid       = &Code{9000010, "系统设置无效", 400, nil}
+	ResourceAPIDisabled  = &Code{9000011, "资源站 API 已关闭", 403, nil}
 )

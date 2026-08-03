@@ -156,6 +156,9 @@ func (v *videoRepoStub) GetByID(ctx context.Context, id uint64) (*model.Videos, 
 	cp := *item
 	return &cp, nil
 }
+func (v *videoRepoStub) GetByIDs(ctx context.Context, ids []uint64) ([]model.Videos, error) {
+	return nil, nil
+}
 func (v *videoRepoStub) Create(ctx context.Context, video *model.Videos) error { return nil }
 func (v *videoRepoStub) BatchCreate(ctx context.Context, videos []*model.Videos) error {
 	return nil

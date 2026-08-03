@@ -12,7 +12,6 @@ import (
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
 	"github.com/ilaziness/orange-tv/internal/service"
-	"github.com/ilaziness/orange-tv/internal/utils"
 	"github.com/ilaziness/orange-tv/internal/validator"
 	"go.uber.org/zap"
 )
@@ -93,7 +92,7 @@ func (s *settingsService) parseUpdateData(group string, data json.RawMessage) ([
 		if err := validator.Validate(&req); err != nil {
 			return nil, errcode.WithMessage(errcode.ParamError, err.Error())
 		}
-		return s.buildAPIUpserts(&req)
+		return s.buildAPIUpserts(&req), nil
 	case constant.SettingGroupAd:
 		var req admindto.UpdateAdSettings
 		if err := json.Unmarshal(data, &req); err != nil {
@@ -158,22 +157,8 @@ func (s *settingsService) buildSiteUpserts(site *admindto.UpdateSiteSettings) []
 	return upserts
 }
 
-func (s *settingsService) buildAPIUpserts(api *admindto.UpdateAPISettings) ([]repository.SettingUpsert, error) {
+func (s *settingsService) buildAPIUpserts(api *admindto.UpdateAPISettings) []repository.SettingUpsert {
 	var upserts []repository.SettingUpsert
-	if api.SiteMode != nil {
-		mode := strings.TrimSpace(*api.SiteMode)
-		upserts = append(upserts, repository.SettingUpsert{
-			Key: constant.SettingSiteMode, Group: constant.SettingGroupAPI, Value: mode,
-			SettingType: constant.SettingTypeString, Description: "站点模式",
-		})
-	}
-	if api.APIOutputFormat != nil {
-		fmtv := strings.ToLower(strings.TrimSpace(*api.APIOutputFormat))
-		upserts = append(upserts, repository.SettingUpsert{
-			Key: constant.SettingAPIOutputFormat, Group: constant.SettingGroupAPI, Value: fmtv,
-			SettingType: constant.SettingTypeString, Description: "API输出格式：default(系统默认) apple_cms(苹果CMS)",
-		})
-	}
 	if api.EnableThirdPartyCollect != nil {
 		v := "0"
 		if *api.EnableThirdPartyCollect {
@@ -184,16 +169,7 @@ func (s *settingsService) buildAPIUpserts(api *admindto.UpdateAPISettings) ([]re
 			SettingType: constant.SettingTypeBoolean, Description: "是否允许第三方采集",
 		})
 	}
-	if api.ResourceAPIKey != nil {
-		key := strings.TrimSpace(*api.ResourceAPIKey)
-		if key != "" {
-			upserts = append(upserts, repository.SettingUpsert{
-				Key: constant.SettingResourceAPIKey, Group: constant.SettingGroupAPI, Value: key,
-				SettingType: constant.SettingTypeString, Description: "资源站 API 访问密钥",
-			})
-		}
-	}
-	return upserts, nil
+	return upserts
 }
 
 func (s *settingsService) buildAdUpserts(ad *admindto.UpdateAdSettings) []repository.SettingUpsert {
@@ -263,17 +239,8 @@ func (s *settingsService) mapToResponse(group string, m map[string]model.SystemS
 }
 
 func mapToAPISettings(m map[string]model.SystemSettings) admindto.APISettings {
-	key := service.StrVal(m, constant.SettingResourceAPIKey)
-	masked := ""
-	if key != "" {
-		masked = "******"
-	}
 	return admindto.APISettings{
-		SiteMode:                utils.DefaultStr(service.StrVal(m, constant.SettingSiteMode), constant.SiteModeVideoSite),
-		APIOutputFormat:         service.NormalizeAPIOutputFormat(service.StrVal(m, constant.SettingAPIOutputFormat)),
 		EnableThirdPartyCollect: service.BoolVal(m, constant.SettingEnableThirdPartyCollect, true),
-		ResourceAPIKeySet:       key != "",
-		ResourceAPIKeyMasked:    masked,
 	}
 }
 

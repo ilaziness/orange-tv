@@ -4,7 +4,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/ilaziness/orange-tv/internal/constant"
 	"github.com/ilaziness/orange-tv/internal/model"
 )
 
@@ -47,13 +46,4 @@ func BoolVal(m map[string]model.SystemSettings, key string, def bool) bool {
 		}
 		return def
 	}
-}
-
-// NormalizeAPIOutputFormat returns default or apple_cms only.
-func NormalizeAPIOutputFormat(v string) string {
-	v = strings.TrimSpace(strings.ToLower(v))
-	if v == constant.APIOutputAppleCMS {
-		return constant.APIOutputAppleCMS
-	}
-	return constant.APIOutputDefault
 }

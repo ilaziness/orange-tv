@@ -10,12 +10,12 @@ import (
 	shareddto "github.com/ilaziness/orange-tv/internal/dto"
 	admindto "github.com/ilaziness/orange-tv/internal/dto/admin"
 	clientdto "github.com/ilaziness/orange-tv/internal/dto/client"
+	opendto "github.com/ilaziness/orange-tv/internal/dto/open"
 	adminhandler "github.com/ilaziness/orange-tv/internal/handler/http/admin"
 	clienthandler "github.com/ilaziness/orange-tv/internal/handler/http/client"
 	openhandler "github.com/ilaziness/orange-tv/internal/handler/http/open"
 	"github.com/ilaziness/orange-tv/internal/model"
 	adminsvc "github.com/ilaziness/orange-tv/internal/service/admin"
-	opensvc "github.com/ilaziness/orange-tv/internal/service/open"
 )
 
 // BusinessHandlers holds no-op business handlers for route registration tests.
@@ -281,17 +281,17 @@ func (s clientSettingsSvc) GetByGroups(ctx context.Context, groups []string) (an
 
 type openResourceSvc struct{}
 
-func (s openResourceSvc) Authorize(ctx context.Context, providedKey string) (*opensvc.ResourceConfig, error) {
-	return &opensvc.ResourceConfig{EnableThirdPartyCollect: true, APIOutputFormat: "default"}, nil
+func (s openResourceSvc) Enabled(ctx context.Context) bool {
+	return true
 }
-func (s openResourceSvc) ListVideos(ctx context.Context, page, pageSize int, format string) (any, error) {
-	return map[string]any{"code": 200}, nil
+func (s openResourceSvc) ListVideos(ctx context.Context, page, pageSize int) ([]opendto.VideoListItem, int, error) {
+	return nil, 0, nil
 }
-func (s openResourceSvc) GetVideo(ctx context.Context, id int64, format string) (any, error) {
-	return map[string]any{"code": 200}, nil
+func (s openResourceSvc) GetVideo(ctx context.Context, ids []int64) ([]opendto.VideoDetailItem, error) {
+	return nil, nil
 }
-func (s openResourceSvc) ListCategories(ctx context.Context) ([]shareddto.CategoryResponse, error) {
-	return []shareddto.CategoryResponse{}, nil
+func (s openResourceSvc) ListCategories(ctx context.Context) ([]opendto.CategoryItem, error) {
+	return []opendto.CategoryItem{}, nil
 }
 
 // ===== Phase 5 stubs =====

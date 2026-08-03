@@ -2,14 +2,11 @@ package open
 
 import (
 	"context"
-	"crypto/subtle"
-	"fmt"
-	"strconv"
-	"strings"
 
 	"github.com/ilaziness/orange-tv/internal/cache"
 	"github.com/ilaziness/orange-tv/internal/constant"
 	shareddto "github.com/ilaziness/orange-tv/internal/dto"
+	opendto "github.com/ilaziness/orange-tv/internal/dto/open"
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
@@ -18,21 +15,13 @@ import (
 	"go.uber.org/zap"
 )
 
-// ResourceConfig is runtime resource-station config used by the open API.
-type ResourceConfig struct {
-	SiteMode                string
-	APIOutputFormat         string
-	EnableThirdPartyCollect bool
-	APIKey                  string
-}
-
 // ResourceService serves third-party resource-station APIs.
 type ResourceService interface {
-	// Authorize checks third-party collect switch and optional API key.
-	Authorize(ctx context.Context, providedKey string) (*ResourceConfig, error)
-	ListVideos(ctx context.Context, page, pageSize int, format string) (any, error)
-	GetVideo(ctx context.Context, id int64, format string) (any, error)
-	ListCategories(ctx context.Context) ([]shareddto.CategoryResponse, error)
+	// Enabled reports whether third-party collect is enabled.
+	Enabled(ctx context.Context) bool
+	ListVideos(ctx context.Context, page, pageSize int) ([]opendto.VideoListItem, int, error)
+	GetVideo(ctx context.Context, ids []int64) ([]opendto.VideoDetailItem, error)
+	ListCategories(ctx context.Context) ([]opendto.CategoryItem, error)
 }
 
 type resourceService struct {
@@ -64,28 +53,12 @@ func NewResourceService(
 	}
 }
 
-func (s *resourceService) Authorize(ctx context.Context, providedKey string) (*ResourceConfig, error) {
+func (s *resourceService) Enabled(ctx context.Context) bool {
 	m, err := s.loadAPIConfig(ctx)
 	if err != nil {
-		return nil, err
+		return false
 	}
-	cfg := &ResourceConfig{
-		SiteMode:                utils.DefaultStr(service.StrVal(m, constant.SettingSiteMode), constant.SiteModeVideoSite),
-		APIOutputFormat:         service.NormalizeAPIOutputFormat(service.StrVal(m, constant.SettingAPIOutputFormat)),
-		EnableThirdPartyCollect: service.BoolVal(m, constant.SettingEnableThirdPartyCollect, true),
-		APIKey:                  service.StrVal(m, constant.SettingResourceAPIKey),
-	}
-	if !cfg.EnableThirdPartyCollect {
-		return nil, errcode.ResourceAPIDisabled
-	}
-	expected := strings.TrimSpace(cfg.APIKey)
-	if expected != "" {
-		got := strings.TrimSpace(providedKey)
-		if len(got) != len(expected) || subtle.ConstantTimeCompare([]byte(got), []byte(expected)) != 1 {
-			return nil, errcode.ResourceAPIKeyInvalid
-		}
-	}
-	return cfg, nil
+	return service.BoolVal(m, constant.SettingEnableThirdPartyCollect, true)
 }
 
 func (s *resourceService) loadAPIConfig(ctx context.Context) (map[string]model.SystemSettings, error) {
@@ -101,20 +74,23 @@ func (s *resourceService) loadAPIConfig(ctx context.Context) (map[string]model.S
 	return m, nil
 }
 
-func (s *resourceService) ListVideos(ctx context.Context, page, pageSize int, format string) (any, error) {
+type openVideoListCache struct {
+	Items []opendto.VideoListItem
+	Total int
+}
+
+func (s *resourceService) ListVideos(ctx context.Context, page, pageSize int) ([]opendto.VideoListItem, int, error) {
 	if page < 1 {
 		page = 1
 	}
 	if pageSize < 1 || pageSize > 100 {
 		pageSize = 20
 	}
-	format, nerr := normalizeFormat(format)
-	if nerr != nil {
-		return nil, nerr
-	}
-	cacheKey := cache.OpenVideoListKey(format, page, pageSize)
+	cacheKey := cache.OpenVideoListKey(page, pageSize)
 	if v, err := s.cache.GetOpenVideoList(ctx, cacheKey); err == nil && v != nil {
-		return v, nil
+		if cached, ok := v.(*openVideoListCache); ok {
+			return cached.Items, cached.Total, nil
+		}
 	}
 
 	items, total, err := s.videoRepo.List(ctx, repository.VideoListFilter{
@@ -125,101 +101,65 @@ func (s *resourceService) ListVideos(ctx context.Context, page, pageSize int, fo
 	})
 	if err != nil {
 		s.log.Error("open resource: list videos failed", zap.Int("page", page), zap.Int("page_size", pageSize), zap.Error(err))
-		return nil, errcode.Wrap(errcode.DatabaseError, err)
-	}
-	totalPages := 0
-	if pageSize > 0 && total > 0 {
-		totalPages = total / pageSize
-		if total%pageSize > 0 {
-			totalPages++
-		}
+		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
 
-	var out any
-	if format == constant.APIOutputAppleCMS {
-		list := make([]map[string]any, 0, len(items))
-		for _, it := range items {
-			list = append(list, mapAppleListItem(&it))
-		}
-		out = map[string]any{
-			"code":      1,
-			"msg":       "数据列表",
-			"page":      page,
-			"pagecount": totalPages,
-			"limit":     strconv.Itoa(pageSize),
-			"total":     total,
-			"list":      list,
-		}
-	} else {
-		list := make([]map[string]any, 0, len(items))
-		for _, it := range items {
-			list = append(list, mapDefaultListItem(&it))
-		}
-		out = map[string]any{
-			"code":    200,
-			"message": "success",
-			"data": map[string]any{
-				"list": list,
-				"pagination": map[string]any{
-					"page":     page,
-					"pageSize": pageSize,
-					"total":    total,
-				},
-			},
-		}
+	list := make([]opendto.VideoListItem, 0, len(items))
+	for _, it := range items {
+		list = append(list, mapDefaultListItem(&it))
 	}
-	_ = s.cache.SetOpenVideoList(ctx, cacheKey, out)
-	return out, nil
+	_ = s.cache.SetOpenVideoList(ctx, cacheKey, &openVideoListCache{Items: list, Total: total})
+	return list, total, nil
 }
 
-func (s *resourceService) GetVideo(ctx context.Context, id int64, format string) (any, error) {
-	if id <= 0 {
+func (s *resourceService) GetVideo(ctx context.Context, ids []int64) ([]opendto.VideoDetailItem, error) {
+	if len(ids) == 0 {
 		return nil, errcode.ParamError
 	}
-	format, nerr := normalizeFormat(format)
-	if nerr != nil {
-		return nil, nerr
+	if len(ids) > 50 {
+		return nil, errcode.WithMessage(errcode.ParamError, "最多支持 50 个视频 id")
 	}
-	cacheKey := cache.OpenVideoDetailKey(format, id)
-	if v, err := s.cache.GetOpenVideoDetail(ctx, cacheKey); err == nil && v != nil {
-		return v, nil
+	u64IDs := make([]uint64, 0, len(ids))
+	for _, id := range ids {
+		u64IDs = append(u64IDs, uint64(id))
 	}
-
-	detail, err := s.loadDetail(ctx, id)
+	videos, err := s.videoRepo.GetByIDs(ctx, u64IDs)
 	if err != nil {
-		return nil, err
+		s.log.Error("open resource: get videos by ids failed", zap.Int("count", len(ids)), zap.Error(err))
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 
-	var out any
-	if format == constant.APIOutputAppleCMS {
-		out = map[string]any{
-			"code": 1,
-			"msg":  "数据详情",
-			"list": []map[string]any{mapAppleDetail(detail)},
+	list := make([]opendto.VideoDetailItem, 0, len(videos))
+	for i := range videos {
+		detail, err := s.buildDetail(ctx, &videos[i])
+		if err != nil {
+			return nil, err
 		}
-	} else {
-		out = map[string]any{
-			"code":    200,
-			"message": "success",
-			"data":    mapDefaultDetail(detail),
-		}
+		list = append(list, mapDefaultDetail(detail))
 	}
-	_ = s.cache.SetOpenVideoDetail(ctx, cacheKey, out)
-	return out, nil
+
+	return list, nil
 }
 
-func (s *resourceService) ListCategories(ctx context.Context) ([]shareddto.CategoryResponse, error) {
-	if tree, err := s.cache.GetOpenCategories(ctx); err == nil && tree != nil {
-		return tree, nil
+func (s *resourceService) ListCategories(ctx context.Context) ([]opendto.CategoryItem, error) {
+	if cached, err := s.cache.GetOpenCategories(ctx); err == nil && cached != nil {
+		return cached, nil
 	}
 	items, err := s.catRepo.List(ctx, true)
 	if err != nil {
 		s.log.Error("open resource: list categories failed", zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	tree := utils.BuildCategoryTree(items)
-	_ = s.cache.SetOpenCategories(ctx, tree)
-	return tree, nil
+	out := make([]opendto.CategoryItem, 0, len(items))
+	for _, c := range items {
+		out = append(out, opendto.CategoryItem{
+			ID:       c.ID,
+			Name:     c.Name,
+			ParentID: c.ParentID,
+		})
+	}
+	_ = s.cache.SetOpenCategories(ctx, out)
+	return out, nil
 }
 
 type detailBundle struct {
@@ -230,28 +170,20 @@ type detailBundle struct {
 	Sources   []shareddto.VideoSourceGroup
 }
 
-func (s *resourceService) loadDetail(ctx context.Context, id int64) (*detailBundle, error) {
-	video, err := s.videoRepo.GetByID(ctx, uint64(id))
+func (s *resourceService) buildDetail(ctx context.Context, video *model.Videos) (*detailBundle, error) {
+	directorIDs, err := s.videoRepo.ListDirectorIDs(ctx, video.ID)
 	if err != nil {
-		s.log.Error("open resource: load detail get video failed", zap.Int64("video_id", id), zap.Error(err))
-		return nil, errcode.Wrap(errcode.DatabaseError, err)
-	}
-	if video == nil || video.PublishStatus != constant.PublishStatusOnline {
-		return nil, errcode.VideoNotFound
-	}
-	directorIDs, err := s.videoRepo.ListDirectorIDs(ctx, uint64(id))
-	if err != nil {
-		s.log.Error("open resource: load detail list director ids failed", zap.Int64("video_id", id), zap.Error(err))
+		s.log.Error("open resource: load detail list director ids failed", zap.Uint64("video_id", video.ID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	directors, err := s.metaRepo.GetDirectorsByIDs(ctx, directorIDs)
 	if err != nil {
-		s.log.Error("open resource: load detail get directors failed", zap.Int64("video_id", id), zap.Error(err))
+		s.log.Error("open resource: load detail get directors failed", zap.Uint64("video_id", video.ID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	actorRels, err := s.videoRepo.ListActorRels(ctx, uint64(id))
+	actorRels, err := s.videoRepo.ListActorRels(ctx, video.ID)
 	if err != nil {
-		s.log.Error("open resource: load detail list actor rels failed", zap.Int64("video_id", id), zap.Error(err))
+		s.log.Error("open resource: load detail list actor rels failed", zap.Uint64("video_id", video.ID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	actorIDs := make([]uint64, 0, len(actorRels))
@@ -260,7 +192,7 @@ func (s *resourceService) loadDetail(ctx context.Context, id int64) (*detailBund
 	}
 	actors, err := s.metaRepo.GetActorsByIDs(ctx, actorIDs)
 	if err != nil {
-		s.log.Error("open resource: load detail get actors failed", zap.Int64("video_id", id), zap.Error(err))
+		s.log.Error("open resource: load detail get actors failed", zap.Uint64("video_id", video.ID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	actorName := map[uint64]string{}
@@ -271,24 +203,24 @@ func (s *resourceService) loadDetail(ctx context.Context, id int64) (*detailBund
 	for _, rel := range actorRels {
 		actorItems = append(actorItems, shareddto.NamedItem{ID: rel.ActorID, Name: actorName[rel.ActorID]})
 	}
-	tagIDs, err := s.videoRepo.ListTagIDs(ctx, uint64(id))
+	tagIDs, err := s.videoRepo.ListTagIDs(ctx, video.ID)
 	if err != nil {
-		s.log.Error("open resource: load detail list tag ids failed", zap.Int64("video_id", id), zap.Error(err))
+		s.log.Error("open resource: load detail list tag ids failed", zap.Uint64("video_id", video.ID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	tags, err := s.metaRepo.GetTagsByIDs(ctx, tagIDs)
 	if err != nil {
-		s.log.Error("open resource: load detail get tags failed", zap.Int64("video_id", id), zap.Error(err))
+		s.log.Error("open resource: load detail get tags failed", zap.Uint64("video_id", video.ID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	episodes, err := s.playRepo.ListEpisodesByVideo(ctx, int64(id), true)
+	episodes, err := s.playRepo.ListEpisodesByVideo(ctx, int64(video.ID), true)
 	if err != nil {
-		s.log.Error("open resource: load detail list episodes failed", zap.Int64("video_id", id), zap.Error(err))
+		s.log.Error("open resource: load detail list episodes failed", zap.Uint64("video_id", video.ID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	sources, err := s.playRepo.ListSources(ctx)
 	if err != nil {
-		s.log.Error("open resource: load detail list sources failed", zap.Int64("video_id", id), zap.Error(err))
+		s.log.Error("open resource: load detail list sources failed", zap.Uint64("video_id", video.ID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	sourceMap := map[uint64]model.PlaySources{}
@@ -324,45 +256,36 @@ func (s *resourceService) loadDetail(ctx context.Context, id int64) (*detailBund
 	}, nil
 }
 
-// normalizeFormat: empty/default → system format; only apple_cms is alternate.
-// Non-empty unknown values are rejected.
-func normalizeFormat(format string) (string, error) {
-	format = strings.TrimSpace(strings.ToLower(format))
-	switch format {
-	case "", constant.APIOutputDefault:
-		return constant.APIOutputDefault, nil
-	case constant.APIOutputAppleCMS:
-		return constant.APIOutputAppleCMS, nil
-	default:
-		return "", errcode.WithMessage(errcode.ParamError, "format 仅支持 default 或 apple_cms")
+func mapDefaultListItem(v *model.Videos) opendto.VideoListItem {
+	return opendto.VideoListItem{
+		ID:         v.ID,
+		Title:      v.Title,
+		CategoryID: v.CategoryID,
+		CreatedAt:  utils.FormatTimeStr(v.CreatedAt),
 	}
 }
 
-func mapDefaultListItem(v *model.Videos) map[string]any {
-	return map[string]any{
-		"id":          strconv.FormatUint(v.ID, 10),
-		"title":       v.Title,
-		"cover":       v.CoverImage,
-		"category_id": v.CategoryID,
-		"year":        v.Year,
-		"rating":      v.Rating,
-		"region":      v.Region,
-	}
-}
-
-func mapDefaultDetail(d *detailBundle) map[string]any {
+func mapDefaultDetail(d *detailBundle) opendto.VideoDetailItem {
 	v := d.Video
 	desc := ""
 	if v.Description != nil {
 		desc = *v.Description
 	}
-	sources := make([]map[string]any, 0, len(d.Sources))
+	sources := make([]opendto.VideoSource, 0, len(d.Sources))
 	for _, src := range d.Sources {
-		eps := make([]map[string]any, 0, len(src.Episodes))
+		eps := make([]opendto.VideoSourceEpisode, 0, len(src.Episodes))
 		for _, ep := range src.Episodes {
-			eps = append(eps, map[string]any{"episode": ep.Episode, "url": ep.URL, "title": ep.Title})
+			eps = append(eps, opendto.VideoSourceEpisode{
+				Episode: ep.Episode,
+				Title:   ep.Title,
+				URL:     ep.URL,
+			})
 		}
-		sources = append(sources, map[string]any{"name": src.Name, "episodes": eps})
+		sources = append(sources, opendto.VideoSource{
+			ID:       src.ID,
+			Name:     src.Name,
+			Episodes: eps,
+		})
 	}
 	dirs := make([]string, 0, len(d.Directors))
 	for _, d0 := range d.Directors {
@@ -372,81 +295,21 @@ func mapDefaultDetail(d *detailBundle) map[string]any {
 	for _, a := range d.Actors {
 		acts = append(acts, a.Name)
 	}
-	return map[string]any{
-		"id":          strconv.FormatUint(v.ID, 10),
-		"title":       v.Title,
-		"subtitle":    v.Subtitle,
-		"cover":       v.CoverImage,
-		"category_id": v.CategoryID,
-		"year":        v.Year,
-		"rating":      v.Rating,
-		"region":      v.Region,
-		"language":    v.Language,
-		"description": desc,
-		"directors":   dirs,
-		"actors":      acts,
-		"sources":     sources,
-	}
-}
-
-func mapAppleListItem(v *model.Videos) map[string]any {
-	return map[string]any{
-		"vod_id":       strconv.FormatUint(v.ID, 10),
-		"type_id":      strconv.FormatUint(v.CategoryID, 10),
-		"vod_name":     v.Title,
-		"vod_sub":      v.Subtitle,
-		"vod_pic":      v.CoverImage,
-		"vod_year":     v.Year,
-		"vod_area":     v.Region,
-		"vod_lang":     v.Language,
-		"vod_score":    v.Rating,
-		"douban_score": v.Rating,
-	}
-}
-
-func mapAppleDetail(d *detailBundle) map[string]any {
-	v := d.Video
-	desc := ""
-	if v.Description != nil {
-		desc = *v.Description
-	}
-	// join play_from / play_url as apple cms style
-	fromParts := make([]string, 0, len(d.Sources))
-	urlParts := make([]string, 0, len(d.Sources))
-	for _, src := range d.Sources {
-		fromParts = append(fromParts, src.Name)
-		epParts := make([]string, 0, len(src.Episodes))
-		for _, ep := range src.Episodes {
-			title := ep.Title
-			if title == "" {
-				title = fmt.Sprintf("第%d集", ep.Episode)
-			}
-			epParts = append(epParts, title+"$"+ep.URL)
-		}
-		urlParts = append(urlParts, strings.Join(epParts, "#"))
-	}
-	dirs := make([]string, 0, len(d.Directors))
-	for _, d0 := range d.Directors {
-		dirs = append(dirs, d0.Name)
-	}
-	acts := make([]string, 0, len(d.Actors))
-	for _, a := range d.Actors {
-		acts = append(acts, a.Name)
-	}
-	return map[string]any{
-		"vod_id":        strconv.FormatUint(v.ID, 10),
-		"type_id":       strconv.FormatUint(v.CategoryID, 10),
-		"vod_name":      v.Title,
-		"vod_sub":       v.Subtitle,
-		"vod_pic":       v.CoverImage,
-		"vod_actor":     strings.Join(acts, ","),
-		"vod_director":  strings.Join(dirs, ","),
-		"vod_content":   desc,
-		"vod_year":      v.Year,
-		"vod_area":      v.Region,
-		"vod_lang":      v.Language,
-		"douban_score":  v.Rating,
-		"vod_play_from": strings.Join(fromParts, "$$$"),
-		"vod_play_url":  strings.Join(urlParts, "$$$"),
+	return opendto.VideoDetailItem{
+		ID:          v.ID,
+		Title:       v.Title,
+		Subtitle:    v.Subtitle,
+		Cover:       v.CoverImage,
+		CategoryID:  v.CategoryID,
+		Year:        v.Year,
+		Rating:      v.Rating,
+		ReleaseDate: v.ReleaseDate,
+		Region:      v.Region,
+		Language:    v.Language,
+		Description: desc,
+		Directors:   dirs,
+		Actors:      acts,
+		Sources:     sources,
+		CreatedAt:   utils.FormatTimeStr(v.CreatedAt),
 	}
 }

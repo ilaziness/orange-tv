@@ -124,12 +124,6 @@ func (s *videoService) Create(ctx context.Context, req *dto.CreateVideoRequest) 
 		d := strings.TrimSpace(req.Description)
 		desc = &d
 	}
-	releaseDate := strings.TrimSpace(req.ReleaseDate)
-	var releaseDatePtr *string
-	if releaseDate != "" {
-		releaseDatePtr = &releaseDate
-	}
-
 	video := &model.Videos{
 		Title:         strings.TrimSpace(req.Title),
 		Subtitle:      strings.TrimSpace(req.Subtitle),
@@ -143,7 +137,7 @@ func (s *videoService) Create(ctx context.Context, req *dto.CreateVideoRequest) 
 		Region:        strings.TrimSpace(req.Region),
 		Duration:      req.Duration,
 		Language:      strings.TrimSpace(req.Language),
-		ReleaseDate:   releaseDatePtr,
+		ReleaseDate:   strings.TrimSpace(req.ReleaseDate),
 	}
 
 	err := s.videoRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
@@ -163,7 +157,7 @@ func (s *videoService) Create(ctx context.Context, req *dto.CreateVideoRequest) 
 		s.log.Error("video: create transaction failed", zap.String("title", video.Title), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	s.cache.InvalidateVideo(ctx, int64(video.ID))
+	s.cache.InvalidateVideo(ctx)
 	return s.getDetail(ctx, int64(video.ID), false)
 }
 
@@ -233,12 +227,7 @@ func (s *videoService) Update(ctx context.Context, id int64, req *dto.UpdateVide
 		video.Language = strings.TrimSpace(*req.Language)
 	}
 	if req.ReleaseDate != nil {
-		rd := strings.TrimSpace(*req.ReleaseDate)
-		if rd == "" {
-			video.ReleaseDate = nil
-		} else {
-			video.ReleaseDate = &rd
-		}
+		video.ReleaseDate = strings.TrimSpace(*req.ReleaseDate)
 	}
 
 	err = s.videoRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
@@ -267,7 +256,7 @@ func (s *videoService) Update(ctx context.Context, id int64, req *dto.UpdateVide
 		s.log.Error("video: update transaction failed", zap.Int64("video_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	s.cache.InvalidateVideo(ctx, id)
+	s.cache.InvalidateVideo(ctx)
 	return s.getDetail(ctx, id, false)
 }
 
@@ -298,7 +287,7 @@ func (s *videoService) Delete(ctx context.Context, id int64) error {
 		s.log.Error("video: delete transaction failed", zap.Int64("video_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
-	s.cache.InvalidateVideo(ctx, id)
+	s.cache.InvalidateVideo(ctx)
 	return nil
 }
 
@@ -420,11 +409,6 @@ func (s *videoService) getDetail(ctx context.Context, id int64, clientOnly bool)
 	if video.Description != nil {
 		desc = *video.Description
 	}
-	release := ""
-	if video.ReleaseDate != nil {
-		release = *video.ReleaseDate
-	}
-
 	resp := &shareddto.VideoDetailResponse{
 		ID:           video.ID,
 		Title:        video.Title,
@@ -438,7 +422,7 @@ func (s *videoService) getDetail(ctx context.Context, id int64, clientOnly bool)
 		Region:       video.Region,
 		Language:     video.Language,
 		Duration:     video.Duration,
-		ReleaseDate:  release,
+		ReleaseDate:  video.ReleaseDate,
 		Rating:       video.Rating,
 		ViewCount:    video.ViewCount,
 		Directors:    dirItems,

@@ -328,7 +328,7 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 			if item.Duration > 0 {
 				existing.Duration = uint32(item.Duration)
 			}
-			if rd := releaseDatePtr(item.ReleaseDate); rd != nil {
+			if rd := strings.TrimSpace(item.ReleaseDate); rd != "" {
 				existing.ReleaseDate = rd
 			}
 			if serialStatus > 0 {
@@ -362,7 +362,7 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 				Region:           item.Region,
 				Language:         item.Language,
 				Duration:         uint32(item.Duration),
-				ReleaseDate:      releaseDatePtr(item.ReleaseDate),
+				ReleaseDate:      strings.TrimSpace(item.ReleaseDate),
 				CollectSourceID:  uint64(source.ID),
 			}
 			if v.SerialStatus == 0 {
@@ -527,16 +527,6 @@ func (e *Engine) ensureTags(ctx context.Context, names []string) ([]uint64, erro
 		ids = append(ids, item.ID)
 	}
 	return ids, nil
-}
-
-// releaseDatePtr trims the raw collect release_date string and returns a pointer
-// (nil when empty). The value is stored as-is to preserve the original source format.
-func releaseDatePtr(s string) *string {
-	s = strings.TrimSpace(s)
-	if s == "" {
-		return nil
-	}
-	return &s
 }
 
 // parseSerialStatus parses vod_remarks to determine serial status.

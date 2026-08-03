@@ -46,6 +46,7 @@ type VideoListFilter struct {
 type VideoRepository interface {
 	List(ctx context.Context, f VideoListFilter) ([]model.Videos, int, error)
 	GetByID(ctx context.Context, id uint64) (*model.Videos, error)
+	GetByIDs(ctx context.Context, ids []uint64) ([]model.Videos, error)
 	Create(ctx context.Context, v *model.Videos) error
 	BatchCreate(ctx context.Context, videos []*model.Videos) error
 	Update(ctx context.Context, v *model.Videos) error
@@ -182,6 +183,8 @@ func videoSortExpr(sort string) string {
 		return "view_count DESC, id DESC"
 	case "created_at_asc":
 		return "created_at ASC, id ASC"
+	case "id_desc":
+		return "id DESC"
 	default:
 		return "year DESC, id DESC"
 	}
@@ -200,6 +203,23 @@ func (r *videoRepo) GetByID(ctx context.Context, id uint64) (*model.Videos, erro
 		return nil, fmt.Errorf("get video: %w", err)
 	}
 	return item, nil
+}
+
+func (r *videoRepo) GetByIDs(ctx context.Context, ids []uint64) ([]model.Videos, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	var items []model.Videos
+	err := r.db.NewSelect().Model(&items).
+		Where("id IN (?)", bun.In(ids)).
+		Where("deleted_at IS NULL").
+		Where("publish_status = ?", constant.PublishStatusOnline).
+		OrderExpr("id ASC").
+		Scan(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("get videos by ids: %w", err)
+	}
+	return items, nil
 }
 
 func (r *videoRepo) Create(ctx context.Context, v *model.Videos) error {

@@ -340,11 +340,7 @@ export type SiteSettings = {
 }
 
 export type APISettings = {
-  site_mode: string
-  api_output_format: string
   enable_third_party_collect: boolean
-  resource_api_key_set: boolean
-  resource_api_key_masked?: string
 }
 
 export type AdSettings = {
