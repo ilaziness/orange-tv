@@ -21,7 +21,7 @@ type ResourceService interface {
 	// Enabled reports whether third-party collect is enabled.
 	Enabled(ctx context.Context) bool
 	ListVideos(ctx context.Context, page, pageSize int, dataRange, sourceName string) ([]opendto.VideoListItem, int, error)
-	GetVideo(ctx context.Context, ids []int64) ([]opendto.VideoDetailItem, error)
+	GetVideo(ctx context.Context, ids []uint32) ([]opendto.VideoDetailItem, error)
 	ListCategories(ctx context.Context) ([]opendto.CategoryItem, error)
 }
 
@@ -129,18 +129,14 @@ func (s *resourceService) ListVideos(ctx context.Context, page, pageSize int, da
 	return list, total, nil
 }
 
-func (s *resourceService) GetVideo(ctx context.Context, ids []int64) ([]opendto.VideoDetailItem, error) {
+func (s *resourceService) GetVideo(ctx context.Context, ids []uint32) ([]opendto.VideoDetailItem, error) {
 	if len(ids) == 0 {
 		return nil, errcode.ParamError
 	}
 	if len(ids) > 50 {
 		return nil, errcode.WithMessage(errcode.ParamError, "最多支持 50 个视频 id")
 	}
-	u64IDs := make([]uint64, 0, len(ids))
-	for _, id := range ids {
-		u64IDs = append(u64IDs, uint64(id))
-	}
-	videos, err := s.videoRepo.GetByIDs(ctx, u64IDs)
+	videos, err := s.videoRepo.GetByIDs(ctx, ids)
 	if err != nil {
 		s.log.Error("open resource: get videos by ids failed", zap.Int("count", len(ids)), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
@@ -190,29 +186,29 @@ type detailBundle struct {
 func (s *resourceService) buildDetail(ctx context.Context, video *model.Videos) (*detailBundle, error) {
 	directorIDs, err := s.videoRepo.ListDirectorIDs(ctx, video.ID)
 	if err != nil {
-		s.log.Error("open resource: load detail list director ids failed", zap.Uint64("video_id", video.ID), zap.Error(err))
+		s.log.Error("open resource: load detail list director ids failed", zap.Uint32("video_id", video.ID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	directors, err := s.metaRepo.GetDirectorsByIDs(ctx, directorIDs)
 	if err != nil {
-		s.log.Error("open resource: load detail get directors failed", zap.Uint64("video_id", video.ID), zap.Error(err))
+		s.log.Error("open resource: load detail get directors failed", zap.Uint32("video_id", video.ID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	actorRels, err := s.videoRepo.ListActorRels(ctx, video.ID)
 	if err != nil {
-		s.log.Error("open resource: load detail list actor rels failed", zap.Uint64("video_id", video.ID), zap.Error(err))
+		s.log.Error("open resource: load detail list actor rels failed", zap.Uint32("video_id", video.ID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	actorIDs := make([]uint64, 0, len(actorRels))
+	actorIDs := make([]uint32, 0, len(actorRels))
 	for _, rel := range actorRels {
 		actorIDs = append(actorIDs, rel.ActorID)
 	}
 	actors, err := s.metaRepo.GetActorsByIDs(ctx, actorIDs)
 	if err != nil {
-		s.log.Error("open resource: load detail get actors failed", zap.Uint64("video_id", video.ID), zap.Error(err))
+		s.log.Error("open resource: load detail get actors failed", zap.Uint32("video_id", video.ID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	actorName := map[uint64]string{}
+	actorName := map[uint32]string{}
 	for _, a := range actors {
 		actorName[a.ID] = a.Name
 	}
@@ -222,33 +218,33 @@ func (s *resourceService) buildDetail(ctx context.Context, video *model.Videos) 
 	}
 	tagIDs, err := s.videoRepo.ListTagIDs(ctx, video.ID)
 	if err != nil {
-		s.log.Error("open resource: load detail list tag ids failed", zap.Uint64("video_id", video.ID), zap.Error(err))
+		s.log.Error("open resource: load detail list tag ids failed", zap.Uint32("video_id", video.ID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	tags, err := s.metaRepo.GetTagsByIDs(ctx, tagIDs)
 	if err != nil {
-		s.log.Error("open resource: load detail get tags failed", zap.Uint64("video_id", video.ID), zap.Error(err))
+		s.log.Error("open resource: load detail get tags failed", zap.Uint32("video_id", video.ID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	episodes, err := s.playRepo.ListEpisodesByVideo(ctx, int64(video.ID), true)
+	episodes, err := s.playRepo.ListEpisodesByVideo(ctx, video.ID, true)
 	if err != nil {
-		s.log.Error("open resource: load detail list episodes failed", zap.Uint64("video_id", video.ID), zap.Error(err))
+		s.log.Error("open resource: load detail list episodes failed", zap.Uint32("video_id", video.ID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	sources, err := s.playRepo.ListSources(ctx)
 	if err != nil {
-		s.log.Error("open resource: load detail list sources failed", zap.Uint64("video_id", video.ID), zap.Error(err))
+		s.log.Error("open resource: load detail list sources failed", zap.Uint32("video_id", video.ID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	sourceMap := map[uint64]model.PlaySources{}
+	sourceMap := map[uint32]model.PlaySources{}
 	for _, src := range sources {
 		if src.Status != constant.StatusEnabled {
 			continue
 		}
 		sourceMap[src.ID] = src
 	}
-	groups := map[uint64]*opendto.VideoSource{}
-	order := make([]uint64, 0)
+	groups := map[uint32]*opendto.VideoSource{}
+	order := make([]uint32, 0)
 	for _, ep := range episodes {
 		src, ok := sourceMap[ep.SourceID]
 		if !ok {
@@ -284,10 +280,7 @@ func mapDefaultListItem(v *model.Videos) opendto.VideoListItem {
 
 func mapDefaultDetail(d *detailBundle) opendto.VideoDetailItem {
 	v := d.Video
-	desc := ""
-	if v.Description != nil {
-		desc = *v.Description
-	}
+	desc := v.Description
 	dirs := make([]string, 0, len(d.Directors))
 	for _, d0 := range d.Directors {
 		dirs = append(dirs, d0.Name)

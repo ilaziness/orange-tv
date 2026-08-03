@@ -123,7 +123,7 @@ func (h *CommentHandler) record(c *gin.Context, resource, action, desc string) {
 	if h.audit == nil {
 		return
 	}
-	adminID := int64(0)
+	adminID := uint32(0)
 	if claims := httpmiddleware.GetClaims(c); claims != nil {
 		adminID = claims.UserID
 	}

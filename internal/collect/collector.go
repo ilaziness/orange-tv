@@ -17,7 +17,7 @@ type Collector interface {
 	// dataRange filters by time (today/last1d/last3d/last1w/last1m/all).
 	FetchListPage(ctx context.Context, source *model.CollectSources, page int, dataRange string) (*ListPage, error)
 	// FetchDetail fetches full detail for the given external IDs (caller batches).
-	FetchDetail(ctx context.Context, source *model.CollectSources, ids []int64) (*Page, error)
+	FetchDetail(ctx context.Context, source *model.CollectSources, ids []uint32) (*Page, error)
 	// FetchCategories fetches the remote category list (Apple CMS class / Open API categories).
 	FetchCategories(ctx context.Context, source *model.CollectSources) ([]RemoteCategory, error)
 }

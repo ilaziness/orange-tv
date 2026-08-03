@@ -18,8 +18,8 @@ import (
 type CategoryService interface {
 	ListTree(ctx context.Context, onlyEnabled bool) ([]dto.CategoryResponse, error)
 	Create(ctx context.Context, req *dto.CreateCategoryRequest) (*dto.CategoryResponse, error)
-	Update(ctx context.Context, id int64, req *dto.UpdateCategoryRequest) (*dto.CategoryResponse, error)
-	Delete(ctx context.Context, id int64) error
+	Update(ctx context.Context, id uint32, req *dto.UpdateCategoryRequest) (*dto.CategoryResponse, error)
+	Delete(ctx context.Context, id uint32) error
 }
 
 type categoryService struct {
@@ -68,9 +68,9 @@ func (s *categoryService) Create(ctx context.Context, req *dto.CreateCategoryReq
 		return nil, errcode.CategoryNameExists
 	}
 	if req.ParentID > 0 {
-		parent, err := s.repo.GetByID(ctx, int64(req.ParentID))
+		parent, err := s.repo.GetByID(ctx, req.ParentID)
 		if err != nil {
-			s.log.Error("category: get parent by id failed", zap.Uint64("parent_id", req.ParentID), zap.Error(err))
+			s.log.Error("category: get parent by id failed", zap.Uint32("parent_id", req.ParentID), zap.Error(err))
 			return nil, errcode.Wrap(errcode.DatabaseError, err)
 		}
 		if parent == nil {
@@ -96,10 +96,10 @@ func (s *categoryService) Create(ctx context.Context, req *dto.CreateCategoryReq
 	return toCategoryDTO(item), nil
 }
 
-func (s *categoryService) Update(ctx context.Context, id int64, req *dto.UpdateCategoryRequest) (*dto.CategoryResponse, error) {
+func (s *categoryService) Update(ctx context.Context, id uint32, req *dto.UpdateCategoryRequest) (*dto.CategoryResponse, error) {
 	item, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		s.log.Error("category: get by id failed", zap.Int64("category_id", id), zap.Error(err))
+		s.log.Error("category: get by id failed", zap.Uint32("category_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if item == nil {
@@ -113,7 +113,7 @@ func (s *categoryService) Update(ctx context.Context, id int64, req *dto.UpdateC
 		}
 		exists, err := s.repo.ExistsName(ctx, name, id)
 		if err != nil {
-			s.log.Error("category: check name exists for update failed", zap.Int64("category_id", id), zap.String("name", name), zap.Error(err))
+			s.log.Error("category: check name exists for update failed", zap.Uint32("category_id", id), zap.String("name", name), zap.Error(err))
 			return nil, errcode.Wrap(errcode.DatabaseError, err)
 		}
 		if exists {
@@ -123,13 +123,13 @@ func (s *categoryService) Update(ctx context.Context, id int64, req *dto.UpdateC
 	}
 	if req.ParentID != nil {
 		parentID := *req.ParentID
-		if parentID == uint64(id) {
+		if parentID == id {
 			return nil, errcode.CategoryCycle
 		}
 		if parentID > 0 {
-			parent, err := s.repo.GetByID(ctx, int64(parentID))
+			parent, err := s.repo.GetByID(ctx, parentID)
 			if err != nil {
-				s.log.Error("category: get parent for update failed", zap.Int64("category_id", id), zap.Uint64("parent_id", parentID), zap.Error(err))
+				s.log.Error("category: get parent for update failed", zap.Uint32("category_id", id), zap.Uint32("parent_id", parentID), zap.Error(err))
 				return nil, errcode.Wrap(errcode.DatabaseError, err)
 			}
 			if parent == nil {
@@ -138,10 +138,10 @@ func (s *categoryService) Update(ctx context.Context, id int64, req *dto.UpdateC
 			// prevent cycle: new parent cannot be a descendant of current node
 			all, err := s.repo.List(ctx, false)
 			if err != nil {
-				s.log.Error("category: list for cycle check failed", zap.Int64("category_id", id), zap.Error(err))
+				s.log.Error("category: list for cycle check failed", zap.Uint32("category_id", id), zap.Error(err))
 				return nil, errcode.Wrap(errcode.DatabaseError, err)
 			}
-			if isDescendant(all, uint64(id), parentID) {
+			if isDescendant(all, id, parentID) {
 				return nil, errcode.CategoryCycle
 			}
 		}
@@ -154,17 +154,17 @@ func (s *categoryService) Update(ctx context.Context, id int64, req *dto.UpdateC
 		item.Status = *req.Status
 	}
 	if err := s.repo.Update(ctx, item); err != nil {
-		s.log.Error("category: update failed", zap.Int64("category_id", id), zap.Error(err))
+		s.log.Error("category: update failed", zap.Uint32("category_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	s.cache.InvalidateCategory(ctx)
 	return toCategoryDTO(item), nil
 }
 
-func (s *categoryService) Delete(ctx context.Context, id int64) error {
+func (s *categoryService) Delete(ctx context.Context, id uint32) error {
 	item, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		s.log.Error("category: get by id for delete failed", zap.Int64("category_id", id), zap.Error(err))
+		s.log.Error("category: get by id for delete failed", zap.Uint32("category_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if item == nil {
@@ -172,7 +172,7 @@ func (s *categoryService) Delete(ctx context.Context, id int64) error {
 	}
 	children, err := s.repo.CountChildren(ctx, id)
 	if err != nil {
-		s.log.Error("category: count children failed", zap.Int64("category_id", id), zap.Error(err))
+		s.log.Error("category: count children failed", zap.Uint32("category_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if children > 0 {
@@ -180,14 +180,14 @@ func (s *categoryService) Delete(ctx context.Context, id int64) error {
 	}
 	videos, err := s.repo.CountVideos(ctx, id)
 	if err != nil {
-		s.log.Error("category: count videos failed", zap.Int64("category_id", id), zap.Error(err))
+		s.log.Error("category: count videos failed", zap.Uint32("category_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if videos > 0 {
 		return errcode.CategoryHasVideos
 	}
 	if err := s.repo.SoftDelete(ctx, id); err != nil {
-		s.log.Error("category: soft delete failed", zap.Int64("category_id", id), zap.Error(err))
+		s.log.Error("category: soft delete failed", zap.Uint32("category_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	s.cache.InvalidateCategory(ctx)
@@ -204,12 +204,12 @@ func toCategoryDTO(item *model.Categories) *dto.CategoryResponse {
 	}
 }
 
-func isDescendant(all []model.Categories, ancestorID, nodeID uint64) bool {
-	childrenOf := make(map[uint64][]uint64, len(all))
+func isDescendant(all []model.Categories, ancestorID, nodeID uint32) bool {
+	childrenOf := make(map[uint32][]uint32, len(all))
 	for _, c := range all {
 		childrenOf[c.ParentID] = append(childrenOf[c.ParentID], c.ID)
 	}
-	stack := []uint64{ancestorID}
+	stack := []uint32{ancestorID}
 	for len(stack) > 0 {
 		cur := stack[len(stack)-1]
 		stack = stack[:len(stack)-1]

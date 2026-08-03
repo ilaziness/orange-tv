@@ -255,17 +255,13 @@ func parseAppLogLine(line []byte) (admindto.AppLogItem, bool) {
 }
 
 func toSystemLogItem(m *model.SystemLogs) admindto.SystemLogItem {
-	content := ""
-	if m.Content != nil {
-		content = *m.Content
-	}
 	return admindto.SystemLogItem{
 		ID:        m.ID,
 		Level:     m.Level,
 		Module:    m.Module,
 		Action:    m.Action,
 		AdminID:   m.AdminID,
-		Content:   content,
+		Content:   m.Content,
 		IPAddress: m.IPAddress,
 		CreatedAt: utils.FormatTimeStr(m.CreatedAt),
 	}

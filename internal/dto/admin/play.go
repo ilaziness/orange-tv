@@ -18,7 +18,7 @@ type UpdatePlaySourceRequest struct {
 
 // PlaySourceResponse is a play source payload.
 type PlaySourceResponse struct {
-	ID        uint64 `json:"id"`
+	ID        uint32 `json:"id"`
 	Name      string `json:"name"`
 	SortOrder uint32 `json:"sort_order"`
 	Status    uint8  `json:"status"`
@@ -27,14 +27,14 @@ type PlaySourceResponse struct {
 // PlayEpisodeListRequest filters episode list.
 type PlayEpisodeListRequest struct {
 	dto.PaginationRequest
-	VideoID  uint64 `form:"video_id" validate:"required,min=1"`
-	SourceID uint64 `form:"source_id" validate:"required,min=1"`
+	VideoID  uint32 `form:"video_id" validate:"required,min=1"`
+	SourceID uint32 `form:"source_id" validate:"required,min=1"`
 }
 
 // CreatePlayEpisodeRequest creates a play episode.
 type CreatePlayEpisodeRequest struct {
-	SourceID      uint64 `json:"source_id" validate:"required,min=1"`
-	VideoID       uint64 `json:"video_id" validate:"required,min=1"`
+	SourceID      uint32 `json:"source_id" validate:"required,min=1"`
+	VideoID       uint32 `json:"video_id" validate:"required,min=1"`
 	EpisodeNumber uint32 `json:"episode_number" validate:"required,min=1"`
 	Title         string `json:"title" validate:"omitempty,max=255"`
 	PlayURL       string `json:"play_url" validate:"required,min=1,max=1000"`
@@ -46,8 +46,8 @@ type CreatePlayEpisodeRequest struct {
 
 // UpdatePlayEpisodeRequest updates a play episode.
 type UpdatePlayEpisodeRequest struct {
-	SourceID      *uint64 `json:"source_id" validate:"omitempty,min=1"`
-	VideoID       *uint64 `json:"video_id" validate:"omitempty,min=1"`
+	SourceID      *uint32 `json:"source_id" validate:"omitempty,min=1"`
+	VideoID       *uint32 `json:"video_id" validate:"omitempty,min=1"`
 	EpisodeNumber *uint32 `json:"episode_number" validate:"omitempty,min=1"`
 	Title         *string `json:"title" validate:"omitempty,max=255"`
 	PlayURL       *string `json:"play_url" validate:"omitempty,min=1,max=1000"`
@@ -59,9 +59,9 @@ type UpdatePlayEpisodeRequest struct {
 
 // PlayEpisodeResponse is a play episode payload.
 type PlayEpisodeResponse struct {
-	ID            uint64 `json:"id"`
-	SourceID      uint64 `json:"source_id"`
-	VideoID       uint64 `json:"video_id"`
+	ID            uint32 `json:"id"`
+	SourceID      uint32 `json:"source_id"`
+	VideoID       uint32 `json:"video_id"`
 	EpisodeNumber uint32 `json:"episode_number"`
 	Title         string `json:"title"`
 	PlayURL       string `json:"play_url"`
@@ -73,8 +73,8 @@ type PlayEpisodeResponse struct {
 
 // BatchUpdateEpisodeStatusRequest 批量更新某影视下指定播放源的全部剧集状态。
 type BatchUpdateEpisodeStatusRequest struct {
-	VideoID  uint64 `json:"video_id" validate:"required,min=1"`
-	SourceID uint64 `json:"source_id" validate:"required,min=1"`
+	VideoID  uint32 `json:"video_id" validate:"required,min=1"`
+	SourceID uint32 `json:"source_id" validate:"required,min=1"`
 	Status   uint8  `json:"status" validate:"oneof=0 1"`
 }
 

@@ -24,15 +24,15 @@ func TestParseAppleCMSList(t *testing.T) {
 	require.Equal(t, 2, lp.PageCount)
 	require.Equal(t, 100, lp.Total)
 	require.Len(t, lp.IDs, 2)
-	require.Equal(t, int64(123), lp.IDs[0])
-	require.Equal(t, int64(456), lp.IDs[1])
+	require.Equal(t, uint32(123), lp.IDs[0])
+	require.Equal(t, uint32(456), lp.IDs[1])
 	require.Len(t, lp.Times, 2)
 	require.Equal(t, "2025-07-20 10:30:00", lp.Times[0])
 
 	require.Len(t, lp.Categories, 2)
-	require.Equal(t, int64(1), lp.Categories[0].ID)
+	require.Equal(t, uint32(1), lp.Categories[0].ID)
 	require.Equal(t, "电影片", lp.Categories[0].Name)
-	require.Equal(t, int64(6), lp.Categories[1].ID)
+	require.Equal(t, uint32(6), lp.Categories[1].ID)
 }
 
 func TestParseAppleCMSDetail(t *testing.T) {
@@ -57,7 +57,7 @@ func TestParseAppleCMSDetail(t *testing.T) {
 	it := page.Items[0]
 	require.Equal(t, "测试影片", it.Title)
 	require.Equal(t, int32(2024), it.Year)
-	require.Equal(t, int64(1), it.ExternalCategoryID)
+	require.Equal(t, uint32(1), it.ExternalCategoryID)
 	require.Equal(t, "这是描述", it.Description)
 	require.Equal(t, "更新至第10集", it.Remarks)
 	// only m3u8 group should be parsed, mp4 group should be skipped
@@ -71,7 +71,7 @@ func TestParseAppleCMSDetail(t *testing.T) {
 	require.Equal(t, "2024-01-01", it.ReleaseDate)
 
 	require.Len(t, page.Classes, 1)
-	require.Equal(t, int64(1), page.Classes[0].ID)
+	require.Equal(t, uint32(1), page.Classes[0].ID)
 }
 
 func TestParseAppleCMSDetailNumericIDs(t *testing.T) {
@@ -86,9 +86,9 @@ func TestParseAppleCMSDetailNumericIDs(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, page.Items, 1)
 	require.Equal(t, "120334", page.Items[0].ExternalID)
-	require.Equal(t, int64(29), page.Items[0].ExternalCategoryID)
+	require.Equal(t, uint32(29), page.Items[0].ExternalCategoryID)
 	require.Len(t, page.Classes, 1)
-	require.Equal(t, int64(29), page.Classes[0].ID)
+	require.Equal(t, uint32(29), page.Classes[0].ID)
 }
 
 func TestParseApplePlayURLsM3u8Only(t *testing.T) {

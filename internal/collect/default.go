@@ -44,7 +44,7 @@ func (c *defaultCollector) FetchListPage(ctx context.Context, source *model.Coll
 }
 
 // FetchDetail GET {base}/videos/detail?id=1&id=2... (max 50 ids per call)
-func (c *defaultCollector) FetchDetail(ctx context.Context, source *model.CollectSources, ids []int64) (*Page, error) {
+func (c *defaultCollector) FetchDetail(ctx context.Context, source *model.CollectSources, ids []uint32) (*Page, error) {
 	if len(ids) == 0 {
 		return &Page{}, nil
 	}
@@ -57,7 +57,7 @@ func (c *defaultCollector) FetchDetail(ctx context.Context, source *model.Collec
 	}
 	q := u.Query()
 	for _, id := range ids {
-		q.Add("id", strconv.FormatInt(id, 10))
+		q.Add("id", strconv.FormatUint(uint64(id), 10))
 	}
 	u.RawQuery = q.Encode()
 	body, err := c.fetcher.doGet(ctx, u.String(), source.APIKey)
@@ -136,7 +136,7 @@ func parseDefaultList(body []byte) (*ListPage, error) {
 	if page.TotalPages < 1 {
 		page.TotalPages = 1
 	}
-	ids := make([]int64, 0, len(page.List))
+	ids := make([]uint32, 0, len(page.List))
 	times := make([]string, 0, len(page.List))
 	for _, it := range page.List {
 		if it.ID <= 0 {
@@ -214,7 +214,7 @@ func parseDefaultCategories(body []byte) ([]RemoteCategory, error) {
 // Only the first play source's episodes are taken.
 func mapDefaultDetailRow(row defaultDetailRow) Item {
 	it := Item{
-		ExternalID:         strconv.FormatUint(row.ID, 10),
+		ExternalID:         strconv.FormatUint(uint64(row.ID), 10),
 		Title:              strings.TrimSpace(row.Title),
 		Subtitle:           strings.TrimSpace(row.Subtitle),
 		Description:        strings.TrimSpace(row.Description),
@@ -268,19 +268,19 @@ func trimStrings(in []string) []string {
 
 // defaultListItem is one compact item in the Open API video list.
 type defaultListItem struct {
-	ID         int64  `json:"id"`
+	ID         uint32 `json:"id"`
 	Title      string `json:"title"`
-	CategoryID uint64 `json:"category_id"`
+	CategoryID uint32 `json:"category_id"`
 	CreatedAt  string `json:"created_at"`
 }
 
 // defaultDetailRow is one full detail item in the Open API video detail.
 type defaultDetailRow struct {
-	ID          uint64             `json:"id"`
+	ID          uint32             `json:"id"`
 	Title       string             `json:"title"`
 	Subtitle    string             `json:"subtitle"`
 	Cover       string             `json:"cover"`
-	CategoryID  int64              `json:"category_id"`
+	CategoryID  uint32             `json:"category_id"`
 	Year        uint32             `json:"year"`
 	ReleaseDate string             `json:"release_date"`
 	Region      string             `json:"region"`
@@ -293,7 +293,7 @@ type defaultDetailRow struct {
 }
 
 type defaultSourceRow struct {
-	ID       uint64              `json:"id"`
+	ID       uint32              `json:"id"`
 	Name     string              `json:"name"`
 	Episodes []defaultEpisodeRow `json:"episodes"`
 }
@@ -305,7 +305,7 @@ type defaultEpisodeRow struct {
 }
 
 type defaultCategoryRow struct {
-	ID       int64  `json:"id"`
+	ID       uint32 `json:"id"`
 	Name     string `json:"name"`
-	ParentID int64  `json:"parent_id"`
+	ParentID uint32 `json:"parent_id"`
 }

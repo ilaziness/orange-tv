@@ -17,13 +17,13 @@ import (
 type PlayService interface {
 	ListSources(ctx context.Context) ([]dto.PlaySourceResponse, error)
 	CreateSource(ctx context.Context, req *dto.CreatePlaySourceRequest) (*dto.PlaySourceResponse, error)
-	UpdateSource(ctx context.Context, id int64, req *dto.UpdatePlaySourceRequest) (*dto.PlaySourceResponse, error)
-	DeleteSource(ctx context.Context, id int64) error
+	UpdateSource(ctx context.Context, id uint32, req *dto.UpdatePlaySourceRequest) (*dto.PlaySourceResponse, error)
+	DeleteSource(ctx context.Context, id uint32) error
 
 	ListEpisodes(ctx context.Context, req *dto.PlayEpisodeListRequest) ([]dto.PlayEpisodeResponse, int, error)
 	CreateEpisode(ctx context.Context, req *dto.CreatePlayEpisodeRequest) (*dto.PlayEpisodeResponse, error)
-	UpdateEpisode(ctx context.Context, id int64, req *dto.UpdatePlayEpisodeRequest) (*dto.PlayEpisodeResponse, error)
-	DeleteEpisode(ctx context.Context, id int64) error
+	UpdateEpisode(ctx context.Context, id uint32, req *dto.UpdatePlayEpisodeRequest) (*dto.PlayEpisodeResponse, error)
+	DeleteEpisode(ctx context.Context, id uint32) error
 	BatchUpdateEpisodeStatus(ctx context.Context, req *dto.BatchUpdateEpisodeStatusRequest) (*dto.BatchUpdateEpisodeStatusResponse, error)
 }
 
@@ -80,10 +80,10 @@ func (s *playService) CreateSource(ctx context.Context, req *dto.CreatePlaySourc
 	return &resp, nil
 }
 
-func (s *playService) UpdateSource(ctx context.Context, id int64, req *dto.UpdatePlaySourceRequest) (*dto.PlaySourceResponse, error) {
+func (s *playService) UpdateSource(ctx context.Context, id uint32, req *dto.UpdatePlaySourceRequest) (*dto.PlaySourceResponse, error) {
 	m, err := s.playRepo.GetSource(ctx, id)
 	if err != nil {
-		s.log.Error("play: get source failed", zap.Int64("source_id", id), zap.Error(err))
+		s.log.Error("play: get source failed", zap.Uint32("source_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if m == nil {
@@ -96,7 +96,7 @@ func (s *playService) UpdateSource(ctx context.Context, id int64, req *dto.Updat
 		}
 		exists, err := s.playRepo.ExistsSourceName(ctx, name, id)
 		if err != nil {
-			s.log.Error("play: check source name exists for update failed", zap.Int64("source_id", id), zap.String("name", name), zap.Error(err))
+			s.log.Error("play: check source name exists for update failed", zap.Uint32("source_id", id), zap.String("name", name), zap.Error(err))
 			return nil, errcode.Wrap(errcode.DatabaseError, err)
 		}
 		if exists {
@@ -111,17 +111,17 @@ func (s *playService) UpdateSource(ctx context.Context, id int64, req *dto.Updat
 		m.Status = *req.Status
 	}
 	if err := s.playRepo.UpdateSource(ctx, m); err != nil {
-		s.log.Error("play: update source failed", zap.Int64("source_id", id), zap.Error(err))
+		s.log.Error("play: update source failed", zap.Uint32("source_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	resp := toPlaySourceDTO(*m)
 	return &resp, nil
 }
 
-func (s *playService) DeleteSource(ctx context.Context, id int64) error {
+func (s *playService) DeleteSource(ctx context.Context, id uint32) error {
 	m, err := s.playRepo.GetSource(ctx, id)
 	if err != nil {
-		s.log.Error("play: get source for delete failed", zap.Int64("source_id", id), zap.Error(err))
+		s.log.Error("play: get source for delete failed", zap.Uint32("source_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if m == nil {
@@ -129,23 +129,23 @@ func (s *playService) DeleteSource(ctx context.Context, id int64) error {
 	}
 	n, err := s.playRepo.CountEpisodesBySource(ctx, id)
 	if err != nil {
-		s.log.Error("play: count episodes by source failed", zap.Int64("source_id", id), zap.Error(err))
+		s.log.Error("play: count episodes by source failed", zap.Uint32("source_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if n > 0 {
 		return errcode.PlaySourceInUse
 	}
 	if err := s.playRepo.SoftDeleteSource(ctx, id); err != nil {
-		s.log.Error("play: soft delete source failed", zap.Int64("source_id", id), zap.Error(err))
+		s.log.Error("play: soft delete source failed", zap.Uint32("source_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return nil
 }
 
 func (s *playService) ListEpisodes(ctx context.Context, req *dto.PlayEpisodeListRequest) ([]dto.PlayEpisodeResponse, int, error) {
-	items, total, err := s.playRepo.ListEpisodes(ctx, int64(req.VideoID), int64(req.SourceID), req.GetOffset(), req.GetLimit())
+	items, total, err := s.playRepo.ListEpisodes(ctx, req.VideoID, req.SourceID, req.GetOffset(), req.GetLimit())
 	if err != nil {
-		s.log.Error("play: list episodes failed", zap.Uint64("video_id", req.VideoID), zap.Uint64("source_id", req.SourceID), zap.Error(err))
+		s.log.Error("play: list episodes failed", zap.Uint32("video_id", req.VideoID), zap.Uint32("source_id", req.SourceID), zap.Error(err))
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	out := make([]dto.PlayEpisodeResponse, 0, len(items))
@@ -156,7 +156,7 @@ func (s *playService) ListEpisodes(ctx context.Context, req *dto.PlayEpisodeList
 }
 
 func (s *playService) CreateEpisode(ctx context.Context, req *dto.CreatePlayEpisodeRequest) (*dto.PlayEpisodeResponse, error) {
-	if err := s.validateEpisodeRefs(ctx, int64(req.VideoID), int64(req.SourceID)); err != nil {
+	if err := s.validateEpisodeRefs(ctx, req.VideoID, req.SourceID); err != nil {
 		return nil, err
 	}
 	status := constant.StatusEnabled
@@ -180,42 +180,30 @@ func (s *playService) CreateEpisode(ctx context.Context, req *dto.CreatePlayEpis
 	}
 
 	// Unique index covers soft-deleted rows. Reuse a soft-deleted slot when present.
-	existing, err := s.playRepo.GetEpisodeByKey(ctx, int64(req.VideoID), int64(req.SourceID), int32(req.EpisodeNumber))
+	existing, err := s.playRepo.GetEpisodeByKey(ctx, req.VideoID, req.SourceID, int32(req.EpisodeNumber))
 	if err != nil {
-		s.log.Error("play: get episode by key failed", zap.Uint64("video_id", req.VideoID), zap.Uint64("source_id", req.SourceID), zap.Uint32("episode_number", req.EpisodeNumber), zap.Error(err))
+		s.log.Error("play: get episode by key failed", zap.Uint32("video_id", req.VideoID), zap.Uint32("source_id", req.SourceID), zap.Uint32("episode_number", req.EpisodeNumber), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if existing != nil {
-		if existing.DeletedAt == nil {
-			return nil, errcode.PlayEpisodeDuplicate
-		}
-		m.ID = existing.ID
-		if err := s.playRepo.RestoreAndUpdateEpisode(ctx, m); err != nil {
-			if utils.IsDuplicateKey(err) {
-				return nil, errcode.PlayEpisodeDuplicate
-			}
-			s.log.Error("play: restore and update episode failed", zap.Uint64("episode_id", m.ID), zap.Error(err))
-			return nil, errcode.Wrap(errcode.DatabaseError, err)
-		}
-		resp := toPlayEpisodeDTO(*m)
-		return &resp, nil
+		return nil, errcode.PlayEpisodeDuplicate
 	}
 
 	if err := s.playRepo.CreateEpisode(ctx, m); err != nil {
 		if utils.IsDuplicateKey(err) {
 			return nil, errcode.PlayEpisodeDuplicate
 		}
-		s.log.Error("play: create episode failed", zap.Uint64("video_id", req.VideoID), zap.Uint64("source_id", req.SourceID), zap.Error(err))
+		s.log.Error("play: create episode failed", zap.Uint32("video_id", req.VideoID), zap.Uint32("source_id", req.SourceID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	resp := toPlayEpisodeDTO(*m)
 	return &resp, nil
 }
 
-func (s *playService) UpdateEpisode(ctx context.Context, id int64, req *dto.UpdatePlayEpisodeRequest) (*dto.PlayEpisodeResponse, error) {
+func (s *playService) UpdateEpisode(ctx context.Context, id uint32, req *dto.UpdatePlayEpisodeRequest) (*dto.PlayEpisodeResponse, error) {
 	m, err := s.playRepo.GetEpisode(ctx, id)
 	if err != nil {
-		s.log.Error("play: get episode failed", zap.Int64("episode_id", id), zap.Error(err))
+		s.log.Error("play: get episode failed", zap.Uint32("episode_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if m == nil {
@@ -231,24 +219,17 @@ func (s *playService) UpdateEpisode(ctx context.Context, id int64, req *dto.Upda
 	if req.EpisodeNumber != nil {
 		episodeNumber = *req.EpisodeNumber
 	}
-	if err := s.validateEpisodeRefs(ctx, int64(videoID), int64(sourceID)); err != nil {
+	if err := s.validateEpisodeRefs(ctx, videoID, sourceID); err != nil {
 		return nil, err
 	}
 	if videoID != m.VideoID || sourceID != m.SourceID || episodeNumber != m.EpisodeNumber {
-		existing, err := s.playRepo.GetEpisodeByKey(ctx, int64(videoID), int64(sourceID), int32(episodeNumber))
+		existing, err := s.playRepo.GetEpisodeByKey(ctx, videoID, sourceID, int32(episodeNumber))
 		if err != nil {
-			s.log.Error("play: get episode by key for update failed", zap.Uint64("video_id", videoID), zap.Uint64("source_id", sourceID), zap.Uint32("episode_number", episodeNumber), zap.Error(err))
+			s.log.Error("play: get episode by key for update failed", zap.Uint32("video_id", videoID), zap.Uint32("source_id", sourceID), zap.Uint32("episode_number", episodeNumber), zap.Error(err))
 			return nil, errcode.Wrap(errcode.DatabaseError, err)
 		}
-		if existing != nil && existing.ID != uint64(id) {
-			if existing.DeletedAt == nil {
-				return nil, errcode.PlayEpisodeDuplicate
-			}
-			// Free soft-deleted unique key before reassigning.
-			if err := s.playRepo.HardDeleteEpisodeByKey(ctx, int64(videoID), int64(sourceID), int32(episodeNumber), id); err != nil {
-				s.log.Error("play: hard delete episode by key failed", zap.Uint64("video_id", videoID), zap.Uint64("source_id", sourceID), zap.Uint32("episode_number", episodeNumber), zap.Error(err))
-				return nil, errcode.Wrap(errcode.DatabaseError, err)
-			}
+		if existing != nil && existing.ID != id {
+			return nil, errcode.PlayEpisodeDuplicate
 		}
 	}
 	m.VideoID = videoID
@@ -276,24 +257,24 @@ func (s *playService) UpdateEpisode(ctx context.Context, id int64, req *dto.Upda
 		if utils.IsDuplicateKey(err) {
 			return nil, errcode.PlayEpisodeDuplicate
 		}
-		s.log.Error("play: update episode failed", zap.Int64("episode_id", id), zap.Error(err))
+		s.log.Error("play: update episode failed", zap.Uint32("episode_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	resp := toPlayEpisodeDTO(*m)
 	return &resp, nil
 }
 
-func (s *playService) DeleteEpisode(ctx context.Context, id int64) error {
+func (s *playService) DeleteEpisode(ctx context.Context, id uint32) error {
 	m, err := s.playRepo.GetEpisode(ctx, id)
 	if err != nil {
-		s.log.Error("play: get episode for delete failed", zap.Int64("episode_id", id), zap.Error(err))
+		s.log.Error("play: get episode for delete failed", zap.Uint32("episode_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if m == nil {
 		return errcode.PlayEpisodeNotFound
 	}
 	if err := s.playRepo.SoftDeleteEpisode(ctx, id); err != nil {
-		s.log.Error("play: soft delete episode failed", zap.Int64("episode_id", id), zap.Error(err))
+		s.log.Error("play: soft delete episode failed", zap.Uint32("episode_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return nil
@@ -301,14 +282,14 @@ func (s *playService) DeleteEpisode(ctx context.Context, id int64) error {
 
 // BatchUpdateEpisodeStatus 批量更新某影视下指定播放源的全部剧集状态。
 func (s *playService) BatchUpdateEpisodeStatus(ctx context.Context, req *dto.BatchUpdateEpisodeStatusRequest) (*dto.BatchUpdateEpisodeStatusResponse, error) {
-	if err := s.validateEpisodeRefs(ctx, int64(req.VideoID), int64(req.SourceID)); err != nil {
+	if err := s.validateEpisodeRefs(ctx, req.VideoID, req.SourceID); err != nil {
 		return nil, err
 	}
-	n, err := s.playRepo.UpdateEpisodeStatusBySource(ctx, int64(req.VideoID), int64(req.SourceID), req.Status)
+	n, err := s.playRepo.UpdateEpisodeStatusBySource(ctx, req.VideoID, req.SourceID, req.Status)
 	if err != nil {
 		s.log.Error("play: batch update episode status failed",
-			zap.Uint64("video_id", req.VideoID),
-			zap.Uint64("source_id", req.SourceID),
+			zap.Uint32("video_id", req.VideoID),
+			zap.Uint32("source_id", req.SourceID),
 			zap.Uint8("status", req.Status),
 			zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
@@ -316,10 +297,10 @@ func (s *playService) BatchUpdateEpisodeStatus(ctx context.Context, req *dto.Bat
 	return &dto.BatchUpdateEpisodeStatusResponse{Affected: n}, nil
 }
 
-func (s *playService) validateEpisodeRefs(ctx context.Context, videoID, sourceID int64) error {
-	video, err := s.videoRepo.GetByID(ctx, uint64(videoID))
+func (s *playService) validateEpisodeRefs(ctx context.Context, videoID, sourceID uint32) error {
+	video, err := s.videoRepo.GetByID(ctx, videoID)
 	if err != nil {
-		s.log.Error("play: validate episode refs get video failed", zap.Int64("video_id", videoID), zap.Error(err))
+		s.log.Error("play: validate episode refs get video failed", zap.Uint32("video_id", videoID), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if video == nil {
@@ -327,7 +308,7 @@ func (s *playService) validateEpisodeRefs(ctx context.Context, videoID, sourceID
 	}
 	source, err := s.playRepo.GetSource(ctx, sourceID)
 	if err != nil {
-		s.log.Error("play: validate episode refs get source failed", zap.Int64("source_id", sourceID), zap.Error(err))
+		s.log.Error("play: validate episode refs get source failed", zap.Uint32("source_id", sourceID), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if source == nil {

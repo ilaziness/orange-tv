@@ -7,13 +7,13 @@ import (
 	"github.com/ilaziness/orange-tv/internal/model"
 )
 
-// StrVal reads a string setting from the map, returning "" if missing or nil.
+// StrVal reads a string setting from the map, returning "" if missing.
 func StrVal(m map[string]model.SystemSettings, key string) string {
 	it, ok := m[key]
-	if !ok || it.SettingValue == nil {
+	if !ok {
 		return ""
 	}
-	return *it.SettingValue
+	return it.SettingValue
 }
 
 // IntVal reads an integer setting from the map, returning def if missing or invalid.

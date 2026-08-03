@@ -16,17 +16,17 @@ import (
 
 // VideoTagRow is one row of a batch video→tag query.
 type VideoTagRow struct {
-	VideoID uint64 `bun:"video_id"`
-	TagID   uint64 `bun:"tag_id"`
+	VideoID uint32 `bun:"video_id"`
+	TagID   uint32 `bun:"tag_id"`
 	Name    string `bun:"name"`
 }
 
 // VideoListFilter filters video queries.
 type VideoListFilter struct {
 	Keyword          string
-	CategoryID       uint64
-	ParentCategoryID uint64
-	CategoryIDs      []uint64
+	CategoryID       uint32
+	ParentCategoryID uint32
+	CategoryIDs      []uint32
 	PublishStatus    *uint8
 	Year             uint32 // exact year match (admin)
 	YearStart        uint32 // year range start (client, inclusive)
@@ -34,9 +34,9 @@ type VideoListFilter struct {
 	Region           string
 	Language         string
 	Sort             string
-	DirectorID       uint64
-	ActorID          uint64
-	TagID            uint64
+	DirectorID       uint32
+	ActorID          uint32
+	TagID            uint32
 	OnlyOnline       bool
 	CreatedAfter     *time.Time // open API: created_at >= cutoff (data_range filter)
 	SourceName       string     // open API: play source name exact match
@@ -47,26 +47,26 @@ type VideoListFilter struct {
 // VideoRepository provides video and association persistence.
 type VideoRepository interface {
 	List(ctx context.Context, f VideoListFilter) ([]model.Videos, int, error)
-	GetByID(ctx context.Context, id uint64) (*model.Videos, error)
-	GetByIDs(ctx context.Context, ids []uint64) ([]model.Videos, error)
+	GetByID(ctx context.Context, id uint32) (*model.Videos, error)
+	GetByIDs(ctx context.Context, ids []uint32) ([]model.Videos, error)
 	Create(ctx context.Context, v *model.Videos) error
 	BatchCreate(ctx context.Context, videos []*model.Videos) error
 	Update(ctx context.Context, v *model.Videos) error
-	SoftDelete(ctx context.Context, id uint64) error
-	ReplaceDirectors(ctx context.Context, videoID uint64, directorIDs []uint64) error
-	ReplaceActors(ctx context.Context, videoID uint64, actors []model.VideoActors) error
-	ReplaceTags(ctx context.Context, videoID uint64, tagIDs []uint64) error
-	ListDirectorIDs(ctx context.Context, videoID uint64) ([]uint64, error)
-	ListActorRels(ctx context.Context, videoID uint64) ([]model.VideoActors, error)
-	ListTagIDs(ctx context.Context, videoID uint64) ([]uint64, error)
-	ListTagsByVideoIDs(ctx context.Context, videoIDs []uint64) ([]VideoTagRow, error)
+	SoftDelete(ctx context.Context, id uint32) error
+	ReplaceDirectors(ctx context.Context, videoID uint32, directorIDs []uint32) error
+	ReplaceActors(ctx context.Context, videoID uint32, actors []model.VideoActors) error
+	ReplaceTags(ctx context.Context, videoID uint32, tagIDs []uint32) error
+	ListDirectorIDs(ctx context.Context, videoID uint32) ([]uint32, error)
+	ListActorRels(ctx context.Context, videoID uint32) ([]model.VideoActors, error)
+	ListTagIDs(ctx context.Context, videoID uint32) ([]uint32, error)
+	ListTagsByVideoIDs(ctx context.Context, videoIDs []uint32) ([]VideoTagRow, error)
 	RunInTx(ctx context.Context, fn func(ctx context.Context, tx bun.Tx) error) error
 	WithTx(tx bun.Tx) VideoRepository
-	UpdateRatingStats(ctx context.Context, videoID uint64, rating float64, count uint32) error
+	UpdateRatingStats(ctx context.Context, videoID uint32, rating float64, count uint32) error
 
 	// Batch operations (A2)
-	BatchUpdatePublishStatus(ctx context.Context, ids []uint64, status uint8) (int, error)
-	BatchSoftDelete(ctx context.Context, ids []uint64) (int, error)
+	BatchUpdatePublishStatus(ctx context.Context, ids []uint32, status uint8) (int, error)
+	BatchSoftDelete(ctx context.Context, ids []uint32) (int, error)
 
 	// Stats (A1)
 	CountVideos(ctx context.Context) (int, error)
@@ -78,7 +78,7 @@ type VideoRepository interface {
 	// for all videos collected by the given collect source. Used when a remote source
 	// changes its image CDN domain; collecting one item triggers migration of all
 	// historical covers. oldHost/newHost are authority strings (e.g. "img.old.com").
-	UpdateCoverDomainByCollectSource(ctx context.Context, collectSourceID uint64, oldHost, newHost string) (int, error)
+	UpdateCoverDomainByCollectSource(ctx context.Context, collectSourceID uint32, oldHost, newHost string) (int, error)
 }
 
 type videoRepo struct {
@@ -100,7 +100,7 @@ func (r *videoRepo) RunInTx(ctx context.Context, fn func(ctx context.Context, tx
 
 // UpdateRatingStats updates the rating and rating_count columns for a video.
 // Uses explicit Set to persist zero values (Bun's model Update skips zero fields).
-func (r *videoRepo) UpdateRatingStats(ctx context.Context, videoID uint64, rating float64, count uint32) error {
+func (r *videoRepo) UpdateRatingStats(ctx context.Context, videoID uint32, rating float64, count uint32) error {
 	_, err := r.db.NewUpdate().Model((*model.Videos)(nil)).
 		Set("rating = ?", rating).
 		Set("rating_count = ?", count).
@@ -168,7 +168,7 @@ func (r *videoRepo) List(ctx context.Context, f VideoListFilter) ([]model.Videos
 		q = q.Where("created_at >= ?", *f.CreatedAfter)
 	}
 	if name := strings.TrimSpace(f.SourceName); name != "" {
-		q = q.Where("id IN (SELECT pe.video_id FROM play_episodes pe JOIN play_sources ps ON ps.id = pe.source_id WHERE ps.name = ? AND pe.deleted_at IS NULL AND ps.deleted_at IS NULL)", name)
+		q = q.Where("id IN (SELECT pe.video_id FROM play_episodes pe JOIN play_sources ps ON ps.id = pe.source_id WHERE ps.name = ? AND ps.deleted_at IS NULL)", name)
 	}
 
 	total, err := q.Count(ctx)
@@ -204,7 +204,7 @@ func videoSortExpr(sort string) string {
 	}
 }
 
-func (r *videoRepo) GetByID(ctx context.Context, id uint64) (*model.Videos, error) {
+func (r *videoRepo) GetByID(ctx context.Context, id uint32) (*model.Videos, error) {
 	item := new(model.Videos)
 	err := r.db.NewSelect().Model(item).
 		Where("id = ?", id).
@@ -219,7 +219,7 @@ func (r *videoRepo) GetByID(ctx context.Context, id uint64) (*model.Videos, erro
 	return item, nil
 }
 
-func (r *videoRepo) GetByIDs(ctx context.Context, ids []uint64) ([]model.Videos, error) {
+func (r *videoRepo) GetByIDs(ctx context.Context, ids []uint32) ([]model.Videos, error) {
 	if len(ids) == 0 {
 		return nil, nil
 	}
@@ -263,7 +263,7 @@ func (r *videoRepo) Update(ctx context.Context, v *model.Videos) error {
 	return nil
 }
 
-func (r *videoRepo) SoftDelete(ctx context.Context, id uint64) error {
+func (r *videoRepo) SoftDelete(ctx context.Context, id uint32) error {
 	now := time.Now()
 	_, err := r.db.NewUpdate().Model((*model.Videos)(nil)).
 		Set("deleted_at = ?", now).
@@ -277,7 +277,7 @@ func (r *videoRepo) SoftDelete(ctx context.Context, id uint64) error {
 	return nil
 }
 
-func (r *videoRepo) ReplaceDirectors(ctx context.Context, videoID uint64, directorIDs []uint64) error {
+func (r *videoRepo) ReplaceDirectors(ctx context.Context, videoID uint32, directorIDs []uint32) error {
 	if _, err := r.db.NewDelete().Model((*model.VideoDirectors)(nil)).
 		Where("video_id = ?", videoID).Exec(ctx); err != nil {
 		return fmt.Errorf("clear video directors: %w", err)
@@ -295,7 +295,7 @@ func (r *videoRepo) ReplaceDirectors(ctx context.Context, videoID uint64, direct
 	return nil
 }
 
-func (r *videoRepo) ReplaceActors(ctx context.Context, videoID uint64, actors []model.VideoActors) error {
+func (r *videoRepo) ReplaceActors(ctx context.Context, videoID uint32, actors []model.VideoActors) error {
 	if _, err := r.db.NewDelete().Model((*model.VideoActors)(nil)).
 		Where("video_id = ?", videoID).Exec(ctx); err != nil {
 		return fmt.Errorf("clear video actors: %w", err)
@@ -312,7 +312,7 @@ func (r *videoRepo) ReplaceActors(ctx context.Context, videoID uint64, actors []
 	return nil
 }
 
-func (r *videoRepo) ReplaceTags(ctx context.Context, videoID uint64, tagIDs []uint64) error {
+func (r *videoRepo) ReplaceTags(ctx context.Context, videoID uint32, tagIDs []uint32) error {
 	if _, err := r.db.NewDelete().Model((*model.VideoTags)(nil)).
 		Where("video_id = ?", videoID).Exec(ctx); err != nil {
 		return fmt.Errorf("clear video tags: %w", err)
@@ -330,19 +330,19 @@ func (r *videoRepo) ReplaceTags(ctx context.Context, videoID uint64, tagIDs []ui
 	return nil
 }
 
-func (r *videoRepo) ListDirectorIDs(ctx context.Context, videoID uint64) ([]uint64, error) {
+func (r *videoRepo) ListDirectorIDs(ctx context.Context, videoID uint32) ([]uint32, error) {
 	var rows []model.VideoDirectors
 	if err := r.db.NewSelect().Model(&rows).Where("video_id = ?", videoID).Scan(ctx); err != nil {
 		return nil, fmt.Errorf("list video directors: %w", err)
 	}
-	ids := make([]uint64, 0, len(rows))
+	ids := make([]uint32, 0, len(rows))
 	for _, row := range rows {
 		ids = append(ids, row.DirectorID)
 	}
 	return ids, nil
 }
 
-func (r *videoRepo) ListActorRels(ctx context.Context, videoID uint64) ([]model.VideoActors, error) {
+func (r *videoRepo) ListActorRels(ctx context.Context, videoID uint32) ([]model.VideoActors, error) {
 	var rows []model.VideoActors
 	if err := r.db.NewSelect().Model(&rows).Where("video_id = ?", videoID).Scan(ctx); err != nil {
 		return nil, fmt.Errorf("list video actors: %w", err)
@@ -350,19 +350,19 @@ func (r *videoRepo) ListActorRels(ctx context.Context, videoID uint64) ([]model.
 	return rows, nil
 }
 
-func (r *videoRepo) ListTagIDs(ctx context.Context, videoID uint64) ([]uint64, error) {
+func (r *videoRepo) ListTagIDs(ctx context.Context, videoID uint32) ([]uint32, error) {
 	var rows []model.VideoTags
 	if err := r.db.NewSelect().Model(&rows).Where("video_id = ?", videoID).Scan(ctx); err != nil {
 		return nil, fmt.Errorf("list video tags: %w", err)
 	}
-	ids := make([]uint64, 0, len(rows))
+	ids := make([]uint32, 0, len(rows))
 	for _, row := range rows {
 		ids = append(ids, row.TagID)
 	}
 	return ids, nil
 }
 
-func (r *videoRepo) ListTagsByVideoIDs(ctx context.Context, videoIDs []uint64) ([]VideoTagRow, error) {
+func (r *videoRepo) ListTagsByVideoIDs(ctx context.Context, videoIDs []uint32) ([]VideoTagRow, error) {
 	if len(videoIDs) == 0 {
 		return nil, nil
 	}
@@ -382,7 +382,7 @@ func (r *videoRepo) ListTagsByVideoIDs(ctx context.Context, videoIDs []uint64) (
 
 // ===== Batch operations (A2) =====
 
-func (r *videoRepo) BatchUpdatePublishStatus(ctx context.Context, ids []uint64, status uint8) (int, error) {
+func (r *videoRepo) BatchUpdatePublishStatus(ctx context.Context, ids []uint32, status uint8) (int, error) {
 	if len(ids) == 0 {
 		return 0, nil
 	}
@@ -400,7 +400,7 @@ func (r *videoRepo) BatchUpdatePublishStatus(ctx context.Context, ids []uint64, 
 	return int(n), nil
 }
 
-func (r *videoRepo) BatchSoftDelete(ctx context.Context, ids []uint64) (int, error) {
+func (r *videoRepo) BatchSoftDelete(ctx context.Context, ids []uint32) (int, error) {
 	if len(ids) == 0 {
 		return 0, nil
 	}
@@ -465,7 +465,7 @@ func (r *videoRepo) CountCategories(ctx context.Context) (int, error) {
 // UpdateCoverDomainByCollectSource batch-replaces the host portion of cover_image
 // for all videos of a collect source. The match uses "://oldHost" prefix to ensure
 // only the URL authority is replaced, not coincidental substrings in the path.
-func (r *videoRepo) UpdateCoverDomainByCollectSource(ctx context.Context, collectSourceID uint64, oldHost, newHost string) (int, error) {
+func (r *videoRepo) UpdateCoverDomainByCollectSource(ctx context.Context, collectSourceID uint32, oldHost, newHost string) (int, error) {
 	if collectSourceID == 0 || oldHost == "" || newHost == "" || oldHost == newHost {
 		return 0, nil
 	}

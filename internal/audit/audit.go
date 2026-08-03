@@ -23,7 +23,7 @@ func NewRecorder(repo repository.LogRepository, logger *zap.Logger) *Recorder {
 }
 
 // AdminLogin records an admin login attempt.
-func (r *Recorder) AdminLogin(ctx context.Context, userID int64, username, ip, ua string, success bool) {
+func (r *Recorder) AdminLogin(ctx context.Context, userID uint32, username, ip, ua string, success bool) {
 	if r == nil || r.repo == nil {
 		return
 	}
@@ -32,7 +32,7 @@ func (r *Recorder) AdminLogin(ctx context.Context, userID int64, username, ip, u
 		status = constant.LoginStatusFailed
 	}
 	m := &model.AdminLoginLogs{
-		UserID:    uint64(userID),
+		UserID:    userID,
 		Username:  strings.TrimSpace(username),
 		IP:        trimIP(ip),
 		UserAgent: trimUA(ua),
@@ -44,17 +44,16 @@ func (r *Recorder) AdminLogin(ctx context.Context, userID int64, username, ip, u
 }
 
 // AdminAction records an admin write operation.
-func (r *Recorder) AdminAction(ctx context.Context, adminID int64, module, action, content, ip string) {
+func (r *Recorder) AdminAction(ctx context.Context, adminID uint32, module, action, content, ip string) {
 	if r == nil || r.repo == nil {
 		return
 	}
-	c := content
 	m := &model.SystemLogs{
 		Level:     constant.SystemLogLevelInfo,
 		Module:    strings.TrimSpace(module),
 		Action:    strings.TrimSpace(action),
-		AdminID:   uint64(adminID),
-		Content:   &c,
+		AdminID:   adminID,
+		Content:   content,
 		IPAddress: trimIP(ip),
 	}
 	if err := r.repo.CreateSystemLog(ctx, m); err != nil && r.logger != nil {
@@ -67,13 +66,12 @@ func (r *Recorder) Warning(ctx context.Context, module, action, content, ip stri
 	if r == nil || r.repo == nil {
 		return
 	}
-	c := content
 	m := &model.SystemLogs{
 		Level:     constant.SystemLogLevelWarning,
 		Module:    strings.TrimSpace(module),
 		Action:    strings.TrimSpace(action),
 		AdminID:   0,
-		Content:   &c,
+		Content:   content,
 		IPAddress: trimIP(ip),
 	}
 	if err := r.repo.CreateSystemLog(ctx, m); err != nil && r.logger != nil {

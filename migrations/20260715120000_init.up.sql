@@ -266,7 +266,8 @@ CREATE TABLE IF NOT EXISTS `admins` (
     `created_at` DATETIME NOT NULL,
     `updated_at` DATETIME NOT NULL,
     `deleted_at` DATETIME NULL DEFAULT NULL COMMENT '软删除时间',
-    INDEX `idx_group` (`group_id`)
+    INDEX `idx_group` (`group_id`),
+    UNIQUE `uk_username` (`username`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='管理员表';
 
 --bun:split

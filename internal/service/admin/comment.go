@@ -14,9 +14,9 @@ import (
 // CommentService manages admin comment operations.
 type CommentService interface {
 	List(ctx context.Context, req *dto.CommentListRequest) ([]dto.CommentListItem, int, error)
-	UpdateStatus(ctx context.Context, id int64, req *dto.UpdateCommentStatusRequest) error
-	Delete(ctx context.Context, id int64) error
-	GetParents(ctx context.Context, id int64) ([]dto.CommentParentItem, error)
+	UpdateStatus(ctx context.Context, id uint32, req *dto.UpdateCommentStatusRequest) error
+	Delete(ctx context.Context, id uint32) error
+	GetParents(ctx context.Context, id uint32) ([]dto.CommentParentItem, error)
 }
 
 type commentService struct {
@@ -47,42 +47,42 @@ func (s *commentService) List(ctx context.Context, req *dto.CommentListRequest) 
 	return mapCommentList(items), total, nil
 }
 
-func (s *commentService) UpdateStatus(ctx context.Context, id int64, req *dto.UpdateCommentStatusRequest) error {
+func (s *commentService) UpdateStatus(ctx context.Context, id uint32, req *dto.UpdateCommentStatusRequest) error {
 	c, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		s.log.Error("comment: get by id for status update failed", zap.Int64("comment_id", id), zap.Error(err))
+		s.log.Error("comment: get by id for status update failed", zap.Uint32("comment_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if c == nil {
 		return errcode.CommentNotFound
 	}
 	if err := s.repo.UpdateStatus(ctx, id, req.Status); err != nil {
-		s.log.Error("comment: update status failed", zap.Int64("comment_id", id), zap.Uint8("status", req.Status), zap.Error(err))
+		s.log.Error("comment: update status failed", zap.Uint32("comment_id", id), zap.Uint8("status", req.Status), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return nil
 }
 
-func (s *commentService) Delete(ctx context.Context, id int64) error {
+func (s *commentService) Delete(ctx context.Context, id uint32) error {
 	c, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		s.log.Error("comment: get by id for delete failed", zap.Int64("comment_id", id), zap.Error(err))
+		s.log.Error("comment: get by id for delete failed", zap.Uint32("comment_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if c == nil {
 		return errcode.CommentNotFound
 	}
 	if err := s.repo.DeleteTree(ctx, id); err != nil {
-		s.log.Error("comment: delete tree failed", zap.Int64("comment_id", id), zap.Error(err))
+		s.log.Error("comment: delete tree failed", zap.Uint32("comment_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return nil
 }
 
-func (s *commentService) GetParents(ctx context.Context, id int64) ([]dto.CommentParentItem, error) {
+func (s *commentService) GetParents(ctx context.Context, id uint32) ([]dto.CommentParentItem, error) {
 	chain, err := s.repo.GetParentChain(ctx, id)
 	if err != nil {
-		s.log.Error("comment: get parent chain failed", zap.Int64("comment_id", id), zap.Error(err))
+		s.log.Error("comment: get parent chain failed", zap.Uint32("comment_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if chain == nil {
@@ -113,7 +113,7 @@ func mapCommentList(items []model.VideoComments) []dto.CommentListItem {
 			LikeCount:    c.LikeCount,
 			DislikeCount: c.DislikeCount,
 			ParentID:     c.ParentID,
-			CreatedAt:    utils.FormatTimeStr(&c.CreatedAt),
+			CreatedAt:    utils.FormatTimeStr(c.CreatedAt),
 		})
 	}
 	return out
@@ -132,7 +132,7 @@ func mapCommentParents(chain []model.VideoComments) []dto.CommentParentItem {
 			Username:  username,
 			ParentID:  c.ParentID,
 			Content:   c.Content,
-			CreatedAt: utils.FormatTimeStr(&c.CreatedAt),
+			CreatedAt: utils.FormatTimeStr(c.CreatedAt),
 		})
 	}
 	return out

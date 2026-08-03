@@ -11,7 +11,7 @@ type LiveListRequest struct {
 
 // LiveChannelItem is a live channel payload for client (no status, no stream_url).
 type LiveChannelItem struct {
-	ID          uint64 `json:"id"`
+	ID          uint32 `json:"id"`
 	Name        string `json:"name"`
 	Category    string `json:"category"`
 	Logo        string `json:"logo"`

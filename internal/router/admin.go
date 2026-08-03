@@ -12,7 +12,7 @@ func registerAdminRoutes(engine *gin.Engine, h *Handlers) {
 
 	v1 := engine.Group(PathAdminV1)
 	if h.RequireAdminAuth {
-		v1.Use(httpmiddleware.RequireSuperAdmin(func(c *gin.Context, adminID int64) error {
+		v1.Use(httpmiddleware.RequireSuperAdmin(func(c *gin.Context, adminID uint32) error {
 			_, _, err := h.AuthService.EnsureSuperAdmin(c.Request.Context(), adminID)
 			return err
 		}))

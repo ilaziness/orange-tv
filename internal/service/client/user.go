@@ -31,33 +31,33 @@ type UserService interface {
 	// C5: Auth
 	Register(ctx context.Context, req *clientdto.RegisterRequest) (*clientdto.Profile, error)
 	Login(ctx context.Context, req *clientdto.LoginRequest, ip, ua string) (*clientdto.LoginResponse, error)
-	Profile(ctx context.Context, userID int64) (*clientdto.Profile, error)
-	UpdateProfile(ctx context.Context, userID int64, req *clientdto.UpdateProfileRequest) (*clientdto.Profile, error)
-	ChangePassword(ctx context.Context, userID int64, req *clientdto.ChangePasswordRequest) error
-	LoginHistory(ctx context.Context, userID int64, req *clientdto.LoginHistoryListRequest) ([]clientdto.LoginHistoryItem, int, error)
+	Profile(ctx context.Context, userID uint32) (*clientdto.Profile, error)
+	UpdateProfile(ctx context.Context, userID uint32, req *clientdto.UpdateProfileRequest) (*clientdto.Profile, error)
+	ChangePassword(ctx context.Context, userID uint32, req *clientdto.ChangePasswordRequest) error
+	LoginHistory(ctx context.Context, userID uint32, req *clientdto.LoginHistoryListRequest) ([]clientdto.LoginHistoryItem, int, error)
 
 	// C6: Favorites
-	ListFavorites(ctx context.Context, userID int64, req *clientdto.FavoriteListRequest) ([]clientdto.FavoriteItem, int, error)
-	AddFavorite(ctx context.Context, userID, videoID int64) error
-	RemoveFavorite(ctx context.Context, userID, videoID int64) error
-	CheckFavorite(ctx context.Context, userID, videoID int64) (bool, error)
+	ListFavorites(ctx context.Context, userID uint32, req *clientdto.FavoriteListRequest) ([]clientdto.FavoriteItem, int, error)
+	AddFavorite(ctx context.Context, userID, videoID uint32) error
+	RemoveFavorite(ctx context.Context, userID, videoID uint32) error
+	CheckFavorite(ctx context.Context, userID, videoID uint32) (bool, error)
 
 	// C6: History
-	ListHistory(ctx context.Context, userID int64, req *clientdto.HistoryListRequest) ([]clientdto.HistoryItem, int, error)
-	GetHistory(ctx context.Context, userID, videoID int64) (*clientdto.HistoryItem, error)
-	UpsertHistory(ctx context.Context, userID int64, req *clientdto.UpsertHistoryRequest) error
-	DeleteHistory(ctx context.Context, userID, videoID int64) error
-	ClearHistory(ctx context.Context, userID int64) error
+	ListHistory(ctx context.Context, userID uint32, req *clientdto.HistoryListRequest) ([]clientdto.HistoryItem, int, error)
+	GetHistory(ctx context.Context, userID, videoID uint32) (*clientdto.HistoryItem, error)
+	UpsertHistory(ctx context.Context, userID uint32, req *clientdto.UpsertHistoryRequest) error
+	DeleteHistory(ctx context.Context, userID, videoID uint32) error
+	ClearHistory(ctx context.Context, userID uint32) error
 
 	// C6: Comments
-	ListComments(ctx context.Context, videoID int64, userID int64, req *clientdto.CommentListRequest) ([]clientdto.CommentItem, int, error)
-	ListReplies(ctx context.Context, commentID int64, userID int64, req *clientdto.CommentListRequest) ([]clientdto.CommentItem, int, error)
-	CreateComment(ctx context.Context, userID int64, req *clientdto.CreateCommentRequest) (*clientdto.CommentItem, error)
-	VoteComment(ctx context.Context, userID, commentID int64, req *clientdto.VoteCommentRequest) (*clientdto.VoteCommentResult, error)
+	ListComments(ctx context.Context, videoID, userID uint32, req *clientdto.CommentListRequest) ([]clientdto.CommentItem, int, error)
+	ListReplies(ctx context.Context, commentID, userID uint32, req *clientdto.CommentListRequest) ([]clientdto.CommentItem, int, error)
+	CreateComment(ctx context.Context, userID uint32, req *clientdto.CreateCommentRequest) (*clientdto.CommentItem, error)
+	VoteComment(ctx context.Context, userID, commentID uint32, req *clientdto.VoteCommentRequest) (*clientdto.VoteCommentResult, error)
 
 	// C6: Ratings
-	RateVideo(ctx context.Context, userID, videoID int64, req *clientdto.RateVideoRequest) (*clientdto.RatingResult, error)
-	GetRating(ctx context.Context, userID, videoID int64) (*clientdto.RatingResult, error)
+	RateVideo(ctx context.Context, userID, videoID uint32, req *clientdto.RateVideoRequest) (*clientdto.RatingResult, error)
+	GetRating(ctx context.Context, userID, videoID uint32) (*clientdto.RatingResult, error)
 }
 
 type userService struct {
@@ -148,13 +148,13 @@ func (s *userService) Login(ctx context.Context, req *clientdto.LoginRequest, ip
 		s.log.Error("client user: get user by username for login failed", zap.String("username", username), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	userID := int64(0)
+	userID := uint32(0)
 	if u != nil {
-		userID = int64(u.ID)
+		userID = u.ID
 	}
 	recordLog := func(success bool) {
 		_ = s.userRepo.CreateUserLoginLog(ctx, &model.UserLoginLogs{
-			UserID:    uint64(userID),
+			UserID:    userID,
 			Username:  username,
 			IP:        ip,
 			UserAgent: ua,
@@ -176,9 +176,9 @@ func (s *userService) Login(ctx context.Context, req *clientdto.LoginRequest, ip
 		recordLog(false)
 		return nil, errcode.InvalidCredentials
 	}
-	token, err := s.jwtMgr.GenerateAccessTokenFor(int64(u.ID), auth.SubjectUser)
+	token, err := s.jwtMgr.GenerateAccessTokenFor(u.ID, auth.SubjectUser)
 	if err != nil {
-		s.log.Error("client user: generate access token failed", zap.Int64("user_id", int64(u.ID)), zap.Error(err))
+		s.log.Error("client user: generate access token failed", zap.Uint32("user_id", u.ID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.InternalError, err)
 	}
 	now := time.Now()
@@ -193,10 +193,10 @@ func (s *userService) Login(ctx context.Context, req *clientdto.LoginRequest, ip
 	}, nil
 }
 
-func (s *userService) Profile(ctx context.Context, userID int64) (*clientdto.Profile, error) {
+func (s *userService) Profile(ctx context.Context, userID uint32) (*clientdto.Profile, error) {
 	u, err := s.adminRepo.GetUserByID(ctx, userID)
 	if err != nil {
-		s.log.Error("client user: get profile failed", zap.Int64("user_id", userID), zap.Error(err))
+		s.log.Error("client user: get profile failed", zap.Uint32("user_id", userID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if u == nil {
@@ -205,10 +205,10 @@ func (s *userService) Profile(ctx context.Context, userID int64) (*clientdto.Pro
 	return toUserProfile(u), nil
 }
 
-func (s *userService) UpdateProfile(ctx context.Context, userID int64, req *clientdto.UpdateProfileRequest) (*clientdto.Profile, error) {
+func (s *userService) UpdateProfile(ctx context.Context, userID uint32, req *clientdto.UpdateProfileRequest) (*clientdto.Profile, error) {
 	u, err := s.adminRepo.GetUserByID(ctx, userID)
 	if err != nil {
-		s.log.Error("client user: get user for update profile failed", zap.Int64("user_id", userID), zap.Error(err))
+		s.log.Error("client user: get user for update profile failed", zap.Uint32("user_id", userID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if u == nil {
@@ -224,16 +224,16 @@ func (s *userService) UpdateProfile(ctx context.Context, userID int64, req *clie
 		u.Avatar = avatar
 	}
 	if err := s.adminRepo.UpdateUser(ctx, u); err != nil {
-		s.log.Error("client user: update profile failed", zap.Int64("user_id", userID), zap.Error(err))
+		s.log.Error("client user: update profile failed", zap.Uint32("user_id", userID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return toUserProfile(u), nil
 }
 
-func (s *userService) ChangePassword(ctx context.Context, userID int64, req *clientdto.ChangePasswordRequest) error {
+func (s *userService) ChangePassword(ctx context.Context, userID uint32, req *clientdto.ChangePasswordRequest) error {
 	u, err := s.adminRepo.GetUserByID(ctx, userID)
 	if err != nil {
-		s.log.Error("client user: get user for change password failed", zap.Int64("user_id", userID), zap.Error(err))
+		s.log.Error("client user: get user for change password failed", zap.Uint32("user_id", userID), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if u == nil {
@@ -244,18 +244,18 @@ func (s *userService) ChangePassword(ctx context.Context, userID int64, req *cli
 	}
 	hash, err := crypto.HashPassword(req.NewPassword)
 	if err != nil {
-		s.log.Error("client user: hash new password failed", zap.Int64("user_id", userID), zap.Error(err))
+		s.log.Error("client user: hash new password failed", zap.Uint32("user_id", userID), zap.Error(err))
 		return errcode.Wrap(errcode.InternalError, err)
 	}
 	u.Password = hash
 	if err := s.adminRepo.UpdateUser(ctx, u); err != nil {
-		s.log.Error("client user: update password failed", zap.Int64("user_id", userID), zap.Error(err))
+		s.log.Error("client user: update password failed", zap.Uint32("user_id", userID), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return nil
 }
 
-func (s *userService) LoginHistory(ctx context.Context, userID int64, req *clientdto.LoginHistoryListRequest) ([]clientdto.LoginHistoryItem, int, error) {
+func (s *userService) LoginHistory(ctx context.Context, userID uint32, req *clientdto.LoginHistoryListRequest) ([]clientdto.LoginHistoryItem, int, error) {
 	threeMonthsAgo := time.Now().AddDate(0, -3, 0)
 	items, total, err := s.userRepo.ListUserLoginLogs(ctx, repository.UserLoginLogFilter{
 		UserID:    &userID,
@@ -264,7 +264,7 @@ func (s *userService) LoginHistory(ctx context.Context, userID int64, req *clien
 		Limit:     req.GetPageSize(),
 	})
 	if err != nil {
-		s.log.Error("client user: list login history failed", zap.Int64("user_id", userID), zap.Error(err))
+		s.log.Error("client user: list login history failed", zap.Uint32("user_id", userID), zap.Error(err))
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	out := make([]clientdto.LoginHistoryItem, 0, len(items))
@@ -274,7 +274,7 @@ func (s *userService) LoginHistory(ctx context.Context, userID int64, req *clien
 			IP:        item.IP,
 			UserAgent: item.UserAgent,
 			Status:    item.Status,
-			CreatedAt: utils.FormatTimeStr(&item.CreatedAt),
+			CreatedAt: utils.FormatTimeStr(item.CreatedAt),
 		})
 	}
 	return out, total, nil
@@ -282,10 +282,10 @@ func (s *userService) LoginHistory(ctx context.Context, userID int64, req *clien
 
 // ===== C6: Favorites =====
 
-func (s *userService) ListFavorites(ctx context.Context, userID int64, req *clientdto.FavoriteListRequest) ([]clientdto.FavoriteItem, int, error) {
+func (s *userService) ListFavorites(ctx context.Context, userID uint32, req *clientdto.FavoriteListRequest) ([]clientdto.FavoriteItem, int, error) {
 	favs, total, err := s.userRepo.ListFavorites(ctx, userID, req.GetOffset(), req.GetPageSize())
 	if err != nil {
-		s.log.Error("client user: list favorites failed", zap.Int64("user_id", userID), zap.Error(err))
+		s.log.Error("client user: list favorites failed", zap.Uint32("user_id", userID), zap.Error(err))
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	out := make([]clientdto.FavoriteItem, 0, len(favs))
@@ -293,15 +293,15 @@ func (s *userService) ListFavorites(ctx context.Context, userID int64, req *clie
 		v, _ := s.videoRepo.GetByID(ctx, f.VideoID)
 		item := clientdto.FavoriteItem{
 			VideoID:   f.VideoID,
-			CreatedAt: utils.FormatTimeStr(&f.CreatedAt),
+			CreatedAt: utils.FormatTimeStr(f.CreatedAt),
 		}
 		if v != nil {
 			item.Title = v.Title
 			item.Cover = v.CoverImage
-			item.Year = uint32(v.Year)
+			item.Year = v.Year
 			item.Rating = v.Rating
 			if v.CategoryID > 0 {
-				cat, _ := s.categoryRepo.GetByID(ctx, int64(v.CategoryID))
+				cat, _ := s.categoryRepo.GetByID(ctx, v.CategoryID)
 				if cat != nil {
 					item.CategoryName = cat.Name
 				}
@@ -312,10 +312,10 @@ func (s *userService) ListFavorites(ctx context.Context, userID int64, req *clie
 	return out, total, nil
 }
 
-func (s *userService) AddFavorite(ctx context.Context, userID, videoID int64) error {
-	v, err := s.videoRepo.GetByID(ctx, uint64(videoID))
+func (s *userService) AddFavorite(ctx context.Context, userID, videoID uint32) error {
+	v, err := s.videoRepo.GetByID(ctx, videoID)
 	if err != nil {
-		s.log.Error("client user: get video for add favorite failed", zap.Int64("video_id", videoID), zap.Error(err))
+		s.log.Error("client user: get video for add favorite failed", zap.Uint32("video_id", videoID), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if v == nil {
@@ -323,22 +323,22 @@ func (s *userService) AddFavorite(ctx context.Context, userID, videoID int64) er
 	}
 	existing, err := s.userRepo.GetFavorite(ctx, userID, videoID)
 	if err != nil {
-		s.log.Error("client user: get favorite failed", zap.Int64("user_id", userID), zap.Int64("video_id", videoID), zap.Error(err))
+		s.log.Error("client user: get favorite failed", zap.Uint32("user_id", userID), zap.Uint32("video_id", videoID), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if existing != nil {
 		return errcode.FavoriteExists
 	}
 	return s.userRepo.AddFavorite(ctx, &model.UserFavorites{
-		UserID:  uint64(userID),
-		VideoID: uint64(videoID),
+		UserID:  userID,
+		VideoID: videoID,
 	})
 }
 
-func (s *userService) RemoveFavorite(ctx context.Context, userID, videoID int64) error {
+func (s *userService) RemoveFavorite(ctx context.Context, userID, videoID uint32) error {
 	existing, err := s.userRepo.GetFavorite(ctx, userID, videoID)
 	if err != nil {
-		s.log.Error("client user: get favorite for remove failed", zap.Int64("user_id", userID), zap.Int64("video_id", videoID), zap.Error(err))
+		s.log.Error("client user: get favorite for remove failed", zap.Uint32("user_id", userID), zap.Uint32("video_id", videoID), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if existing == nil {
@@ -347,10 +347,10 @@ func (s *userService) RemoveFavorite(ctx context.Context, userID, videoID int64)
 	return s.userRepo.RemoveFavorite(ctx, userID, videoID)
 }
 
-func (s *userService) CheckFavorite(ctx context.Context, userID, videoID int64) (bool, error) {
+func (s *userService) CheckFavorite(ctx context.Context, userID, videoID uint32) (bool, error) {
 	existing, err := s.userRepo.GetFavorite(ctx, userID, videoID)
 	if err != nil {
-		s.log.Error("client user: check favorite failed", zap.Int64("user_id", userID), zap.Int64("video_id", videoID), zap.Error(err))
+		s.log.Error("client user: check favorite failed", zap.Uint32("user_id", userID), zap.Uint32("video_id", videoID), zap.Error(err))
 		return false, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return existing != nil, nil
@@ -358,10 +358,10 @@ func (s *userService) CheckFavorite(ctx context.Context, userID, videoID int64) 
 
 // ===== C6: History =====
 
-func (s *userService) ListHistory(ctx context.Context, userID int64, req *clientdto.HistoryListRequest) ([]clientdto.HistoryItem, int, error) {
+func (s *userService) ListHistory(ctx context.Context, userID uint32, req *clientdto.HistoryListRequest) ([]clientdto.HistoryItem, int, error) {
 	items, total, err := s.userRepo.ListHistory(ctx, userID, req.GetOffset(), req.GetPageSize())
 	if err != nil {
-		s.log.Error("client user: list history failed", zap.Int64("user_id", userID), zap.Error(err))
+		s.log.Error("client user: list history failed", zap.Uint32("user_id", userID), zap.Error(err))
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	out := make([]clientdto.HistoryItem, 0, len(items))
@@ -373,7 +373,7 @@ func (s *userService) ListHistory(ctx context.Context, userID int64, req *client
 			EpisodeID:    h.EpisodeID,
 			Progress:     h.Progress,
 			Duration:     h.Duration,
-			LastPlayedAt: utils.FormatTimeStr(&h.LastPlayedAt),
+			LastPlayedAt: utils.FormatTimeStr(h.LastPlayedAt),
 		}
 		if v != nil {
 			item.Title = v.Title
@@ -382,7 +382,7 @@ func (s *userService) ListHistory(ctx context.Context, userID int64, req *client
 				item.Year = strconv.FormatUint(uint64(v.Year), 10)
 			}
 			if v.CategoryID > 0 {
-				if cat, _ := s.categoryRepo.GetByID(ctx, int64(v.CategoryID)); cat != nil {
+				if cat, _ := s.categoryRepo.GetByID(ctx, v.CategoryID); cat != nil {
 					item.CategoryName = cat.Name
 				}
 			}
@@ -392,10 +392,10 @@ func (s *userService) ListHistory(ctx context.Context, userID int64, req *client
 	return out, total, nil
 }
 
-func (s *userService) GetHistory(ctx context.Context, userID, videoID int64) (*clientdto.HistoryItem, error) {
+func (s *userService) GetHistory(ctx context.Context, userID, videoID uint32) (*clientdto.HistoryItem, error) {
 	h, err := s.userRepo.GetHistory(ctx, userID, videoID)
 	if err != nil {
-		s.log.Error("client user: get history failed", zap.Int64("user_id", userID), zap.Int64("video_id", videoID), zap.Error(err))
+		s.log.Error("client user: get history failed", zap.Uint32("user_id", userID), zap.Uint32("video_id", videoID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if h == nil {
@@ -407,7 +407,7 @@ func (s *userService) GetHistory(ctx context.Context, userID, videoID int64) (*c
 		EpisodeID:    h.EpisodeID,
 		Progress:     h.Progress,
 		Duration:     h.Duration,
-		LastPlayedAt: utils.FormatTimeStr(&h.LastPlayedAt),
+		LastPlayedAt: utils.FormatTimeStr(h.LastPlayedAt),
 	}
 	v, _ := s.videoRepo.GetByID(ctx, h.VideoID)
 	if v != nil {
@@ -417,7 +417,7 @@ func (s *userService) GetHistory(ctx context.Context, userID, videoID int64) (*c
 			item.Year = strconv.FormatUint(uint64(v.Year), 10)
 		}
 		if v.CategoryID > 0 {
-			if cat, _ := s.categoryRepo.GetByID(ctx, int64(v.CategoryID)); cat != nil {
+			if cat, _ := s.categoryRepo.GetByID(ctx, v.CategoryID); cat != nil {
 				item.CategoryName = cat.Name
 			}
 		}
@@ -425,10 +425,10 @@ func (s *userService) GetHistory(ctx context.Context, userID, videoID int64) (*c
 	return &item, nil
 }
 
-func (s *userService) UpsertHistory(ctx context.Context, userID int64, req *clientdto.UpsertHistoryRequest) error {
+func (s *userService) UpsertHistory(ctx context.Context, userID uint32, req *clientdto.UpsertHistoryRequest) error {
 	v, err := s.videoRepo.GetByID(ctx, req.VideoID)
 	if err != nil {
-		s.log.Error("client user: get video for upsert history failed", zap.Uint64("video_id", req.VideoID), zap.Error(err))
+		s.log.Error("client user: get video for upsert history failed", zap.Uint32("video_id", req.VideoID), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if v == nil {
@@ -436,7 +436,7 @@ func (s *userService) UpsertHistory(ctx context.Context, userID int64, req *clie
 	}
 	now := time.Now()
 	return s.userRepo.UpsertHistory(ctx, &model.UserPlayHistory{
-		UserID:       uint64(userID),
+		UserID:       userID,
 		VideoID:      req.VideoID,
 		PlaySourceID: req.PlaySourceID,
 		EpisodeID:    req.EpisodeID,
@@ -446,23 +446,23 @@ func (s *userService) UpsertHistory(ctx context.Context, userID int64, req *clie
 	})
 }
 
-func (s *userService) DeleteHistory(ctx context.Context, userID, videoID int64) error {
+func (s *userService) DeleteHistory(ctx context.Context, userID, videoID uint32) error {
 	return s.userRepo.DeleteHistory(ctx, userID, videoID)
 }
 
-func (s *userService) ClearHistory(ctx context.Context, userID int64) error {
+func (s *userService) ClearHistory(ctx context.Context, userID uint32) error {
 	return s.userRepo.ClearHistory(ctx, userID)
 }
 
 // ===== C6: Comments =====
 
-func (s *userService) mapComments(ctx context.Context, comments []model.VideoComments, userID int64) ([]clientdto.CommentItem, error) {
+func (s *userService) mapComments(ctx context.Context, comments []model.VideoComments, userID uint32) ([]clientdto.CommentItem, error) {
 	if len(comments) == 0 {
 		return []clientdto.CommentItem{}, nil
 	}
-	ids := make([]int64, len(comments))
+	ids := make([]uint32, len(comments))
 	for i, c := range comments {
-		ids[i] = int64(c.ID)
+		ids[i] = c.ID
 	}
 	replyCounts, err := s.userRepo.CountRepliesByParents(ctx, ids)
 	if err != nil {
@@ -482,10 +482,10 @@ func (s *userService) mapComments(ctx context.Context, comments []model.VideoCom
 			Content:      c.Content,
 			LikeCount:    c.LikeCount,
 			DislikeCount: c.DislikeCount,
-			MyVote:       myVotes[int64(c.ID)],
-			ReplyCount:   replyCounts[int64(c.ID)],
+			MyVote:       myVotes[c.ID],
+			ReplyCount:   replyCounts[c.ID],
 			Replies:      make([]*clientdto.CommentItem, 0),
-			CreatedAt:    utils.FormatTimeStr(&c.CreatedAt),
+			CreatedAt:    utils.FormatTimeStr(c.CreatedAt),
 		}
 		if c.User != nil {
 			item.Username = c.User.Username
@@ -496,35 +496,35 @@ func (s *userService) mapComments(ctx context.Context, comments []model.VideoCom
 	return out, nil
 }
 
-func (s *userService) ListComments(ctx context.Context, videoID, userID int64, req *clientdto.CommentListRequest) ([]clientdto.CommentItem, int, error) {
+func (s *userService) ListComments(ctx context.Context, videoID, userID uint32, req *clientdto.CommentListRequest) ([]clientdto.CommentItem, int, error) {
 	comments, total, err := s.userRepo.ListComments(ctx, videoID, req.GetOffset(), req.GetPageSize())
 	if err != nil {
-		s.log.Error("client user: list comments failed", zap.Int64("video_id", videoID), zap.Error(err))
+		s.log.Error("client user: list comments failed", zap.Uint32("video_id", videoID), zap.Error(err))
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	out, err := s.mapComments(ctx, comments, userID)
 	if err != nil {
-		s.log.Error("client user: map comments failed", zap.Int64("video_id", videoID), zap.Error(err))
+		s.log.Error("client user: map comments failed", zap.Uint32("video_id", videoID), zap.Error(err))
 		return nil, 0, err
 	}
 	return out, total, nil
 }
 
-func (s *userService) ListReplies(ctx context.Context, commentID, userID int64, req *clientdto.CommentListRequest) ([]clientdto.CommentItem, int, error) {
+func (s *userService) ListReplies(ctx context.Context, commentID, userID uint32, req *clientdto.CommentListRequest) ([]clientdto.CommentItem, int, error) {
 	comments, total, err := s.userRepo.ListReplies(ctx, commentID, req.GetOffset(), req.GetPageSize())
 	if err != nil {
-		s.log.Error("client user: list replies failed", zap.Int64("parent_id", commentID), zap.Error(err))
+		s.log.Error("client user: list replies failed", zap.Uint32("parent_id", commentID), zap.Error(err))
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	out, err := s.mapComments(ctx, comments, userID)
 	if err != nil {
-		s.log.Error("client user: map replies failed", zap.Int64("parent_id", commentID), zap.Error(err))
+		s.log.Error("client user: map replies failed", zap.Uint32("parent_id", commentID), zap.Error(err))
 		return nil, 0, err
 	}
 	return out, total, nil
 }
 
-func (s *userService) CreateComment(ctx context.Context, userID int64, req *clientdto.CreateCommentRequest) (*clientdto.CommentItem, error) {
+func (s *userService) CreateComment(ctx context.Context, userID uint32, req *clientdto.CreateCommentRequest) (*clientdto.CommentItem, error) {
 	// Check feature toggles
 	featureMap, err := s.settingsSvc.LoadMapByGroup(ctx, constant.SettingGroupFeature)
 	if err != nil {
@@ -537,7 +537,7 @@ func (s *userService) CreateComment(ctx context.Context, userID int64, req *clie
 
 	v, err := s.videoRepo.GetByID(ctx, req.VideoID)
 	if err != nil {
-		s.log.Error("client user: get video for create comment failed", zap.Uint64("video_id", req.VideoID), zap.Error(err))
+		s.log.Error("client user: get video for create comment failed", zap.Uint32("video_id", req.VideoID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if v == nil {
@@ -552,9 +552,9 @@ func (s *userService) CreateComment(ctx context.Context, userID int64, req *clie
 	}
 
 	if req.ParentID > 0 {
-		parent, err := s.userRepo.GetComment(ctx, int64(req.ParentID))
+		parent, err := s.userRepo.GetComment(ctx, req.ParentID)
 		if err != nil {
-			s.log.Error("client user: get parent comment failed", zap.Uint64("parent_id", req.ParentID), zap.Error(err))
+			s.log.Error("client user: get parent comment failed", zap.Uint32("parent_id", req.ParentID), zap.Error(err))
 			return nil, errcode.Wrap(errcode.DatabaseError, err)
 		}
 		if parent == nil || parent.Status != constant.CommentStatusNormal {
@@ -573,13 +573,13 @@ func (s *userService) CreateComment(ctx context.Context, userID int64, req *clie
 
 	c := &model.VideoComments{
 		VideoID:  req.VideoID,
-		UserID:   uint64(userID),
+		UserID:   userID,
 		ParentID: req.ParentID,
 		Content:  content,
 		Status:   status,
 	}
 	if err := s.userRepo.CreateComment(ctx, c); err != nil {
-		s.log.Error("client user: create comment failed", zap.Uint64("video_id", req.VideoID), zap.Int64("user_id", userID), zap.Error(err))
+		s.log.Error("client user: create comment failed", zap.Uint32("video_id", req.VideoID), zap.Uint32("user_id", userID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	item := &clientdto.CommentItem{
@@ -593,7 +593,7 @@ func (s *userService) CreateComment(ctx context.Context, userID int64, req *clie
 		MyVote:       0,
 		ReplyCount:   0,
 		Replies:      make([]*clientdto.CommentItem, 0),
-		CreatedAt:    utils.FormatTimeStr(&c.CreatedAt),
+		CreatedAt:    utils.FormatTimeStr(c.CreatedAt),
 	}
 	if u, _ := s.adminRepo.GetUserByID(ctx, userID); u != nil {
 		item.Username = u.Username
@@ -602,10 +602,10 @@ func (s *userService) CreateComment(ctx context.Context, userID int64, req *clie
 	return item, nil
 }
 
-func (s *userService) VoteComment(ctx context.Context, userID, commentID int64, req *clientdto.VoteCommentRequest) (*clientdto.VoteCommentResult, error) {
+func (s *userService) VoteComment(ctx context.Context, userID, commentID uint32, req *clientdto.VoteCommentRequest) (*clientdto.VoteCommentResult, error) {
 	c, err := s.userRepo.GetComment(ctx, commentID)
 	if err != nil {
-		s.log.Error("client user: get comment for vote failed", zap.Int64("comment_id", commentID), zap.Error(err))
+		s.log.Error("client user: get comment for vote failed", zap.Uint32("comment_id", commentID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if c == nil || c.Status != constant.CommentStatusNormal {
@@ -652,8 +652,8 @@ func (s *userService) VoteComment(ctx context.Context, userID, commentID int64, 
 
 		if newDir != 0 {
 			if err := txRepo.UpsertCommentVote(ctx, &model.UserCommentVotes{
-				UserID:    uint64(userID),
-				CommentID: uint64(commentID),
+				UserID:    userID,
+				CommentID: commentID,
 				Direction: int8(newDir),
 			}); err != nil {
 				return err
@@ -671,19 +671,19 @@ func (s *userService) VoteComment(ctx context.Context, userID, commentID int64, 
 		return nil
 	})
 	if err != nil {
-		s.log.Error("client user: vote comment transaction failed", zap.Int64("comment_id", commentID), zap.Int64("user_id", userID), zap.Error(err))
+		s.log.Error("client user: vote comment transaction failed", zap.Uint32("comment_id", commentID), zap.Uint32("user_id", userID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 
 	c, err = s.userRepo.GetComment(ctx, commentID)
 	if err != nil {
-		s.log.Error("client user: get comment after vote failed", zap.Int64("comment_id", commentID), zap.Error(err))
+		s.log.Error("client user: get comment after vote failed", zap.Uint32("comment_id", commentID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	myVote := int8(0)
 	vote, err := s.userRepo.GetCommentVote(ctx, userID, commentID)
 	if err != nil {
-		s.log.Error("client user: get comment vote after vote failed", zap.Int64("comment_id", commentID), zap.Error(err))
+		s.log.Error("client user: get comment vote after vote failed", zap.Uint32("comment_id", commentID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if vote != nil {
@@ -699,7 +699,7 @@ func (s *userService) VoteComment(ctx context.Context, userID, commentID int64, 
 // ===== Ratings (C6) =====
 
 // RateVideo submits or updates a user's rating for a video.
-func (s *userService) RateVideo(ctx context.Context, userID, videoID int64, req *clientdto.RateVideoRequest) (*clientdto.RatingResult, error) {
+func (s *userService) RateVideo(ctx context.Context, userID, videoID uint32, req *clientdto.RateVideoRequest) (*clientdto.RatingResult, error) {
 	// Check feature toggle
 	featureMap, err := s.settingsSvc.LoadMapByGroup(ctx, constant.SettingGroupFeature)
 	if err != nil {
@@ -718,9 +718,9 @@ func (s *userService) RateVideo(ctx context.Context, userID, videoID int64, req 
 	}
 
 	// Validate video exists
-	v, err := s.videoRepo.GetByID(ctx, uint64(videoID))
+	v, err := s.videoRepo.GetByID(ctx, videoID)
 	if err != nil {
-		s.log.Error("client user: get video for rate failed", zap.Int64("video_id", videoID), zap.Error(err))
+		s.log.Error("client user: get video for rate failed", zap.Uint32("video_id", videoID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if v == nil {
@@ -735,25 +735,25 @@ func (s *userService) RateVideo(ctx context.Context, userID, videoID int64, req 
 		txVideoRepo := s.videoRepo.WithTx(tx)
 
 		ur := &model.UserRatings{
-			UserID:  uint64(userID),
-			VideoID: uint64(videoID),
+			UserID:  userID,
+			VideoID: videoID,
 			Score:   score,
 		}
 		if err := txUserRepo.UpsertRating(ctx, ur); err != nil {
-			s.log.Error("client user: upsert rating failed", zap.Int64("video_id", videoID), zap.Int64("user_id", userID), zap.Error(err))
+			s.log.Error("client user: upsert rating failed", zap.Uint32("video_id", videoID), zap.Uint32("user_id", userID), zap.Error(err))
 			return errcode.Wrap(errcode.DatabaseError, err)
 		}
 
 		avg, count, err = txUserRepo.GetRatingStats(ctx, videoID)
 		if err != nil {
-			s.log.Error("client user: get rating stats failed", zap.Int64("video_id", videoID), zap.Error(err))
+			s.log.Error("client user: get rating stats failed", zap.Uint32("video_id", videoID), zap.Error(err))
 			return errcode.Wrap(errcode.DatabaseError, err)
 		}
 
 		// Round to 1 decimal place
 		rounded := math.Round(avg*10) / 10
-		if err := txVideoRepo.UpdateRatingStats(ctx, uint64(videoID), rounded, uint32(count)); err != nil {
-			s.log.Error("client user: update video rating stats failed", zap.Int64("video_id", videoID), zap.Error(err))
+		if err := txVideoRepo.UpdateRatingStats(ctx, videoID, rounded, uint32(count)); err != nil {
+			s.log.Error("client user: update video rating stats failed", zap.Uint32("video_id", videoID), zap.Error(err))
 			return errcode.Wrap(errcode.DatabaseError, err)
 		}
 		return nil
@@ -770,10 +770,10 @@ func (s *userService) RateVideo(ctx context.Context, userID, videoID int64, req 
 }
 
 // GetRating returns the video's rating stats and the current user's score (0 if not logged in / not rated).
-func (s *userService) GetRating(ctx context.Context, userID, videoID int64) (*clientdto.RatingResult, error) {
-	v, err := s.videoRepo.GetByID(ctx, uint64(videoID))
+func (s *userService) GetRating(ctx context.Context, userID, videoID uint32) (*clientdto.RatingResult, error) {
+	v, err := s.videoRepo.GetByID(ctx, videoID)
 	if err != nil {
-		s.log.Error("client user: get video for get rating failed", zap.Int64("video_id", videoID), zap.Error(err))
+		s.log.Error("client user: get video for get rating failed", zap.Uint32("video_id", videoID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if v == nil {
@@ -789,7 +789,7 @@ func (s *userService) GetRating(ctx context.Context, userID, videoID int64) (*cl
 	if userID > 0 {
 		rating, err := s.userRepo.GetRating(ctx, userID, videoID)
 		if err != nil {
-			s.log.Error("client user: get user rating failed", zap.Int64("video_id", videoID), zap.Int64("user_id", userID), zap.Error(err))
+			s.log.Error("client user: get user rating failed", zap.Uint32("video_id", videoID), zap.Uint32("user_id", userID), zap.Error(err))
 			return nil, errcode.Wrap(errcode.DatabaseError, err)
 		}
 		if rating != nil {
@@ -804,7 +804,7 @@ func (s *userService) GetRating(ctx context.Context, userID, videoID int64) (*cl
 
 func toUserProfile(u *model.Users) *clientdto.Profile {
 	return &clientdto.Profile{
-		ID:       uint64(u.ID),
+		ID:       u.ID,
 		StrID:    u.StrID,
 		Username: u.Username,
 		Nickname: u.Nickname,

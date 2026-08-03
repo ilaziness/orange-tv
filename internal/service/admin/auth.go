@@ -27,11 +27,11 @@ type LoginMeta struct {
 // AuthService handles admin authentication.
 type AuthService interface {
 	Login(ctx context.Context, req *dto.LoginRequest, meta *LoginMeta) (*dto.LoginResponse, error)
-	Profile(ctx context.Context, adminID int64) (*dto.Profile, error)
+	Profile(ctx context.Context, adminID uint32) (*dto.Profile, error)
 	// EnsureSuperAdmin loads admin+group and validates super_admin access for each request.
-	EnsureSuperAdmin(ctx context.Context, adminID int64) (*model.Admins, *model.UserGroups, error)
-	UpdateProfile(ctx context.Context, adminID int64, req *dto.UpdateProfileRequest) (*dto.Profile, error)
-	ChangePassword(ctx context.Context, adminID int64, req *dto.ChangePasswordRequest) error
+	EnsureSuperAdmin(ctx context.Context, adminID uint32) (*model.Admins, *model.UserGroups, error)
+	UpdateProfile(ctx context.Context, adminID uint32, req *dto.UpdateProfileRequest) (*dto.Profile, error)
+	ChangePassword(ctx context.Context, adminID uint32, req *dto.ChangePasswordRequest) error
 }
 
 type authService struct {
@@ -59,12 +59,12 @@ func (s *authService) Login(ctx context.Context, req *dto.LoginRequest, meta *Lo
 	if meta != nil {
 		ip, ua = meta.IP, meta.UserAgent
 	}
-	recordFail := func(userID int64, username string) {
+	recordFail := func(userID uint32, username string) {
 		if s.audit != nil {
 			s.audit.AdminLogin(ctx, userID, username, ip, ua, false)
 		}
 	}
-	recordOK := func(userID int64, username string) {
+	recordOK := func(userID uint32, username string) {
 		if s.audit != nil {
 			s.audit.AdminLogin(ctx, userID, username, ip, ua, true)
 		}
@@ -84,35 +84,35 @@ func (s *authService) Login(ctx context.Context, req *dto.LoginRequest, meta *Lo
 		return nil, errcode.InvalidCredentials
 	}
 	if admin.Status != constant.StatusEnabled {
-		recordFail(int64(admin.ID), username)
+		recordFail(admin.ID, username)
 		return nil, errcode.AdminDisabled
 	}
 	if err := crypto.CheckPassword(req.Password, admin.Password); err != nil {
-		recordFail(int64(admin.ID), username)
+		recordFail(admin.ID, username)
 		return nil, errcode.InvalidCredentials
 	}
 
-	group, err := s.adminRepo.GetGroupByID(ctx, int64(admin.GroupID))
+	group, err := s.adminRepo.GetGroupByID(ctx, admin.GroupID)
 	if err != nil {
-		s.log.Error("auth: get group by id failed", zap.Int64("admin_id", int64(admin.ID)), zap.Uint64("group_id", admin.GroupID), zap.Error(err))
+		s.log.Error("auth: get group by id failed", zap.Uint32("admin_id", admin.ID), zap.Uint32("group_id", admin.GroupID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if group == nil || group.Name != constant.RoleSuperAdmin {
-		recordFail(int64(admin.ID), username)
+		recordFail(admin.ID, username)
 		return nil, errcode.InsufficientPermission
 	}
 
-	token, err := s.jwtMgr.GenerateAccessToken(int64(admin.ID))
+	token, err := s.jwtMgr.GenerateAccessToken(admin.ID)
 	if err != nil {
-		s.log.Error("auth: generate access token failed", zap.Int64("admin_id", int64(admin.ID)), zap.Error(err))
+		s.log.Error("auth: generate access token failed", zap.Uint32("admin_id", admin.ID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.InternalError, err)
 	}
 	now := time.Now()
-	if err := s.adminRepo.UpdateLastLogin(ctx, int64(admin.ID), now); err != nil {
-		s.log.Error("auth: update last login failed", zap.Int64("admin_id", int64(admin.ID)), zap.Error(err))
+	if err := s.adminRepo.UpdateLastLogin(ctx, admin.ID, now); err != nil {
+		s.log.Error("auth: update last login failed", zap.Uint32("admin_id", admin.ID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	recordOK(int64(admin.ID), username)
+	recordOK(admin.ID, username)
 
 	return &dto.LoginResponse{
 		AccessToken: token,
@@ -122,7 +122,7 @@ func (s *authService) Login(ctx context.Context, req *dto.LoginRequest, meta *Lo
 	}, nil
 }
 
-func (s *authService) Profile(ctx context.Context, adminID int64) (*dto.Profile, error) {
+func (s *authService) Profile(ctx context.Context, adminID uint32) (*dto.Profile, error) {
 	admin, group, err := s.EnsureSuperAdmin(ctx, adminID)
 	if err != nil {
 		return nil, err
@@ -130,7 +130,7 @@ func (s *authService) Profile(ctx context.Context, adminID int64) (*dto.Profile,
 	return toAdminProfile(admin, group.Name), nil
 }
 
-func (s *authService) UpdateProfile(ctx context.Context, adminID int64, req *dto.UpdateProfileRequest) (*dto.Profile, error) {
+func (s *authService) UpdateProfile(ctx context.Context, adminID uint32, req *dto.UpdateProfileRequest) (*dto.Profile, error) {
 	admin, group, err := s.EnsureSuperAdmin(ctx, adminID)
 	if err != nil {
 		return nil, err
@@ -148,7 +148,7 @@ func (s *authService) UpdateProfile(ctx context.Context, adminID int64, req *dto
 		return nil, errcode.WithMessage(errcode.ParamError, "头像URL长度不能超过500")
 	}
 	if err := s.adminRepo.UpdateProfile(ctx, adminID, nickname, email, avatar); err != nil {
-		s.log.Error("auth: update admin profile failed", zap.Int64("admin_id", adminID), zap.Error(err))
+		s.log.Error("auth: update admin profile failed", zap.Uint32("admin_id", adminID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	admin.Nickname = nickname
@@ -157,7 +157,7 @@ func (s *authService) UpdateProfile(ctx context.Context, adminID int64, req *dto
 	return toAdminProfile(admin, group.Name), nil
 }
 
-func (s *authService) ChangePassword(ctx context.Context, adminID int64, req *dto.ChangePasswordRequest) error {
+func (s *authService) ChangePassword(ctx context.Context, adminID uint32, req *dto.ChangePasswordRequest) error {
 	admin, _, err := s.EnsureSuperAdmin(ctx, adminID)
 	if err != nil {
 		return err
@@ -170,23 +170,23 @@ func (s *authService) ChangePassword(ctx context.Context, adminID int64, req *dt
 	}
 	hash, err := crypto.HashPassword(req.NewPassword)
 	if err != nil {
-		s.log.Error("auth: hash new password failed", zap.Int64("admin_id", adminID), zap.Error(err))
+		s.log.Error("auth: hash new password failed", zap.Uint32("admin_id", adminID), zap.Error(err))
 		return errcode.Wrap(errcode.InternalError, err)
 	}
 	if err := s.adminRepo.UpdatePassword(ctx, adminID, hash); err != nil {
-		s.log.Error("auth: update admin password failed", zap.Int64("admin_id", adminID), zap.Error(err))
+		s.log.Error("auth: update admin password failed", zap.Uint32("admin_id", adminID), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return nil
 }
 
-func (s *authService) EnsureSuperAdmin(ctx context.Context, adminID int64) (*model.Admins, *model.UserGroups, error) {
-	if adminID <= 0 {
+func (s *authService) EnsureSuperAdmin(ctx context.Context, adminID uint32) (*model.Admins, *model.UserGroups, error) {
+	if adminID == 0 {
 		return nil, nil, errcode.AuthFailed
 	}
 	admin, err := s.adminRepo.GetByID(ctx, adminID)
 	if err != nil {
-		s.log.Error("auth: get admin by id failed", zap.Int64("admin_id", adminID), zap.Error(err))
+		s.log.Error("auth: get admin by id failed", zap.Uint32("admin_id", adminID), zap.Error(err))
 		return nil, nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if admin == nil {
@@ -195,9 +195,9 @@ func (s *authService) EnsureSuperAdmin(ctx context.Context, adminID int64) (*mod
 	if admin.Status != constant.StatusEnabled {
 		return nil, nil, errcode.AdminDisabled
 	}
-	group, err := s.adminRepo.GetGroupByID(ctx, int64(admin.GroupID))
+	group, err := s.adminRepo.GetGroupByID(ctx, admin.GroupID)
 	if err != nil {
-		s.log.Error("auth: get group by id for super admin check failed", zap.Int64("admin_id", adminID), zap.Uint64("group_id", admin.GroupID), zap.Error(err))
+		s.log.Error("auth: get group by id for super admin check failed", zap.Uint32("admin_id", adminID), zap.Uint32("group_id", admin.GroupID), zap.Error(err))
 		return nil, nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if group == nil || group.Name != constant.RoleSuperAdmin {

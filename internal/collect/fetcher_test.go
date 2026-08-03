@@ -56,7 +56,7 @@ func TestAppleCMSFetchDetailUsesDetailMode(t *testing.T) {
 		Type:       constant.CollectTypeAppleCMS,
 		CollectURL: srv.URL + "/api.php/provide/vod/",
 	}
-	_, err := c.FetchDetail(t.Context(), source, []int64{101, 202, 303})
+	_, err := c.FetchDetail(t.Context(), source, []uint32{101, 202, 303})
 	require.NoError(t, err)
 	require.Equal(t, "detail", gotAC)
 	require.Equal(t, "101,202,303", gotIDs)

@@ -161,7 +161,7 @@ func TestJWTMiddleware_ContextClaims(t *testing.T) {
 	r := gin.New()
 	r.Use(JWTAuth(mgr))
 
-	var capturedUserID int64
+	var capturedUserID uint32
 	r.GET("/check", func(c *gin.Context) {
 		claims := GetClaims(c)
 		require.NotNil(t, claims)
@@ -175,7 +175,7 @@ func TestJWTMiddleware_ContextClaims(t *testing.T) {
 	r.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
-	assert.Equal(t, int64(123), capturedUserID)
+	assert.Equal(t, uint32(123), capturedUserID)
 }
 
 func TestRequireAuth_NoClaims(t *testing.T) {

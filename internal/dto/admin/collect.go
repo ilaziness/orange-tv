@@ -15,7 +15,7 @@ type CreateCollectSourceRequest struct {
 	CollectURL   string `json:"collect_url" validate:"required,min=1,max=500"`
 	APIKey       string `json:"api_key" validate:"omitempty,max=255"`
 	CronExpr     string `json:"cron_expr" validate:"omitempty,max=100"`
-	PlaySourceID uint64 `json:"play_source_id" validate:"required,gt=0"`
+	PlaySourceID uint32 `json:"play_source_id" validate:"required,gt=0"`
 	DataRange    string `json:"data_range" validate:"omitempty,max=20"`
 }
 
@@ -26,19 +26,19 @@ type UpdateCollectSourceRequest struct {
 	CollectURL   *string `json:"collect_url" validate:"omitempty,min=1,max=500"`
 	APIKey       *string `json:"api_key" validate:"omitempty,max=255"`
 	CronExpr     *string `json:"cron_expr" validate:"omitempty,max=100"`
-	PlaySourceID *uint64 `json:"play_source_id" validate:"omitempty,gt=0"`
+	PlaySourceID *uint32 `json:"play_source_id" validate:"omitempty,gt=0"`
 	DataRange    *string `json:"data_range" validate:"omitempty,max=20"`
 }
 
 // CollectSourceItem is an admin collect source payload.
 // API key is never returned in list/detail responses.
 type CollectSourceItem struct {
-	ID              uint64 `json:"id"`
+	ID              uint32 `json:"id"`
 	Name            string `json:"name"`
 	Type            uint8  `json:"type"`
 	CollectURL      string `json:"collect_url"`
 	CronExpr        string `json:"cron_expr"`
-	PlaySourceID    uint64 `json:"play_source_id"`
+	PlaySourceID    uint32 `json:"play_source_id"`
 	PlaySourceName  string `json:"play_source_name,omitempty"`
 	LastCollectAt   string `json:"last_collect_at,omitempty"`
 	Status          uint8  `json:"status"`
@@ -54,28 +54,28 @@ type SetCollectCategoriesRequest struct {
 
 // CollectCategoryInput is one external→internal mapping by integer IDs.
 type CollectCategoryInput struct {
-	ExternalCategoryID uint64 `json:"external_category_id" validate:"required,gt=0"`
-	CategoryID         uint64 `json:"category_id" validate:"required,gt=0"`
+	ExternalCategoryID uint32 `json:"external_category_id" validate:"required,gt=0"`
+	CategoryID         uint32 `json:"category_id" validate:"required,gt=0"`
 }
 
 // CollectCategoryMapItem is an external→internal category mapping.
 type CollectCategoryMapItem struct {
-	ID                 uint64 `json:"id"`
-	SourceID           uint64 `json:"source_id"`
-	ExternalCategoryID uint64 `json:"external_category_id"`
-	CategoryID         uint64 `json:"category_id"`
+	ID                 uint32 `json:"id"`
+	SourceID           uint32 `json:"source_id"`
+	ExternalCategoryID uint32 `json:"external_category_id"`
+	CategoryID         uint32 `json:"category_id"`
 }
 
 // CollectLogListRequest filters collect logs.
 type CollectLogListRequest struct {
 	dto.PaginationRequest
-	SourceID uint64 `form:"source_id"`
+	SourceID uint32 `form:"source_id"`
 }
 
 // CollectLogItem is one collect run log entry.
 type CollectLogItem struct {
-	ID           uint64 `json:"id"`
-	SourceID     uint64 `json:"source_id"`
+	ID           uint32 `json:"id"`
+	SourceID     uint32 `json:"source_id"`
 	SourceName   string `json:"source_name,omitempty"`
 	Status       uint8  `json:"status"`
 	CollectCount uint32 `json:"collect_count"`
@@ -90,9 +90,9 @@ type CollectNowRequest struct {
 
 // RemoteCategoryItem is one external category from a collect source.
 type RemoteCategoryItem struct {
-	TypeID   int64  `json:"type_id"`
+	TypeID   uint32 `json:"type_id"`
 	TypeName string `json:"type_name"`
-	TypePID  int64  `json:"type_pid"`
+	TypePID  uint32 `json:"type_pid"`
 }
 
 // RemoteCategoryResponse is the response for fetching remote categories.

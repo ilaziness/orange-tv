@@ -5,8 +5,16 @@ import (
 	"time"
 )
 
-// FormatTimeStr safely formats a *time.Time as DateTime string, returning "" for nil/zero.
-func FormatTimeStr(t *time.Time) string {
+// FormatTimeStr safely formats a time.Time as DateTime string, returning "" for zero.
+func FormatTimeStr(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+	return t.Format(time.DateTime)
+}
+
+// FormatTimePtrStr safely formats a *time.Time as DateTime string, returning "" for nil/zero.
+func FormatTimePtrStr(t *time.Time) string {
 	if t == nil || t.IsZero() {
 		return ""
 	}

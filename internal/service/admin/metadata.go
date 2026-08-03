@@ -15,18 +15,18 @@ import (
 type MetadataService interface {
 	ListDirectors(ctx context.Context, req *dto.NameSearchRequest) ([]dto.NamedResponse, int, error)
 	CreateDirector(ctx context.Context, req *dto.CreateNamedRequest) (*dto.NamedResponse, error)
-	UpdateDirector(ctx context.Context, id int64, req *dto.UpdateNamedRequest) (*dto.NamedResponse, error)
-	DeleteDirector(ctx context.Context, id int64) error
+	UpdateDirector(ctx context.Context, id uint32, req *dto.UpdateNamedRequest) (*dto.NamedResponse, error)
+	DeleteDirector(ctx context.Context, id uint32) error
 
 	ListActors(ctx context.Context, req *dto.NameSearchRequest) ([]dto.NamedResponse, int, error)
 	CreateActor(ctx context.Context, req *dto.CreateNamedRequest) (*dto.NamedResponse, error)
-	UpdateActor(ctx context.Context, id int64, req *dto.UpdateNamedRequest) (*dto.NamedResponse, error)
-	DeleteActor(ctx context.Context, id int64) error
+	UpdateActor(ctx context.Context, id uint32, req *dto.UpdateNamedRequest) (*dto.NamedResponse, error)
+	DeleteActor(ctx context.Context, id uint32) error
 
 	ListTags(ctx context.Context, req *dto.NameSearchRequest) ([]dto.NamedResponse, int, error)
 	CreateTag(ctx context.Context, req *dto.CreateNamedRequest) (*dto.NamedResponse, error)
-	UpdateTag(ctx context.Context, id int64, req *dto.UpdateNamedRequest) (*dto.NamedResponse, error)
-	DeleteTag(ctx context.Context, id int64) error
+	UpdateTag(ctx context.Context, id uint32, req *dto.UpdateNamedRequest) (*dto.NamedResponse, error)
+	DeleteTag(ctx context.Context, id uint32) error
 }
 
 type metadataService struct {
@@ -72,10 +72,10 @@ func (s *metadataService) CreateDirector(ctx context.Context, req *dto.CreateNam
 	return &dto.NamedResponse{ID: m.ID, Name: m.Name}, nil
 }
 
-func (s *metadataService) UpdateDirector(ctx context.Context, id int64, req *dto.UpdateNamedRequest) (*dto.NamedResponse, error) {
+func (s *metadataService) UpdateDirector(ctx context.Context, id uint32, req *dto.UpdateNamedRequest) (*dto.NamedResponse, error) {
 	m, err := s.repo.GetDirector(ctx, id)
 	if err != nil {
-		s.log.Error("metadata: get director failed", zap.Int64("director_id", id), zap.Error(err))
+		s.log.Error("metadata: get director failed", zap.Uint32("director_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if m == nil {
@@ -87,7 +87,7 @@ func (s *metadataService) UpdateDirector(ctx context.Context, id int64, req *dto
 	}
 	exists, err := s.repo.ExistsDirectorName(ctx, name, id)
 	if err != nil {
-		s.log.Error("metadata: check director name exists for update failed", zap.Int64("director_id", id), zap.String("name", name), zap.Error(err))
+		s.log.Error("metadata: check director name exists for update failed", zap.Uint32("director_id", id), zap.String("name", name), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if exists {
@@ -95,16 +95,16 @@ func (s *metadataService) UpdateDirector(ctx context.Context, id int64, req *dto
 	}
 	m.Name = name
 	if err := s.repo.UpdateDirector(ctx, m); err != nil {
-		s.log.Error("metadata: update director failed", zap.Int64("director_id", id), zap.Error(err))
+		s.log.Error("metadata: update director failed", zap.Uint32("director_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return &dto.NamedResponse{ID: m.ID, Name: m.Name}, nil
 }
 
-func (s *metadataService) DeleteDirector(ctx context.Context, id int64) error {
+func (s *metadataService) DeleteDirector(ctx context.Context, id uint32) error {
 	m, err := s.repo.GetDirector(ctx, id)
 	if err != nil {
-		s.log.Error("metadata: get director for delete failed", zap.Int64("director_id", id), zap.Error(err))
+		s.log.Error("metadata: get director for delete failed", zap.Uint32("director_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if m == nil {
@@ -112,14 +112,14 @@ func (s *metadataService) DeleteDirector(ctx context.Context, id int64) error {
 	}
 	n, err := s.repo.CountDirectorRefs(ctx, id)
 	if err != nil {
-		s.log.Error("metadata: count director refs failed", zap.Int64("director_id", id), zap.Error(err))
+		s.log.Error("metadata: count director refs failed", zap.Uint32("director_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if n > 0 {
 		return errcode.DirectorInUse
 	}
 	if err := s.repo.SoftDeleteDirector(ctx, id); err != nil {
-		s.log.Error("metadata: soft delete director failed", zap.Int64("director_id", id), zap.Error(err))
+		s.log.Error("metadata: soft delete director failed", zap.Uint32("director_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return nil
@@ -159,10 +159,10 @@ func (s *metadataService) CreateActor(ctx context.Context, req *dto.CreateNamedR
 	return &dto.NamedResponse{ID: m.ID, Name: m.Name}, nil
 }
 
-func (s *metadataService) UpdateActor(ctx context.Context, id int64, req *dto.UpdateNamedRequest) (*dto.NamedResponse, error) {
+func (s *metadataService) UpdateActor(ctx context.Context, id uint32, req *dto.UpdateNamedRequest) (*dto.NamedResponse, error) {
 	m, err := s.repo.GetActor(ctx, id)
 	if err != nil {
-		s.log.Error("metadata: get actor failed", zap.Int64("actor_id", id), zap.Error(err))
+		s.log.Error("metadata: get actor failed", zap.Uint32("actor_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if m == nil {
@@ -174,7 +174,7 @@ func (s *metadataService) UpdateActor(ctx context.Context, id int64, req *dto.Up
 	}
 	exists, err := s.repo.ExistsActorName(ctx, name, id)
 	if err != nil {
-		s.log.Error("metadata: check actor name exists for update failed", zap.Int64("actor_id", id), zap.String("name", name), zap.Error(err))
+		s.log.Error("metadata: check actor name exists for update failed", zap.Uint32("actor_id", id), zap.String("name", name), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if exists {
@@ -182,16 +182,16 @@ func (s *metadataService) UpdateActor(ctx context.Context, id int64, req *dto.Up
 	}
 	m.Name = name
 	if err := s.repo.UpdateActor(ctx, m); err != nil {
-		s.log.Error("metadata: update actor failed", zap.Int64("actor_id", id), zap.Error(err))
+		s.log.Error("metadata: update actor failed", zap.Uint32("actor_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return &dto.NamedResponse{ID: m.ID, Name: m.Name}, nil
 }
 
-func (s *metadataService) DeleteActor(ctx context.Context, id int64) error {
+func (s *metadataService) DeleteActor(ctx context.Context, id uint32) error {
 	m, err := s.repo.GetActor(ctx, id)
 	if err != nil {
-		s.log.Error("metadata: get actor for delete failed", zap.Int64("actor_id", id), zap.Error(err))
+		s.log.Error("metadata: get actor for delete failed", zap.Uint32("actor_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if m == nil {
@@ -199,14 +199,14 @@ func (s *metadataService) DeleteActor(ctx context.Context, id int64) error {
 	}
 	n, err := s.repo.CountActorRefs(ctx, id)
 	if err != nil {
-		s.log.Error("metadata: count actor refs failed", zap.Int64("actor_id", id), zap.Error(err))
+		s.log.Error("metadata: count actor refs failed", zap.Uint32("actor_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if n > 0 {
 		return errcode.ActorInUse
 	}
 	if err := s.repo.SoftDeleteActor(ctx, id); err != nil {
-		s.log.Error("metadata: soft delete actor failed", zap.Int64("actor_id", id), zap.Error(err))
+		s.log.Error("metadata: soft delete actor failed", zap.Uint32("actor_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return nil
@@ -246,10 +246,10 @@ func (s *metadataService) CreateTag(ctx context.Context, req *dto.CreateNamedReq
 	return &dto.NamedResponse{ID: m.ID, Name: m.Name}, nil
 }
 
-func (s *metadataService) UpdateTag(ctx context.Context, id int64, req *dto.UpdateNamedRequest) (*dto.NamedResponse, error) {
+func (s *metadataService) UpdateTag(ctx context.Context, id uint32, req *dto.UpdateNamedRequest) (*dto.NamedResponse, error) {
 	m, err := s.repo.GetTag(ctx, id)
 	if err != nil {
-		s.log.Error("metadata: get tag failed", zap.Int64("tag_id", id), zap.Error(err))
+		s.log.Error("metadata: get tag failed", zap.Uint32("tag_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if m == nil {
@@ -261,7 +261,7 @@ func (s *metadataService) UpdateTag(ctx context.Context, id int64, req *dto.Upda
 	}
 	exists, err := s.repo.ExistsTagName(ctx, name, id)
 	if err != nil {
-		s.log.Error("metadata: check tag name exists for update failed", zap.Int64("tag_id", id), zap.String("name", name), zap.Error(err))
+		s.log.Error("metadata: check tag name exists for update failed", zap.Uint32("tag_id", id), zap.String("name", name), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if exists {
@@ -269,16 +269,16 @@ func (s *metadataService) UpdateTag(ctx context.Context, id int64, req *dto.Upda
 	}
 	m.Name = name
 	if err := s.repo.UpdateTag(ctx, m); err != nil {
-		s.log.Error("metadata: update tag failed", zap.Int64("tag_id", id), zap.Error(err))
+		s.log.Error("metadata: update tag failed", zap.Uint32("tag_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return &dto.NamedResponse{ID: m.ID, Name: m.Name}, nil
 }
 
-func (s *metadataService) DeleteTag(ctx context.Context, id int64) error {
+func (s *metadataService) DeleteTag(ctx context.Context, id uint32) error {
 	m, err := s.repo.GetTag(ctx, id)
 	if err != nil {
-		s.log.Error("metadata: get tag for delete failed", zap.Int64("tag_id", id), zap.Error(err))
+		s.log.Error("metadata: get tag for delete failed", zap.Uint32("tag_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if m == nil {
@@ -286,14 +286,14 @@ func (s *metadataService) DeleteTag(ctx context.Context, id int64) error {
 	}
 	n, err := s.repo.CountTagRefs(ctx, id)
 	if err != nil {
-		s.log.Error("metadata: count tag refs failed", zap.Int64("tag_id", id), zap.Error(err))
+		s.log.Error("metadata: count tag refs failed", zap.Uint32("tag_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if n > 0 {
 		return errcode.TagInUse
 	}
 	if err := s.repo.SoftDeleteTag(ctx, id); err != nil {
-		s.log.Error("metadata: soft delete tag failed", zap.Int64("tag_id", id), zap.Error(err))
+		s.log.Error("metadata: soft delete tag failed", zap.Uint32("tag_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return nil

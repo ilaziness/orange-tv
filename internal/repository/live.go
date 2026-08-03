@@ -25,12 +25,12 @@ type LiveListFilter struct {
 type LiveRepository interface {
 	List(ctx context.Context, f LiveListFilter) ([]model.LiveChannels, int, error)
 	ListAll(ctx context.Context) ([]model.LiveChannels, error)
-	GetByID(ctx context.Context, id int64) (*model.LiveChannels, error)
+	GetByID(ctx context.Context, id uint32) (*model.LiveChannels, error)
 	Create(ctx context.Context, m *model.LiveChannels) error
 	BatchCreate(ctx context.Context, items []model.LiveChannels) error
 	Update(ctx context.Context, m *model.LiveChannels) error
-	Delete(ctx context.Context, id int64) error
-	DeleteByIDs(ctx context.Context, ids []int64) error
+	Delete(ctx context.Context, id uint32) error
+	DeleteByIDs(ctx context.Context, ids []uint32) error
 }
 
 type liveRepo struct {
@@ -71,7 +71,7 @@ func (r *liveRepo) List(ctx context.Context, f LiveListFilter) ([]model.LiveChan
 	return items, total, nil
 }
 
-func (r *liveRepo) GetByID(ctx context.Context, id int64) (*model.LiveChannels, error) {
+func (r *liveRepo) GetByID(ctx context.Context, id uint32) (*model.LiveChannels, error) {
 	item := new(model.LiveChannels)
 	err := r.db.NewSelect().Model(item).
 		Where("id = ?", id).
@@ -104,7 +104,7 @@ func (r *liveRepo) Update(ctx context.Context, m *model.LiveChannels) error {
 	return nil
 }
 
-func (r *liveRepo) Delete(ctx context.Context, id int64) error {
+func (r *liveRepo) Delete(ctx context.Context, id uint32) error {
 	_, err := r.db.NewDelete().Model((*model.LiveChannels)(nil)).
 		Where("id = ?", id).
 		Exec(ctx)
@@ -134,7 +134,7 @@ func (r *liveRepo) BatchCreate(ctx context.Context, items []model.LiveChannels) 
 	return nil
 }
 
-func (r *liveRepo) DeleteByIDs(ctx context.Context, ids []int64) error {
+func (r *liveRepo) DeleteByIDs(ctx context.Context, ids []uint32) error {
 	if len(ids) == 0 {
 		return nil
 	}

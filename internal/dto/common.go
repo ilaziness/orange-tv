@@ -56,11 +56,11 @@ func (p *PaginationRequest) GetTotalPages(total int) int {
 
 // IDURI is a common URI path parameter.
 type IDURI struct {
-	ID int64 `uri:"id" binding:"required,gt=0"`
+	ID uint32 `uri:"id" binding:"required,gt=0"`
 }
 
 // NamedItem is a simple id/name pair shared by content APIs.
 type NamedItem struct {
-	ID   uint64 `json:"id"`
+	ID   uint32 `json:"id"`
 	Name string `json:"name"`
 }

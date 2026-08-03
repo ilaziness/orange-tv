@@ -167,7 +167,7 @@ func (m *mockLiveService) List(ctx context.Context, req *clientdto.LiveListReque
 	return nil, 0, nil
 }
 
-func (m *mockLiveService) GetStreamURL(ctx context.Context, id int64) (string, error) {
+func (m *mockLiveService) GetStreamURL(ctx context.Context, id uint32) (string, error) {
 	return "", nil
 }
 

@@ -32,7 +32,7 @@ const (
 
 // Claims represents the custom JWT claims.
 type Claims struct {
-	UserID    int64     `json:"user_id"`
+	UserID    uint32    `json:"user_id"`
 	Subject   Subject   `json:"subject"`
 	TokenType TokenType `json:"token_type"`
 	jwt.RegisteredClaims
@@ -72,27 +72,27 @@ func NewJWTManager(secret string, accessTokenTTL, refreshTokenTTL int) *JWTManag
 }
 
 // GenerateAccessToken generates a new access token for the given user ID.
-func (m *JWTManager) GenerateAccessToken(userID int64) (string, error) {
+func (m *JWTManager) GenerateAccessToken(userID uint32) (string, error) {
 	return m.generateToken(userID, SubjectAdmin, TokenTypeAccess, m.accessTokenTTL)
 }
 
 // GenerateRefreshToken generates a new refresh token for the given user ID.
-func (m *JWTManager) GenerateRefreshToken(userID int64) (string, error) {
+func (m *JWTManager) GenerateRefreshToken(userID uint32) (string, error) {
 	return m.generateToken(userID, SubjectAdmin, TokenTypeRefresh, m.refreshTokenTTL)
 }
 
 // GenerateAccessTokenFor generates an access token for a specific subject (admin/user).
-func (m *JWTManager) GenerateAccessTokenFor(userID int64, sub Subject) (string, error) {
+func (m *JWTManager) GenerateAccessTokenFor(userID uint32, sub Subject) (string, error) {
 	return m.generateToken(userID, sub, TokenTypeAccess, m.accessTokenTTL)
 }
 
 // GenerateRefreshTokenFor generates a refresh token for a specific subject (admin/user).
-func (m *JWTManager) GenerateRefreshTokenFor(userID int64, sub Subject) (string, error) {
+func (m *JWTManager) GenerateRefreshTokenFor(userID uint32, sub Subject) (string, error) {
 	return m.generateToken(userID, sub, TokenTypeRefresh, m.refreshTokenTTL)
 }
 
 // generateToken creates a signed JWT token with the given parameters.
-func (m *JWTManager) generateToken(userID int64, sub Subject, tokenType TokenType, ttl time.Duration) (string, error) {
+func (m *JWTManager) generateToken(userID uint32, sub Subject, tokenType TokenType, ttl time.Duration) (string, error) {
 	now := time.Now()
 	claims := &Claims{
 		UserID:    userID,

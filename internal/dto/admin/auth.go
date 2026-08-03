@@ -16,7 +16,7 @@ type LoginResponse struct {
 
 // Profile is the authenticated admin public profile.
 type Profile struct {
-	ID       uint64 `json:"id"`
+	ID       uint32 `json:"id"`
 	Username string `json:"username"`
 	Nickname string `json:"nickname"`
 	Email    string `json:"email"`

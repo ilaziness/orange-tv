@@ -23,8 +23,8 @@ func TestParseDefaultList(t *testing.T) {
 	require.Equal(t, 1, lp.PageCount)
 	require.Equal(t, 2, lp.Total)
 	require.Len(t, lp.IDs, 2)
-	require.Equal(t, int64(101), lp.IDs[0])
-	require.Equal(t, int64(102), lp.IDs[1])
+	require.Equal(t, uint32(101), lp.IDs[0])
+	require.Equal(t, uint32(102), lp.IDs[1])
 	require.Len(t, lp.Times, 2)
 	require.Equal(t, "2025-08-01 10:00:00", lp.Times[0])
 }
@@ -68,7 +68,7 @@ func TestParseDefaultDetailTakesFirstSourceOnly(t *testing.T) {
 	it := page.Items[0]
 	require.Equal(t, "测试影片", it.Title)
 	require.Equal(t, "101", it.ExternalID)
-	require.Equal(t, int64(5), it.ExternalCategoryID)
+	require.Equal(t, uint32(5), it.ExternalCategoryID)
 	require.Equal(t, int32(2024), it.Year)
 	require.Equal(t, []string{"导演A"}, it.Directors)
 	require.Equal(t, []string{"演员1", "演员2"}, it.Actors)
@@ -118,10 +118,10 @@ func TestParseDefaultCategories(t *testing.T) {
 	cats, err := parseDefaultCategories(body)
 	require.NoError(t, err)
 	require.Len(t, cats, 2)
-	require.Equal(t, int64(1), cats[0].ID)
+	require.Equal(t, uint32(1), cats[0].ID)
 	require.Equal(t, "电影", cats[0].Name)
-	require.Equal(t, int64(6), cats[1].ID)
-	require.Equal(t, int64(1), cats[1].ParentID)
+	require.Equal(t, uint32(6), cats[1].ID)
+	require.Equal(t, uint32(1), cats[1].ParentID)
 }
 
 func TestParseDefaultCategoriesSkipsInvalidID(t *testing.T) {
@@ -129,7 +129,7 @@ func TestParseDefaultCategoriesSkipsInvalidID(t *testing.T) {
 	cats, err := parseDefaultCategories(body)
 	require.NoError(t, err)
 	require.Len(t, cats, 1)
-	require.Equal(t, int64(5), cats[0].ID)
+	require.Equal(t, uint32(5), cats[0].ID)
 }
 
 func TestDefaultEndpointURL(t *testing.T) {

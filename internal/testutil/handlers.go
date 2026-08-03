@@ -46,16 +46,16 @@ type authSvc struct{}
 func (s authSvc) Login(ctx context.Context, req *admindto.LoginRequest, meta *adminsvc.LoginMeta) (*admindto.LoginResponse, error) {
 	return &admindto.LoginResponse{}, nil
 }
-func (s authSvc) Profile(ctx context.Context, adminID int64) (*admindto.Profile, error) {
-	return &admindto.Profile{ID: uint64(adminID)}, nil
+func (s authSvc) Profile(ctx context.Context, adminID uint32) (*admindto.Profile, error) {
+	return &admindto.Profile{ID: adminID}, nil
 }
-func (s authSvc) EnsureSuperAdmin(ctx context.Context, adminID int64) (*model.Admins, *model.UserGroups, error) {
-	return &model.Admins{ID: uint64(adminID)}, &model.UserGroups{Name: "super_admin"}, nil
+func (s authSvc) EnsureSuperAdmin(ctx context.Context, adminID uint32) (*model.Admins, *model.UserGroups, error) {
+	return &model.Admins{ID: adminID}, &model.UserGroups{Name: "super_admin"}, nil
 }
-func (s authSvc) UpdateProfile(ctx context.Context, adminID int64, req *admindto.UpdateProfileRequest) (*admindto.Profile, error) {
-	return &admindto.Profile{ID: uint64(adminID)}, nil
+func (s authSvc) UpdateProfile(ctx context.Context, adminID uint32, req *admindto.UpdateProfileRequest) (*admindto.Profile, error) {
+	return &admindto.Profile{ID: adminID}, nil
 }
-func (s authSvc) ChangePassword(ctx context.Context, adminID int64, req *admindto.ChangePasswordRequest) error {
+func (s authSvc) ChangePassword(ctx context.Context, adminID uint32, req *admindto.ChangePasswordRequest) error {
 	return nil
 }
 
@@ -67,26 +67,26 @@ func (s adminCategorySvc) ListTree(ctx context.Context, onlyEnabled bool) ([]adm
 func (s adminCategorySvc) Create(ctx context.Context, req *admindto.CreateCategoryRequest) (*admindto.CategoryResponse, error) {
 	return &admindto.CategoryResponse{}, nil
 }
-func (s adminCategorySvc) Update(ctx context.Context, id int64, req *admindto.UpdateCategoryRequest) (*admindto.CategoryResponse, error) {
-	return &admindto.CategoryResponse{ID: uint64(id)}, nil
+func (s adminCategorySvc) Update(ctx context.Context, id uint32, req *admindto.UpdateCategoryRequest) (*admindto.CategoryResponse, error) {
+	return &admindto.CategoryResponse{ID: id}, nil
 }
-func (s adminCategorySvc) Delete(ctx context.Context, id int64) error { return nil }
+func (s adminCategorySvc) Delete(ctx context.Context, id uint32) error { return nil }
 
 type adminVideoSvc struct{}
 
 func (s adminVideoSvc) List(ctx context.Context, req *admindto.VideoListRequest) ([]admindto.VideoListItem, int, error) {
 	return []admindto.VideoListItem{}, 0, nil
 }
-func (s adminVideoSvc) Get(ctx context.Context, id int64) (*admindto.VideoDetailResponse, error) {
-	return &admindto.VideoDetailResponse{ID: uint64(id)}, nil
+func (s adminVideoSvc) Get(ctx context.Context, id uint32) (*admindto.VideoDetailResponse, error) {
+	return &admindto.VideoDetailResponse{ID: id}, nil
 }
 func (s adminVideoSvc) Create(ctx context.Context, req *admindto.CreateVideoRequest) (*admindto.VideoDetailResponse, error) {
 	return &admindto.VideoDetailResponse{}, nil
 }
-func (s adminVideoSvc) Update(ctx context.Context, id int64, req *admindto.UpdateVideoRequest) (*admindto.VideoDetailResponse, error) {
-	return &admindto.VideoDetailResponse{ID: uint64(id)}, nil
+func (s adminVideoSvc) Update(ctx context.Context, id uint32, req *admindto.UpdateVideoRequest) (*admindto.VideoDetailResponse, error) {
+	return &admindto.VideoDetailResponse{ID: id}, nil
 }
-func (s adminVideoSvc) Delete(ctx context.Context, id int64) error { return nil }
+func (s adminVideoSvc) Delete(ctx context.Context, id uint32) error { return nil }
 
 type adminMetadataSvc struct{}
 
@@ -96,30 +96,30 @@ func (s adminMetadataSvc) ListDirectors(ctx context.Context, req *admindto.NameS
 func (s adminMetadataSvc) CreateDirector(ctx context.Context, req *admindto.CreateNamedRequest) (*admindto.NamedResponse, error) {
 	return &admindto.NamedResponse{}, nil
 }
-func (s adminMetadataSvc) UpdateDirector(ctx context.Context, id int64, req *admindto.UpdateNamedRequest) (*admindto.NamedResponse, error) {
-	return &admindto.NamedResponse{ID: uint64(id)}, nil
+func (s adminMetadataSvc) UpdateDirector(ctx context.Context, id uint32, req *admindto.UpdateNamedRequest) (*admindto.NamedResponse, error) {
+	return &admindto.NamedResponse{ID: id}, nil
 }
-func (s adminMetadataSvc) DeleteDirector(ctx context.Context, id int64) error { return nil }
+func (s adminMetadataSvc) DeleteDirector(ctx context.Context, id uint32) error { return nil }
 func (s adminMetadataSvc) ListActors(ctx context.Context, req *admindto.NameSearchRequest) ([]admindto.NamedResponse, int, error) {
 	return nil, 0, nil
 }
 func (s adminMetadataSvc) CreateActor(ctx context.Context, req *admindto.CreateNamedRequest) (*admindto.NamedResponse, error) {
 	return &admindto.NamedResponse{}, nil
 }
-func (s adminMetadataSvc) UpdateActor(ctx context.Context, id int64, req *admindto.UpdateNamedRequest) (*admindto.NamedResponse, error) {
-	return &admindto.NamedResponse{ID: uint64(id)}, nil
+func (s adminMetadataSvc) UpdateActor(ctx context.Context, id uint32, req *admindto.UpdateNamedRequest) (*admindto.NamedResponse, error) {
+	return &admindto.NamedResponse{ID: id}, nil
 }
-func (s adminMetadataSvc) DeleteActor(ctx context.Context, id int64) error { return nil }
+func (s adminMetadataSvc) DeleteActor(ctx context.Context, id uint32) error { return nil }
 func (s adminMetadataSvc) ListTags(ctx context.Context, req *admindto.NameSearchRequest) ([]admindto.NamedResponse, int, error) {
 	return nil, 0, nil
 }
 func (s adminMetadataSvc) CreateTag(ctx context.Context, req *admindto.CreateNamedRequest) (*admindto.NamedResponse, error) {
 	return &admindto.NamedResponse{}, nil
 }
-func (s adminMetadataSvc) UpdateTag(ctx context.Context, id int64, req *admindto.UpdateNamedRequest) (*admindto.NamedResponse, error) {
-	return &admindto.NamedResponse{ID: uint64(id)}, nil
+func (s adminMetadataSvc) UpdateTag(ctx context.Context, id uint32, req *admindto.UpdateNamedRequest) (*admindto.NamedResponse, error) {
+	return &admindto.NamedResponse{ID: id}, nil
 }
-func (s adminMetadataSvc) DeleteTag(ctx context.Context, id int64) error { return nil }
+func (s adminMetadataSvc) DeleteTag(ctx context.Context, id uint32) error { return nil }
 
 type adminPlaySvc struct{}
 
@@ -129,20 +129,20 @@ func (s adminPlaySvc) ListSources(ctx context.Context) ([]admindto.PlaySourceRes
 func (s adminPlaySvc) CreateSource(ctx context.Context, req *admindto.CreatePlaySourceRequest) (*admindto.PlaySourceResponse, error) {
 	return &admindto.PlaySourceResponse{}, nil
 }
-func (s adminPlaySvc) UpdateSource(ctx context.Context, id int64, req *admindto.UpdatePlaySourceRequest) (*admindto.PlaySourceResponse, error) {
-	return &admindto.PlaySourceResponse{ID: uint64(id)}, nil
+func (s adminPlaySvc) UpdateSource(ctx context.Context, id uint32, req *admindto.UpdatePlaySourceRequest) (*admindto.PlaySourceResponse, error) {
+	return &admindto.PlaySourceResponse{ID: id}, nil
 }
-func (s adminPlaySvc) DeleteSource(ctx context.Context, id int64) error { return nil }
+func (s adminPlaySvc) DeleteSource(ctx context.Context, id uint32) error { return nil }
 func (s adminPlaySvc) ListEpisodes(ctx context.Context, req *admindto.PlayEpisodeListRequest) ([]admindto.PlayEpisodeResponse, int, error) {
 	return nil, 0, nil
 }
 func (s adminPlaySvc) CreateEpisode(ctx context.Context, req *admindto.CreatePlayEpisodeRequest) (*admindto.PlayEpisodeResponse, error) {
 	return &admindto.PlayEpisodeResponse{}, nil
 }
-func (s adminPlaySvc) UpdateEpisode(ctx context.Context, id int64, req *admindto.UpdatePlayEpisodeRequest) (*admindto.PlayEpisodeResponse, error) {
-	return &admindto.PlayEpisodeResponse{ID: uint64(id)}, nil
+func (s adminPlaySvc) UpdateEpisode(ctx context.Context, id uint32, req *admindto.UpdatePlayEpisodeRequest) (*admindto.PlayEpisodeResponse, error) {
+	return &admindto.PlayEpisodeResponse{ID: id}, nil
 }
-func (s adminPlaySvc) DeleteEpisode(ctx context.Context, id int64) error { return nil }
+func (s adminPlaySvc) DeleteEpisode(ctx context.Context, id uint32) error { return nil }
 func (s adminPlaySvc) BatchUpdateEpisodeStatus(ctx context.Context, req *admindto.BatchUpdateEpisodeStatusRequest) (*admindto.BatchUpdateEpisodeStatusResponse, error) {
 	return &admindto.BatchUpdateEpisodeStatusResponse{}, nil
 }
@@ -155,10 +155,10 @@ func (s adminLiveSvc) List(ctx context.Context, req *admindto.LiveListRequest) (
 func (s adminLiveSvc) Create(ctx context.Context, req *admindto.CreateLiveRequest) (*admindto.LiveChannelItem, error) {
 	return &admindto.LiveChannelItem{}, nil
 }
-func (s adminLiveSvc) Update(ctx context.Context, id int64, req *admindto.UpdateLiveRequest) (*admindto.LiveChannelItem, error) {
-	return &admindto.LiveChannelItem{ID: uint64(id)}, nil
+func (s adminLiveSvc) Update(ctx context.Context, id uint32, req *admindto.UpdateLiveRequest) (*admindto.LiveChannelItem, error) {
+	return &admindto.LiveChannelItem{ID: id}, nil
 }
-func (s adminLiveSvc) Delete(ctx context.Context, id int64) error { return nil }
+func (s adminLiveSvc) Delete(ctx context.Context, id uint32) error { return nil }
 func (s adminLiveSvc) SyncFromSource(ctx context.Context) (*admindto.LiveSyncResult, error) {
 	return &admindto.LiveSyncResult{}, nil
 }
@@ -168,11 +168,11 @@ type adminCommentSvc struct{}
 func (s adminCommentSvc) List(ctx context.Context, req *admindto.CommentListRequest) ([]admindto.CommentListItem, int, error) {
 	return nil, 0, nil
 }
-func (s adminCommentSvc) UpdateStatus(ctx context.Context, id int64, req *admindto.UpdateCommentStatusRequest) error {
+func (s adminCommentSvc) UpdateStatus(ctx context.Context, id uint32, req *admindto.UpdateCommentStatusRequest) error {
 	return nil
 }
-func (s adminCommentSvc) Delete(ctx context.Context, id int64) error { return nil }
-func (s adminCommentSvc) GetParents(ctx context.Context, id int64) ([]admindto.CommentParentItem, error) {
+func (s adminCommentSvc) Delete(ctx context.Context, id uint32) error { return nil }
+func (s adminCommentSvc) GetParents(ctx context.Context, id uint32) ([]admindto.CommentParentItem, error) {
 	return nil, nil
 }
 
@@ -184,25 +184,25 @@ func (s adminCollectSvc) ListSources(ctx context.Context, req *admindto.CollectS
 func (s adminCollectSvc) CreateSource(ctx context.Context, req *admindto.CreateCollectSourceRequest) (*admindto.CollectSourceItem, error) {
 	return &admindto.CollectSourceItem{}, nil
 }
-func (s adminCollectSvc) UpdateSource(ctx context.Context, id int64, req *admindto.UpdateCollectSourceRequest) (*admindto.CollectSourceItem, error) {
-	return &admindto.CollectSourceItem{ID: uint64(id)}, nil
+func (s adminCollectSvc) UpdateSource(ctx context.Context, id uint32, req *admindto.UpdateCollectSourceRequest) (*admindto.CollectSourceItem, error) {
+	return &admindto.CollectSourceItem{ID: id}, nil
 }
-func (s adminCollectSvc) DeleteSource(ctx context.Context, id int64) error { return nil }
-func (s adminCollectSvc) ListCategories(ctx context.Context, sourceID int64) ([]admindto.CollectCategoryMapItem, error) {
+func (s adminCollectSvc) DeleteSource(ctx context.Context, id uint32) error { return nil }
+func (s adminCollectSvc) ListCategories(ctx context.Context, sourceID uint32) ([]admindto.CollectCategoryMapItem, error) {
 	return nil, nil
 }
-func (s adminCollectSvc) SetCategories(ctx context.Context, sourceID int64, req *admindto.SetCollectCategoriesRequest) ([]admindto.CollectCategoryMapItem, error) {
+func (s adminCollectSvc) SetCategories(ctx context.Context, sourceID uint32, req *admindto.SetCollectCategoriesRequest) ([]admindto.CollectCategoryMapItem, error) {
 	return nil, nil
 }
 func (s adminCollectSvc) ListLogs(ctx context.Context, req *admindto.CollectLogListRequest) ([]admindto.CollectLogItem, int, error) {
 	return nil, 0, nil
 }
-func (s adminCollectSvc) FetchRemoteCategories(ctx context.Context, sourceID int64) (*admindto.RemoteCategoryResponse, error) {
+func (s adminCollectSvc) FetchRemoteCategories(ctx context.Context, sourceID uint32) (*admindto.RemoteCategoryResponse, error) {
 	return &admindto.RemoteCategoryResponse{}, nil
 }
-func (s adminCollectSvc) EnableSchedule(ctx context.Context, sourceID int64) error  { return nil }
-func (s adminCollectSvc) DisableSchedule(ctx context.Context, sourceID int64) error { return nil }
-func (s adminCollectSvc) CollectNow(ctx context.Context, sourceID int64, req *admindto.CollectNowRequest) error {
+func (s adminCollectSvc) EnableSchedule(ctx context.Context, sourceID uint32) error  { return nil }
+func (s adminCollectSvc) DisableSchedule(ctx context.Context, sourceID uint32) error { return nil }
+func (s adminCollectSvc) CollectNow(ctx context.Context, sourceID uint32, req *admindto.CollectNowRequest) error {
 	return nil
 }
 func (s adminCollectSvc) ReloadScheduler(ctx context.Context) error { return nil }
@@ -244,13 +244,13 @@ func (s clientVideoSvc) List(ctx context.Context, req *clientdto.VideoListReques
 func (s clientVideoSvc) Search(ctx context.Context, req *clientdto.SearchRequest) ([]clientdto.VideoListItem, int, error) {
 	return nil, 0, nil
 }
-func (s clientVideoSvc) Get(ctx context.Context, id int64) (*clientdto.VideoDetailResponse, error) {
-	return &clientdto.VideoDetailResponse{ID: uint64(id)}, nil
+func (s clientVideoSvc) Get(ctx context.Context, id uint32) (*clientdto.VideoDetailResponse, error) {
+	return &clientdto.VideoDetailResponse{ID: id}, nil
 }
-func (s clientVideoSvc) Related(ctx context.Context, id int64, limit int) ([]clientdto.VideoListItem, error) {
+func (s clientVideoSvc) Related(ctx context.Context, id uint32, limit int) ([]clientdto.VideoListItem, error) {
 	return nil, nil
 }
-func (s clientVideoSvc) GetEpisode(ctx context.Context, videoID, episodeID int64) (*clientdto.PlayEpisodeResponse, error) {
+func (s clientVideoSvc) GetEpisode(ctx context.Context, videoID, episodeID uint32) (*clientdto.PlayEpisodeResponse, error) {
 	return &clientdto.PlayEpisodeResponse{}, nil
 }
 
@@ -260,7 +260,7 @@ func (s clientLiveSvc) List(ctx context.Context, req *clientdto.LiveListRequest)
 	return nil, 0, nil
 }
 
-func (s clientLiveSvc) GetStreamURL(ctx context.Context, id int64) (string, error) {
+func (s clientLiveSvc) GetStreamURL(ctx context.Context, id uint32) (string, error) {
 	return "", nil
 }
 
@@ -270,7 +270,7 @@ func (s clientLiveSvc) AllowedStreamDomains(ctx context.Context) (map[string]str
 
 type clientLiveProxySvc struct{}
 
-func (s clientLiveProxySvc) Proxy(c *gin.Context, channelID int64, segURL string) error { return nil }
+func (s clientLiveProxySvc) Proxy(c *gin.Context, channelID uint32, segURL string) error { return nil }
 
 type clientSettingsSvc struct{}
 
@@ -286,7 +286,7 @@ func (s openResourceSvc) Enabled(ctx context.Context) bool {
 func (s openResourceSvc) ListVideos(ctx context.Context, page, pageSize int, dataRange, sourceName string) ([]opendto.VideoListItem, int, error) {
 	return nil, 0, nil
 }
-func (s openResourceSvc) GetVideo(ctx context.Context, ids []int64) ([]opendto.VideoDetailItem, error) {
+func (s openResourceSvc) GetVideo(ctx context.Context, ids []uint32) ([]opendto.VideoDetailItem, error) {
 	return nil, nil
 }
 func (s openResourceSvc) ListCategories(ctx context.Context) ([]opendto.CategoryItem, error) {
@@ -301,7 +301,7 @@ func (s adminDataSvc) Backup(ctx context.Context, w io.Writer, useNative bool) e
 func (s adminDataSvc) BatchUpdatePreview(ctx context.Context, req *admindto.BatchUpdatePreviewRequest) (int64, error) {
 	return 0, nil
 }
-func (s adminDataSvc) BatchUpdateExecute(ctx context.Context, req *admindto.BatchUpdateExecuteRequest, adminID int64, ip string) (int64, error) {
+func (s adminDataSvc) BatchUpdateExecute(ctx context.Context, req *admindto.BatchUpdateExecuteRequest, adminID uint32, ip string) (int64, error) {
 	return 0, nil
 }
 
@@ -322,36 +322,36 @@ func (s adminMgmtSvc) ListAdmins(ctx context.Context, req *admindto.AdminListReq
 func (s adminMgmtSvc) CreateAdmin(ctx context.Context, req *admindto.CreateAdminRequest) (*admindto.AdminItem, error) {
 	return &admindto.AdminItem{}, nil
 }
-func (s adminMgmtSvc) UpdateAdmin(ctx context.Context, id int64, req *admindto.UpdateAdminRequest) (*admindto.AdminItem, error) {
-	return &admindto.AdminItem{ID: uint64(id)}, nil
+func (s adminMgmtSvc) UpdateAdmin(ctx context.Context, id uint32, req *admindto.UpdateAdminRequest) (*admindto.AdminItem, error) {
+	return &admindto.AdminItem{ID: id}, nil
 }
-func (s adminMgmtSvc) ResetAdminPassword(ctx context.Context, id int64, req *admindto.ResetAdminPasswordRequest) error {
+func (s adminMgmtSvc) ResetAdminPassword(ctx context.Context, id uint32, req *admindto.ResetAdminPasswordRequest) error {
 	return nil
 }
-func (s adminMgmtSvc) DeleteAdmin(ctx context.Context, id int64) error { return nil }
+func (s adminMgmtSvc) DeleteAdmin(ctx context.Context, id uint32) error { return nil }
 func (s adminMgmtSvc) ListGroups(ctx context.Context, req *admindto.UserGroupListRequest) ([]admindto.UserGroupItem, int, error) {
 	return nil, 0, nil
 }
 func (s adminMgmtSvc) CreateGroup(ctx context.Context, req *admindto.CreateUserGroupRequest) (*admindto.UserGroupItem, error) {
 	return &admindto.UserGroupItem{}, nil
 }
-func (s adminMgmtSvc) UpdateGroup(ctx context.Context, id int64, req *admindto.UpdateUserGroupRequest) (*admindto.UserGroupItem, error) {
-	return &admindto.UserGroupItem{ID: uint64(id)}, nil
+func (s adminMgmtSvc) UpdateGroup(ctx context.Context, id uint32, req *admindto.UpdateUserGroupRequest) (*admindto.UserGroupItem, error) {
+	return &admindto.UserGroupItem{ID: id}, nil
 }
-func (s adminMgmtSvc) DeleteGroup(ctx context.Context, id int64) error { return nil }
+func (s adminMgmtSvc) DeleteGroup(ctx context.Context, id uint32) error { return nil }
 func (s adminMgmtSvc) ListUsers(ctx context.Context, req *admindto.UserListRequest) ([]admindto.UserItem, int, error) {
 	return nil, 0, nil
 }
 func (s adminMgmtSvc) CreateUser(ctx context.Context, req *admindto.CreateUserRequest) (*admindto.UserItem, error) {
 	return &admindto.UserItem{}, nil
 }
-func (s adminMgmtSvc) UpdateUser(ctx context.Context, id int64, req *admindto.UpdateUserRequest) (*admindto.UserItem, error) {
-	return &admindto.UserItem{ID: uint64(id)}, nil
+func (s adminMgmtSvc) UpdateUser(ctx context.Context, id uint32, req *admindto.UpdateUserRequest) (*admindto.UserItem, error) {
+	return &admindto.UserItem{ID: id}, nil
 }
-func (s adminMgmtSvc) ResetUserPassword(ctx context.Context, id int64, req *admindto.ResetUserPasswordRequest) error {
+func (s adminMgmtSvc) ResetUserPassword(ctx context.Context, id uint32, req *admindto.ResetUserPasswordRequest) error {
 	return nil
 }
-func (s adminMgmtSvc) DeleteUser(ctx context.Context, id int64) error { return nil }
+func (s adminMgmtSvc) DeleteUser(ctx context.Context, id uint32) error { return nil }
 func (s adminMgmtSvc) ListUserLoginLogs(ctx context.Context, req *admindto.UserLoginLogListRequest) ([]admindto.UserLoginLogItem, int, error) {
 	return nil, 0, nil
 }
@@ -361,10 +361,10 @@ func (s adminMgmtSvc) ListBanners(ctx context.Context, offset, limit int) ([]adm
 func (s adminMgmtSvc) CreateBanner(ctx context.Context, req *admindto.CreateBannerRequest) (*admindto.BannerItem, error) {
 	return &admindto.BannerItem{}, nil
 }
-func (s adminMgmtSvc) UpdateBanner(ctx context.Context, id int64, req *admindto.UpdateBannerRequest) (*admindto.BannerItem, error) {
-	return &admindto.BannerItem{ID: uint64(id)}, nil
+func (s adminMgmtSvc) UpdateBanner(ctx context.Context, id uint32, req *admindto.UpdateBannerRequest) (*admindto.BannerItem, error) {
+	return &admindto.BannerItem{ID: id}, nil
 }
-func (s adminMgmtSvc) DeleteBanner(ctx context.Context, id int64) error { return nil }
+func (s adminMgmtSvc) DeleteBanner(ctx context.Context, id uint32) error { return nil }
 
 type clientUserSvc struct{}
 
@@ -374,53 +374,53 @@ func (s clientUserSvc) Register(ctx context.Context, req *clientdto.RegisterRequ
 func (s clientUserSvc) Login(ctx context.Context, req *clientdto.LoginRequest, ip, ua string) (*clientdto.LoginResponse, error) {
 	return &clientdto.LoginResponse{}, nil
 }
-func (s clientUserSvc) Profile(ctx context.Context, userID int64) (*clientdto.Profile, error) {
-	return &clientdto.Profile{ID: uint64(userID)}, nil
+func (s clientUserSvc) Profile(ctx context.Context, userID uint32) (*clientdto.Profile, error) {
+	return &clientdto.Profile{ID: userID}, nil
 }
-func (s clientUserSvc) UpdateProfile(ctx context.Context, userID int64, req *clientdto.UpdateProfileRequest) (*clientdto.Profile, error) {
-	return &clientdto.Profile{ID: uint64(userID)}, nil
+func (s clientUserSvc) UpdateProfile(ctx context.Context, userID uint32, req *clientdto.UpdateProfileRequest) (*clientdto.Profile, error) {
+	return &clientdto.Profile{ID: userID}, nil
 }
-func (s clientUserSvc) ChangePassword(ctx context.Context, userID int64, req *clientdto.ChangePasswordRequest) error {
+func (s clientUserSvc) ChangePassword(ctx context.Context, userID uint32, req *clientdto.ChangePasswordRequest) error {
 	return nil
 }
-func (s clientUserSvc) LoginHistory(ctx context.Context, userID int64, req *clientdto.LoginHistoryListRequest) ([]clientdto.LoginHistoryItem, int, error) {
+func (s clientUserSvc) LoginHistory(ctx context.Context, userID uint32, req *clientdto.LoginHistoryListRequest) ([]clientdto.LoginHistoryItem, int, error) {
 	return nil, 0, nil
 }
-func (s clientUserSvc) ListFavorites(ctx context.Context, userID int64, req *clientdto.FavoriteListRequest) ([]clientdto.FavoriteItem, int, error) {
+func (s clientUserSvc) ListFavorites(ctx context.Context, userID uint32, req *clientdto.FavoriteListRequest) ([]clientdto.FavoriteItem, int, error) {
 	return nil, 0, nil
 }
-func (s clientUserSvc) AddFavorite(ctx context.Context, userID, videoID int64) error    { return nil }
-func (s clientUserSvc) RemoveFavorite(ctx context.Context, userID, videoID int64) error { return nil }
-func (s clientUserSvc) CheckFavorite(ctx context.Context, userID, videoID int64) (bool, error) {
+func (s clientUserSvc) AddFavorite(ctx context.Context, userID, videoID uint32) error    { return nil }
+func (s clientUserSvc) RemoveFavorite(ctx context.Context, userID, videoID uint32) error { return nil }
+func (s clientUserSvc) CheckFavorite(ctx context.Context, userID, videoID uint32) (bool, error) {
 	return false, nil
 }
-func (s clientUserSvc) ListHistory(ctx context.Context, userID int64, req *clientdto.HistoryListRequest) ([]clientdto.HistoryItem, int, error) {
+func (s clientUserSvc) ListHistory(ctx context.Context, userID uint32, req *clientdto.HistoryListRequest) ([]clientdto.HistoryItem, int, error) {
 	return nil, 0, nil
 }
-func (s clientUserSvc) GetHistory(ctx context.Context, userID, videoID int64) (*clientdto.HistoryItem, error) {
+func (s clientUserSvc) GetHistory(ctx context.Context, userID, videoID uint32) (*clientdto.HistoryItem, error) {
 	return nil, nil
 }
-func (s clientUserSvc) UpsertHistory(ctx context.Context, userID int64, req *clientdto.UpsertHistoryRequest) error {
+func (s clientUserSvc) UpsertHistory(ctx context.Context, userID uint32, req *clientdto.UpsertHistoryRequest) error {
 	return nil
 }
-func (s clientUserSvc) DeleteHistory(ctx context.Context, userID, videoID int64) error { return nil }
-func (s clientUserSvc) ClearHistory(ctx context.Context, userID int64) error           { return nil }
-func (s clientUserSvc) ListComments(ctx context.Context, videoID, userID int64, req *clientdto.CommentListRequest) ([]clientdto.CommentItem, int, error) {
+func (s clientUserSvc) DeleteHistory(ctx context.Context, userID, videoID uint32) error { return nil }
+func (s clientUserSvc) ClearHistory(ctx context.Context, userID uint32) error           { return nil }
+func (s clientUserSvc) ListComments(ctx context.Context, videoID, userID uint32, req *clientdto.CommentListRequest) ([]clientdto.CommentItem, int, error) {
 	return nil, 0, nil
 }
-func (s clientUserSvc) ListReplies(ctx context.Context, commentID, userID int64, req *clientdto.CommentListRequest) ([]clientdto.CommentItem, int, error) {
+func (s clientUserSvc) ListReplies(ctx context.Context, commentID, userID uint32, req *clientdto.CommentListRequest) ([]clientdto.CommentItem, int, error) {
 	return nil, 0, nil
 }
-func (s clientUserSvc) CreateComment(ctx context.Context, userID int64, req *clientdto.CreateCommentRequest) (*clientdto.CommentItem, error) {
+func (s clientUserSvc) CreateComment(ctx context.Context, userID uint32, req *clientdto.CreateCommentRequest) (*clientdto.CommentItem, error) {
 	return &clientdto.CommentItem{}, nil
 }
-func (s clientUserSvc) VoteComment(ctx context.Context, userID, commentID int64, req *clientdto.VoteCommentRequest) (*clientdto.VoteCommentResult, error) {
+func (s clientUserSvc) VoteComment(ctx context.Context, userID, commentID uint32, req *clientdto.VoteCommentRequest) (*clientdto.VoteCommentResult, error) {
 	return &clientdto.VoteCommentResult{}, nil
 }
-func (s clientUserSvc) RateVideo(ctx context.Context, userID, videoID int64, req *clientdto.RateVideoRequest) (*clientdto.RatingResult, error) {
+func (s clientUserSvc) RateVideo(ctx context.Context, userID, videoID uint32, req *clientdto.RateVideoRequest) (*clientdto.RatingResult, error) {
 	return &clientdto.RatingResult{}, nil
 }
-func (s clientUserSvc) GetRating(ctx context.Context, userID, videoID int64) (*clientdto.RatingResult, error) {
+func (s clientUserSvc) GetRating(ctx context.Context, userID, videoID uint32) (*clientdto.RatingResult, error) {
 	return &clientdto.RatingResult{}, nil
 }
 

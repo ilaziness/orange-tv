@@ -19,10 +19,10 @@ import (
 // VideoService manages videos and associations.
 type VideoService interface {
 	List(ctx context.Context, req *dto.VideoListRequest) ([]dto.VideoListItem, int, error)
-	Get(ctx context.Context, id int64) (*dto.VideoDetailResponse, error)
+	Get(ctx context.Context, id uint32) (*dto.VideoDetailResponse, error)
 	Create(ctx context.Context, req *dto.CreateVideoRequest) (*dto.VideoDetailResponse, error)
-	Update(ctx context.Context, id int64, req *dto.UpdateVideoRequest) (*dto.VideoDetailResponse, error)
-	Delete(ctx context.Context, id int64) error
+	Update(ctx context.Context, id uint32, req *dto.UpdateVideoRequest) (*dto.VideoDetailResponse, error)
+	Delete(ctx context.Context, id uint32) error
 }
 
 type videoService struct {
@@ -62,7 +62,7 @@ func (s *videoService) List(ctx context.Context, req *dto.VideoListRequest) ([]d
 		s.log.Error("video: list categories failed", zap.Error(err))
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	catMap := make(map[uint64]*model.Categories, len(cats))
+	catMap := make(map[uint32]*model.Categories, len(cats))
 	for i := range cats {
 		catMap[cats[i].ID] = &cats[i]
 	}
@@ -93,12 +93,12 @@ func (s *videoService) List(ctx context.Context, req *dto.VideoListRequest) ([]d
 	return mapVideoList(items, catMap), total, nil
 }
 
-func (s *videoService) Get(ctx context.Context, id int64) (*dto.VideoDetailResponse, error) {
+func (s *videoService) Get(ctx context.Context, id uint32) (*dto.VideoDetailResponse, error) {
 	return s.getDetail(ctx, id, false)
 }
 
 func (s *videoService) Create(ctx context.Context, req *dto.CreateVideoRequest) (*dto.VideoDetailResponse, error) {
-	if err := s.ensureCategory(ctx, int64(req.CategoryID)); err != nil {
+	if err := s.ensureCategory(ctx, req.CategoryID); err != nil {
 		return nil, err
 	}
 	if err := s.ensureDirectors(ctx, req.DirectorIDs); err != nil {
@@ -119,11 +119,7 @@ func (s *videoService) Create(ctx context.Context, req *dto.CreateVideoRequest) 
 	if req.SerialStatus != nil {
 		serial = *req.SerialStatus
 	}
-	var desc *string
-	if strings.TrimSpace(req.Description) != "" {
-		d := strings.TrimSpace(req.Description)
-		desc = &d
-	}
+	desc := strings.TrimSpace(req.Description)
 	video := &model.Videos{
 		Title:         strings.TrimSpace(req.Title),
 		Subtitle:      strings.TrimSpace(req.Subtitle),
@@ -145,33 +141,33 @@ func (s *videoService) Create(ctx context.Context, req *dto.CreateVideoRequest) 
 		if err := txRepo.Create(ctx, video); err != nil {
 			return err
 		}
-		if err := txRepo.ReplaceDirectors(ctx, video.ID, utils.UniqueUint64IDs(req.DirectorIDs)); err != nil {
+		if err := txRepo.ReplaceDirectors(ctx, video.ID, utils.UniqueUint32IDs(req.DirectorIDs)); err != nil {
 			return err
 		}
 		if err := txRepo.ReplaceActors(ctx, video.ID, toActorRels(req.Actors)); err != nil {
 			return err
 		}
-		return txRepo.ReplaceTags(ctx, video.ID, utils.UniqueUint64IDs(req.TagIDs))
+		return txRepo.ReplaceTags(ctx, video.ID, utils.UniqueUint32IDs(req.TagIDs))
 	})
 	if err != nil {
 		s.log.Error("video: create transaction failed", zap.String("title", video.Title), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	s.cache.InvalidateVideo(ctx)
-	return s.getDetail(ctx, int64(video.ID), false)
+	return s.getDetail(ctx, video.ID, false)
 }
 
-func (s *videoService) Update(ctx context.Context, id int64, req *dto.UpdateVideoRequest) (*dto.VideoDetailResponse, error) {
-	video, err := s.videoRepo.GetByID(ctx, uint64(id))
+func (s *videoService) Update(ctx context.Context, id uint32, req *dto.UpdateVideoRequest) (*dto.VideoDetailResponse, error) {
+	video, err := s.videoRepo.GetByID(ctx, id)
 	if err != nil {
-		s.log.Error("video: get by id for update failed", zap.Int64("video_id", id), zap.Error(err))
+		s.log.Error("video: get by id for update failed", zap.Uint32("video_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if video == nil {
 		return nil, errcode.VideoNotFound
 	}
 	if req.CategoryID != nil {
-		if err := s.ensureCategory(ctx, int64(*req.CategoryID)); err != nil {
+		if err := s.ensureCategory(ctx, *req.CategoryID); err != nil {
 			return nil, err
 		}
 		video.CategoryID = *req.CategoryID
@@ -199,8 +195,7 @@ func (s *videoService) Update(ctx context.Context, id int64, req *dto.UpdateVide
 		video.Subtitle = strings.TrimSpace(*req.Subtitle)
 	}
 	if req.Description != nil {
-		d := strings.TrimSpace(*req.Description)
-		video.Description = &d
+		video.Description = strings.TrimSpace(*req.Description)
 	}
 	if req.PublishStatus != nil {
 		video.PublishStatus = *req.PublishStatus
@@ -236,34 +231,34 @@ func (s *videoService) Update(ctx context.Context, id int64, req *dto.UpdateVide
 			return err
 		}
 		if req.DirectorIDs != nil {
-			if err := txRepo.ReplaceDirectors(ctx, uint64(id), utils.UniqueUint64IDs(*req.DirectorIDs)); err != nil {
+			if err := txRepo.ReplaceDirectors(ctx, id, utils.UniqueUint32IDs(*req.DirectorIDs)); err != nil {
 				return err
 			}
 		}
 		if req.Actors != nil {
-			if err := txRepo.ReplaceActors(ctx, uint64(id), toActorRels(*req.Actors)); err != nil {
+			if err := txRepo.ReplaceActors(ctx, id, toActorRels(*req.Actors)); err != nil {
 				return err
 			}
 		}
 		if req.TagIDs != nil {
-			if err := txRepo.ReplaceTags(ctx, uint64(id), utils.UniqueUint64IDs(*req.TagIDs)); err != nil {
+			if err := txRepo.ReplaceTags(ctx, id, utils.UniqueUint32IDs(*req.TagIDs)); err != nil {
 				return err
 			}
 		}
 		return nil
 	})
 	if err != nil {
-		s.log.Error("video: update transaction failed", zap.Int64("video_id", id), zap.Error(err))
+		s.log.Error("video: update transaction failed", zap.Uint32("video_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	s.cache.InvalidateVideo(ctx)
 	return s.getDetail(ctx, id, false)
 }
 
-func (s *videoService) Delete(ctx context.Context, id int64) error {
-	video, err := s.videoRepo.GetByID(ctx, uint64(id))
+func (s *videoService) Delete(ctx context.Context, id uint32) error {
+	video, err := s.videoRepo.GetByID(ctx, id)
 	if err != nil {
-		s.log.Error("video: get by id for delete failed", zap.Int64("video_id", id), zap.Error(err))
+		s.log.Error("video: get by id for delete failed", zap.Uint32("video_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if video == nil {
@@ -272,29 +267,29 @@ func (s *videoService) Delete(ctx context.Context, id int64) error {
 	// Clear association rows so directors/actors/tags are not blocked by soft-deleted videos.
 	err = s.videoRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
 		txRepo := s.videoRepo.WithTx(tx)
-		if err := txRepo.ReplaceDirectors(ctx, uint64(id), nil); err != nil {
+		if err := txRepo.ReplaceDirectors(ctx, id, nil); err != nil {
 			return err
 		}
-		if err := txRepo.ReplaceActors(ctx, uint64(id), nil); err != nil {
+		if err := txRepo.ReplaceActors(ctx, id, nil); err != nil {
 			return err
 		}
-		if err := txRepo.ReplaceTags(ctx, uint64(id), nil); err != nil {
+		if err := txRepo.ReplaceTags(ctx, id, nil); err != nil {
 			return err
 		}
-		return txRepo.SoftDelete(ctx, uint64(id))
+		return txRepo.SoftDelete(ctx, id)
 	})
 	if err != nil {
-		s.log.Error("video: delete transaction failed", zap.Int64("video_id", id), zap.Error(err))
+		s.log.Error("video: delete transaction failed", zap.Uint32("video_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	s.cache.InvalidateVideo(ctx)
 	return nil
 }
 
-func (s *videoService) getDetail(ctx context.Context, id int64, clientOnly bool) (*dto.VideoDetailResponse, error) {
-	video, err := s.videoRepo.GetByID(ctx, uint64(id))
+func (s *videoService) getDetail(ctx context.Context, id uint32, clientOnly bool) (*dto.VideoDetailResponse, error) {
+	video, err := s.videoRepo.GetByID(ctx, id)
 	if err != nil {
-		s.log.Error("video: get by id for detail failed", zap.Int64("video_id", id), zap.Error(err))
+		s.log.Error("video: get by id for detail failed", zap.Uint32("video_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if video == nil {
@@ -304,56 +299,56 @@ func (s *videoService) getDetail(ctx context.Context, id int64, clientOnly bool)
 		return nil, errcode.VideoNotFound
 	}
 
-	directorIDs, err := s.videoRepo.ListDirectorIDs(ctx, uint64(id))
+	directorIDs, err := s.videoRepo.ListDirectorIDs(ctx, id)
 	if err != nil {
-		s.log.Error("video: list director ids failed", zap.Int64("video_id", id), zap.Error(err))
+		s.log.Error("video: list director ids failed", zap.Uint32("video_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	directors, err := s.metaRepo.GetDirectorsByIDs(ctx, directorIDs)
 	if err != nil {
-		s.log.Error("video: get directors by ids failed", zap.Int64("video_id", id), zap.Error(err))
+		s.log.Error("video: get directors by ids failed", zap.Uint32("video_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	actorRels, err := s.videoRepo.ListActorRels(ctx, uint64(id))
+	actorRels, err := s.videoRepo.ListActorRels(ctx, id)
 	if err != nil {
-		s.log.Error("video: list actor rels failed", zap.Int64("video_id", id), zap.Error(err))
+		s.log.Error("video: list actor rels failed", zap.Uint32("video_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	actorIDs := make([]uint64, 0, len(actorRels))
+	actorIDs := make([]uint32, 0, len(actorRels))
 	for _, rel := range actorRels {
 		actorIDs = append(actorIDs, rel.ActorID)
 	}
 	actors, err := s.metaRepo.GetActorsByIDs(ctx, actorIDs)
 	if err != nil {
-		s.log.Error("video: get actors by ids failed", zap.Int64("video_id", id), zap.Error(err))
+		s.log.Error("video: get actors by ids failed", zap.Uint32("video_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	actorName := map[uint64]string{}
+	actorName := map[uint32]string{}
 	for _, a := range actors {
 		actorName[a.ID] = a.Name
 	}
-	tagIDs, err := s.videoRepo.ListTagIDs(ctx, uint64(id))
+	tagIDs, err := s.videoRepo.ListTagIDs(ctx, id)
 	if err != nil {
-		s.log.Error("video: list tag ids failed", zap.Int64("video_id", id), zap.Error(err))
+		s.log.Error("video: list tag ids failed", zap.Uint32("video_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	tags, err := s.metaRepo.GetTagsByIDs(ctx, tagIDs)
 	if err != nil {
-		s.log.Error("video: get tags by ids failed", zap.Int64("video_id", id), zap.Error(err))
+		s.log.Error("video: get tags by ids failed", zap.Uint32("video_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 
-	episodes, err := s.playRepo.ListEpisodesByVideo(ctx, int64(id), clientOnly)
+	episodes, err := s.playRepo.ListEpisodesByVideo(ctx, id, clientOnly)
 	if err != nil {
-		s.log.Error("video: list episodes by video failed", zap.Int64("video_id", id), zap.Error(err))
+		s.log.Error("video: list episodes by video failed", zap.Uint32("video_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	sources, err := s.playRepo.ListSources(ctx)
 	if err != nil {
-		s.log.Error("video: list sources for detail failed", zap.Int64("video_id", id), zap.Error(err))
+		s.log.Error("video: list sources for detail failed", zap.Uint32("video_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	sourceMap := map[uint64]model.PlaySources{}
+	sourceMap := map[uint32]model.PlaySources{}
 	for _, src := range sources {
 		if clientOnly && src.Status != constant.StatusEnabled {
 			continue
@@ -361,8 +356,8 @@ func (s *videoService) getDetail(ctx context.Context, id int64, clientOnly bool)
 		sourceMap[src.ID] = src
 	}
 
-	groups := map[uint64]*dto.VideoSourceGroup{}
-	order := make([]uint64, 0)
+	groups := map[uint32]*dto.VideoSourceGroup{}
+	order := make([]uint32, 0)
 	for _, ep := range episodes {
 		src, ok := sourceMap[ep.SourceID]
 		if !ok {
@@ -405,15 +400,11 @@ func (s *videoService) getDetail(ctx context.Context, id int64, clientOnly bool)
 		tagItems = append(tagItems, shareddto.NamedItem{ID: t.ID, Name: t.Name})
 	}
 
-	desc := ""
-	if video.Description != nil {
-		desc = *video.Description
-	}
 	resp := &dto.VideoDetailResponse{
 		ID:           video.ID,
 		Title:        video.Title,
 		Subtitle:     video.Subtitle,
-		Description:  desc,
+		Description:  video.Description,
 		CategoryID:   video.CategoryID,
 		SerialStatus: video.SerialStatus,
 		Cover:        video.CoverImage,
@@ -436,10 +427,10 @@ func (s *videoService) getDetail(ctx context.Context, id int64, clientOnly bool)
 	return resp, nil
 }
 
-func (s *videoService) ensureCategory(ctx context.Context, id int64) error {
+func (s *videoService) ensureCategory(ctx context.Context, id uint32) error {
 	c, err := s.categoryRepo.GetByID(ctx, id)
 	if err != nil {
-		s.log.Error("video: ensure category get failed", zap.Int64("category_id", id), zap.Error(err))
+		s.log.Error("video: ensure category get failed", zap.Uint32("category_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if c == nil {
@@ -448,8 +439,8 @@ func (s *videoService) ensureCategory(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (s *videoService) ensureDirectors(ctx context.Context, ids []uint64) error {
-	ids = utils.UniqueUint64IDs(ids)
+func (s *videoService) ensureDirectors(ctx context.Context, ids []uint32) error {
+	ids = utils.UniqueUint32IDs(ids)
 	if len(ids) == 0 {
 		return nil
 	}
@@ -465,8 +456,8 @@ func (s *videoService) ensureDirectors(ctx context.Context, ids []uint64) error 
 }
 
 func (s *videoService) ensureActors(ctx context.Context, actors []dto.VideoActorInput) error {
-	ids := make([]uint64, 0, len(actors))
-	seen := map[uint64]struct{}{}
+	ids := make([]uint32, 0, len(actors))
+	seen := map[uint32]struct{}{}
 	for _, a := range actors {
 		if _, ok := seen[a.ActorID]; ok {
 			continue
@@ -488,8 +479,8 @@ func (s *videoService) ensureActors(ctx context.Context, actors []dto.VideoActor
 	return nil
 }
 
-func (s *videoService) ensureTags(ctx context.Context, ids []uint64) error {
-	ids = utils.UniqueUint64IDs(ids)
+func (s *videoService) ensureTags(ctx context.Context, ids []uint32) error {
+	ids = utils.UniqueUint32IDs(ids)
 	if len(ids) == 0 {
 		return nil
 	}
@@ -504,7 +495,7 @@ func (s *videoService) ensureTags(ctx context.Context, ids []uint64) error {
 	return nil
 }
 
-func mapVideoList(items []model.Videos, catMap map[uint64]*model.Categories) []dto.VideoListItem {
+func mapVideoList(items []model.Videos, catMap map[uint32]*model.Categories) []dto.VideoListItem {
 	out := make([]dto.VideoListItem, 0, len(items))
 	for _, v := range items {
 		out = append(out, dto.VideoListItem{
@@ -532,7 +523,7 @@ func mapVideoList(items []model.Videos, catMap map[uint64]*model.Categories) []d
 
 // resolveCategoryName builds a display string for a category. If the category
 // has a parent, the format is "parent/child"; otherwise just the category name.
-func resolveCategoryName(catMap map[uint64]*model.Categories, id uint64) string {
+func resolveCategoryName(catMap map[uint32]*model.Categories, id uint32) string {
 	cat, ok := catMap[id]
 	if !ok {
 		return ""
@@ -547,8 +538,8 @@ func resolveCategoryName(catMap map[uint64]*model.Categories, id uint64) string 
 
 // collectDescendantIDs gathers the given category ID and all its descendant IDs
 // from the flat category map.
-func collectDescendantIDs(catMap map[uint64]*model.Categories, id uint64) []uint64 {
-	ids := []uint64{id}
+func collectDescendantIDs(catMap map[uint32]*model.Categories, id uint32) []uint32 {
+	ids := []uint32{id}
 	for _, cat := range catMap {
 		if cat.ParentID == id {
 			ids = append(ids, collectDescendantIDs(catMap, cat.ID)...)
@@ -558,7 +549,7 @@ func collectDescendantIDs(catMap map[uint64]*model.Categories, id uint64) []uint
 }
 
 func toActorRels(inputs []dto.VideoActorInput) []model.VideoActors {
-	seen := map[uint64]struct{}{}
+	seen := map[uint32]struct{}{}
 	out := make([]model.VideoActors, 0, len(inputs))
 	for _, in := range inputs {
 		if in.ActorID == 0 {

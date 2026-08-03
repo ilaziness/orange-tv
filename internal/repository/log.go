@@ -24,7 +24,7 @@ type AdminLoginLogFilter struct {
 type SystemLogFilter struct {
 	Level     *uint8
 	Module    string
-	AdminID   *uint64
+	AdminID   *uint32
 	StartTime *time.Time
 	EndTime   *time.Time
 	Offset    int

@@ -7,7 +7,7 @@ type SystemLogListRequest struct {
 	shareddto.PaginationRequest
 	Level   *uint8  `form:"level" validate:"omitempty,oneof=1 2 3 4"`
 	Module  string  `form:"module"`
-	AdminID *uint64 `form:"admin_id" validate:"omitempty,min=1"`
+	AdminID *uint32 `form:"admin_id" validate:"omitempty,min=1"`
 	// Start / End are RFC3339 or date strings; optional.
 	Start string `form:"start"`
 	End   string `form:"end"`
@@ -25,20 +25,20 @@ type AdminLoginLogListRequest struct {
 // UserLoginLogListRequest queries user_login_logs.
 type UserLoginLogListRequest struct {
 	shareddto.PaginationRequest
-	UserID   *int64 `form:"user_id" validate:"omitempty,min=1"`
-	Username string `form:"username"`
-	Status   *uint8 `form:"status" validate:"omitempty,oneof=1 2"`
-	Start    string `form:"start"`
-	End      string `form:"end"`
+	UserID   *uint32 `form:"user_id" validate:"omitempty,min=1"`
+	Username string  `form:"username"`
+	Status   *uint8  `form:"status" validate:"omitempty,oneof=1 2"`
+	Start    string  `form:"start"`
+	End      string  `form:"end"`
 }
 
 // SystemLogItem is one system log row.
 type SystemLogItem struct {
-	ID        uint64 `json:"id"`
+	ID        uint32 `json:"id"`
 	Level     uint8  `json:"level"`
 	Module    string `json:"module"`
 	Action    string `json:"action"`
-	AdminID   uint64 `json:"admin_id"`
+	AdminID   uint32 `json:"admin_id"`
 	Content   string `json:"content"`
 	IPAddress string `json:"ip_address"`
 	CreatedAt string `json:"created_at"`
@@ -46,8 +46,8 @@ type SystemLogItem struct {
 
 // AdminLoginLogItem is one admin login log row.
 type AdminLoginLogItem struct {
-	ID        uint64 `json:"id"`
-	UserID    uint64 `json:"user_id"`
+	ID        uint32 `json:"id"`
+	UserID    uint32 `json:"user_id"`
 	Username  string `json:"username"`
 	IP        string `json:"ip"`
 	UserAgent string `json:"user_agent"`
@@ -57,8 +57,8 @@ type AdminLoginLogItem struct {
 
 // UserLoginLogItem is one user login log row.
 type UserLoginLogItem struct {
-	ID        uint64 `json:"id"`
-	UserID    uint64 `json:"user_id"`
+	ID        uint32 `json:"id"`
+	UserID    uint32 `json:"user_id"`
 	Username  string `json:"username"`
 	IP        string `json:"ip"`
 	UserAgent string `json:"user_agent"`

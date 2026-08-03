@@ -15,40 +15,40 @@ import (
 // AdminRepository provides admin and user-group persistence.
 type AdminRepository interface {
 	GetByUsername(ctx context.Context, username string) (*model.Admins, error)
-	GetByID(ctx context.Context, id int64) (*model.Admins, error)
-	GetGroupByID(ctx context.Context, id int64) (*model.UserGroups, error)
+	GetByID(ctx context.Context, id uint32) (*model.Admins, error)
+	GetGroupByID(ctx context.Context, id uint32) (*model.UserGroups, error)
 	GetGroupByName(ctx context.Context, name string) (*model.UserGroups, error)
 	Create(ctx context.Context, admin *model.Admins) error
-	UpdateLastLogin(ctx context.Context, id int64, at time.Time) error
+	UpdateLastLogin(ctx context.Context, id uint32, at time.Time) error
 	ExistsUsername(ctx context.Context, username string) (bool, error)
 
 	// Self-service profile update
-	UpdateProfile(ctx context.Context, adminID int64, nickname, email, avatar string) error
-	UpdatePassword(ctx context.Context, adminID int64, hashedPassword string) error
+	UpdateProfile(ctx context.Context, adminID uint32, nickname, email, avatar string) error
+	UpdatePassword(ctx context.Context, adminID uint32, hashedPassword string) error
 
 	// Admin CRUD (A3)
 	ListAdmins(ctx context.Context, f AdminListFilter) ([]model.Admins, int, error)
 	UpdateAdmin(ctx context.Context, admin *model.Admins) error
-	SoftDeleteAdmin(ctx context.Context, id int64) error
-	ExistsUsernameExcludeID(ctx context.Context, username string, excludeID int64) (bool, error)
+	SoftDeleteAdmin(ctx context.Context, id uint32) error
+	ExistsUsernameExcludeID(ctx context.Context, username string, excludeID uint32) (bool, error)
 
 	// User group CRUD (A4)
 	ListGroups(ctx context.Context, f UserGroupListFilter) ([]model.UserGroups, int, error)
 	CreateGroup(ctx context.Context, g *model.UserGroups) error
 	UpdateGroup(ctx context.Context, g *model.UserGroups) error
-	SoftDeleteGroup(ctx context.Context, id int64) error
-	ExistsGroupNameExcludeID(ctx context.Context, name string, excludeID int64) (bool, error)
+	SoftDeleteGroup(ctx context.Context, id uint32) error
+	ExistsGroupNameExcludeID(ctx context.Context, name string, excludeID uint32) (bool, error)
 
 	// Regular users (A5)
 	ListUsers(ctx context.Context, f UserListFilter) ([]model.Users, int, error)
-	GetUserByID(ctx context.Context, id int64) (*model.Users, error)
+	GetUserByID(ctx context.Context, id uint32) (*model.Users, error)
 	GetUserByUsername(ctx context.Context, username string) (*model.Users, error)
 	GetUserByStrID(ctx context.Context, strID string) (*model.Users, error)
 	CreateUser(ctx context.Context, u *model.Users) error
 	UpdateUser(ctx context.Context, u *model.Users) error
-	SoftDeleteUser(ctx context.Context, id int64) error
+	SoftDeleteUser(ctx context.Context, id uint32) error
 	ExistsUserUsername(ctx context.Context, username string) (bool, error)
-	ExistsUserUsernameExcludeID(ctx context.Context, username string, excludeID int64) (bool, error)
+	ExistsUserUsernameExcludeID(ctx context.Context, username string, excludeID uint32) (bool, error)
 	ExistsUserStrID(ctx context.Context, strID string) (bool, error)
 }
 
@@ -56,7 +56,7 @@ type AdminRepository interface {
 type AdminListFilter struct {
 	Keyword string
 	Status  *uint8
-	GroupID *uint64
+	GroupID *uint32
 	Offset  int
 	Limit   int
 }
@@ -100,7 +100,7 @@ func (r *adminRepo) GetByUsername(ctx context.Context, username string) (*model.
 	return admin, nil
 }
 
-func (r *adminRepo) GetByID(ctx context.Context, id int64) (*model.Admins, error) {
+func (r *adminRepo) GetByID(ctx context.Context, id uint32) (*model.Admins, error) {
 	admin := new(model.Admins)
 	err := r.db.NewSelect().Model(admin).
 		Where("id = ?", id).
@@ -115,7 +115,7 @@ func (r *adminRepo) GetByID(ctx context.Context, id int64) (*model.Admins, error
 	return admin, nil
 }
 
-func (r *adminRepo) GetGroupByID(ctx context.Context, id int64) (*model.UserGroups, error) {
+func (r *adminRepo) GetGroupByID(ctx context.Context, id uint32) (*model.UserGroups, error) {
 	group := new(model.UserGroups)
 	err := r.db.NewSelect().Model(group).
 		Where("id = ?", id).
@@ -153,7 +153,7 @@ func (r *adminRepo) Create(ctx context.Context, admin *model.Admins) error {
 	return nil
 }
 
-func (r *adminRepo) UpdateLastLogin(ctx context.Context, id int64, at time.Time) error {
+func (r *adminRepo) UpdateLastLogin(ctx context.Context, id uint32, at time.Time) error {
 	_, err := r.db.NewUpdate().Model((*model.Admins)(nil)).
 		Set("last_login_at = ?", at).
 		Set("updated_at = ?", at).
@@ -166,7 +166,7 @@ func (r *adminRepo) UpdateLastLogin(ctx context.Context, id int64, at time.Time)
 	return nil
 }
 
-func (r *adminRepo) UpdateProfile(ctx context.Context, adminID int64, nickname, email, avatar string) error {
+func (r *adminRepo) UpdateProfile(ctx context.Context, adminID uint32, nickname, email, avatar string) error {
 	_, err := r.db.NewUpdate().Model((*model.Admins)(nil)).
 		Set("nickname = ?", nickname).
 		Set("email = ?", email).
@@ -181,7 +181,7 @@ func (r *adminRepo) UpdateProfile(ctx context.Context, adminID int64, nickname, 
 	return nil
 }
 
-func (r *adminRepo) UpdatePassword(ctx context.Context, adminID int64, hashedPassword string) error {
+func (r *adminRepo) UpdatePassword(ctx context.Context, adminID uint32, hashedPassword string) error {
 	_, err := r.db.NewUpdate().Model((*model.Admins)(nil)).
 		Set("password = ?", hashedPassword).
 		Set("updated_at = ?", time.Now()).
@@ -245,7 +245,7 @@ func (r *adminRepo) UpdateAdmin(ctx context.Context, admin *model.Admins) error 
 	return nil
 }
 
-func (r *adminRepo) SoftDeleteAdmin(ctx context.Context, id int64) error {
+func (r *adminRepo) SoftDeleteAdmin(ctx context.Context, id uint32) error {
 	now := time.Now()
 	_, err := r.db.NewUpdate().Model((*model.Admins)(nil)).
 		Set("deleted_at = ?", now).
@@ -259,7 +259,7 @@ func (r *adminRepo) SoftDeleteAdmin(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (r *adminRepo) ExistsUsernameExcludeID(ctx context.Context, username string, excludeID int64) (bool, error) {
+func (r *adminRepo) ExistsUsernameExcludeID(ctx context.Context, username string, excludeID uint32) (bool, error) {
 	exists, err := r.db.NewSelect().Model((*model.Admins)(nil)).
 		Where("username = ?", username).
 		Where("id != ?", excludeID).
@@ -308,7 +308,7 @@ func (r *adminRepo) UpdateGroup(ctx context.Context, g *model.UserGroups) error 
 	return nil
 }
 
-func (r *adminRepo) SoftDeleteGroup(ctx context.Context, id int64) error {
+func (r *adminRepo) SoftDeleteGroup(ctx context.Context, id uint32) error {
 	now := time.Now()
 	_, err := r.db.NewUpdate().Model((*model.UserGroups)(nil)).
 		Set("deleted_at = ?", now).
@@ -322,7 +322,7 @@ func (r *adminRepo) SoftDeleteGroup(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (r *adminRepo) ExistsGroupNameExcludeID(ctx context.Context, name string, excludeID int64) (bool, error) {
+func (r *adminRepo) ExistsGroupNameExcludeID(ctx context.Context, name string, excludeID uint32) (bool, error) {
 	exists, err := r.db.NewSelect().Model((*model.UserGroups)(nil)).
 		Where("name = ?", name).
 		Where("id != ?", excludeID).
@@ -355,7 +355,7 @@ func (r *adminRepo) ListUsers(ctx context.Context, f UserListFilter) ([]model.Us
 	return items, total, nil
 }
 
-func (r *adminRepo) GetUserByID(ctx context.Context, id int64) (*model.Users, error) {
+func (r *adminRepo) GetUserByID(ctx context.Context, id uint32) (*model.Users, error) {
 	u := new(model.Users)
 	err := r.db.NewSelect().Model(u).
 		Where("id = ?", id).
@@ -404,7 +404,7 @@ func (r *adminRepo) UpdateUser(ctx context.Context, u *model.Users) error {
 	return nil
 }
 
-func (r *adminRepo) SoftDeleteUser(ctx context.Context, id int64) error {
+func (r *adminRepo) SoftDeleteUser(ctx context.Context, id uint32) error {
 	now := time.Now()
 	_, err := r.db.NewUpdate().Model((*model.Users)(nil)).
 		Set("deleted_at = ?", now).
@@ -429,7 +429,7 @@ func (r *adminRepo) ExistsUserUsername(ctx context.Context, username string) (bo
 	return exists, nil
 }
 
-func (r *adminRepo) ExistsUserUsernameExcludeID(ctx context.Context, username string, excludeID int64) (bool, error) {
+func (r *adminRepo) ExistsUserUsernameExcludeID(ctx context.Context, username string, excludeID uint32) (bool, error) {
 	exists, err := r.db.NewSelect().Model((*model.Users)(nil)).
 		Where("username = ?", username).
 		Where("id != ?", excludeID).

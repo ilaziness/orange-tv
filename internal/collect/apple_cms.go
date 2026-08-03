@@ -32,7 +32,7 @@ func (c *appleCMSCollector) FetchListPage(ctx context.Context, source *model.Col
 
 // FetchDetail GET the collect URL with ac=detail mode to retrieve full vod info for given IDs.
 // The caller should batch IDs (max 25 per call) to avoid URL length limits.
-func (c *appleCMSCollector) FetchDetail(ctx context.Context, source *model.CollectSources, ids []int64) (*Page, error) {
+func (c *appleCMSCollector) FetchDetail(ctx context.Context, source *model.CollectSources, ids []uint32) (*Page, error) {
 	body, err := c.fetchAppleDetail(ctx, source.CollectURL, source.APIKey, ids)
 	if err != nil {
 		return nil, err
@@ -82,7 +82,7 @@ func (c *appleCMSCollector) fetchAppleList(ctx context.Context, baseURL, apiKey 
 
 // fetchAppleDetail GET the collect URL with ac=detail mode to retrieve full vod info for given IDs.
 // The caller should batch IDs (max 25 per call) to avoid URL length limits.
-func (c *appleCMSCollector) fetchAppleDetail(ctx context.Context, baseURL, apiKey string, ids []int64) ([]byte, error) {
+func (c *appleCMSCollector) fetchAppleDetail(ctx context.Context, baseURL, apiKey string, ids []uint32) ([]byte, error) {
 	u, err := url.Parse(strings.TrimSpace(baseURL))
 	if err != nil {
 		return nil, fmt.Errorf("parse collect url: %w", err)
@@ -96,7 +96,7 @@ func (c *appleCMSCollector) fetchAppleDetail(ctx context.Context, baseURL, apiKe
 	if len(ids) > 0 {
 		parts := make([]string, len(ids))
 		for i, id := range ids {
-			parts[i] = strconv.FormatInt(id, 10)
+			parts[i] = strconv.FormatUint(uint64(id), 10)
 		}
 		q.Set("ids", strings.Join(parts, ","))
 	}
@@ -159,10 +159,10 @@ func parseAppleCMSList(body []byte) (*ListPage, error) {
 			return nil, fmt.Errorf("apple cms list rows: %w", err)
 		}
 	}
-	ids := make([]int64, 0, len(rows))
+	ids := make([]uint32, 0, len(rows))
 	times := make([]string, 0, len(rows))
 	for _, row := range rows {
-		ids = append(ids, int64(utils.AnyToInt(row.VodID)))
+		ids = append(ids, uint32(utils.AnyToInt(row.VodID)))
 		times = append(times, strings.TrimSpace(row.VodTime))
 	}
 
@@ -218,7 +218,7 @@ func parseAppleCMSDetail(body []byte) (*Page, error) {
 			Language:           strings.TrimSpace(row.VodLang),
 			Duration:           int32(utils.AnyToInt(row.VodDuration)),
 			ReleaseDate:        strings.TrimSpace(row.Pubdate),
-			ExternalCategoryID: int64(utils.AnyToInt(row.TypeID)),
+			ExternalCategoryID: uint32(utils.AnyToInt(row.TypeID)),
 			Directors:          utils.SplitNames(row.Director),
 			Actors:             utils.SplitNames(row.Actor),
 			Tags:               utils.SplitNames(row.VodTag, row.Class),
@@ -248,9 +248,9 @@ func parseAppleCMSClasses(raw json.RawMessage) []RemoteCategory {
 	out := make([]RemoteCategory, 0, len(classRows))
 	for _, c := range classRows {
 		out = append(out, RemoteCategory{
-			ID:       int64(utils.AnyToInt(c.TypeID)),
+			ID:       uint32(utils.AnyToInt(c.TypeID)),
 			Name:     strings.TrimSpace(c.TypeName),
-			ParentID: int64(utils.AnyToInt(c.TypePID)),
+			ParentID: uint32(utils.AnyToInt(c.TypePID)),
 		})
 	}
 	return out

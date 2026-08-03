@@ -65,7 +65,7 @@ func (h *SettingsHandler) Update(c *gin.Context) {
 		return
 	}
 	if h.audit != nil {
-		adminID := int64(0)
+		adminID := uint32(0)
 		if claims := httpmiddleware.GetClaims(c); claims != nil {
 			adminID = claims.UserID
 		}

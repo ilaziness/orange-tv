@@ -38,7 +38,7 @@ func SettingsGroupKey(group string) string {
 }
 
 // VideoListKey 生成客户端视频列表缓存键。
-func VideoListKey(categoryID, parentCategoryID uint64, sort string, page, limit int) string {
+func VideoListKey(categoryID, parentCategoryID uint32, sort string, page, limit int) string {
 	return fmt.Sprintf(KeyTplVideoList, categoryID, parentCategoryID, sort, page, limit)
 }
 

@@ -14,13 +14,13 @@ import (
 // CategoryRepository provides category persistence.
 type CategoryRepository interface {
 	List(ctx context.Context, onlyEnabled bool) ([]model.Categories, error)
-	GetByID(ctx context.Context, id int64) (*model.Categories, error)
-	ExistsName(ctx context.Context, name string, excludeID int64) (bool, error)
+	GetByID(ctx context.Context, id uint32) (*model.Categories, error)
+	ExistsName(ctx context.Context, name string, excludeID uint32) (bool, error)
 	Create(ctx context.Context, c *model.Categories) error
 	Update(ctx context.Context, c *model.Categories) error
-	SoftDelete(ctx context.Context, id int64) error
-	CountChildren(ctx context.Context, parentID int64) (int, error)
-	CountVideos(ctx context.Context, categoryID int64) (int, error)
+	SoftDelete(ctx context.Context, id uint32) error
+	CountChildren(ctx context.Context, parentID uint32) (int, error)
+	CountVideos(ctx context.Context, categoryID uint32) (int, error)
 	ListIDs(ctx context.Context) ([]model.Categories, error)
 }
 
@@ -46,7 +46,7 @@ func (r *categoryRepo) List(ctx context.Context, onlyEnabled bool) ([]model.Cate
 	return items, nil
 }
 
-func (r *categoryRepo) GetByID(ctx context.Context, id int64) (*model.Categories, error) {
+func (r *categoryRepo) GetByID(ctx context.Context, id uint32) (*model.Categories, error) {
 	item := new(model.Categories)
 	err := r.db.NewSelect().Model(item).
 		Where("id = ?", id).
@@ -61,7 +61,7 @@ func (r *categoryRepo) GetByID(ctx context.Context, id int64) (*model.Categories
 	return item, nil
 }
 
-func (r *categoryRepo) ExistsName(ctx context.Context, name string, excludeID int64) (bool, error) {
+func (r *categoryRepo) ExistsName(ctx context.Context, name string, excludeID uint32) (bool, error) {
 	q := r.db.NewSelect().Model((*model.Categories)(nil)).
 		Where("name = ?", name).
 		Where("deleted_at IS NULL")
@@ -94,7 +94,7 @@ func (r *categoryRepo) Update(ctx context.Context, c *model.Categories) error {
 	return nil
 }
 
-func (r *categoryRepo) SoftDelete(ctx context.Context, id int64) error {
+func (r *categoryRepo) SoftDelete(ctx context.Context, id uint32) error {
 	now := time.Now()
 	_, err := r.db.NewUpdate().Model((*model.Categories)(nil)).
 		Set("deleted_at = ?", now).
@@ -108,7 +108,7 @@ func (r *categoryRepo) SoftDelete(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (r *categoryRepo) CountChildren(ctx context.Context, parentID int64) (int, error) {
+func (r *categoryRepo) CountChildren(ctx context.Context, parentID uint32) (int, error) {
 	n, err := r.db.NewSelect().Model((*model.Categories)(nil)).
 		Where("parent_id = ?", parentID).
 		Where("deleted_at IS NULL").
@@ -119,7 +119,7 @@ func (r *categoryRepo) CountChildren(ctx context.Context, parentID int64) (int, 
 	return n, nil
 }
 
-func (r *categoryRepo) CountVideos(ctx context.Context, categoryID int64) (int, error) {
+func (r *categoryRepo) CountVideos(ctx context.Context, categoryID uint32) (int, error) {
 	n, err := r.db.NewSelect().Model((*model.Videos)(nil)).
 		Where("category_id = ?", categoryID).
 		Where("deleted_at IS NULL").

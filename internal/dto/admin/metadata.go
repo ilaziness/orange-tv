@@ -20,6 +20,6 @@ type UpdateNamedRequest struct {
 
 // NamedResponse is a generic named entity response.
 type NamedResponse struct {
-	ID   uint64 `json:"id"`
+	ID   uint32 `json:"id"`
 	Name string `json:"name"`
 }

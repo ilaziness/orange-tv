@@ -15,7 +15,7 @@ import (
 type CommentListFilter struct {
 	Keyword string
 	Status  *uint8
-	VideoID *uint64
+	VideoID *uint32
 	Offset  int
 	Limit   int
 }
@@ -23,11 +23,11 @@ type CommentListFilter struct {
 // CommentRepository provides admin comment persistence.
 type CommentRepository interface {
 	List(ctx context.Context, f CommentListFilter) ([]model.VideoComments, int, error)
-	GetByID(ctx context.Context, id int64) (*model.VideoComments, error)
-	GetParentChain(ctx context.Context, id int64) ([]model.VideoComments, error)
-	UpdateStatus(ctx context.Context, id int64, status uint8) error
-	Delete(ctx context.Context, id int64) error
-	DeleteTree(ctx context.Context, id int64) error
+	GetByID(ctx context.Context, id uint32) (*model.VideoComments, error)
+	GetParentChain(ctx context.Context, id uint32) ([]model.VideoComments, error)
+	UpdateStatus(ctx context.Context, id uint32, status uint8) error
+	Delete(ctx context.Context, id uint32) error
+	DeleteTree(ctx context.Context, id uint32) error
 }
 
 type commentRepo struct {
@@ -65,7 +65,7 @@ func (r *commentRepo) List(ctx context.Context, f CommentListFilter) ([]model.Vi
 	return items, total, nil
 }
 
-func (r *commentRepo) GetByID(ctx context.Context, id int64) (*model.VideoComments, error) {
+func (r *commentRepo) GetByID(ctx context.Context, id uint32) (*model.VideoComments, error) {
 	c := new(model.VideoComments)
 	err := r.db.NewSelect().Model(c).
 		Relation("User").
@@ -81,7 +81,7 @@ func (r *commentRepo) GetByID(ctx context.Context, id int64) (*model.VideoCommen
 	return c, nil
 }
 
-func (r *commentRepo) GetParentChain(ctx context.Context, id int64) ([]model.VideoComments, error) {
+func (r *commentRepo) GetParentChain(ctx context.Context, id uint32) ([]model.VideoComments, error) {
 	const maxDepth = 50
 
 	c, err := r.GetByID(ctx, id)
@@ -96,7 +96,7 @@ func (r *commentRepo) GetParentChain(ctx context.Context, id int64) ([]model.Vid
 	}
 
 	chain := make([]model.VideoComments, 0, 8)
-	visited := make(map[uint64]struct{}, maxDepth)
+	visited := make(map[uint32]struct{}, maxDepth)
 	currentID := c.ParentID
 
 	for i := 0; i < maxDepth; i++ {
@@ -108,7 +108,7 @@ func (r *commentRepo) GetParentChain(ctx context.Context, id int64) ([]model.Vid
 		}
 		visited[currentID] = struct{}{}
 
-		parent, err := r.GetByID(ctx, int64(currentID))
+		parent, err := r.GetByID(ctx, currentID)
 		if err != nil {
 			return nil, err
 		}
@@ -126,7 +126,7 @@ func (r *commentRepo) GetParentChain(ctx context.Context, id int64) ([]model.Vid
 	return chain, nil
 }
 
-func (r *commentRepo) UpdateStatus(ctx context.Context, id int64, status uint8) error {
+func (r *commentRepo) UpdateStatus(ctx context.Context, id uint32, status uint8) error {
 	now := time.Now()
 	_, err := r.db.NewUpdate().Model((*model.VideoComments)(nil)).
 		Set("status = ?", status).
@@ -139,7 +139,7 @@ func (r *commentRepo) UpdateStatus(ctx context.Context, id int64, status uint8) 
 	return nil
 }
 
-func (r *commentRepo) Delete(ctx context.Context, id int64) error {
+func (r *commentRepo) Delete(ctx context.Context, id uint32) error {
 	_, err := r.db.NewDelete().Model((*model.VideoComments)(nil)).Where("id = ?", id).Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("delete comment: %w", err)
@@ -147,6 +147,6 @@ func (r *commentRepo) Delete(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (r *commentRepo) DeleteTree(ctx context.Context, id int64) error {
+func (r *commentRepo) DeleteTree(ctx context.Context, id uint32) error {
 	return deleteCommentTreeByID(ctx, r.db, id)
 }

@@ -24,7 +24,7 @@ func TestGenerateAccessToken(t *testing.T) {
 
 	claims, err := mgr.ParseToken(token)
 	require.NoError(t, err)
-	assert.Equal(t, int64(42), claims.UserID)
+	assert.Equal(t, uint32(42), claims.UserID)
 	assert.Equal(t, TokenTypeAccess, claims.TokenType)
 	assert.Equal(t, "orange-tv", claims.Issuer)
 	assert.True(t, claims.ExpiresAt.After(time.Now().Add(time.Hour)))
@@ -39,7 +39,7 @@ func TestGenerateRefreshToken(t *testing.T) {
 
 	claims, err := mgr.ParseToken(token)
 	require.NoError(t, err)
-	assert.Equal(t, int64(99), claims.UserID)
+	assert.Equal(t, uint32(99), claims.UserID)
 	assert.Equal(t, TokenTypeRefresh, claims.TokenType)
 	assert.True(t, claims.ExpiresAt.After(time.Now().Add(24*time.Hour)))
 }
@@ -51,7 +51,7 @@ func TestParseToken_Valid(t *testing.T) {
 
 	claims, err := mgr.ParseToken(token)
 	require.NoError(t, err)
-	assert.Equal(t, int64(1), claims.UserID)
+	assert.Equal(t, uint32(1), claims.UserID)
 }
 
 func TestParseToken_Expired(t *testing.T) {

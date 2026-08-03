@@ -17,8 +17,8 @@ import (
 type LiveService interface {
 	List(ctx context.Context, req *admindto.LiveListRequest) ([]admindto.LiveChannelItem, int, error)
 	Create(ctx context.Context, req *admindto.CreateLiveRequest) (*admindto.LiveChannelItem, error)
-	Update(ctx context.Context, id int64, req *admindto.UpdateLiveRequest) (*admindto.LiveChannelItem, error)
-	Delete(ctx context.Context, id int64) error
+	Update(ctx context.Context, id uint32, req *admindto.UpdateLiveRequest) (*admindto.LiveChannelItem, error)
+	Delete(ctx context.Context, id uint32) error
 	SyncFromSource(ctx context.Context) (*admindto.LiveSyncResult, error)
 }
 
@@ -65,16 +65,12 @@ func (s *liveService) Create(ctx context.Context, req *admindto.CreateLiveReques
 		status = *req.Status
 	}
 	desc := strings.TrimSpace(req.Description)
-	var descPtr *string
-	if desc != "" {
-		descPtr = &desc
-	}
 	item := &model.LiveChannels{
 		Name:        name,
 		Category:    strings.TrimSpace(req.Category),
 		StreamURL:   streamURL,
 		Logo:        strings.TrimSpace(req.Logo),
-		Description: descPtr,
+		Description: desc,
 		SortOrder:   req.SortOrder,
 		Status:      status,
 	}
@@ -87,10 +83,10 @@ func (s *liveService) Create(ctx context.Context, req *admindto.CreateLiveReques
 	return &out, nil
 }
 
-func (s *liveService) Update(ctx context.Context, id int64, req *admindto.UpdateLiveRequest) (*admindto.LiveChannelItem, error) {
+func (s *liveService) Update(ctx context.Context, id uint32, req *admindto.UpdateLiveRequest) (*admindto.LiveChannelItem, error) {
 	item, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		s.log.Error("live: get by id failed", zap.Int64("live_id", id), zap.Error(err))
+		s.log.Error("live: get by id failed", zap.Uint32("live_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if item == nil {
@@ -117,12 +113,7 @@ func (s *liveService) Update(ctx context.Context, id int64, req *admindto.Update
 		item.Logo = strings.TrimSpace(*req.Logo)
 	}
 	if req.Description != nil {
-		desc := strings.TrimSpace(*req.Description)
-		if desc == "" {
-			item.Description = nil
-		} else {
-			item.Description = &desc
-		}
+		item.Description = strings.TrimSpace(*req.Description)
 	}
 	if req.SortOrder != nil {
 		item.SortOrder = *req.SortOrder
@@ -131,7 +122,7 @@ func (s *liveService) Update(ctx context.Context, id int64, req *admindto.Update
 		item.Status = *req.Status
 	}
 	if err := s.repo.Update(ctx, item); err != nil {
-		s.log.Error("live: update failed", zap.Int64("live_id", id), zap.Error(err))
+		s.log.Error("live: update failed", zap.Uint32("live_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	s.cache.InvalidateLive(ctx)
@@ -139,17 +130,17 @@ func (s *liveService) Update(ctx context.Context, id int64, req *admindto.Update
 	return &out, nil
 }
 
-func (s *liveService) Delete(ctx context.Context, id int64) error {
+func (s *liveService) Delete(ctx context.Context, id uint32) error {
 	item, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		s.log.Error("live: get by id for delete failed", zap.Int64("live_id", id), zap.Error(err))
+		s.log.Error("live: get by id for delete failed", zap.Uint32("live_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if item == nil {
 		return errcode.LiveChannelNotFound
 	}
 	if err := s.repo.Delete(ctx, id); err != nil {
-		s.log.Error("live: delete failed", zap.Int64("live_id", id), zap.Error(err))
+		s.log.Error("live: delete failed", zap.Uint32("live_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	s.cache.InvalidateLive(ctx)
@@ -165,17 +156,13 @@ func mapLiveItems(items []model.LiveChannels, withStatus bool) []admindto.LiveCh
 }
 
 func toLiveItem(m *model.LiveChannels, withStatus bool) admindto.LiveChannelItem {
-	desc := ""
-	if m.Description != nil {
-		desc = *m.Description
-	}
 	item := admindto.LiveChannelItem{
 		ID:          m.ID,
 		Name:        m.Name,
 		Category:    m.Category,
 		StreamURL:   m.StreamURL,
 		Logo:        m.Logo,
-		Description: desc,
+		Description: m.Description,
 		SortOrder:   m.SortOrder,
 	}
 	if withStatus {
@@ -205,7 +192,7 @@ func (s *liveService) SyncFromSource(ctx context.Context) (*admindto.LiveSyncRes
 
 	seenNames := make(map[string]bool, len(entries))
 	var toCreate []model.LiveChannels
-	var toDeleteIDs []int64
+	var toDeleteIDs []uint32
 
 	for _, entry := range entries {
 		seenNames[entry.Name] = true
@@ -230,7 +217,7 @@ func (s *liveService) SyncFromSource(ctx context.Context) (*admindto.LiveSyncRes
 
 	for i := range existing {
 		if !seenNames[existing[i].Name] {
-			toDeleteIDs = append(toDeleteIDs, int64(existing[i].ID))
+			toDeleteIDs = append(toDeleteIDs, existing[i].ID)
 		}
 	}
 

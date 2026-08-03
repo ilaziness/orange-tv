@@ -59,7 +59,7 @@ type Result struct {
 // Run executes collection for a source (all pages until page_count or vod_time out of range).
 // dataRange filters by time (today/last1d/last3d/last1w/last1m/all).
 // logID is the collect_logs row ID for incremental count updates.
-func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRange string, logID uint64) Result {
+func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRange string, logID uint32) Result {
 	res := Result{}
 
 	collector, err := newCollector(source, e.fetcher, e.log)
@@ -69,29 +69,29 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRang
 		return res
 	}
 
-	maps, err := e.collectRepo.ListCategories(ctx, int64(source.ID))
+	maps, err := e.collectRepo.ListCategories(ctx, source.ID)
 	if err != nil {
-		e.log.Error("collect: list categories failed", zap.Int64("source_id", int64(source.ID)), zap.Error(err))
+		e.log.Error("collect: list categories failed", zap.Uint32("source_id", source.ID), zap.Error(err))
 		res.HasError = true
 		res.Message = err.Error()
 		return res
 	}
-	catMap := map[int64]int64{}
+	catMap := map[uint32]uint32{}
 	for _, m := range maps {
 		if m.ExternalCategoryID == 0 {
 			continue
 		}
-		catMap[int64(m.ExternalCategoryID)] = int64(m.CategoryID)
+		catMap[m.ExternalCategoryID] = m.CategoryID
 	}
 
 	cats, err := e.categoryRepo.List(ctx, false)
 	if err != nil {
-		e.log.Error("collect: list all categories for parent map failed", zap.Int64("source_id", int64(source.ID)), zap.Error(err))
+		e.log.Error("collect: list all categories for parent map failed", zap.Uint32("source_id", source.ID), zap.Error(err))
 		res.HasError = true
 		res.Message = err.Error()
 		return res
 	}
-	parentMap := map[uint64]uint64{}
+	parentMap := map[uint32]uint32{}
 	for _, c := range cats {
 		parentMap[c.ID] = c.ParentID
 	}
@@ -99,7 +99,7 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRang
 	cutoffTime := utils.DataRangeCutoff(dataRange)
 
 	// Phase 1: collect all ids from list pages
-	var allIDs []int64
+	var allIDs []uint32
 	pageNo := 1
 	maxPages := 50
 	for pageNo <= maxPages {
@@ -109,7 +109,7 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRang
 		}
 		listPage, err := collector.FetchListPage(ctx, source, pageNo, dataRange)
 		if err != nil {
-			e.log.Error("collect: fetch list failed", zap.Int64("source_id", int64(source.ID)), zap.Int("page", pageNo), zap.Error(err))
+			e.log.Error("collect: fetch list failed", zap.Uint32("source_id", source.ID), zap.Int("page", pageNo), zap.Error(err))
 			res.HasError = true
 			res.Message = fmt.Sprintf("拉取列表第%d页失败: %v", pageNo, err)
 			return res
@@ -160,7 +160,7 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRang
 
 		page, err := collector.FetchDetail(ctx, source, batch)
 		if err != nil {
-			e.log.Error("collect: fetch detail failed", zap.Int64("source_id", int64(source.ID)), zap.Int("batch_start", i), zap.Int("batch_end", end), zap.Error(err))
+			e.log.Error("collect: fetch detail failed", zap.Uint32("source_id", source.ID), zap.Int("batch_start", i), zap.Int("batch_end", end), zap.Error(err))
 			res.HasError = true
 			res.Message = fmt.Sprintf("拉取详情失败(batch %d-%d): %v", i, end, err)
 			return res
@@ -185,7 +185,7 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRang
 
 			if err := e.upsertItem(ctx, source, catMap, parentMap, item); err != nil {
 				e.log.Warn("collect item failed",
-					zap.Int64("source_id", int64(source.ID)),
+					zap.Uint32("source_id", source.ID),
 					zap.String("title", item.Title),
 					zap.Error(err),
 				)
@@ -236,8 +236,8 @@ func extractHost(raw string) string {
 	return u.Host
 }
 
-func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, catMap map[int64]int64, parentMap map[uint64]uint64, item Item) error {
-	if item.ExternalCategoryID <= 0 {
+func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, catMap map[uint32]uint32, parentMap map[uint32]uint32, item Item) error {
+	if item.ExternalCategoryID == 0 {
 		return fmt.Errorf("外部分类ID无效")
 	}
 	categoryID, ok := catMap[item.ExternalCategoryID]
@@ -257,7 +257,7 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 
 	// Cross-source: existing video was collected by a different source.
 	// Supplement empty basic fields (no cover, no associations, no PublishStatus) + upsert episodes.
-	if existing != nil && existing.CollectSourceID != 0 && existing.CollectSourceID != uint64(source.ID) {
+	if existing != nil && existing.CollectSourceID != 0 && existing.CollectSourceID != source.ID {
 		return e.videoRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
 			vRepo := e.videoRepo.WithTx(tx)
 			pRepo := e.playRepo.WithTx(tx)
@@ -288,7 +288,7 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 	if existing != nil {
 		if err := e.migrateDomainIfChanged(ctx, source, existing, item); err != nil {
 			e.log.Warn("collect: domain migration failed",
-				zap.Int64("source_id", int64(source.ID)),
+				zap.Uint32("source_id", source.ID),
 				zap.String("title", item.Title),
 				zap.Error(err),
 			)
@@ -298,12 +298,12 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 	return e.videoRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
 		vRepo := e.videoRepo.WithTx(tx)
 		pRepo := e.playRepo.WithTx(tx)
-		var videoID uint64
+		var videoID uint32
 		if existing != nil {
 			videoID = existing.ID
 			// Manually created (CollectSourceID==0): claim it for this source
 			if existing.CollectSourceID == 0 {
-				existing.CollectSourceID = uint64(source.ID)
+				existing.CollectSourceID = source.ID
 			}
 			// Same source: supplement empty basic fields + override cover (capture domain/path changes)
 			applySupplementFields(existing, item, categoryID, parentMap, serialStatus, true)
@@ -311,17 +311,12 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 				return err
 			}
 		} else {
-			desc := item.Description
-			var descPtr *string
-			if desc != "" {
-				descPtr = &desc
-			}
 			v := &model.Videos{
 				Title:            item.Title,
 				Subtitle:         item.Subtitle,
-				Description:      descPtr,
-				CategoryID:       uint64(categoryID),
-				ParentCategoryID: parentMap[uint64(categoryID)],
+				Description:      item.Description,
+				CategoryID:       categoryID,
+				ParentCategoryID: parentMap[categoryID],
 				PublishStatus:    constant.PublishStatusOnline,
 				SerialStatus:     serialStatus,
 				CoverImage:       item.Cover,
@@ -331,7 +326,7 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 				Language:         item.Language,
 				Duration:         uint32(item.Duration),
 				ReleaseDate:      strings.TrimSpace(item.ReleaseDate),
-				CollectSourceID:  uint64(source.ID),
+				CollectSourceID:  source.ID,
 			}
 			if v.SerialStatus == 0 {
 				v.SerialStatus = constant.SerialStatusFinished
@@ -369,7 +364,7 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 			if format == "" {
 				format = constant.PlayFormatHLS
 			}
-			existingEp, err := pRepo.GetEpisodeByKey(ctx, int64(videoID), int64(source.PlaySourceID), num)
+			existingEp, err := pRepo.GetEpisodeByKey(ctx, videoID, source.PlaySourceID, num)
 			if err != nil {
 				return err
 			}
@@ -379,19 +374,13 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 				existingEp.Quality = ep.Quality
 				existingEp.Format = format
 				existingEp.Status = constant.StatusEnabled
-				if existingEp.DeletedAt != nil {
-					if err := pRepo.RestoreAndUpdateEpisode(ctx, existingEp); err != nil {
-						return err
-					}
-				} else {
-					if err := pRepo.UpdateEpisode(ctx, existingEp); err != nil {
-						return err
-					}
+				if err := pRepo.UpdateEpisode(ctx, existingEp); err != nil {
+					return err
 				}
 				continue
 			}
 			m := &model.PlayEpisodes{
-				SourceID:      uint64(source.PlaySourceID),
+				SourceID:      source.PlaySourceID,
 				VideoID:       videoID,
 				EpisodeNumber: uint32(num),
 				Title:         ep.Title,
@@ -413,13 +402,12 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 // When updateCover is true (same-source), the cover image is overridden with the new
 // value to capture remote domain/path changes; when false (cross-source) the cover is
 // left untouched. PublishStatus is never modified here — it is a system-managed field.
-func applySupplementFields(v *model.Videos, item Item, categoryID int64, parentMap map[uint64]uint64, serialStatus uint8, updateCover bool) {
+func applySupplementFields(v *model.Videos, item Item, categoryID uint32, parentMap map[uint32]uint32, serialStatus uint8, updateCover bool) {
 	if v.Subtitle == "" && item.Subtitle != "" {
 		v.Subtitle = item.Subtitle
 	}
-	if (v.Description == nil || *v.Description == "") && item.Description != "" {
-		desc := item.Description
-		v.Description = &desc
+	if v.Description == "" && item.Description != "" {
+		v.Description = item.Description
 	}
 	if updateCover && item.Cover != "" {
 		v.CoverImage = item.Cover
@@ -445,10 +433,10 @@ func applySupplementFields(v *model.Videos, item Item, categoryID int64, parentM
 		v.SerialStatus = serialStatus
 	}
 	if v.CategoryID == 0 {
-		v.CategoryID = uint64(categoryID)
+		v.CategoryID = categoryID
 	}
 	if v.ParentCategoryID == 0 {
-		v.ParentCategoryID = parentMap[uint64(categoryID)]
+		v.ParentCategoryID = parentMap[categoryID]
 	}
 }
 
@@ -462,12 +450,12 @@ func (e *Engine) migrateDomainIfChanged(ctx context.Context, source *model.Colle
 		oldHost := extractHost(existing.CoverImage)
 		newHost := extractHost(item.Cover)
 		if oldHost != "" && newHost != "" && oldHost != newHost {
-			n, err := e.videoRepo.UpdateCoverDomainByCollectSource(ctx, uint64(source.ID), oldHost, newHost)
+			n, err := e.videoRepo.UpdateCoverDomainByCollectSource(ctx, source.ID, oldHost, newHost)
 			if err != nil {
 				return fmt.Errorf("migrate cover domain: %w", err)
 			}
 			e.log.Info("collect: migrated cover domain",
-				zap.Int64("source_id", int64(source.ID)),
+				zap.Uint32("source_id", source.ID),
 				zap.String("old_host", oldHost),
 				zap.String("new_host", newHost),
 				zap.Int("affected", n),
@@ -493,7 +481,7 @@ func (e *Engine) migrateDomainIfChanged(ctx context.Context, source *model.Colle
 	if newHost == "" {
 		return nil
 	}
-	eps, _, err := e.playRepo.ListEpisodes(ctx, int64(existing.ID), int64(source.PlaySourceID), 0, 1)
+	eps, _, err := e.playRepo.ListEpisodes(ctx, existing.ID, source.PlaySourceID, 0, 1)
 	if err != nil {
 		return fmt.Errorf("migrate play url domain: list episodes: %w", err)
 	}
@@ -504,12 +492,12 @@ func (e *Engine) migrateDomainIfChanged(ctx context.Context, source *model.Colle
 	if oldHost == "" || oldHost == newHost {
 		return nil
 	}
-	n, err := e.playRepo.UpdatePlayURLDomainBySource(ctx, uint64(source.PlaySourceID), oldHost, newHost)
+	n, err := e.playRepo.UpdatePlayURLDomainBySource(ctx, source.PlaySourceID, oldHost, newHost)
 	if err != nil {
 		return fmt.Errorf("migrate play url domain: %w", err)
 	}
 	e.log.Info("collect: migrated play url domain",
-		zap.Uint64("play_source_id", uint64(source.PlaySourceID)),
+		zap.Uint32("play_source_id", source.PlaySourceID),
 		zap.String("old_host", oldHost),
 		zap.String("new_host", newHost),
 		zap.Int("affected", n),
@@ -517,8 +505,8 @@ func (e *Engine) migrateDomainIfChanged(ctx context.Context, source *model.Colle
 	return nil
 }
 
-func (e *Engine) ensureDirectors(ctx context.Context, names []string) ([]uint64, error) {
-	ids := make([]uint64, 0, len(names))
+func (e *Engine) ensureDirectors(ctx context.Context, names []string) ([]uint32, error) {
+	ids := make([]uint32, 0, len(names))
 	for _, name := range names {
 		name = strings.TrimSpace(name)
 		if name == "" {
@@ -548,8 +536,8 @@ func (e *Engine) ensureDirectors(ctx context.Context, names []string) ([]uint64,
 	return ids, nil
 }
 
-func (e *Engine) ensureActors(ctx context.Context, names []string) ([]uint64, error) {
-	ids := make([]uint64, 0, len(names))
+func (e *Engine) ensureActors(ctx context.Context, names []string) ([]uint32, error) {
+	ids := make([]uint32, 0, len(names))
 	for _, name := range names {
 		name = strings.TrimSpace(name)
 		if name == "" {
@@ -577,8 +565,8 @@ func (e *Engine) ensureActors(ctx context.Context, names []string) ([]uint64, er
 	return ids, nil
 }
 
-func (e *Engine) ensureTags(ctx context.Context, names []string) ([]uint64, error) {
-	ids := make([]uint64, 0, len(names))
+func (e *Engine) ensureTags(ctx context.Context, names []string) ([]uint32, error) {
+	ids := make([]uint32, 0, len(names))
 	for _, name := range names {
 		name = strings.TrimSpace(name)
 		if name == "" {
@@ -627,7 +615,7 @@ func parseSerialStatus(remarks string) uint8 {
 
 // upsertEpisodes only adds/updates play episodes for a video collected by a different source.
 // It does not modify the video record itself.
-func (e *Engine) upsertEpisodes(ctx context.Context, pRepo repository.PlayRepository, source *model.CollectSources, videoID uint64, item Item) error {
+func (e *Engine) upsertEpisodes(ctx context.Context, pRepo repository.PlayRepository, source *model.CollectSources, videoID uint32, item Item) error {
 	for _, ep := range item.Episodes {
 		if ep.URL == "" {
 			continue
@@ -640,7 +628,7 @@ func (e *Engine) upsertEpisodes(ctx context.Context, pRepo repository.PlayReposi
 		if format == "" {
 			format = constant.PlayFormatHLS
 		}
-		existingEp, err := pRepo.GetEpisodeByKey(ctx, int64(videoID), int64(source.PlaySourceID), num)
+		existingEp, err := pRepo.GetEpisodeByKey(ctx, videoID, source.PlaySourceID, num)
 		if err != nil {
 			return err
 		}
@@ -650,19 +638,13 @@ func (e *Engine) upsertEpisodes(ctx context.Context, pRepo repository.PlayReposi
 			existingEp.Quality = ep.Quality
 			existingEp.Format = format
 			existingEp.Status = constant.StatusEnabled
-			if existingEp.DeletedAt != nil {
-				if err := pRepo.RestoreAndUpdateEpisode(ctx, existingEp); err != nil {
-					return err
-				}
-			} else {
-				if err := pRepo.UpdateEpisode(ctx, existingEp); err != nil {
-					return err
-				}
+			if err := pRepo.UpdateEpisode(ctx, existingEp); err != nil {
+				return err
 			}
 			continue
 		}
 		m := &model.PlayEpisodes{
-			SourceID:      uint64(source.PlaySourceID),
+			SourceID:      source.PlaySourceID,
 			VideoID:       videoID,
 			EpisodeNumber: uint32(num),
 			Title:         ep.Title,

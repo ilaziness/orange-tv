@@ -26,7 +26,7 @@ type LiveProxyService interface {
 	// If segURL is non-empty, it proxies the decoded segment/sub-playlist URL.
 	// The method writes the HTTP response directly into gin.Context and returns
 	// an error only when the request cannot be fulfilled before response headers.
-	Proxy(c *gin.Context, channelID int64, segURL string) error
+	Proxy(c *gin.Context, channelID uint32, segURL string) error
 }
 
 type liveProxyService struct {
@@ -66,7 +66,7 @@ func NewLiveProxyService(svc LiveService, log *zap.Logger) LiveProxyService {
 }
 
 // Proxy handles live stream proxy.
-func (s *liveProxyService) Proxy(c *gin.Context, channelID int64, segURL string) error {
+func (s *liveProxyService) Proxy(c *gin.Context, channelID uint32, segURL string) error {
 	s.writeCORS(c)
 	if c.Request.Method == http.MethodOptions {
 		c.AbortWithStatus(http.StatusNoContent)
@@ -89,11 +89,11 @@ func (s *liveProxyService) Proxy(c *gin.Context, channelID int64, segURL string)
 	} else {
 		streamURL, err := s.svc.GetStreamURL(c.Request.Context(), channelID)
 		if err != nil {
-			s.log.Error("[LIVE-PROXY] get stream url failed", zap.Int64("channel_id", channelID), zap.Error(err))
+			s.log.Error("[LIVE-PROXY] get stream url failed", zap.Uint32("channel_id", channelID), zap.Error(err))
 			return err
 		}
 		realURL = streamURL
-		s.log.Debug("[LIVE-PROXY] master playlist request", zap.Int64("channel_id", channelID), zap.String("url", realURL))
+		s.log.Debug("[LIVE-PROXY] master playlist request", zap.Uint32("channel_id", channelID), zap.String("url", realURL))
 	}
 
 	return s.proxyURL(c, channelID, realURL)
@@ -102,7 +102,7 @@ func (s *liveProxyService) Proxy(c *gin.Context, channelID int64, segURL string)
 // proxyURL fetches a URL and either rewrites an m3u8 playlist or streams a media segment.
 // Detection is based on Content-Type, URL extension, and a small body peek, so it works
 // for segment URLs without a .ts extension and for playlist URLs without a .m3u8 extension.
-func (s *liveProxyService) proxyURL(c *gin.Context, channelID int64, realURL string) error {
+func (s *liveProxyService) proxyURL(c *gin.Context, channelID uint32, realURL string) error {
 	resp, err := s.fetchResp(c.Request.Context(), realURL)
 	if err != nil {
 		s.log.Error("[LIVE-PROXY] fetch failed", zap.String("url", realURL), zap.Error(err))
@@ -219,7 +219,7 @@ func (s *liveProxyService) getDomains(ctx context.Context) (map[string]struct{},
 }
 
 // rewriteM3U8 rewrites m3u8 content URLs so they go through the proxy endpoint.
-func rewriteM3U8(body []byte, baseURL string, channelID int64) string {
+func rewriteM3U8(body []byte, baseURL string, channelID uint32) string {
 	text := string(body)
 	base, _ := url.Parse(baseURL)
 	lines := strings.Split(text, "\n")

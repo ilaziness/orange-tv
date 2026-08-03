@@ -22,7 +22,7 @@ type Item struct {
 	Language           string
 	Duration           int32
 	ReleaseDate        string
-	ExternalCategoryID int64 // external category type_id for mapping
+	ExternalCategoryID uint32 // external category type_id for mapping
 	Directors          []string
 	Actors             []string
 	Tags               []string
@@ -34,9 +34,9 @@ type Item struct {
 // RemoteCategory is one external category from a collect source.
 // Generic across formats: Apple CMS class / Open API category.
 type RemoteCategory struct {
-	ID       int64
+	ID       uint32
 	Name     string
-	ParentID int64
+	ParentID uint32
 }
 
 // Page is one page of collected items.
@@ -54,7 +54,7 @@ type ListPage struct {
 	Page       int
 	PageCount  int
 	Total      int
-	IDs        []int64  // external ID list (vod_id for Apple CMS, video id for default)
+	IDs        []uint32 // external ID list (vod_id for Apple CMS, video id for default)
 	Times      []string // time list (vod_time / created_at), parallel to IDs, for time range filtering
 	Categories []RemoteCategory
 }

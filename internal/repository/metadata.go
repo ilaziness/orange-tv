@@ -16,36 +16,36 @@ import (
 type MetadataRepository interface {
 	// Directors
 	ListDirectors(ctx context.Context, keyword string, offset, limit int) ([]model.Directors, int, error)
-	GetDirector(ctx context.Context, id int64) (*model.Directors, error)
+	GetDirector(ctx context.Context, id uint32) (*model.Directors, error)
 	GetDirectorByName(ctx context.Context, name string) (*model.Directors, error)
-	GetDirectorsByIDs(ctx context.Context, ids []uint64) ([]model.Directors, error)
-	ExistsDirectorName(ctx context.Context, name string, excludeID int64) (bool, error)
+	GetDirectorsByIDs(ctx context.Context, ids []uint32) ([]model.Directors, error)
+	ExistsDirectorName(ctx context.Context, name string, excludeID uint32) (bool, error)
 	CreateDirector(ctx context.Context, m *model.Directors) error
 	UpdateDirector(ctx context.Context, m *model.Directors) error
-	SoftDeleteDirector(ctx context.Context, id int64) error
-	CountDirectorRefs(ctx context.Context, id int64) (int, error)
+	SoftDeleteDirector(ctx context.Context, id uint32) error
+	CountDirectorRefs(ctx context.Context, id uint32) (int, error)
 
 	// Actors
 	ListActors(ctx context.Context, keyword string, offset, limit int) ([]model.Actors, int, error)
-	GetActor(ctx context.Context, id int64) (*model.Actors, error)
+	GetActor(ctx context.Context, id uint32) (*model.Actors, error)
 	GetActorByName(ctx context.Context, name string) (*model.Actors, error)
-	GetActorsByIDs(ctx context.Context, ids []uint64) ([]model.Actors, error)
-	ExistsActorName(ctx context.Context, name string, excludeID int64) (bool, error)
+	GetActorsByIDs(ctx context.Context, ids []uint32) ([]model.Actors, error)
+	ExistsActorName(ctx context.Context, name string, excludeID uint32) (bool, error)
 	CreateActor(ctx context.Context, m *model.Actors) error
 	UpdateActor(ctx context.Context, m *model.Actors) error
-	SoftDeleteActor(ctx context.Context, id int64) error
-	CountActorRefs(ctx context.Context, id int64) (int, error)
+	SoftDeleteActor(ctx context.Context, id uint32) error
+	CountActorRefs(ctx context.Context, id uint32) (int, error)
 
 	// Tags
 	ListTags(ctx context.Context, keyword string, offset, limit int) ([]model.Tags, int, error)
-	GetTag(ctx context.Context, id int64) (*model.Tags, error)
+	GetTag(ctx context.Context, id uint32) (*model.Tags, error)
 	GetTagByName(ctx context.Context, name string) (*model.Tags, error)
-	GetTagsByIDs(ctx context.Context, ids []uint64) ([]model.Tags, error)
-	ExistsTagName(ctx context.Context, name string, excludeID int64) (bool, error)
+	GetTagsByIDs(ctx context.Context, ids []uint32) ([]model.Tags, error)
+	ExistsTagName(ctx context.Context, name string, excludeID uint32) (bool, error)
 	CreateTag(ctx context.Context, m *model.Tags) error
 	UpdateTag(ctx context.Context, m *model.Tags) error
-	SoftDeleteTag(ctx context.Context, id int64) error
-	CountTagRefs(ctx context.Context, id int64) (int, error)
+	SoftDeleteTag(ctx context.Context, id uint32) error
+	CountTagRefs(ctx context.Context, id uint32) (int, error)
 }
 
 type metadataRepo struct {
@@ -73,7 +73,7 @@ func (r *metadataRepo) ListDirectors(ctx context.Context, keyword string, offset
 	return items, total, nil
 }
 
-func (r *metadataRepo) GetDirector(ctx context.Context, id int64) (*model.Directors, error) {
+func (r *metadataRepo) GetDirector(ctx context.Context, id uint32) (*model.Directors, error) {
 	item := new(model.Directors)
 	err := r.db.NewSelect().Model(item).Where("id = ?", id).Where("deleted_at IS NULL").Scan(ctx)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -97,7 +97,7 @@ func (r *metadataRepo) GetDirectorByName(ctx context.Context, name string) (*mod
 	return item, nil
 }
 
-func (r *metadataRepo) GetDirectorsByIDs(ctx context.Context, ids []uint64) ([]model.Directors, error) {
+func (r *metadataRepo) GetDirectorsByIDs(ctx context.Context, ids []uint32) ([]model.Directors, error) {
 	if len(ids) == 0 {
 		return nil, nil
 	}
@@ -112,7 +112,7 @@ func (r *metadataRepo) GetDirectorsByIDs(ctx context.Context, ids []uint64) ([]m
 	return items, nil
 }
 
-func (r *metadataRepo) ExistsDirectorName(ctx context.Context, name string, excludeID int64) (bool, error) {
+func (r *metadataRepo) ExistsDirectorName(ctx context.Context, name string, excludeID uint32) (bool, error) {
 	q := r.db.NewSelect().Model((*model.Directors)(nil)).Where("name = ?", name)
 	if excludeID > 0 {
 		q = q.Where("id <> ?", excludeID)
@@ -140,7 +140,7 @@ func (r *metadataRepo) UpdateDirector(ctx context.Context, m *model.Directors) e
 	return nil
 }
 
-func (r *metadataRepo) SoftDeleteDirector(ctx context.Context, id int64) error {
+func (r *metadataRepo) SoftDeleteDirector(ctx context.Context, id uint32) error {
 	now := time.Now()
 	_, err := r.db.NewUpdate().Model((*model.Directors)(nil)).
 		Set("deleted_at = ?", now).Set("updated_at = ?", now).
@@ -151,7 +151,7 @@ func (r *metadataRepo) SoftDeleteDirector(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (r *metadataRepo) CountDirectorRefs(ctx context.Context, id int64) (int, error) {
+func (r *metadataRepo) CountDirectorRefs(ctx context.Context, id uint32) (int, error) {
 	// Only count associations to non-soft-deleted videos.
 	n, err := r.db.NewSelect().
 		TableExpr("video_directors AS vd").
@@ -180,7 +180,7 @@ func (r *metadataRepo) ListActors(ctx context.Context, keyword string, offset, l
 	return items, total, nil
 }
 
-func (r *metadataRepo) GetActor(ctx context.Context, id int64) (*model.Actors, error) {
+func (r *metadataRepo) GetActor(ctx context.Context, id uint32) (*model.Actors, error) {
 	item := new(model.Actors)
 	err := r.db.NewSelect().Model(item).Where("id = ?", id).Where("deleted_at IS NULL").Scan(ctx)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -204,7 +204,7 @@ func (r *metadataRepo) GetActorByName(ctx context.Context, name string) (*model.
 	return item, nil
 }
 
-func (r *metadataRepo) GetActorsByIDs(ctx context.Context, ids []uint64) ([]model.Actors, error) {
+func (r *metadataRepo) GetActorsByIDs(ctx context.Context, ids []uint32) ([]model.Actors, error) {
 	if len(ids) == 0 {
 		return nil, nil
 	}
@@ -219,7 +219,7 @@ func (r *metadataRepo) GetActorsByIDs(ctx context.Context, ids []uint64) ([]mode
 	return items, nil
 }
 
-func (r *metadataRepo) ExistsActorName(ctx context.Context, name string, excludeID int64) (bool, error) {
+func (r *metadataRepo) ExistsActorName(ctx context.Context, name string, excludeID uint32) (bool, error) {
 	q := r.db.NewSelect().Model((*model.Actors)(nil)).Where("name = ?", name)
 	if excludeID > 0 {
 		q = q.Where("id <> ?", excludeID)
@@ -247,7 +247,7 @@ func (r *metadataRepo) UpdateActor(ctx context.Context, m *model.Actors) error {
 	return nil
 }
 
-func (r *metadataRepo) SoftDeleteActor(ctx context.Context, id int64) error {
+func (r *metadataRepo) SoftDeleteActor(ctx context.Context, id uint32) error {
 	now := time.Now()
 	_, err := r.db.NewUpdate().Model((*model.Actors)(nil)).
 		Set("deleted_at = ?", now).Set("updated_at = ?", now).
@@ -258,7 +258,7 @@ func (r *metadataRepo) SoftDeleteActor(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (r *metadataRepo) CountActorRefs(ctx context.Context, id int64) (int, error) {
+func (r *metadataRepo) CountActorRefs(ctx context.Context, id uint32) (int, error) {
 	n, err := r.db.NewSelect().
 		TableExpr("video_actors AS va").
 		Join("JOIN videos AS v ON v.id = va.video_id AND v.deleted_at IS NULL").
@@ -286,7 +286,7 @@ func (r *metadataRepo) ListTags(ctx context.Context, keyword string, offset, lim
 	return items, total, nil
 }
 
-func (r *metadataRepo) GetTag(ctx context.Context, id int64) (*model.Tags, error) {
+func (r *metadataRepo) GetTag(ctx context.Context, id uint32) (*model.Tags, error) {
 	item := new(model.Tags)
 	err := r.db.NewSelect().Model(item).Where("id = ?", id).Where("deleted_at IS NULL").Scan(ctx)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -310,7 +310,7 @@ func (r *metadataRepo) GetTagByName(ctx context.Context, name string) (*model.Ta
 	return item, nil
 }
 
-func (r *metadataRepo) GetTagsByIDs(ctx context.Context, ids []uint64) ([]model.Tags, error) {
+func (r *metadataRepo) GetTagsByIDs(ctx context.Context, ids []uint32) ([]model.Tags, error) {
 	if len(ids) == 0 {
 		return nil, nil
 	}
@@ -325,7 +325,7 @@ func (r *metadataRepo) GetTagsByIDs(ctx context.Context, ids []uint64) ([]model.
 	return items, nil
 }
 
-func (r *metadataRepo) ExistsTagName(ctx context.Context, name string, excludeID int64) (bool, error) {
+func (r *metadataRepo) ExistsTagName(ctx context.Context, name string, excludeID uint32) (bool, error) {
 	q := r.db.NewSelect().Model((*model.Tags)(nil)).Where("name = ?", name)
 	if excludeID > 0 {
 		q = q.Where("id <> ?", excludeID)
@@ -353,7 +353,7 @@ func (r *metadataRepo) UpdateTag(ctx context.Context, m *model.Tags) error {
 	return nil
 }
 
-func (r *metadataRepo) SoftDeleteTag(ctx context.Context, id int64) error {
+func (r *metadataRepo) SoftDeleteTag(ctx context.Context, id uint32) error {
 	now := time.Now()
 	_, err := r.db.NewUpdate().Model((*model.Tags)(nil)).
 		Set("deleted_at = ?", now).Set("updated_at = ?", now).
@@ -364,7 +364,7 @@ func (r *metadataRepo) SoftDeleteTag(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (r *metadataRepo) CountTagRefs(ctx context.Context, id int64) (int, error) {
+func (r *metadataRepo) CountTagRefs(ctx context.Context, id uint32) (int, error) {
 	n, err := r.db.NewSelect().
 		TableExpr("video_tags AS vt").
 		Join("JOIN videos AS v ON v.id = vt.video_id AND v.deleted_at IS NULL").

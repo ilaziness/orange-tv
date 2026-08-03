@@ -27,7 +27,7 @@ type LoginResponse struct {
 
 // Profile is the authenticated user public profile.
 type Profile struct {
-	ID       uint64 `json:"id"`
+	ID       uint32 `json:"id"`
 	StrID    string `json:"str_id"`
 	Username string `json:"username"`
 	Nickname string `json:"nickname"`
@@ -56,7 +56,7 @@ type LoginHistoryListRequest struct {
 
 // LoginHistoryItem is a single user login log entry.
 type LoginHistoryItem struct {
-	ID        uint64 `json:"id"`
+	ID        uint32 `json:"id"`
 	IP        string `json:"ip"`
 	UserAgent string `json:"user_agent"`
 	Status    uint8  `json:"status"`
@@ -72,7 +72,7 @@ type FavoriteListRequest struct {
 
 // FavoriteItem is the favorite list item.
 type FavoriteItem struct {
-	VideoID      uint64  `json:"video_id"`
+	VideoID      uint32  `json:"video_id"`
 	Title        string  `json:"title"`
 	Cover        string  `json:"cover"`
 	Year         uint32  `json:"year"`
@@ -95,13 +95,13 @@ type HistoryListRequest struct {
 
 // HistoryItem is the play history list item.
 type HistoryItem struct {
-	VideoID      uint64 `json:"video_id"`
+	VideoID      uint32 `json:"video_id"`
 	Title        string `json:"title"`
 	Cover        string `json:"cover"`
 	Year         string `json:"year"`
 	CategoryName string `json:"category_name"`
-	PlaySourceID uint64 `json:"play_source_id"`
-	EpisodeID    uint64 `json:"episode_id"`
+	PlaySourceID uint32 `json:"play_source_id"`
+	EpisodeID    uint32 `json:"episode_id"`
 	Progress     uint32 `json:"progress"`
 	Duration     uint32 `json:"duration"`
 	LastPlayedAt string `json:"last_played_at"`
@@ -109,9 +109,9 @@ type HistoryItem struct {
 
 // UpsertHistoryRequest upserts play progress.
 type UpsertHistoryRequest struct {
-	VideoID      uint64 `json:"video_id" validate:"required,min=1"`
-	PlaySourceID uint64 `json:"play_source_id" validate:"omitempty,min=1"`
-	EpisodeID    uint64 `json:"episode_id" validate:"omitempty,min=1"`
+	VideoID      uint32 `json:"video_id" validate:"required,min=1"`
+	PlaySourceID uint32 `json:"play_source_id" validate:"omitempty,min=1"`
+	EpisodeID    uint32 `json:"episode_id" validate:"omitempty,min=1"`
 	Progress     uint32 `json:"progress" validate:"omitempty,min=0"`
 	Duration     uint32 `json:"duration" validate:"omitempty,min=0"`
 }
@@ -125,12 +125,12 @@ type CommentListRequest struct {
 
 // CommentItem is the comment list item.
 type CommentItem struct {
-	ID           uint64         `json:"id"`
-	VideoID      uint64         `json:"video_id"`
-	UserID       uint64         `json:"user_id"`
+	ID           uint32         `json:"id"`
+	VideoID      uint32         `json:"video_id"`
+	UserID       uint32         `json:"user_id"`
 	Username     string         `json:"username"`
 	Avatar       string         `json:"avatar"`
-	ParentID     uint64         `json:"parent_id"`
+	ParentID     uint32         `json:"parent_id"`
 	Content      string         `json:"content"`
 	LikeCount    uint32         `json:"like_count"`
 	DislikeCount uint32         `json:"dislike_count"`
@@ -142,8 +142,8 @@ type CommentItem struct {
 
 // CreateCommentRequest creates a comment.
 type CreateCommentRequest struct {
-	VideoID  uint64 `json:"video_id" validate:"required,min=1"`
-	ParentID uint64 `json:"parent_id" validate:"omitempty,min=1"`
+	VideoID  uint32 `json:"video_id" validate:"required,min=1"`
+	ParentID uint32 `json:"parent_id" validate:"omitempty,min=1"`
 	Content  string `json:"content" validate:"required,min=1,max=200"`
 }
 
@@ -163,11 +163,11 @@ type VoteCommentResult struct {
 
 // BannerItem is the client banner item.
 type BannerItem struct {
-	ID      uint64 `json:"id"`
+	ID      uint32 `json:"id"`
 	Title   string `json:"title"`
 	Cover   string `json:"cover"`
 	Link    string `json:"link"`
-	VideoID uint64 `json:"video_id"`
+	VideoID uint32 `json:"video_id"`
 }
 
 // ===== Ratings (C6) =====

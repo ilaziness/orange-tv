@@ -30,7 +30,7 @@ import (
 type DataService interface {
 	Backup(ctx context.Context, w io.Writer, useNative bool) error
 	BatchUpdatePreview(ctx context.Context, req *dto.BatchUpdatePreviewRequest) (int64, error)
-	BatchUpdateExecute(ctx context.Context, req *dto.BatchUpdateExecuteRequest, adminID int64, ip string) (int64, error)
+	BatchUpdateExecute(ctx context.Context, req *dto.BatchUpdateExecuteRequest, adminID uint32, ip string) (int64, error)
 }
 
 type dataService struct {
@@ -205,7 +205,7 @@ func (s *dataService) BatchUpdatePreview(ctx context.Context, req *dto.BatchUpda
 }
 
 // BatchUpdateExecute performs the actual string replacement on the allowed field.
-func (s *dataService) BatchUpdateExecute(ctx context.Context, req *dto.BatchUpdateExecuteRequest, adminID int64, ip string) (int64, error) {
+func (s *dataService) BatchUpdateExecute(ctx context.Context, req *dto.BatchUpdateExecuteRequest, adminID uint32, ip string) (int64, error) {
 	target, err := s.resolveTarget(req.Target)
 	if err != nil {
 		return 0, err
@@ -256,7 +256,7 @@ func (s *dataService) resolveTarget(target string) (struct {
 	}{}, errcode.WithMessage(errcode.ParamError, "不支持的目标字段")
 }
 
-func (s *dataService) recordSystemLog(ctx context.Context, adminID int64, ip, target, oldValue, newValue string, affected int64) error {
+func (s *dataService) recordSystemLog(ctx context.Context, adminID uint32, ip, target, oldValue, newValue string, affected int64) error {
 	if s.repo == nil {
 		return nil
 	}
@@ -272,17 +272,14 @@ func (s *dataService) recordSystemLog(ctx context.Context, adminID int64, ip, ta
 	}
 	contentStr := string(content)
 	now := time.Now()
-	if adminID < 0 {
-		adminID = 0
-	}
 	return s.repo.CreateSystemLog(ctx, &model.SystemLogs{
 		Level:     1,
 		Module:    "data_admin",
 		Action:    "batch_update",
-		AdminID:   uint64(adminID),
-		Content:   &contentStr,
+		AdminID:   adminID,
+		Content:   contentStr,
 		IPAddress: ip,
-		CreatedAt: &now,
+		CreatedAt: now,
 	})
 }
 

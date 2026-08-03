@@ -145,7 +145,7 @@ func (r *settingsRepo) UpsertMany(ctx context.Context, items []SettingUpsert) er
 				row := &model.SystemSettings{
 					SettingKey:   it.Key,
 					SettingGroup: it.Group,
-					SettingValue: &val,
+					SettingValue: val,
 					SettingType:  it.SettingType,
 					Description:  it.Description,
 				}
@@ -158,7 +158,7 @@ func (r *settingsRepo) UpsertMany(ctx context.Context, items []SettingUpsert) er
 				return fmt.Errorf("select setting %s: %w", it.Key, err)
 			}
 			val := it.Value
-			existing.SettingValue = &val
+			existing.SettingValue = val
 			if it.SettingType > 0 {
 				existing.SettingType = it.SettingType
 			}

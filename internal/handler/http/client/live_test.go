@@ -57,7 +57,7 @@ func (s *stubLiveService) List(ctx context.Context, req *clientdto.LiveListReque
 	return nil, 0, nil
 }
 
-func (s *stubLiveService) GetStreamURL(ctx context.Context, id int64) (string, error) {
+func (s *stubLiveService) GetStreamURL(ctx context.Context, id uint32) (string, error) {
 	return "", nil
 }
 
@@ -69,6 +69,6 @@ type stubLiveProxyService struct {
 	proxyErr error
 }
 
-func (s *stubLiveProxyService) Proxy(c *gin.Context, channelID int64, segURL string) error {
+func (s *stubLiveProxyService) Proxy(c *gin.Context, channelID uint32, segURL string) error {
 	return s.proxyErr
 }

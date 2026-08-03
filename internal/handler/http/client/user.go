@@ -532,7 +532,7 @@ func (h *UserHandler) ListBanners(c *gin.Context) {
 }
 
 // currentUserID extracts the user ID from JWT claims; returns 0 if not a user token.
-func currentUserID(c *gin.Context) int64 {
+func currentUserID(c *gin.Context) uint32 {
 	claims := httpmiddleware.GetClaims(c)
 	if claims == nil {
 		return 0

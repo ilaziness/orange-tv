@@ -15,20 +15,20 @@ type VideoListRequest struct {
 
 // VideoDetailRequest is the query parameter for the open video detail (multiple ids).
 type VideoDetailRequest struct {
-	IDs []int64 `form:"id" binding:"required,max=50,dive,gt=0"`
+	IDs []uint32 `form:"id" binding:"required,max=50,dive,gt=0"`
 }
 
 // VideoListItem is one compact video item in the open video list.
 type VideoListItem struct {
-	ID         uint64 `json:"id"`
+	ID         uint32 `json:"id"`
 	Title      string `json:"title"`
-	CategoryID uint64 `json:"category_id"`
+	CategoryID uint32 `json:"category_id"`
 	CreatedAt  string `json:"created_at"`
 }
 
 // VideoSource is a play source group used in the open detail response.
 type VideoSource struct {
-	ID       uint64               `json:"id"`
+	ID       uint32               `json:"id"`
 	Name     string               `json:"name"`
 	Episodes []VideoSourceEpisode `json:"episodes"`
 }
@@ -42,11 +42,11 @@ type VideoSourceEpisode struct {
 
 // VideoDetailItem is the full video detail payload in the open API.
 type VideoDetailItem struct {
-	ID          uint64        `json:"id"`
+	ID          uint32        `json:"id"`
 	Title       string        `json:"title"`
 	Subtitle    string        `json:"subtitle"`
 	Cover       string        `json:"cover"`
-	CategoryID  uint64        `json:"category_id"`
+	CategoryID  uint32        `json:"category_id"`
 	Year        uint32        `json:"year"`
 	Rating      float64       `json:"rating"`
 	ReleaseDate string        `json:"release_date"`

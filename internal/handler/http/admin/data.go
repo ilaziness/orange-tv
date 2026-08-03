@@ -56,7 +56,7 @@ func (h *DataHandler) BatchUpdateExecute(c *gin.Context) {
 		return
 	}
 
-	adminID := int64(0)
+	adminID := uint32(0)
 	if claims := httpmiddleware.GetClaims(c); claims != nil {
 		adminID = claims.UserID
 	}

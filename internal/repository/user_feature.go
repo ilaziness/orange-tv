@@ -15,7 +15,7 @@ import (
 
 // UserLoginLogFilter filters user_login_logs queries.
 type UserLoginLogFilter struct {
-	UserID    *int64
+	UserID    *uint32
 	Username  string
 	Status    *uint8
 	StartTime *time.Time
@@ -27,50 +27,50 @@ type UserLoginLogFilter struct {
 // UserFeatureRepository manages user favorites, play history, comments, banners and site stats.
 type UserFeatureRepository interface {
 	// Favorites
-	ListFavorites(ctx context.Context, userID int64, offset, limit int) ([]model.UserFavorites, int, error)
-	GetFavorite(ctx context.Context, userID, videoID int64) (*model.UserFavorites, error)
+	ListFavorites(ctx context.Context, userID uint32, offset, limit int) ([]model.UserFavorites, int, error)
+	GetFavorite(ctx context.Context, userID, videoID uint32) (*model.UserFavorites, error)
 	AddFavorite(ctx context.Context, f *model.UserFavorites) error
-	RemoveFavorite(ctx context.Context, userID, videoID int64) error
+	RemoveFavorite(ctx context.Context, userID, videoID uint32) error
 
 	// Play history
-	ListHistory(ctx context.Context, userID int64, offset, limit int) ([]model.UserPlayHistory, int, error)
-	GetHistory(ctx context.Context, userID, videoID int64) (*model.UserPlayHistory, error)
+	ListHistory(ctx context.Context, userID uint32, offset, limit int) ([]model.UserPlayHistory, int, error)
+	GetHistory(ctx context.Context, userID, videoID uint32) (*model.UserPlayHistory, error)
 	UpsertHistory(ctx context.Context, h *model.UserPlayHistory) error
-	DeleteHistory(ctx context.Context, userID, videoID int64) error
-	ClearHistory(ctx context.Context, userID int64) error
+	DeleteHistory(ctx context.Context, userID, videoID uint32) error
+	ClearHistory(ctx context.Context, userID uint32) error
 
 	// Comments
-	ListComments(ctx context.Context, videoID int64, offset, limit int) ([]model.VideoComments, int, error)
-	ListReplies(ctx context.Context, parentID int64, offset, limit int) ([]model.VideoComments, int, error)
-	ListCommentsByUser(ctx context.Context, userID int64, offset, limit int) ([]model.VideoComments, int, error)
-	CountRepliesByParents(ctx context.Context, parentIDs []int64) (map[int64]int, error)
-	GetComment(ctx context.Context, id int64) (*model.VideoComments, error)
+	ListComments(ctx context.Context, videoID uint32, offset, limit int) ([]model.VideoComments, int, error)
+	ListReplies(ctx context.Context, parentID uint32, offset, limit int) ([]model.VideoComments, int, error)
+	ListCommentsByUser(ctx context.Context, userID uint32, offset, limit int) ([]model.VideoComments, int, error)
+	CountRepliesByParents(ctx context.Context, parentIDs []uint32) (map[uint32]int, error)
+	GetComment(ctx context.Context, id uint32) (*model.VideoComments, error)
 	CreateComment(ctx context.Context, c *model.VideoComments) error
-	GetCommentVote(ctx context.Context, userID, commentID int64) (*model.UserCommentVotes, error)
+	GetCommentVote(ctx context.Context, userID, commentID uint32) (*model.UserCommentVotes, error)
 	UpsertCommentVote(ctx context.Context, v *model.UserCommentVotes) error
-	DeleteCommentVote(ctx context.Context, userID, commentID int64) error
-	BatchGetCommentVotes(ctx context.Context, userID int64, commentIDs []int64) (map[int64]int8, error)
-	UpdateCommentVoteCounts(ctx context.Context, commentID int64, likeDelta, dislikeDelta int) error
+	DeleteCommentVote(ctx context.Context, userID, commentID uint32) error
+	BatchGetCommentVotes(ctx context.Context, userID uint32, commentIDs []uint32) (map[uint32]int8, error)
+	UpdateCommentVoteCounts(ctx context.Context, commentID uint32, likeDelta, dislikeDelta int) error
 
 	// Ratings
-	GetRating(ctx context.Context, userID, videoID int64) (*model.UserRatings, error)
+	GetRating(ctx context.Context, userID, videoID uint32) (*model.UserRatings, error)
 	UpsertRating(ctx context.Context, r *model.UserRatings) error
-	GetRatingStats(ctx context.Context, videoID int64) (float64, int, error)
+	GetRatingStats(ctx context.Context, videoID uint32) (float64, int, error)
 	WithTx(tx bun.Tx) UserFeatureRepository
 	RunInTx(ctx context.Context, fn func(ctx context.Context, tx bun.Tx) error) error
 
 	// User login logs
 	CreateUserLoginLog(ctx context.Context, l *model.UserLoginLogs) error
 	ListUserLoginLogs(ctx context.Context, f UserLoginLogFilter) ([]model.UserLoginLogs, int, error)
-	DeleteUserLoginLogsBefore(ctx context.Context, userID int64, before time.Time) error
+	DeleteUserLoginLogsBefore(ctx context.Context, userID uint32, before time.Time) error
 
 	// Banners
 	ListBanners(ctx context.Context, status *uint8) ([]model.Banners, error)
 	ListAllBanners(ctx context.Context, offset, limit int) ([]model.Banners, int, error)
-	GetBanner(ctx context.Context, id int64) (*model.Banners, error)
+	GetBanner(ctx context.Context, id uint32) (*model.Banners, error)
 	CreateBanner(ctx context.Context, b *model.Banners) error
 	UpdateBanner(ctx context.Context, b *model.Banners) error
-	DeleteBanner(ctx context.Context, id int64) error
+	DeleteBanner(ctx context.Context, id uint32) error
 
 	// Site stats
 	IncrDailyStats(ctx context.Context, date time.Time, pv, uv int) error
@@ -110,7 +110,7 @@ func notFoundOrErr(err error, wrap string) (bool, error) {
 
 // ===== Favorites =====
 
-func (r *userFeatureRepo) ListFavorites(ctx context.Context, userID int64, offset, limit int) ([]model.UserFavorites, int, error) {
+func (r *userFeatureRepo) ListFavorites(ctx context.Context, userID uint32, offset, limit int) ([]model.UserFavorites, int, error) {
 	items := make([]model.UserFavorites, 0, limit)
 	q := r.db.NewSelect().Model(&items).Where("user_id = ?", userID)
 	total, err := q.Count(ctx)
@@ -123,7 +123,7 @@ func (r *userFeatureRepo) ListFavorites(ctx context.Context, userID int64, offse
 	return items, total, nil
 }
 
-func (r *userFeatureRepo) GetFavorite(ctx context.Context, userID, videoID int64) (*model.UserFavorites, error) {
+func (r *userFeatureRepo) GetFavorite(ctx context.Context, userID, videoID uint32) (*model.UserFavorites, error) {
 	f := new(model.UserFavorites)
 	err := r.db.NewSelect().Model(f).
 		Where("user_id = ?", userID).
@@ -147,7 +147,7 @@ func (r *userFeatureRepo) AddFavorite(ctx context.Context, f *model.UserFavorite
 	return nil
 }
 
-func (r *userFeatureRepo) RemoveFavorite(ctx context.Context, userID, videoID int64) error {
+func (r *userFeatureRepo) RemoveFavorite(ctx context.Context, userID, videoID uint32) error {
 	_, err := r.db.NewDelete().Model((*model.UserFavorites)(nil)).
 		Where("user_id = ?", userID).
 		Where("video_id = ?", videoID).
@@ -160,7 +160,7 @@ func (r *userFeatureRepo) RemoveFavorite(ctx context.Context, userID, videoID in
 
 // ===== Play history =====
 
-func (r *userFeatureRepo) ListHistory(ctx context.Context, userID int64, offset, limit int) ([]model.UserPlayHistory, int, error) {
+func (r *userFeatureRepo) ListHistory(ctx context.Context, userID uint32, offset, limit int) ([]model.UserPlayHistory, int, error) {
 	items := make([]model.UserPlayHistory, 0, limit)
 	q := r.db.NewSelect().Model(&items).Where("user_id = ?", userID)
 	total, err := q.Count(ctx)
@@ -173,7 +173,7 @@ func (r *userFeatureRepo) ListHistory(ctx context.Context, userID int64, offset,
 	return items, total, nil
 }
 
-func (r *userFeatureRepo) GetHistory(ctx context.Context, userID, videoID int64) (*model.UserPlayHistory, error) {
+func (r *userFeatureRepo) GetHistory(ctx context.Context, userID, videoID uint32) (*model.UserPlayHistory, error) {
 	h := new(model.UserPlayHistory)
 	err := r.db.NewSelect().Model(h).
 		Where("user_id = ?", userID).
@@ -204,7 +204,7 @@ func (r *userFeatureRepo) UpsertHistory(ctx context.Context, h *model.UserPlayHi
 	return nil
 }
 
-func (r *userFeatureRepo) DeleteHistory(ctx context.Context, userID, videoID int64) error {
+func (r *userFeatureRepo) DeleteHistory(ctx context.Context, userID, videoID uint32) error {
 	_, err := r.db.NewDelete().Model((*model.UserPlayHistory)(nil)).
 		Where("user_id = ?", userID).
 		Where("video_id = ?", videoID).
@@ -215,7 +215,7 @@ func (r *userFeatureRepo) DeleteHistory(ctx context.Context, userID, videoID int
 	return nil
 }
 
-func (r *userFeatureRepo) ClearHistory(ctx context.Context, userID int64) error {
+func (r *userFeatureRepo) ClearHistory(ctx context.Context, userID uint32) error {
 	_, err := r.db.NewDelete().Model((*model.UserPlayHistory)(nil)).
 		Where("user_id = ?", userID).
 		Exec(ctx)
@@ -227,7 +227,7 @@ func (r *userFeatureRepo) ClearHistory(ctx context.Context, userID int64) error 
 
 // ===== Comments =====
 
-func (r *userFeatureRepo) ListComments(ctx context.Context, videoID int64, offset, limit int) ([]model.VideoComments, int, error) {
+func (r *userFeatureRepo) ListComments(ctx context.Context, videoID uint32, offset, limit int) ([]model.VideoComments, int, error) {
 	items := make([]model.VideoComments, 0, limit)
 	q := r.db.NewSelect().Model(&items).
 		Relation("User").
@@ -244,7 +244,7 @@ func (r *userFeatureRepo) ListComments(ctx context.Context, videoID int64, offse
 	return items, total, nil
 }
 
-func (r *userFeatureRepo) ListReplies(ctx context.Context, parentID int64, offset, limit int) ([]model.VideoComments, int, error) {
+func (r *userFeatureRepo) ListReplies(ctx context.Context, parentID uint32, offset, limit int) ([]model.VideoComments, int, error) {
 	items := make([]model.VideoComments, 0, limit)
 	q := r.db.NewSelect().Model(&items).
 		Relation("User").
@@ -260,7 +260,7 @@ func (r *userFeatureRepo) ListReplies(ctx context.Context, parentID int64, offse
 	return items, total, nil
 }
 
-func (r *userFeatureRepo) ListCommentsByUser(ctx context.Context, userID int64, offset, limit int) ([]model.VideoComments, int, error) {
+func (r *userFeatureRepo) ListCommentsByUser(ctx context.Context, userID uint32, offset, limit int) ([]model.VideoComments, int, error) {
 	items := make([]model.VideoComments, 0, limit)
 	q := r.db.NewSelect().Model(&items).Where("user_id = ?", userID)
 	total, err := q.Count(ctx)
@@ -273,14 +273,14 @@ func (r *userFeatureRepo) ListCommentsByUser(ctx context.Context, userID int64, 
 	return items, total, nil
 }
 
-func (r *userFeatureRepo) CountRepliesByParents(ctx context.Context, parentIDs []int64) (map[int64]int, error) {
-	result := make(map[int64]int, len(parentIDs))
+func (r *userFeatureRepo) CountRepliesByParents(ctx context.Context, parentIDs []uint32) (map[uint32]int, error) {
+	result := make(map[uint32]int, len(parentIDs))
 	if len(parentIDs) == 0 {
 		return result, nil
 	}
 	var rows []struct {
-		ParentID int64 `bun:"parent_id"`
-		Count    int   `bun:"cnt"`
+		ParentID uint32 `bun:"parent_id"`
+		Count    int    `bun:"cnt"`
 	}
 	err := r.db.NewSelect().TableExpr("video_comments AS vc").
 		ColumnExpr("vc.parent_id, COUNT(*) AS cnt").
@@ -297,7 +297,7 @@ func (r *userFeatureRepo) CountRepliesByParents(ctx context.Context, parentIDs [
 	return result, nil
 }
 
-func (r *userFeatureRepo) GetComment(ctx context.Context, id int64) (*model.VideoComments, error) {
+func (r *userFeatureRepo) GetComment(ctx context.Context, id uint32) (*model.VideoComments, error) {
 	c := new(model.VideoComments)
 	err := r.db.NewSelect().Model(c).Where("id = ?", id).Scan(ctx)
 	found, err := notFoundOrErr(err, "get comment")
@@ -318,7 +318,7 @@ func (r *userFeatureRepo) CreateComment(ctx context.Context, c *model.VideoComme
 	return nil
 }
 
-func (r *userFeatureRepo) GetCommentVote(ctx context.Context, userID, commentID int64) (*model.UserCommentVotes, error) {
+func (r *userFeatureRepo) GetCommentVote(ctx context.Context, userID, commentID uint32) (*model.UserCommentVotes, error) {
 	v := new(model.UserCommentVotes)
 	err := r.db.NewSelect().Model(v).
 		Where("user_id = ?", userID).
@@ -346,7 +346,7 @@ func (r *userFeatureRepo) UpsertCommentVote(ctx context.Context, v *model.UserCo
 	return nil
 }
 
-func (r *userFeatureRepo) DeleteCommentVote(ctx context.Context, userID, commentID int64) error {
+func (r *userFeatureRepo) DeleteCommentVote(ctx context.Context, userID, commentID uint32) error {
 	_, err := r.db.NewDelete().Model((*model.UserCommentVotes)(nil)).
 		Where("user_id = ?", userID).
 		Where("comment_id = ?", commentID).
@@ -357,14 +357,14 @@ func (r *userFeatureRepo) DeleteCommentVote(ctx context.Context, userID, comment
 	return nil
 }
 
-func (r *userFeatureRepo) BatchGetCommentVotes(ctx context.Context, userID int64, commentIDs []int64) (map[int64]int8, error) {
-	result := make(map[int64]int8, len(commentIDs))
-	if len(commentIDs) == 0 || userID <= 0 {
+func (r *userFeatureRepo) BatchGetCommentVotes(ctx context.Context, userID uint32, commentIDs []uint32) (map[uint32]int8, error) {
+	result := make(map[uint32]int8, len(commentIDs))
+	if len(commentIDs) == 0 || userID == 0 {
 		return result, nil
 	}
 	var rows []struct {
-		CommentID int64 `bun:"comment_id"`
-		Direction int8  `bun:"direction"`
+		CommentID uint32 `bun:"comment_id"`
+		Direction int8   `bun:"direction"`
 	}
 	err := r.db.NewSelect().TableExpr("user_comment_votes").
 		ColumnExpr("comment_id, direction").
@@ -380,7 +380,7 @@ func (r *userFeatureRepo) BatchGetCommentVotes(ctx context.Context, userID int64
 	return result, nil
 }
 
-func (r *userFeatureRepo) UpdateCommentVoteCounts(ctx context.Context, commentID int64, likeDelta, dislikeDelta int) error {
+func (r *userFeatureRepo) UpdateCommentVoteCounts(ctx context.Context, commentID uint32, likeDelta, dislikeDelta int) error {
 	q := r.db.NewUpdate().Model((*model.VideoComments)(nil)).
 		Set("updated_at = ?", time.Now()).
 		Where("id = ?", commentID)
@@ -442,7 +442,7 @@ func (r *userFeatureRepo) ListUserLoginLogs(ctx context.Context, f UserLoginLogF
 	return items, total, nil
 }
 
-func (r *userFeatureRepo) DeleteUserLoginLogsBefore(ctx context.Context, userID int64, before time.Time) error {
+func (r *userFeatureRepo) DeleteUserLoginLogsBefore(ctx context.Context, userID uint32, before time.Time) error {
 	_, err := r.db.NewDelete().Model((*model.UserLoginLogs)(nil)).
 		Where("user_id = ?", userID).
 		Where("created_at < ?", before).
@@ -480,7 +480,7 @@ func (r *userFeatureRepo) ListAllBanners(ctx context.Context, offset, limit int)
 	return items, total, nil
 }
 
-func (r *userFeatureRepo) GetBanner(ctx context.Context, id int64) (*model.Banners, error) {
+func (r *userFeatureRepo) GetBanner(ctx context.Context, id uint32) (*model.Banners, error) {
 	b := new(model.Banners)
 	err := r.db.NewSelect().Model(b).Where("id = ?", id).Scan(ctx)
 	found, err := notFoundOrErr(err, "get banner")
@@ -509,7 +509,7 @@ func (r *userFeatureRepo) UpdateBanner(ctx context.Context, b *model.Banners) er
 	return nil
 }
 
-func (r *userFeatureRepo) DeleteBanner(ctx context.Context, id int64) error {
+func (r *userFeatureRepo) DeleteBanner(ctx context.Context, id uint32) error {
 	_, err := r.db.NewDelete().Model((*model.Banners)(nil)).Where("id = ?", id).Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("delete banner: %w", err)
@@ -591,7 +591,7 @@ func (r *userFeatureRepo) CleanupOnlineSessions(ctx context.Context, before time
 
 // ===== Ratings =====
 
-func (r *userFeatureRepo) GetRating(ctx context.Context, userID, videoID int64) (*model.UserRatings, error) {
+func (r *userFeatureRepo) GetRating(ctx context.Context, userID, videoID uint32) (*model.UserRatings, error) {
 	rating := new(model.UserRatings)
 	err := r.db.NewSelect().Model(rating).
 		Where("user_id = ?", userID).
@@ -618,7 +618,7 @@ func (r *userFeatureRepo) UpsertRating(ctx context.Context, ur *model.UserRating
 	return nil
 }
 
-func (r *userFeatureRepo) GetRatingStats(ctx context.Context, videoID int64) (float64, int, error) {
+func (r *userFeatureRepo) GetRatingStats(ctx context.Context, videoID uint32) (float64, int, error) {
 	var stats struct {
 		Avg   float64 `bun:"avg"`
 		Count int     `bun:"cnt"`

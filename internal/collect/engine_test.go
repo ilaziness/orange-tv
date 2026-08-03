@@ -37,7 +37,7 @@ func TestExtractHost(t *testing.T) {
 }
 
 func TestApplySupplementFields(t *testing.T) {
-	parentMap := map[uint64]uint64{5: 1}
+	parentMap := map[uint32]uint32{5: 1}
 
 	t.Run("fills all empty fields", func(t *testing.T) {
 		v := &model.Videos{}
@@ -53,8 +53,7 @@ func TestApplySupplementFields(t *testing.T) {
 		}
 		applySupplementFields(v, item, 5, parentMap, constant.SerialStatusFinished, true)
 		require.Equal(t, "副标题", v.Subtitle)
-		require.NotNil(t, v.Description)
-		require.Equal(t, "描述", *v.Description)
+		require.Equal(t, "描述", v.Description)
 		require.Equal(t, "https://img.new.com/c.jpg", v.CoverImage)
 		require.Equal(t, uint32(2024), v.Year)
 		require.Equal(t, "美国", v.Region)
@@ -62,15 +61,14 @@ func TestApplySupplementFields(t *testing.T) {
 		require.Equal(t, uint32(120), v.Duration)
 		require.Equal(t, "2024-01-01", v.ReleaseDate)
 		require.Equal(t, uint8(constant.SerialStatusFinished), v.SerialStatus)
-		require.Equal(t, uint64(5), v.CategoryID)
-		require.Equal(t, uint64(1), v.ParentCategoryID)
+		require.Equal(t, uint32(5), v.CategoryID)
+		require.Equal(t, uint32(1), v.ParentCategoryID)
 	})
 
 	t.Run("does not overwrite non-empty fields", func(t *testing.T) {
-		existingDesc := "原有描述"
 		v := &model.Videos{
 			Subtitle:         "原副标题",
-			Description:      &existingDesc,
+			Description:      "原有描述",
 			CoverImage:       "https://img.old.com/old.jpg",
 			Year:             2020,
 			Region:           "中国",
@@ -94,15 +92,15 @@ func TestApplySupplementFields(t *testing.T) {
 		applySupplementFields(v, item, 5, parentMap, constant.SerialStatusFinished, true)
 		// all basic fields keep original values (supplement semantics)
 		require.Equal(t, "原副标题", v.Subtitle)
-		require.Equal(t, "原有描述", *v.Description)
+		require.Equal(t, "原有描述", v.Description)
 		require.Equal(t, uint32(2020), v.Year)
 		require.Equal(t, "中国", v.Region)
 		require.Equal(t, "中文", v.Language)
 		require.Equal(t, uint32(90), v.Duration)
 		require.Equal(t, "2020-05-05", v.ReleaseDate)
 		require.Equal(t, uint8(constant.SerialStatusOngoing), v.SerialStatus)
-		require.Equal(t, uint64(3), v.CategoryID)
-		require.Equal(t, uint64(2), v.ParentCategoryID)
+		require.Equal(t, uint32(3), v.CategoryID)
+		require.Equal(t, uint32(2), v.ParentCategoryID)
 	})
 
 	t.Run("cover overridden when updateCover true (same-source)", func(t *testing.T) {
@@ -126,21 +124,18 @@ func TestApplySupplementFields(t *testing.T) {
 		require.Equal(t, "https://img.old.com/old.jpg", v.CoverImage)
 	})
 
-	t.Run("description nil pointer filled", func(t *testing.T) {
-		v := &model.Videos{Description: nil}
+	t.Run("description empty string filled", func(t *testing.T) {
+		v := &model.Videos{}
 		item := Item{Description: "新描述"}
 		applySupplementFields(v, item, 5, parentMap, 0, false)
-		require.NotNil(t, v.Description)
-		require.Equal(t, "新描述", *v.Description)
+		require.Equal(t, "新描述", v.Description)
 	})
 
-	t.Run("description empty string pointer filled", func(t *testing.T) {
-		emptyDesc := ""
-		v := &model.Videos{Description: &emptyDesc}
+	t.Run("description not overwritten when non-empty", func(t *testing.T) {
+		v := &model.Videos{Description: "原有描述"}
 		item := Item{Description: "新描述"}
 		applySupplementFields(v, item, 5, parentMap, 0, false)
-		require.NotNil(t, v.Description)
-		require.Equal(t, "新描述", *v.Description)
+		require.Equal(t, "原有描述", v.Description)
 	})
 
 	t.Run("release date trimmed", func(t *testing.T) {

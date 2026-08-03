@@ -142,7 +142,7 @@ func RequireAuth() gin.HandlerFunc {
 
 // RequireSuperAdmin ensures JWT is present and the admin is an enabled super_admin.
 // check is called with gin.Context and admin ID from JWT claims.
-func RequireSuperAdmin(check func(c *gin.Context, adminID int64) error) gin.HandlerFunc {
+func RequireSuperAdmin(check func(c *gin.Context, adminID uint32) error) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		claims := GetClaims(c)
 		if claims == nil {

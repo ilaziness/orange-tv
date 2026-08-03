@@ -34,7 +34,7 @@ type UpdateLiveRequest struct {
 
 // LiveChannelItem is a live channel payload for admin (includes status, sort_order, stream_url).
 type LiveChannelItem struct {
-	ID          uint64 `json:"id"`
+	ID          uint32 `json:"id"`
 	Name        string `json:"name"`
 	Category    string `json:"category"`
 	StreamURL   string `json:"stream_url"`

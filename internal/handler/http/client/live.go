@@ -52,12 +52,12 @@ func (h *LiveHandler) Play(c *gin.Context) {
 }
 
 // parseID 解析频道 id。
-func parseID(s string) (int64, error) {
-	var id int64
+func parseID(s string) (uint32, error) {
+	var id uint32
 	if _, err := fmt.Sscanf(s, "%d", &id); err != nil {
 		return 0, err
 	}
-	if id <= 0 {
+	if id == 0 {
 		return 0, fmt.Errorf("id must be positive")
 	}
 	return id, nil

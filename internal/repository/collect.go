@@ -21,7 +21,7 @@ type CollectSourceListFilter struct {
 
 // CollectLogListFilter filters collect log queries.
 type CollectLogListFilter struct {
-	SourceID uint64
+	SourceID uint32
 	Offset   int
 	Limit    int
 }
@@ -30,18 +30,18 @@ type CollectLogListFilter struct {
 type CollectRepository interface {
 	ListSources(ctx context.Context, f CollectSourceListFilter) ([]model.CollectSources, int, error)
 	ListEnabledCronSources(ctx context.Context) ([]model.CollectSources, error)
-	GetSource(ctx context.Context, id int64) (*model.CollectSources, error)
+	GetSource(ctx context.Context, id uint32) (*model.CollectSources, error)
 	CreateSource(ctx context.Context, m *model.CollectSources) error
 	UpdateSource(ctx context.Context, m *model.CollectSources) error
-	SoftDeleteSource(ctx context.Context, id int64) error
-	TouchLastCollect(ctx context.Context, id int64, at time.Time) error
+	SoftDeleteSource(ctx context.Context, id uint32) error
+	TouchLastCollect(ctx context.Context, id uint32, at time.Time) error
 
-	ListCategories(ctx context.Context, sourceID int64) ([]model.CollectSourceCategories, error)
-	ReplaceCategories(ctx context.Context, sourceID int64, items []model.CollectSourceCategories) error
+	ListCategories(ctx context.Context, sourceID uint32) ([]model.CollectSourceCategories, error)
+	ReplaceCategories(ctx context.Context, sourceID uint32, items []model.CollectSourceCategories) error
 
 	CreateLog(ctx context.Context, m *model.CollectLogs) error
 	UpdateLog(ctx context.Context, m *model.CollectLogs) error
-	IncrementLogCount(ctx context.Context, logID uint64, count int) error
+	IncrementLogCount(ctx context.Context, logID uint32, count int) error
 	ListLogs(ctx context.Context, f CollectLogListFilter) ([]model.CollectLogs, int, error)
 
 	// FindVideoByTitleYear finds undeleleted video by title+year (dedup).
@@ -91,7 +91,7 @@ func (r *collectRepo) ListEnabledCronSources(ctx context.Context) ([]model.Colle
 	return items, nil
 }
 
-func (r *collectRepo) GetSource(ctx context.Context, id int64) (*model.CollectSources, error) {
+func (r *collectRepo) GetSource(ctx context.Context, id uint32) (*model.CollectSources, error) {
 	item := new(model.CollectSources)
 	err := r.db.NewSelect().Model(item).
 		Where("id = ?", id).
@@ -126,7 +126,7 @@ func (r *collectRepo) UpdateSource(ctx context.Context, m *model.CollectSources)
 	return nil
 }
 
-func (r *collectRepo) SoftDeleteSource(ctx context.Context, id int64) error {
+func (r *collectRepo) SoftDeleteSource(ctx context.Context, id uint32) error {
 	now := time.Now()
 	_, err := r.db.NewUpdate().Model((*model.CollectSources)(nil)).
 		Set("deleted_at = ?", now).
@@ -140,7 +140,7 @@ func (r *collectRepo) SoftDeleteSource(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (r *collectRepo) TouchLastCollect(ctx context.Context, id int64, at time.Time) error {
+func (r *collectRepo) TouchLastCollect(ctx context.Context, id uint32, at time.Time) error {
 	_, err := r.db.NewUpdate().Model((*model.CollectSources)(nil)).
 		Set("last_collect_at = ?", at).
 		Set("updated_at = ?", at).
@@ -153,7 +153,7 @@ func (r *collectRepo) TouchLastCollect(ctx context.Context, id int64, at time.Ti
 	return nil
 }
 
-func (r *collectRepo) ListCategories(ctx context.Context, sourceID int64) ([]model.CollectSourceCategories, error) {
+func (r *collectRepo) ListCategories(ctx context.Context, sourceID uint32) ([]model.CollectSourceCategories, error) {
 	var items []model.CollectSourceCategories
 	err := r.db.NewSelect().Model(&items).
 		Where("source_id = ?", sourceID).
@@ -165,7 +165,7 @@ func (r *collectRepo) ListCategories(ctx context.Context, sourceID int64) ([]mod
 	return items, nil
 }
 
-func (r *collectRepo) ReplaceCategories(ctx context.Context, sourceID int64, items []model.CollectSourceCategories) error {
+func (r *collectRepo) ReplaceCategories(ctx context.Context, sourceID uint32, items []model.CollectSourceCategories) error {
 	return r.db.RunInTx(ctx, nil, func(ctx context.Context, tx bun.Tx) error {
 		if _, err := tx.NewDelete().Model((*model.CollectSourceCategories)(nil)).
 			Where("source_id = ?", sourceID).
@@ -176,7 +176,7 @@ func (r *collectRepo) ReplaceCategories(ctx context.Context, sourceID int64, ite
 			return nil
 		}
 		for i := range items {
-			items[i].SourceID = uint64(sourceID)
+			items[i].SourceID = sourceID
 			items[i].ID = 0
 		}
 		if _, err := tx.NewInsert().Model(&items).Exec(ctx); err != nil {
@@ -205,7 +205,7 @@ func (r *collectRepo) UpdateLog(ctx context.Context, m *model.CollectLogs) error
 	return nil
 }
 
-func (r *collectRepo) IncrementLogCount(ctx context.Context, logID uint64, count int) error {
+func (r *collectRepo) IncrementLogCount(ctx context.Context, logID uint32, count int) error {
 	_, err := r.db.NewUpdate().Model((*model.CollectLogs)(nil)).
 		Set("collect_count = collect_count + ?", count).
 		Where("id = ?", logID).

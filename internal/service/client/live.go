@@ -16,7 +16,7 @@ import (
 // LiveService provides public live channel queries.
 type LiveService interface {
 	List(ctx context.Context, req *clientdto.LiveListRequest) ([]clientdto.LiveChannelItem, int, error)
-	GetStreamURL(ctx context.Context, id int64) (string, error)
+	GetStreamURL(ctx context.Context, id uint32) (string, error)
 	// AllowedStreamDomains 返回所有在线频道的流地址域名集合，用于代理 ts 分片时的 SSRF 校验。
 	AllowedStreamDomains(ctx context.Context) (map[string]struct{}, error)
 }
@@ -59,10 +59,10 @@ func (s *liveService) List(ctx context.Context, req *clientdto.LiveListRequest) 
 }
 
 // GetStreamURL 返回指定频道的真实播放地址，供代理 handler 使用。
-func (s *liveService) GetStreamURL(ctx context.Context, id int64) (string, error) {
+func (s *liveService) GetStreamURL(ctx context.Context, id uint32) (string, error) {
 	item, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		s.log.Error("client live: get stream url failed", zap.Int64("id", id), zap.Error(err))
+		s.log.Error("client live: get stream url failed", zap.Uint32("id", id), zap.Error(err))
 		return "", errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if item == nil || item.Status != 1 {
@@ -104,16 +104,12 @@ func filterByCategory(items []clientdto.LiveChannelItem, category string) []clie
 
 // toPublicLiveItem 将模型转为对外 DTO，stream_url 不返回给前端。
 func toPublicLiveItem(m *model.LiveChannels) clientdto.LiveChannelItem {
-	desc := ""
-	if m.Description != nil {
-		desc = *m.Description
-	}
 	return clientdto.LiveChannelItem{
 		ID:          m.ID,
 		Name:        m.Name,
 		Category:    m.Category,
 		Logo:        m.Logo,
-		Description: desc,
+		Description: m.Description,
 		SortOrder:   m.SortOrder,
 	}
 }
