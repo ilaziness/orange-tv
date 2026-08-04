@@ -30,12 +30,11 @@ type App struct {
 	log    *zap.Logger
 	logger *logger.Logger
 
-	db       *database.DB
-	cache    *internalcache.Manager
-	eventBus event.EventBus
-	tracer   *tracing.Tracer
-	metrics  *metrics.Metrics
-	jwtMgr   *auth.JWTManager
+	db      *database.DB
+	cache   *internalcache.Manager
+	tracer  *tracing.Tracer
+	metrics *metrics.Metrics
+	jwtMgr  *auth.JWTManager
 
 	httpServer *server.HTTPServer
 
@@ -111,7 +110,7 @@ func (a *App) logStartup() error {
 	}
 	a.log.Info("Application started", fields...)
 
-	return event.PublishAppStarted(a.eventBus, a.cfg.App.Version)
+	return event.PublishAppStarted(a.cfg.App.Version)
 }
 
 func (a *App) startServers(ctx context.Context, stop context.CancelFunc) error {
@@ -154,9 +153,9 @@ func (a *App) shutdown() error {
 		cancel()
 	}
 
-	if a.appStarted && a.eventBus != nil {
+	if a.appStarted {
 		uptime := time.Since(a.startTime)
-		if err := event.PublishAppStopped(a.eventBus, uptime); err != nil {
+		if err := event.PublishAppStopped(uptime); err != nil {
 			if a.log != nil {
 				a.log.Error("Failed to publish app stopped event", zap.Error(err))
 			}

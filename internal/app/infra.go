@@ -72,11 +72,16 @@ func (a *App) wireInfra() error {
 		OnStop: func(ctx context.Context) error { return a.cache.Close() },
 	})
 
-	a.eventBus = pkgevent.NewEventBusWithLogger(a.log)
+	bus := pkgevent.NewEventBusWithLogger(a.log)
+	pkgevent.SetDefault(bus)
 	a.registerBuiltinEventListeners()
 	a.addHook(Hook{
-		Name:   "event_bus",
-		OnStop: func(ctx context.Context) error { return a.eventBus.Close() },
+		Name: "event_bus",
+		OnStop: func(ctx context.Context) error {
+			err := pkgevent.Default().Close()
+			pkgevent.SetDefault(nil)
+			return err
+		},
 	})
 
 	tracer, err := tracing.NewTracer(a.cfg)
@@ -95,7 +100,7 @@ func (a *App) wireInfra() error {
 }
 
 func (a *App) registerBuiltinEventListeners() {
-	if err := a.eventBus.Subscribe(event.EventAppStopped, func(ctx context.Context, ev *event.Event) error {
+	if err := pkgevent.Subscribe(event.EventAppStopped, func(ctx context.Context, ev *event.Event) error {
 		if payload, ok := ev.Payload.(*event.AppStoppedPayload); ok {
 			a.log.Info("Application stopped",
 				zap.Duration("uptime", payload.Uptime),

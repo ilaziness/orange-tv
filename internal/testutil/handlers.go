@@ -205,9 +205,9 @@ func (s adminCollectSvc) DisableSchedule(ctx context.Context, sourceID uint32) e
 func (s adminCollectSvc) CollectNow(ctx context.Context, sourceID uint32, req *admindto.CollectNowRequest) error {
 	return nil
 }
-func (s adminCollectSvc) ReloadScheduler(ctx context.Context) error { return nil }
-func (s adminCollectSvc) StartScheduler(ctx context.Context) error  { return nil }
-func (s adminCollectSvc) StopScheduler(ctx context.Context) error   { return nil }
+func (s adminCollectSvc) RunScheduledJob(source *model.CollectSources, dataRange string) error {
+	return nil
+}
 
 type adminSettingsSvc struct{}
 

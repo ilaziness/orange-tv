@@ -13,6 +13,7 @@ import (
 	"github.com/ilaziness/orange-tv/internal/logger"
 	"github.com/ilaziness/orange-tv/internal/repository"
 	"github.com/ilaziness/orange-tv/internal/router"
+	"github.com/ilaziness/orange-tv/internal/scheduler"
 	"github.com/ilaziness/orange-tv/internal/server"
 	"github.com/ilaziness/orange-tv/internal/service"
 	adminsvc "github.com/ilaziness/orange-tv/internal/service/admin"
@@ -99,16 +100,25 @@ func (a *App) wireHTTP() error {
 	handlers.ClientBanner = clienthandler.NewBannerHandler(clientBannerSvc)
 	handlers.OpenResource = openhandler.NewResourceHandler(openResourceSvc)
 
-	// collect scheduler lifecycle
+	// ── scheduler ──────────────────────────────────────────────────────────
+	// 创建 cron 管理器、注册所有调度任务，并绑定生命周期 hook。
+	// Manager 统一启动/停止所有注册的 Job，app 层无需关心任务内部实现。
+	cronMgr := scheduler.NewManager()
+	scheduler.Setup(cronMgr, scheduler.Deps{
+		CollectRepo:   collectRepo,
+		CollectRunner: adminCollectSvc,
+	})
+
 	a.addHook(Hook{
-		Name: "collect_scheduler",
+		Name: "cron_manager",
 		OnStart: func(ctx context.Context) error {
-			return adminCollectSvc.StartScheduler(ctx)
+			return cronMgr.Start(ctx)
 		},
 		OnStop: func(ctx context.Context) error {
-			return adminCollectSvc.StopScheduler(ctx)
+			return cronMgr.Stop(ctx)
 		},
 	})
+
 	// Access logs (gin request logs) go to stdout only so they don't clutter
 	// the application log file. Business/recovery logs still use a.log.
 	accessLogger := logger.NewStdoutLogger(a.cfg.Log.Level)

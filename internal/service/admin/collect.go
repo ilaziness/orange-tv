@@ -12,10 +12,11 @@ import (
 	"github.com/ilaziness/orange-tv/internal/constant"
 	admindto "github.com/ilaziness/orange-tv/internal/dto/admin"
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
+	"github.com/ilaziness/orange-tv/internal/event"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
+	"github.com/ilaziness/orange-tv/internal/scheduler"
 	"github.com/ilaziness/orange-tv/internal/utils"
-	"github.com/robfig/cron/v3"
 	"go.uber.org/zap"
 )
 
@@ -32,19 +33,13 @@ type CollectService interface {
 	EnableSchedule(ctx context.Context, sourceID uint32) error
 	DisableSchedule(ctx context.Context, sourceID uint32) error
 	CollectNow(ctx context.Context, sourceID uint32, req *admindto.CollectNowRequest) error
-	// ReloadScheduler reloads cron jobs from DB (called on startup and after schedule changes).
-	ReloadScheduler(ctx context.Context) error
-	StartScheduler(ctx context.Context) error
-	StopScheduler(ctx context.Context) error
+	// RunScheduledJob executes a collection synchronously for the given source.
+	// Called by the scheduler when a cron job fires.
+	RunScheduledJob(source *model.CollectSources, dataRange string) error
 }
 
 type runningJob struct {
 	cancel context.CancelFunc
-}
-
-// collectCronParser is shared by validation and the scheduler (5-field + descriptors).
-func collectCronParser() cron.Parser {
-	return cron.NewParser(cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow | cron.Descriptor)
 }
 
 type collectService struct {
@@ -57,8 +52,6 @@ type collectService struct {
 
 	mu      sync.Mutex
 	running map[uint32]*runningJob
-	cron    *cron.Cron
-	cronIDs map[uint32]cron.EntryID
 }
 
 // NewCollectService creates a CollectService.
@@ -81,7 +74,6 @@ func NewCollectService(
 		log:          log,
 		cache:        c,
 		running:      map[uint32]*runningJob{},
-		cronIDs:      map[uint32]cron.EntryID{},
 	}
 }
 
@@ -218,7 +210,7 @@ func (s *collectService) DeleteSource(ctx context.Context, id uint32) error {
 		s.log.Error("collect: delete source failed", zap.Uint32("source_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
-	return s.ReloadScheduler(ctx)
+	return event.PublishCollectScheduleChanged(id)
 }
 
 func (s *collectService) ListCategories(ctx context.Context, sourceID uint32) ([]admindto.CollectCategoryMapItem, error) {
@@ -277,6 +269,7 @@ func (s *collectService) SetCategories(ctx context.Context, sourceID uint32, req
 }
 
 // startJob launches a collection goroutine for the given source.
+// Used by manual CollectNow so the HTTP request returns immediately.
 func (s *collectService) startJob(source *model.CollectSources, dataRange string) error {
 	if strings.TrimSpace(dataRange) == "" {
 		dataRange = "all"
@@ -290,7 +283,9 @@ func (s *collectService) startJob(source *model.CollectSources, dataRange string
 	s.running[source.ID] = &runningJob{cancel: cancel}
 	s.mu.Unlock()
 
-	utils.Go(func() { s.runJob(jobCtx, source, dataRange) })
+	utils.Go(func() {
+		s.runJob(jobCtx, source, dataRange, true)
+	})
 	return nil
 }
 
@@ -344,12 +339,17 @@ func (s *collectService) ListLogs(ctx context.Context, req *admindto.CollectLogL
 	return out, total, nil
 }
 
-func (s *collectService) runJob(ctx context.Context, source *model.CollectSources, dataRange string) {
-	defer func() {
-		s.mu.Lock()
-		delete(s.running, source.ID)
-		s.mu.Unlock()
-	}()
+// runJob executes a single collection: creates a log row, runs the engine,
+// updates the log, and clears cache. If async is true, it removes the source
+// from the running map on completion (used by startJob's goroutine).
+func (s *collectService) runJob(ctx context.Context, source *model.CollectSources, dataRange string, async bool) {
+	if async {
+		defer func() {
+			s.mu.Lock()
+			delete(s.running, source.ID)
+			s.mu.Unlock()
+		}()
+	}
 
 	start := time.Now()
 	logRow := &model.CollectLogs{
@@ -383,80 +383,14 @@ func (s *collectService) runJob(ctx context.Context, source *model.CollectSource
 	}
 }
 
-func (s *collectService) StartScheduler(ctx context.Context) error {
-	s.mu.Lock()
-	if s.cron == nil {
-		s.cron = cron.New(cron.WithParser(collectCronParser()), cron.WithChain(cron.Recover(cron.DefaultLogger)))
-		s.cron.Start()
+// RunScheduledJob executes a collection synchronously for the given source.
+// Called by the scheduler when a cron job fires; cron already runs the callback
+// in its own goroutine, so no extra goroutine is needed here.
+func (s *collectService) RunScheduledJob(source *model.CollectSources, dataRange string) error {
+	if strings.TrimSpace(dataRange) == "" {
+		dataRange = "all"
 	}
-	s.mu.Unlock()
-	return s.ReloadScheduler(ctx)
-}
-
-func (s *collectService) StopScheduler(ctx context.Context) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if s.cron != nil {
-		stopCtx := s.cron.Stop()
-		select {
-		case <-stopCtx.Done():
-		case <-ctx.Done():
-		case <-time.After(5 * time.Second):
-		}
-		s.cron = nil
-		s.cronIDs = map[uint32]cron.EntryID{}
-	}
-	// cancel all running jobs
-	for id, job := range s.running {
-		job.cancel()
-		delete(s.running, id)
-	}
-	return nil
-}
-
-func (s *collectService) ReloadScheduler(ctx context.Context) error {
-	s.mu.Lock()
-	if s.cron == nil {
-		s.mu.Unlock()
-		return nil
-	}
-	// remove old entries
-	for id, entryID := range s.cronIDs {
-		s.cron.Remove(entryID)
-		delete(s.cronIDs, id)
-	}
-	s.mu.Unlock()
-
-	sources, err := s.repo.ListEnabledCronSources(ctx)
-	if err != nil {
-		s.log.Error("collect: list enabled cron sources failed", zap.Error(err))
-		return err
-	}
-	parser := collectCronParser()
-	for i := range sources {
-		src := sources[i]
-		expr := strings.TrimSpace(src.CronExpr)
-		if expr == "" {
-			continue
-		}
-		if _, err := parser.Parse(expr); err != nil {
-			s.log.Warn("skip invalid cron", zap.Uint32("source_id", src.ID), zap.Error(err))
-			continue
-		}
-		sourceID := src.ID
-		dataRange := src.DataRange
-		s.mu.Lock()
-		entryID, err := s.cron.AddFunc(expr, func() {
-			_ = s.startJob(&src, dataRange)
-		})
-		if err != nil {
-			s.mu.Unlock()
-			s.log.Warn("add cron failed", zap.Uint32("source_id", sourceID), zap.Error(err))
-			continue
-		}
-		s.cronIDs[sourceID] = entryID
-		s.mu.Unlock()
-	}
+	s.runJob(context.Background(), source, dataRange, false)
 	return nil
 }
 
@@ -498,7 +432,7 @@ func (s *collectService) validateSourceInput(ctx context.Context, typ uint8, col
 		return errcode.WithMessage(errcode.ParamError, "采集地址格式无效")
 	}
 	if strings.TrimSpace(cronExpr) != "" {
-		if _, err := collectCronParser().Parse(strings.TrimSpace(cronExpr)); err != nil {
+		if _, err := scheduler.DefaultParser().Parse(strings.TrimSpace(cronExpr)); err != nil {
 			return errcode.CollectInvalidCron
 		}
 	}
@@ -581,7 +515,7 @@ func (s *collectService) EnableSchedule(ctx context.Context, sourceID uint32) er
 	if expr == "" {
 		return errcode.WithMessage(errcode.ParamError, "请先设置定时时间")
 	}
-	if _, err := collectCronParser().Parse(expr); err != nil {
+	if _, err := scheduler.DefaultParser().Parse(expr); err != nil {
 		return errcode.CollectInvalidCron
 	}
 	source.ScheduleEnabled = 1
@@ -589,7 +523,7 @@ func (s *collectService) EnableSchedule(ctx context.Context, sourceID uint32) er
 		s.log.Error("collect: enable schedule failed", zap.Uint32("source_id", sourceID), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
-	return s.ReloadScheduler(ctx)
+	return event.PublishCollectScheduleChanged(sourceID)
 }
 
 func (s *collectService) DisableSchedule(ctx context.Context, sourceID uint32) error {
@@ -602,7 +536,7 @@ func (s *collectService) DisableSchedule(ctx context.Context, sourceID uint32) e
 		s.log.Error("collect: disable schedule failed", zap.Uint32("source_id", sourceID), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
-	return s.ReloadScheduler(ctx)
+	return event.PublishCollectScheduleChanged(sourceID)
 }
 
 func (s *collectService) CollectNow(ctx context.Context, sourceID uint32, req *admindto.CollectNowRequest) error {

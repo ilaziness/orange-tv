@@ -12,12 +12,14 @@ import (
 func TestBuiltInEvents(t *testing.T) {
 	bus := pkgevent.NewEventBus()
 	defer bus.Close()
+	pkgevent.SetDefault(bus)
+	defer pkgevent.SetDefault(nil)
 
 	appStarted := false
 	appStopped := false
 
 	// 订阅应用启动事件
-	_ = bus.Subscribe(event.EventAppStarted, func(ctx context.Context, e *event.Event) error {
+	_ = pkgevent.Subscribe(event.EventAppStarted, func(ctx context.Context, e *event.Event) error {
 		if payload, ok := e.Payload.(*event.AppStartedPayload); ok {
 			appStarted = true
 			if payload.Version == "" {
@@ -28,7 +30,7 @@ func TestBuiltInEvents(t *testing.T) {
 	})
 
 	// 订阅应用停止事件
-	_ = bus.Subscribe(event.EventAppStopped, func(ctx context.Context, e *event.Event) error {
+	_ = pkgevent.Subscribe(event.EventAppStopped, func(ctx context.Context, e *event.Event) error {
 		if payload, ok := e.Payload.(*event.AppStoppedPayload); ok {
 			appStopped = true
 			if payload.Uptime == 0 {
@@ -38,9 +40,9 @@ func TestBuiltInEvents(t *testing.T) {
 		return nil
 	})
 
-	// 发布内置事件
-	_ = event.PublishAppStarted(bus, "1.0.0")
-	_ = event.PublishAppStopped(bus, 5*time.Second)
+	// 发布内置事件（通过默认总线）
+	_ = event.PublishAppStarted("1.0.0")
+	_ = event.PublishAppStopped(5 * time.Second)
 
 	// 等待执行
 	time.Sleep(100 * time.Millisecond)

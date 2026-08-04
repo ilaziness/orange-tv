@@ -10,6 +10,14 @@ import (
 // 重导出核心类型，下游包通过 internal/event 即可使用，无需直接 import pkg/event
 type EventBus = pkgevent.EventBus
 type Event = pkgevent.Event
+type EventHandler = pkgevent.EventHandler
+type SubscriptionOptions = pkgevent.SubscriptionOptions
+
+// Subscribe 通过默认总线订阅事件。下游包只需 import internal/event 即可订阅，
+// 无需直接依赖 pkg/event 或传递 EventBus 实例。
+func Subscribe(eventName string, handler EventHandler, opts ...SubscriptionOptions) error {
+	return pkgevent.Subscribe(eventName, handler, opts...)
+}
 
 // 内置事件名称常量
 const (
@@ -37,30 +45,20 @@ type AppStoppedPayload struct {
 	Uptime   time.Duration
 }
 
-// PublishAppStarted 发布应用启动事件
-func PublishAppStarted(bus EventBus, version string) error {
-	e := &pkgevent.Event{
-		Name: EventAppStarted,
-		Payload: &AppStartedPayload{
-			StartTime: time.Now(),
-			Version:   version,
-		},
+// PublishAppStarted 发布应用启动事件（通过默认事件总线）
+func PublishAppStarted(version string) error {
+	return pkgevent.Publish(context.Background(), &pkgevent.Event{
+		Name:      EventAppStarted,
+		Payload:   &AppStartedPayload{StartTime: time.Now(), Version: version},
 		Timestamp: time.Now(),
-		Context:   context.Background(),
-	}
-	return bus.Publish(context.Background(), e)
+	})
 }
 
-// PublishAppStopped 发布应用停止事件
-func PublishAppStopped(bus EventBus, uptime time.Duration) error {
-	e := &pkgevent.Event{
-		Name: EventAppStopped,
-		Payload: &AppStoppedPayload{
-			StopTime: time.Now(),
-			Uptime:   uptime,
-		},
+// PublishAppStopped 发布应用停止事件（通过默认事件总线）
+func PublishAppStopped(uptime time.Duration) error {
+	return pkgevent.Publish(context.Background(), &pkgevent.Event{
+		Name:      EventAppStopped,
+		Payload:   &AppStoppedPayload{StopTime: time.Now(), Uptime: uptime},
 		Timestamp: time.Now(),
-		Context:   context.Background(),
-	}
-	return bus.Publish(context.Background(), e)
+	})
 }

@@ -41,6 +41,7 @@ orange-tv/
 │   ├── repository/                  # 数据访问层
 │   ├── response/                    # 统一 HTTP 响应结构
 │   ├── router/                      # Gin 路由注册：/api/client、/api/admin、/api/internal、/api/open
+│   ├── scheduler/                   # 定时任务（cron）调度管理，与 service 解耦
 │   ├── server/                      # HTTP 服务器实现
 │   ├── service/                     # 业务逻辑层（admin/client/open 子包）
 │   ├── testutil/                    # 测试辅助（业务 handler 桩等）
