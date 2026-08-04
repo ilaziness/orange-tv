@@ -16,9 +16,11 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { Spinner } from '@/components/ui/spinner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Empty, EmptyHeader, EmptyTitle, EmptyDescription } from '@/components/ui/empty'
+import { cn } from '@/lib/utils'
 
 interface CollectMapEditorProps {
   open: boolean
@@ -32,7 +34,7 @@ interface CollectMapEditorProps {
   onSave: (items: CategoryBindingItem[]) => void | Promise<void>
 }
 
-type RemoteCategoryNode = RemoteCategory & { depth: number }
+type RemoteCategoryNode = RemoteCategory & { depth: number; hasChildren: boolean }
 type RemoteCategoryTreeNode = RemoteCategory & { children: RemoteCategoryTreeNode[] }
 
 function buildRemoteCategoryTree(list: RemoteCategory[]): RemoteCategoryNode[] {
@@ -55,7 +57,7 @@ function buildRemoteCategoryTree(list: RemoteCategory[]): RemoteCategoryNode[] {
   const result: RemoteCategoryNode[] = []
   function flatten(nodes: RemoteCategoryTreeNode[], depth: number) {
     for (const n of nodes) {
-      result.push({ ...n, depth })
+      result.push({ ...n, depth, hasChildren: n.children.length > 0 })
       if (n.children.length) flatten(n.children, depth + 1)
     }
   }
@@ -78,7 +80,7 @@ export function CollectMapEditor({
 
   const categoryOptions = useMemo(
     () => [
-      { value: '0', label: '不绑定' },
+      { value: '0', label: '未绑定' },
       ...flatCats.map((c) => ({
         value: String(c.id),
         label: `${'　'.repeat(c.depth)}${c.name}`,
@@ -89,16 +91,25 @@ export function CollectMapEditor({
 
   const flatRemote = useMemo(() => buildRemoteCategoryTree(remoteCategories), [remoteCategories])
 
+  // 有子分类的父级远程分类不允许绑定，只能绑定子分类
+  const parentIds = useMemo(() => {
+    const ids = new Set<number>()
+    for (const rc of flatRemote) {
+      if (rc.hasChildren) ids.add(rc.type_id)
+    }
+    return ids
+  }, [flatRemote])
+
   useEffect(() => {
     if (!open) return
     const b: Record<string, string> = {}
     for (const m of maps) {
-      if (m.external_category_id > 0) {
+      if (m.external_category_id > 0 && !parentIds.has(m.external_category_id)) {
         b[String(m.external_category_id)] = String(m.category_id)
       }
     }
     setBindings(b)
-  }, [open, maps])
+  }, [open, maps, parentIds])
 
   async function handleSave() {
     if (loading || saving) return
@@ -109,6 +120,7 @@ export function CollectMapEditor({
       if (
         Number.isSafeInteger(externalId) &&
         externalId > 0 &&
+        !parentIds.has(externalId) &&
         Number.isSafeInteger(categoryId) &&
         categoryId > 0
       ) {
@@ -147,36 +159,48 @@ export function CollectMapEditor({
             </Empty>
           ) : (
             <div className="flex flex-col gap-2">
-              {flatRemote.map((rc) => (
-                <div key={rc.type_id} className="flex items-center gap-3">
-                  <span
-                    className="w-40 truncate text-sm"
-                    title={rc.type_name}
-                    style={{ paddingLeft: rc.depth * 20 }}
-                  >
-                    {rc.type_name} ({rc.type_id})
-                  </span>
-                  <Select
-                    items={categoryOptions}
-                    value={bindings[String(rc.type_id)] || '0'}
-                    onValueChange={(v) =>
-                      setBindings((prev) => ({ ...prev, [String(rc.type_id)]: v ?? '0' }))
-                    }
-                    disabled={busy}
-                  >
-                    <SelectTrigger className="flex-1" disabled={busy}>
-                      <SelectValue placeholder="选择系统分类" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categoryOptions.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ))}
+              {flatRemote.map((rc) => {
+                const currentValue = bindings[String(rc.type_id)] || '0'
+                return (
+                  <div key={rc.type_id} className="flex items-center gap-3">
+                    <span
+                      className="w-40 truncate text-sm"
+                      title={rc.type_name}
+                      style={{ paddingLeft: rc.depth * 20 }}
+                    >
+                      {rc.type_name} ({rc.type_id})
+                    </span>
+                    {rc.hasChildren ? (
+                      <Badge variant="outline" className="text-muted-foreground">
+                        请绑定子分类
+                      </Badge>
+                    ) : (
+                      <Select
+                        items={categoryOptions}
+                        value={currentValue}
+                        onValueChange={(v) =>
+                          setBindings((prev) => ({ ...prev, [String(rc.type_id)]: v ?? '0' }))
+                        }
+                        disabled={busy}
+                      >
+                        <SelectTrigger className="w-52" disabled={busy}>
+                          <SelectValue
+                            placeholder="选择系统分类"
+                            className={cn(currentValue === '0' && 'text-muted-foreground')}
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categoryOptions.map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
