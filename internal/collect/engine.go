@@ -242,7 +242,8 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 	}
 	categoryID, ok := catMap[item.ExternalCategoryID]
 	if !ok {
-		return fmt.Errorf("未映射分类: %d", item.ExternalCategoryID)
+		// 未绑定分类
+		return nil
 	}
 	if item.Title == "" {
 		return fmt.Errorf("标题为空")
@@ -255,13 +256,17 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 
 	serialStatus := parseSerialStatus(item.Remarks)
 
+	// Resolve target category fields based on whether the bound system category is
+	// a top-level (一级) or second-level (二级) category.
+	catID, parentCatID := resolveCategoryFields(categoryID, parentMap)
+
 	// Cross-source: existing video was collected by a different source.
 	// Supplement empty basic fields (no cover, no associations, no PublishStatus) + upsert episodes.
 	if existing != nil && existing.CollectSourceID != 0 && existing.CollectSourceID != source.ID {
 		return e.videoRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
 			vRepo := e.videoRepo.WithTx(tx)
 			pRepo := e.playRepo.WithTx(tx)
-			applySupplementFields(existing, item, categoryID, parentMap, serialStatus, false)
+			applySupplementFields(existing, item, catID, parentCatID, serialStatus, false)
 			if err := vRepo.Update(ctx, existing); err != nil {
 				return err
 			}
@@ -306,7 +311,7 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 				existing.CollectSourceID = source.ID
 			}
 			// Same source: supplement empty basic fields + override cover (capture domain/path changes)
-			applySupplementFields(existing, item, categoryID, parentMap, serialStatus, true)
+			applySupplementFields(existing, item, catID, parentCatID, serialStatus, true)
 			if err := vRepo.Update(ctx, existing); err != nil {
 				return err
 			}
@@ -315,8 +320,8 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 				Title:            item.Title,
 				Subtitle:         item.Subtitle,
 				Description:      item.Description,
-				CategoryID:       categoryID,
-				ParentCategoryID: parentMap[categoryID],
+				CategoryID:       catID,
+				ParentCategoryID: parentCatID,
 				PublishStatus:    constant.PublishStatusOnline,
 				SerialStatus:     serialStatus,
 				CoverImage:       item.Cover,
@@ -397,12 +402,28 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 	})
 }
 
+// resolveCategoryFields determines the video's category_id and parent_category_id
+// based on the bound system category. If the bound category is a top-level category
+// (ParentID==0, 一级分类), it is written to parent_category_id and category_id is left
+// empty. If it is a second-level category (二级分类), it is written to category_id and
+// its parent is written to parent_category_id.
+func resolveCategoryFields(boundCategoryID uint32, parentMap map[uint32]uint32) (categoryID, parentCategoryID uint32) {
+	parentID := parentMap[boundCategoryID]
+	if parentID == 0 {
+		// 一级分类：写入 parent_category_id
+		return 0, boundCategoryID
+	}
+	// 二级分类：写入 category_id，父分类写入 parent_category_id
+	return boundCategoryID, parentID
+}
+
 // applySupplementFields fills empty/zero basic fields of an existing video with values
 // from the collected item (supplement semantics: never overwrite non-empty values).
 // When updateCover is true (same-source), the cover image is overridden with the new
 // value to capture remote domain/path changes; when false (cross-source) the cover is
 // left untouched. PublishStatus is never modified here — it is a system-managed field.
-func applySupplementFields(v *model.Videos, item Item, categoryID uint32, parentMap map[uint32]uint32, serialStatus uint8, updateCover bool) {
+// catID/parentCatID are the pre-resolved target category fields (see resolveCategoryFields).
+func applySupplementFields(v *model.Videos, item Item, catID, parentCatID uint32, serialStatus uint8, updateCover bool) {
 	if v.Subtitle == "" && item.Subtitle != "" {
 		v.Subtitle = item.Subtitle
 	}
@@ -433,10 +454,10 @@ func applySupplementFields(v *model.Videos, item Item, categoryID uint32, parent
 		v.SerialStatus = serialStatus
 	}
 	if v.CategoryID == 0 {
-		v.CategoryID = categoryID
+		v.CategoryID = catID
 	}
 	if v.ParentCategoryID == 0 {
-		v.ParentCategoryID = parentMap[categoryID]
+		v.ParentCategoryID = parentCatID
 	}
 }
 

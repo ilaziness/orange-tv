@@ -37,7 +37,8 @@ func TestExtractHost(t *testing.T) {
 }
 
 func TestApplySupplementFields(t *testing.T) {
-	parentMap := map[uint32]uint32{5: 1}
+	// bound category 5 is a second-level category whose parent is 1.
+	const catID, parentCatID = 5, 1
 
 	t.Run("fills all empty fields", func(t *testing.T) {
 		v := &model.Videos{}
@@ -51,7 +52,7 @@ func TestApplySupplementFields(t *testing.T) {
 			Duration:    120,
 			ReleaseDate: "2024-01-01",
 		}
-		applySupplementFields(v, item, 5, parentMap, constant.SerialStatusFinished, true)
+		applySupplementFields(v, item, catID, parentCatID, constant.SerialStatusFinished, true)
 		require.Equal(t, "副标题", v.Subtitle)
 		require.Equal(t, "描述", v.Description)
 		require.Equal(t, "https://img.new.com/c.jpg", v.CoverImage)
@@ -89,7 +90,7 @@ func TestApplySupplementFields(t *testing.T) {
 			Duration:    120,
 			ReleaseDate: "2024-01-01",
 		}
-		applySupplementFields(v, item, 5, parentMap, constant.SerialStatusFinished, true)
+		applySupplementFields(v, item, catID, parentCatID, constant.SerialStatusFinished, true)
 		// all basic fields keep original values (supplement semantics)
 		require.Equal(t, "原副标题", v.Subtitle)
 		require.Equal(t, "原有描述", v.Description)
@@ -106,56 +107,82 @@ func TestApplySupplementFields(t *testing.T) {
 	t.Run("cover overridden when updateCover true (same-source)", func(t *testing.T) {
 		v := &model.Videos{CoverImage: "https://img.old.com/old.jpg"}
 		item := Item{Cover: "https://img.new.com/new.jpg"}
-		applySupplementFields(v, item, 5, parentMap, 0, true)
+		applySupplementFields(v, item, catID, parentCatID, 0, true)
 		require.Equal(t, "https://img.new.com/new.jpg", v.CoverImage)
 	})
 
 	t.Run("cover not touched when updateCover false (cross-source)", func(t *testing.T) {
 		v := &model.Videos{CoverImage: "https://img.old.com/old.jpg"}
 		item := Item{Cover: "https://img.new.com/new.jpg"}
-		applySupplementFields(v, item, 5, parentMap, 0, false)
+		applySupplementFields(v, item, catID, parentCatID, 0, false)
 		require.Equal(t, "https://img.old.com/old.jpg", v.CoverImage)
 	})
 
 	t.Run("cover not changed when item cover empty", func(t *testing.T) {
 		v := &model.Videos{CoverImage: "https://img.old.com/old.jpg"}
 		item := Item{Cover: ""}
-		applySupplementFields(v, item, 5, parentMap, 0, true)
+		applySupplementFields(v, item, catID, parentCatID, 0, true)
 		require.Equal(t, "https://img.old.com/old.jpg", v.CoverImage)
 	})
 
 	t.Run("description empty string filled", func(t *testing.T) {
 		v := &model.Videos{}
 		item := Item{Description: "新描述"}
-		applySupplementFields(v, item, 5, parentMap, 0, false)
+		applySupplementFields(v, item, catID, parentCatID, 0, false)
 		require.Equal(t, "新描述", v.Description)
 	})
 
 	t.Run("description not overwritten when non-empty", func(t *testing.T) {
 		v := &model.Videos{Description: "原有描述"}
 		item := Item{Description: "新描述"}
-		applySupplementFields(v, item, 5, parentMap, 0, false)
+		applySupplementFields(v, item, catID, parentCatID, 0, false)
 		require.Equal(t, "原有描述", v.Description)
 	})
 
 	t.Run("release date trimmed", func(t *testing.T) {
 		v := &model.Videos{}
 		item := Item{ReleaseDate: "  2024-01-01  "}
-		applySupplementFields(v, item, 5, parentMap, 0, false)
+		applySupplementFields(v, item, catID, parentCatID, 0, false)
 		require.Equal(t, "2024-01-01", v.ReleaseDate)
 	})
 
 	t.Run("serial status not filled when zero", func(t *testing.T) {
 		v := &model.Videos{}
 		item := Item{}
-		applySupplementFields(v, item, 5, parentMap, 0, false)
+		applySupplementFields(v, item, catID, parentCatID, 0, false)
 		require.Equal(t, uint8(0), v.SerialStatus)
 	})
 
 	t.Run("publish status never modified", func(t *testing.T) {
 		v := &model.Videos{PublishStatus: 0}
 		item := Item{}
-		applySupplementFields(v, item, 5, parentMap, constant.SerialStatusFinished, true)
+		applySupplementFields(v, item, catID, parentCatID, constant.SerialStatusFinished, true)
 		require.Equal(t, uint8(0), v.PublishStatus) // still 0, not set to Online
+	})
+}
+
+func TestResolveCategoryFields(t *testing.T) {
+	parentMap := map[uint32]uint32{
+		1: 0, // 一级分类
+		2: 1, // 二级分类，父为 1
+		5: 1, // 二级分类，父为 1
+	}
+
+	t.Run("top-level category writes to parent_category_id", func(t *testing.T) {
+		catID, parentCatID := resolveCategoryFields(1, parentMap)
+		require.Equal(t, uint32(0), catID)
+		require.Equal(t, uint32(1), parentCatID)
+	})
+
+	t.Run("second-level category writes to category_id", func(t *testing.T) {
+		catID, parentCatID := resolveCategoryFields(5, parentMap)
+		require.Equal(t, uint32(5), catID)
+		require.Equal(t, uint32(1), parentCatID)
+	})
+
+	t.Run("unknown category treated as top-level", func(t *testing.T) {
+		catID, parentCatID := resolveCategoryFields(999, parentMap)
+		require.Equal(t, uint32(0), catID)
+		require.Equal(t, uint32(999), parentCatID)
 	})
 }

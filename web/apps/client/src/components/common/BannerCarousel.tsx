@@ -27,7 +27,7 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
 
   return (
     <section className="group relative w-full overflow-hidden rounded-2xl border border-border bg-background shadow-sm">
-      <div className="relative flex w-full justify-center bg-black">
+      <div className="relative flex w-full justify-center bg-neutral-900">
         <div className="relative w-full max-w-screen-2xl aspect-21/9">
           {banners.map((banner, i) => (
             <div
@@ -40,13 +40,13 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
               {banner.cover ? (
                 <img src={banner.cover} alt={banner.title} className="h-full w-full object-cover" />
               ) : (
-                <div className="h-full w-full bg-muted" />
+                <div className="h-full w-full bg-neutral-900" />
               )}
             </div>
           ))}
 
-          <div className="pointer-events-none absolute inset-y-0 left-0 w-0 bg-linear-to-r from-black to-transparent 2xl:w-48" />
-          <div className="pointer-events-none absolute inset-y-0 right-0 w-0 bg-linear-to-r from-transparent to-black 2xl:w-48" />
+          <div className="pointer-events-none absolute inset-y-0 left-0 w-0 bg-linear-to-r from-neutral-900 to-transparent 2xl:w-48" />
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-0 bg-linear-to-r from-transparent to-neutral-900 2xl:w-48" />
 
           <div className="absolute inset-0 flex flex-col justify-end gap-6 p-6 md:p-10">
             <div className="flex max-w-2xl flex-col gap-4">

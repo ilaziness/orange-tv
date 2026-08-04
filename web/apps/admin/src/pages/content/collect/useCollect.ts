@@ -135,7 +135,7 @@ export function useCollect() {
   const [categorySourceId, setCategorySourceId] = useState(0)
   const [collectOpen, setCollectOpen] = useState(false)
   const [collectSourceId, setCollectSourceId] = useState(0)
-  const [collectDataRange, setCollectDataRange] = useState('today')
+  const [collectDataRange, setCollectDataRange] = useState('last1d')
   const [deleteId, setDeleteId] = useState<number | null>(null)
 
   const fetchSources = useCallback(
@@ -346,7 +346,7 @@ export function useCollect() {
   function openCollectNow(sourceId: number) {
     const source = sources.find((s) => s.id === sourceId)
     setCollectSourceId(sourceId)
-    setCollectDataRange(source?.data_range || 'today')
+    setCollectDataRange(source?.data_range || 'last1d')
     setCollectOpen(true)
   }
 
