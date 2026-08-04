@@ -1,0 +1,95 @@
+# Orange TV 一键 Docker Compose 部署
+# 包含：orange-tv 应用（后端 + 前端 + nginx 一体化镜像）+ MySQL 数据库
+#
+# 使用方式（在 pack 产物目录 build/<version>/ 下执行）：
+#   1. 按需修改下方环境变量（或创建 .env 文件）
+#   2. docker compose up -d
+#   3. 首次启动需执行数据库迁移：
+#      docker compose exec app /app/orange-tv migrate up -c /app/configs/config.prod.yaml
+#
+# 环境变量说明（app 服务）：
+#   DATABASE_HOST / DATABASE_PORT / DATABASE_USER / DATABASE_PASSWORD / DATABASE_NAME
+#     覆盖 config.prod.yaml 中的数据库连接字段。
+#   JWT_SECRET
+#     生产环境必填（至少 32 字节），用于 JWT 签名。
+#
+# 访问地址：
+#   用户端：http://<host>:80
+#   管理端：http://<host>:81
+
+services:
+  # Orange TV 应用（后端 + 前端 + nginx 一体化镜像）
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: orange-tv
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-80}:80"   # 用户端
+      - "${ADMIN_PORT:-81}:81"  # 管理端
+    environment:
+      - TZ=Asia/Shanghai
+      - CONFIG_FILE=/app/configs/config.prod.yaml
+      # 数据库连接（覆盖 config.prod.yaml 中的默认值）
+      - DATABASE_HOST=mysql
+      - DATABASE_PORT=3306
+      - DATABASE_USER=${DB_USER:-orange}
+      - DATABASE_PASSWORD=${DB_PASSWORD:-orange_password}
+      - DATABASE_NAME=${DB_NAME:-orange_tv}
+      # JWT 密钥（生产环境必填，至少 32 字节，请务必修改为随机字符串）
+      - JWT_SECRET=${JWT_SECRET:-change-me-to-a-random-secret-at-least-32-bytes}
+    volumes:
+      - app-logs:/app/logs
+      # 如需自定义配置，取消注释挂载本地 configs 目录：
+      # - ./configs:/app/configs:ro
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - orange-tv-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # MySQL 数据库
+  mysql:
+    image: mysql:8.0
+    container_name: orange-tv-mysql
+    restart: unless-stopped
+    environment:
+      - TZ=Asia/Shanghai
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-rootpassword}
+      - MYSQL_DATABASE=${DB_NAME:-orange_tv}
+      - MYSQL_USER=${DB_USER:-orange}
+      - MYSQL_PASSWORD=${DB_PASSWORD:-orange_password}
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - orange-tv-net
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpassword}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  orange-tv-net:
+    driver: bridge
+
+volumes:
+  mysql-data:
+    driver: local
+  app-logs:
+    driver: local

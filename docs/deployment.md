@@ -126,6 +126,71 @@ curl http://localhost:8080/readiness
 curl http://localhost:8080/version
 ```
 
+## 一键打包（make pack）
+
+`make pack` 会构建前端（client + admin）与后端二进制，并组装出一个自包含的发布目录 `build/<版本号>/`，内含运行服务所需的全部资源，修改配置后即可直接启动。
+
+### 1. 执行打包
+
+```bash
+# 默认 VERSION=1.0.0，目标平台 linux/amd64
+make pack
+
+# 指定版本与目标平台
+make pack VERSION=1.2.0 PACK_GOOS=darwin PACK_GOARCH=arm64
+```
+
+### 2. 发布目录结构
+
+```
+build/1.0.0/
+├── orange-tv              # 后端二进制
+├── configs/               # 配置文件
+│   ├── config.yaml        # 默认/示例配置（开发用）
+│   └── config.prod.yaml   # 生产环境配置（裸机与 Docker 共用，可通过环境变量覆盖）
+├── migrations/            # 数据库迁移脚本
+├── web/
+│   ├── client/            # 用户端前端构建产物
+│   └── admin/             # 管理端前端构建产物
+├── nginx/nginx.conf       # nginx 示例配置（用户端 80 / 管理端 81）
+├── Dockerfile             # 一体化镜像构建文件
+├── docker-compose.yml     # 一键 Docker Compose（应用 + MySQL）
+├── docker-entrypoint.sh   # 容器入口脚本
+└── README.md              # 发布包说明
+```
+
+### 3. 启动
+
+**方式一：裸机运行**
+
+```bash
+cd build/1.0.0
+# 修改 configs/config.prod.yaml 中的数据库连接等信息（或通过环境变量覆盖）
+./orange-tv migrate up -c configs/config.prod.yaml
+./orange-tv serve -c configs/config.prod.yaml
+# 用 nginx 托管前端：参考 nginx/nginx.conf，调整静态资源路径后 reload
+```
+
+**方式二：Docker Compose 一键启动（推荐）**
+
+```bash
+cd build/1.0.0
+docker compose up -d
+# 首次启动执行数据库迁移
+docker compose exec app /app/orange-tv migrate up -c /app/configs/config.prod.yaml
+```
+
+- 用户端访问：`http://<host>:80`
+- 管理端访问：`http://<host>:81`
+- Docker 容器内后端监听 `127.0.0.1:8080`，由同容器 nginx 反代，无需对外暴露
+
+### 4. 相关 Makefile 目标
+
+| 目标 | 说明 |
+| ---- | ---- |
+| `make pack` | 构建前端 + 后端并组装发布目录 |
+| `make pack-clean` | 清理发布目录 |
+
 ## 多实例部署
 
 多实例部署需要使用负载均衡器和共享存储（Redis）。
@@ -248,7 +313,7 @@ docker run -d \
   -e DATABASE_DRIVER=mysql \
   -e DATABASE_HOST=db \
   -e DATABASE_PORT=3306 \
-  -e DATABASE_DATABASE=myapp \
+  -e DATABASE_NAME=myapp \
   -e DATABASE_USER=myapp \
   -e DATABASE_PASSWORD=your_password \
   -e REDIS_ENABLED=true \

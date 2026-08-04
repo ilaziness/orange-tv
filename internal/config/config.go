@@ -16,8 +16,13 @@ import (
 // Environment variable names
 const (
 	EnvVarAppEnv           = "APP_ENV"
+	EnvVarDatabaseHost     = "DATABASE_HOST"
+	EnvVarDatabasePort     = "DATABASE_PORT"
+	EnvVarDatabaseUser     = "DATABASE_USER"
 	EnvVarDatabasePassword = "DATABASE_PASSWORD"
+	EnvVarDatabaseName     = "DATABASE_NAME"
 	EnvVarRedisPassword    = "REDIS_PASSWORD"
+	EnvVarJWTSecret        = "JWT_SECRET"
 )
 
 // Global config instance
@@ -85,11 +90,11 @@ type LogConfig struct {
 // DatabaseConfig 数据库连接配置。
 type DatabaseConfig struct {
 	Driver       string `mapstructure:"driver"`             // 驱动（必填），枚举：mysql | postgres | postgresql | sqlite
-	Host         string `mapstructure:"host"`               // 主机（必填）
-	Port         int    `mapstructure:"port"`               // 端口
-	User         string `mapstructure:"user"`               // 用户名
+	Host         string `mapstructure:"host"`               // 主机（必填），可通过环境变量 DATABASE_HOST 覆盖
+	Port         int    `mapstructure:"port"`               // 端口，可通过环境变量 DATABASE_PORT 覆盖
+	User         string `mapstructure:"user"`               // 用户名，可通过环境变量 DATABASE_USER 覆盖
 	Password     string `mapstructure:"password"`           // 密码，可通过环境变量 DATABASE_PASSWORD 覆盖
-	Database     string `mapstructure:"database"`           // 库名（必填）
+	Database     string `mapstructure:"database"`           // 库名（必填），可通过环境变量 DATABASE_NAME 覆盖
 	SSLMode      string `mapstructure:"ssl_mode"`           // PostgreSQL SSL 模式（仅 postgres/postgresql 生效；空值用驱动默认），枚举：disable | require | verify-ca | verify-full
 	MaxOpenConns int    `mapstructure:"max_open_conns"`     // 最大打开连接数
 	MaxIdleConns int    `mapstructure:"max_idle_conns"`     // 最大空闲连接数
@@ -112,7 +117,7 @@ type RedisConfig struct {
 
 // JWTConfig JWT 认证配置。
 type JWTConfig struct {
-	Secret          string   `mapstructure:"secret"`            // 签名密钥（生产环境必填，至少 32 字节）
+	Secret          string   `mapstructure:"secret"`            // 签名密钥（生产环境必填，至少 32 字节），可通过环境变量 JWT_SECRET 覆盖
 	AccessTokenTTL  int      `mapstructure:"access_token_ttl"`  // Access Token 有效期（秒），默认 7200
 	RefreshTokenTTL int      `mapstructure:"refresh_token_ttl"` // Refresh Token 有效期（秒），默认 604800
 	SkipPaths       []string `mapstructure:"skip_paths"`        // 跳过 JWT 校验的路径前缀列表
@@ -164,19 +169,9 @@ func LoadWithEnv(configPath, envOverride string) (*Config, error) {
 	}
 	v.Set("app.env", env)
 
-	// Step 2: Load .env files based on environment (optional, won't fail if missing)
-	loadOptionalDotenv(fmt.Sprintf(".env.%s", env))
-	loadOptionalDotenv(fmt.Sprintf("./configs/.env.%s", env))
-	loadOptionalDotenv(".env")
-	loadOptionalDotenv("./configs/.env")
-
-	// Step 3: Bind sensitive fields to environment variables
-	bindEnvVar(v, "database.password", EnvVarDatabasePassword)
-	bindEnvVar(v, "redis.password", EnvVarRedisPassword)
-
 	configDir := "./configs"
 
-	// Step 4: Load config files
+	// Step 2: Load config files (lowest priority)
 	// Priority 1: If configPath is provided, load it directly
 	if configPath != "" {
 		absPath, err := filepath.Abs(configPath)
@@ -227,6 +222,23 @@ func LoadWithEnv(configPath, envOverride string) (*Config, error) {
 			}
 		}
 	}
+
+	// Step 3: Load .env files (overrides config file values via os env)
+	// godotenv loads into os.Environ without overriding existing real env vars,
+	// so real environment variables always win over .env files.
+	loadOptionalDotenv(fmt.Sprintf(".env.%s", env))
+	loadOptionalDotenv(fmt.Sprintf("./configs/.env.%s", env))
+	loadOptionalDotenv(".env")
+	loadOptionalDotenv("./configs/.env")
+
+	// Step 4: Bind overridable fields to environment variables
+	bindEnvVar(v, "database.host", EnvVarDatabaseHost)
+	bindEnvVar(v, "database.port", EnvVarDatabasePort)
+	bindEnvVar(v, "database.user", EnvVarDatabaseUser)
+	bindEnvVar(v, "database.password", EnvVarDatabasePassword)
+	bindEnvVar(v, "database.database", EnvVarDatabaseName)
+	bindEnvVar(v, "redis.password", EnvVarRedisPassword)
+	bindEnvVar(v, "jwt.secret", EnvVarJWTSecret)
 
 	cfg := &Config{}
 	if err := v.Unmarshal(cfg); err != nil {

@@ -1,29 +1,38 @@
 # Production environment configuration
+# 裸机与 Docker 共用此配置，差异通过环境变量覆盖。
+# 可覆盖的环境变量：
+#   DATABASE_HOST / DATABASE_PORT / DATABASE_USER / DATABASE_PASSWORD / DATABASE_NAME
+#   JWT_SECRET（生产环境必填，至少 32 字节）
 app:
   env: prod
 
 http:
-  port: 80
+  port: 8080
   shutdown_timeout: 30
+
+# JWT 签名密钥（生产环境必填，至少 32 字节）
+# 请务必修改为随机字符串，或通过 JWT_SECRET 环境变量覆盖
+jwt:
+  secret: change-me-to-a-random-secret-at-least-32-bytes
 
 log:
   level: info
   output: both
-  filename: /var/log/orange-tv/app.log
+  filename: logs/app.log
   max_size: 100
   max_backups: 30
   max_age: 7
   compress: true
 
 # Database configuration (MySQL/PostgreSQL for production)
+# 下方为占位默认值，实际部署时通过环境变量注入。
 database:
   driver: mysql
-  host: ${DB_HOST}
+  host: localhost
   port: 3306
-  user: ${DB_USER}
-  password: ${DB_PASSWORD}
-  database: ${DB_NAME}
-  ssl_mode: require
+  user: orange
+  password: change_me
+  database: orange_tv
   max_open_conns: 50
   max_idle_conns: 25
   conn_max_lifetime: 300

@@ -1,10 +1,16 @@
-.PHONY: build run run-dev test test-coverage test-all benchmark mock clean deps lint fmt vet config-validate config-show version docker-build docker-run docker-compose-up docker-compose-down docker-compose-logs docker-compose-restart clean-all swagger swagger-clean help
+.PHONY: build run run-dev test test-coverage test-all benchmark mock clean deps lint fmt vet config-validate config-show version docker-build docker-run docker-compose-up docker-compose-down docker-compose-logs docker-compose-restart clean-all swagger swagger-clean pack pack-clean help
 
 # Variables
 APP_NAME := orange-tv
 VERSION := 1.0.0
 BUILD_DIR := build
 MAIN_PATH := ./main.go
+
+# Pack variables
+PACK_DIR := $(BUILD_DIR)/$(VERSION)
+PACK_GOOS ?= linux
+PACK_GOARCH ?= amd64
+PACK_DIR_TEMPLATE := pack
 
 # Go parameters
 GOCMD := go
@@ -160,6 +166,54 @@ swagger-clean:
 	@rm -rf docs/swagger/docs.go docs/swagger/swagger.json docs/swagger/swagger.yaml
 	@echo "Swagger documentation cleaned"
 
+## pack: Build frontend + backend and assemble a self-contained release directory at build/$(VERSION)
+pack:
+	@echo "==> [1/4] Cleaning pack directory $(PACK_DIR)..."
+	@rm -rf $(PACK_DIR)
+	@mkdir -p $(PACK_DIR)/configs $(PACK_DIR)/migrations $(PACK_DIR)/web/client $(PACK_DIR)/web/admin $(PACK_DIR)/nginx
+	@echo "==> [2/4] Building backend ($(PACK_GOOS)/$(PACK_GOARCH))..."
+	CGO_ENABLED=0 GOOS=$(PACK_GOOS) GOARCH=$(PACK_GOARCH) $(GOBUILD) \
+		-ldflags="-s -w -X github.com/ilaziness/orange-tv/cmd.version=$(VERSION)" \
+		-o $(PACK_DIR)/$(APP_NAME) $(MAIN_PATH)
+	@echo "==> [3/4] Building frontend (shared -> client -> admin)..."
+	cd web && npm run build
+	@echo "==> [4/4] Assembling release directory..."
+	@cp configs/config.yaml      $(PACK_DIR)/configs/config.yaml
+	@cp configs/config.prod.yaml $(PACK_DIR)/configs/config.prod.yaml
+	@cp -r migrations/.          $(PACK_DIR)/migrations/
+	@cp -r web/apps/client/dist/. $(PACK_DIR)/web/client/
+	@cp -r web/apps/admin/dist/.  $(PACK_DIR)/web/admin/
+	@cp $(PACK_DIR_TEMPLATE)/nginx.conf          $(PACK_DIR)/nginx/nginx.conf
+	@cp $(PACK_DIR_TEMPLATE)/Dockerfile          $(PACK_DIR)/Dockerfile
+	@cp $(PACK_DIR_TEMPLATE)/docker-entrypoint.sh $(PACK_DIR)/docker-entrypoint.sh
+	@cp $(PACK_DIR_TEMPLATE)/docker-compose.yml  $(PACK_DIR)/docker-compose.yml
+	@cp $(PACK_DIR_TEMPLATE)/README.md           $(PACK_DIR)/README.md
+	@chmod +x $(PACK_DIR)/docker-entrypoint.sh
+	@echo ""
+	@echo "================================================"
+	@echo "  Pack complete: $(PACK_DIR)"
+	@echo "================================================"
+	@echo ""
+	@echo "  Next steps:"
+	@echo "    1. Edit $(PACK_DIR)/configs/config.prod.yaml"
+	@echo "    2. cd $(PACK_DIR)"
+	@echo "    3. ./$(APP_NAME) migrate up -c configs/config.prod.yaml"
+	@echo "    4. ./$(APP_NAME) serve -c configs/config.prod.yaml"
+	@echo ""
+	@echo "  Or run with Docker Compose (includes MySQL):"
+	@echo "    cd $(PACK_DIR) && docker compose up -d"
+	@echo "    docker compose exec app /app/$(APP_NAME) migrate up -c /app/configs/config.prod.yaml"
+	@echo ""
+
+## pack-clean: Clean the pack release directory
+pack-clean:
+	@echo "Cleaning pack directory $(PACK_DIR)..."
+	@rm -rf $(PACK_DIR)
+	@echo ""
+	@echo "================================================"
+	@echo "  Pack directory cleaned: $(PACK_DIR)"
+	@echo "================================================"
+
 ## help: Show this help message
 help:
 	@echo "Usage: make [target]"
@@ -190,4 +244,6 @@ help:
 	@echo "  clean-all          Clean all artifacts including Docker"
 	@echo "  swagger            Generate Swagger documentation"
 	@echo "  swagger-clean      Clean generated Swagger documentation"
+	@echo "  pack               Build frontend + backend and assemble build/$(VERSION) release dir"
+	@echo "  pack-clean         Clean the pack release directory"
 	@echo "  help               Show this help message"
