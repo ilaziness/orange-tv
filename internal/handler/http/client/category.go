@@ -16,6 +16,13 @@ func NewCategoryHandler(svc clientsvc.CategoryService) *CategoryHandler {
 	return &CategoryHandler{svc: svc}
 }
 
+// List godoc
+// @Summary 分类树
+// @Description 获取公开分类树形列表
+// @Tags 用户端｜分类浏览
+// @Produce json
+// @Success 200 {object} response.Response
+// @Router /api/client/v1/categories [get]
 func (h *CategoryHandler) List(c *gin.Context) {
 	items, err := h.svc.ListTree(c.Request.Context())
 	if err != nil {

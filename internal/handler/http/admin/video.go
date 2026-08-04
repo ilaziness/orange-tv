@@ -19,6 +19,16 @@ func NewVideoHandler(svc adminsvc.VideoService) *VideoHandler {
 	return &VideoHandler{svc: svc}
 }
 
+// List godoc
+// @Summary 影视列表
+// @Description 分页获取影视列表
+// @Tags 管理端｜视频管理
+// @Accept json
+// @Produce json
+// @Param page query int false "页码"
+// @Param page_size query int false "每页数量"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/videos [get]
 func (h *VideoHandler) List(c *gin.Context) {
 	var req admindto.VideoListRequest
 	if !httphandler.BindAndValidate(c, &req) {
@@ -32,6 +42,14 @@ func (h *VideoHandler) List(c *gin.Context) {
 	response.SuccessPage(c, list, int64(total), req.GetPage(), req.GetPageSize(), req.GetTotalPages(total))
 }
 
+// Get godoc
+// @Summary 影视详情
+// @Description 获取指定影视详情
+// @Tags 管理端｜视频管理
+// @Produce json
+// @Param id path int true "影视ID"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/videos/{id} [get]
 func (h *VideoHandler) Get(c *gin.Context) {
 	var uri shareddto.IDURI
 	if !httphandler.BindURI(c, &uri) {
@@ -45,6 +63,15 @@ func (h *VideoHandler) Get(c *gin.Context) {
 	response.Success(c, item)
 }
 
+// Create godoc
+// @Summary 新建影视
+// @Description 创建一个新的影视
+// @Tags 管理端｜视频管理
+// @Accept json
+// @Produce json
+// @Param body body admindto.CreateVideoRequest true "影视参数"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/videos [post]
 func (h *VideoHandler) Create(c *gin.Context) {
 	var req admindto.CreateVideoRequest
 	if !httphandler.BindAndValidate(c, &req) {
@@ -58,6 +85,16 @@ func (h *VideoHandler) Create(c *gin.Context) {
 	response.Success(c, item)
 }
 
+// Update godoc
+// @Summary 更新影视
+// @Description 更新指定影视信息
+// @Tags 管理端｜视频管理
+// @Accept json
+// @Produce json
+// @Param id path int true "影视ID"
+// @Param body body admindto.UpdateVideoRequest true "影视参数"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/videos/{id} [put]
 func (h *VideoHandler) Update(c *gin.Context) {
 	var uri shareddto.IDURI
 	if !httphandler.BindURI(c, &uri) {
@@ -75,6 +112,14 @@ func (h *VideoHandler) Update(c *gin.Context) {
 	response.Success(c, item)
 }
 
+// Delete godoc
+// @Summary 删除影视
+// @Description 删除指定影视
+// @Tags 管理端｜视频管理
+// @Produce json
+// @Param id path int true "影视ID"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/videos/{id} [delete]
 func (h *VideoHandler) Delete(c *gin.Context) {
 	var uri shareddto.IDURI
 	if !httphandler.BindURI(c, &uri) {

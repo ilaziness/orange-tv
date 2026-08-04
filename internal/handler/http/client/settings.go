@@ -25,7 +25,7 @@ type GetSettingsQuery struct {
 // GetSettings godoc
 // @Summary 获取客户端设置
 // @Description 按分组获取客户端设置（支持多分组：site/ad/feature）
-// @Tags 系统设置
+// @Tags 用户端｜站点设置
 // @Accept json
 // @Produce json
 // @Param groups query []string true "设置分组 (site/ad/feature)" collectionFormat(multi)

@@ -22,7 +22,7 @@ func NewCollectHandler(svc adminsvc.CollectService) *CollectHandler {
 // ListSources godoc
 // @Summary 采集源列表
 // @Description 获取采集源分页列表
-// @Tags 采集管理
+// @Tags 管理端｜采集管理
 // @Accept json
 // @Produce json
 // @Param page query int false "页码"
@@ -45,7 +45,7 @@ func (h *CollectHandler) ListSources(c *gin.Context) {
 // CreateSource godoc
 // @Summary 新建采集源
 // @Description 创建一个新的采集源
-// @Tags 采集管理
+// @Tags 管理端｜采集管理
 // @Accept json
 // @Produce json
 // @Param body body admindto.CreateCollectSourceRequest true "采集源参数"
@@ -67,7 +67,7 @@ func (h *CollectHandler) CreateSource(c *gin.Context) {
 // UpdateSource godoc
 // @Summary 更新采集源
 // @Description 更新指定采集源信息
-// @Tags 采集管理
+// @Tags 管理端｜采集管理
 // @Accept json
 // @Produce json
 // @Param id path int true "采集源ID"
@@ -94,7 +94,7 @@ func (h *CollectHandler) UpdateSource(c *gin.Context) {
 // DeleteSource godoc
 // @Summary 删除采集源
 // @Description 删除指定采集源
-// @Tags 采集管理
+// @Tags 管理端｜采集管理
 // @Accept json
 // @Produce json
 // @Param id path int true "采集源ID"
@@ -115,7 +115,7 @@ func (h *CollectHandler) DeleteSource(c *gin.Context) {
 // ListCategories godoc
 // @Summary 采集源分类映射列表
 // @Description 获取指定采集源的分类映射列表
-// @Tags 采集管理
+// @Tags 管理端｜采集管理
 // @Accept json
 // @Produce json
 // @Param id path int true "采集源ID"
@@ -137,7 +137,7 @@ func (h *CollectHandler) ListCategories(c *gin.Context) {
 // SetCategories godoc
 // @Summary 设置采集源分类映射
 // @Description 替换指定采集源的分类映射
-// @Tags 采集管理
+// @Tags 管理端｜采集管理
 // @Accept json
 // @Produce json
 // @Param id path int true "采集源ID"
@@ -164,7 +164,7 @@ func (h *CollectHandler) SetCategories(c *gin.Context) {
 // ListLogs godoc
 // @Summary 采集日志列表
 // @Description 获取采集日志分页列表
-// @Tags 采集管理
+// @Tags 管理端｜采集管理
 // @Accept json
 // @Produce json
 // @Param page query int false "页码"
@@ -188,7 +188,7 @@ func (h *CollectHandler) ListLogs(c *gin.Context) {
 // FetchRemoteCategories godoc
 // @Summary 获取远程分类
 // @Description 从远程采集源拉取分类列表（仅苹果CMS）
-// @Tags 采集管理
+// @Tags 管理端｜采集管理
 // @Accept json
 // @Produce json
 // @Param id path int true "采集源ID"
@@ -210,7 +210,7 @@ func (h *CollectHandler) FetchRemoteCategories(c *gin.Context) {
 // EnableSchedule godoc
 // @Summary 启用定时采集
 // @Description 启用指定采集源的定时采集（需已绑定分类和设置cron表达式）
-// @Tags 采集管理
+// @Tags 管理端｜采集管理
 // @Accept json
 // @Produce json
 // @Param id path int true "采集源ID"
@@ -231,7 +231,7 @@ func (h *CollectHandler) EnableSchedule(c *gin.Context) {
 // DisableSchedule godoc
 // @Summary 禁用定时采集
 // @Description 禁用指定采集源的定时采集
-// @Tags 采集管理
+// @Tags 管理端｜采集管理
 // @Accept json
 // @Produce json
 // @Param id path int true "采集源ID"
@@ -252,7 +252,7 @@ func (h *CollectHandler) DisableSchedule(c *gin.Context) {
 // CollectNow godoc
 // @Summary 立即采集
 // @Description 立即执行一次采集任务
-// @Tags 采集管理
+// @Tags 管理端｜采集管理
 // @Accept json
 // @Produce json
 // @Param id path int true "采集源ID"

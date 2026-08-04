@@ -22,6 +22,13 @@ func NewDataHandler(svc adminsvc.DataService) *DataHandler {
 }
 
 // Backup streams a full SQL dump as a downloadable file.
+// @Summary 数据库备份
+// @Description 导出全量 SQL 备份文件
+// @Tags 管理端｜数据管理
+// @Produce octet-stream
+// @Param native query int false "是否使用原生备份工具：1/true 使用，0 使用 Go 实现"
+// @Success 200 {file} file "SQL 备份文件"
+// @Router /api/admin/v1/data/backup [get]
 func (h *DataHandler) Backup(c *gin.Context) {
 	filename := adminsvc.BackupFilename()
 	c.Header("Content-Type", "application/sql")
@@ -36,6 +43,14 @@ func (h *DataHandler) Backup(c *gin.Context) {
 }
 
 // BatchUpdatePreview returns the number of rows that would be affected.
+// @Summary 批量更新预览
+// @Description 预览批量替换操作的影响行数
+// @Tags 管理端｜数据管理
+// @Accept json
+// @Produce json
+// @Param body body admindto.BatchUpdatePreviewRequest true "批量更新预览请求"
+// @Success 200 {object} response.Response{data=admindto.BatchUpdatePreviewResponse}
+// @Router /api/admin/v1/data/batch-update/preview [post]
 func (h *DataHandler) BatchUpdatePreview(c *gin.Context) {
 	var req admindto.BatchUpdatePreviewRequest
 	if !httphandler.BindAndValidate(c, &req) {
@@ -50,6 +65,14 @@ func (h *DataHandler) BatchUpdatePreview(c *gin.Context) {
 }
 
 // BatchUpdateExecute performs the batch replacement after confirmation.
+// @Summary 批量更新执行
+// @Description 执行批量替换操作并返回影响行数
+// @Tags 管理端｜数据管理
+// @Accept json
+// @Produce json
+// @Param body body admindto.BatchUpdateExecuteRequest true "批量更新执行请求"
+// @Success 200 {object} response.Response{data=admindto.BatchUpdateExecuteResponse}
+// @Router /api/admin/v1/data/batch-update/execute [post]
 func (h *DataHandler) BatchUpdateExecute(c *gin.Context) {
 	var req admindto.BatchUpdateExecuteRequest
 	if !httphandler.BindAndValidate(c, &req) {

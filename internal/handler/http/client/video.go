@@ -19,6 +19,16 @@ func NewVideoHandler(svc clientsvc.VideoService) *VideoHandler {
 	return &VideoHandler{svc: svc}
 }
 
+// List godoc
+// @Summary 影视列表
+// @Description 分页获取影视列表
+// @Tags 用户端｜影视浏览
+// @Accept json
+// @Produce json
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(20)
+// @Success 200 {object} response.Response
+// @Router /api/client/v1/videos [get]
 func (h *VideoHandler) List(c *gin.Context) {
 	var req clientdto.VideoListRequest
 	if !httphandler.BindAndValidate(c, &req) {
@@ -32,6 +42,17 @@ func (h *VideoHandler) List(c *gin.Context) {
 	response.SuccessPage(c, list, int64(total), req.GetPage(), req.GetPageSize(), req.GetTotalPages(total))
 }
 
+// Search godoc
+// @Summary 搜索影视
+// @Description 根据关键词分页搜索影视
+// @Tags 用户端｜影视浏览
+// @Accept json
+// @Produce json
+// @Param keyword query string true "搜索关键词"
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(20)
+// @Success 200 {object} response.Response
+// @Router /api/client/v1/search [get]
 func (h *VideoHandler) Search(c *gin.Context) {
 	var req clientdto.SearchRequest
 	if !httphandler.BindAndValidate(c, &req) {
@@ -45,6 +66,14 @@ func (h *VideoHandler) Search(c *gin.Context) {
 	response.SuccessPage(c, list, int64(total), req.GetPage(), req.GetPageSize(), req.GetTotalPages(total))
 }
 
+// Get godoc
+// @Summary 影视详情
+// @Description 获取指定影视详情
+// @Tags 用户端｜影视浏览
+// @Produce json
+// @Param id path int true "影视ID"
+// @Success 200 {object} response.Response
+// @Router /api/client/v1/videos/{id} [get]
 func (h *VideoHandler) Get(c *gin.Context) {
 	var uri shareddto.IDURI
 	if !httphandler.BindURI(c, &uri) {
@@ -58,6 +87,16 @@ func (h *VideoHandler) Get(c *gin.Context) {
 	response.Success(c, item)
 }
 
+// Related godoc
+// @Summary 相关影视
+// @Description 获取指定影视的相关推荐列表
+// @Tags 用户端｜影视浏览
+// @Accept json
+// @Produce json
+// @Param id path int true "影视ID"
+// @Param limit query int false "返回数量"
+// @Success 200 {object} response.Response
+// @Router /api/client/v1/videos/{id}/related [get]
 func (h *VideoHandler) Related(c *gin.Context) {
 	var uri shareddto.IDURI
 	if !httphandler.BindURI(c, &uri) {
@@ -76,7 +115,7 @@ func (h *VideoHandler) Related(c *gin.Context) {
 // GetEpisode returns the play URL for a single episode.
 // @Summary 获取单集播放地址
 // @Description 根据影视ID和剧集主键ID获取播放地址
-// @Tags client-video
+// @Tags 用户端｜影视浏览
 // @Accept json
 // @Produce json
 // @Param id path int true "影视ID"

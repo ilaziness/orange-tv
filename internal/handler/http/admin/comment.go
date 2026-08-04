@@ -25,7 +25,7 @@ func NewCommentHandler(svc adminsvc.CommentService, recorder *audit.Recorder) *C
 // List godoc
 // @Summary 评论列表
 // @Description 分页获取评论列表，支持按关键词、状态、影视ID筛选
-// @Tags 评论管理
+// @Tags 管理端｜评论管理
 // @Accept json
 // @Produce json
 // @Param page query int false "页码" default(1)
@@ -51,7 +51,7 @@ func (h *CommentHandler) List(c *gin.Context) {
 // GetParents godoc
 // @Summary 父级评论链
 // @Description 获取指定评论的所有父级评论（从根评论到直接父评论）
-// @Tags 评论管理
+// @Tags 管理端｜评论管理
 // @Accept json
 // @Produce json
 // @Param id path int true "评论ID"
@@ -73,7 +73,7 @@ func (h *CommentHandler) GetParents(c *gin.Context) {
 // UpdateStatus godoc
 // @Summary 更新评论状态
 // @Description 审核/隐藏评论，status=1 为正常，status=0 为隐藏
-// @Tags 评论管理
+// @Tags 管理端｜评论管理
 // @Accept json
 // @Produce json
 // @Param id path int true "评论ID"
@@ -100,7 +100,7 @@ func (h *CommentHandler) UpdateStatus(c *gin.Context) {
 // Delete godoc
 // @Summary 删除评论
 // @Description 删除指定评论
-// @Tags 评论管理
+// @Tags 管理端｜评论管理
 // @Accept json
 // @Produce json
 // @Param id path int true "评论ID"

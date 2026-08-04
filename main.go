@@ -6,9 +6,9 @@ import (
 	_ "github.com/ilaziness/orange-tv/docs/swagger"
 )
 
-// @title App Template API
+// @title 小橘TV
 // @version 1.0
-// @description 这是一个灵活的 Go 应用模板框架，支持多种服务类型和可选组件集成
+// @description 小橘TV
 // @termsOfService http://swagger.io/terms/
 
 // @contact.name API Support

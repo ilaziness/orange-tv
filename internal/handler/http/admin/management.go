@@ -21,6 +21,13 @@ func NewManagementHandler(svc adminsvc.ManagementService) *ManagementHandler {
 
 // ===== A1: Dashboard =====
 
+// Dashboard godoc
+// @Summary 仪表盘
+// @Description 获取管理后台仪表盘统计数据
+// @Tags 管理端｜系统管理
+// @Produce json
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/dashboard [get]
 func (h *ManagementHandler) Dashboard(c *gin.Context) {
 	resp, err := h.svc.Dashboard(c.Request.Context())
 	if err != nil {
@@ -32,6 +39,15 @@ func (h *ManagementHandler) Dashboard(c *gin.Context) {
 
 // ===== A2: Batch video ops =====
 
+// BatchUpdatePublishStatus godoc
+// @Summary 批量更新发布状态
+// @Description 批量更新影视的发布状态
+// @Tags 管理端｜视频管理
+// @Accept json
+// @Produce json
+// @Param body body admindto.BatchVideoRequest true "批量操作请求"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/videos/batch/publish-status [post]
 func (h *ManagementHandler) BatchUpdatePublishStatus(c *gin.Context) {
 	var req admindto.BatchVideoRequest
 	if !httphandler.BindAndValidate(c, &req) {
@@ -45,6 +61,15 @@ func (h *ManagementHandler) BatchUpdatePublishStatus(c *gin.Context) {
 	response.Success(c, resp)
 }
 
+// BatchDeleteVideos godoc
+// @Summary 批量删除影视
+// @Description 批量删除指定影视
+// @Tags 管理端｜视频管理
+// @Accept json
+// @Produce json
+// @Param body body admindto.BatchVideoRequest true "批量操作请求"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/videos/batch/delete [post]
 func (h *ManagementHandler) BatchDeleteVideos(c *gin.Context) {
 	var req admindto.BatchVideoRequest
 	if !httphandler.BindAndValidate(c, &req) {
@@ -60,6 +85,16 @@ func (h *ManagementHandler) BatchDeleteVideos(c *gin.Context) {
 
 // ===== A3: Admin CRUD =====
 
+// ListAdmins godoc
+// @Summary 管理员列表
+// @Description 分页获取管理员列表
+// @Tags 管理端｜管理员管理
+// @Accept json
+// @Produce json
+// @Param page query int false "页码"
+// @Param page_size query int false "每页数量"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/admins [get]
 func (h *ManagementHandler) ListAdmins(c *gin.Context) {
 	var req admindto.AdminListRequest
 	if !httphandler.BindQuery(c, &req) {
@@ -73,6 +108,15 @@ func (h *ManagementHandler) ListAdmins(c *gin.Context) {
 	response.SuccessPage(c, list, int64(total), req.GetPage(), req.GetPageSize(), req.GetTotalPages(total))
 }
 
+// CreateAdmin godoc
+// @Summary 新建管理员
+// @Description 创建一个新的管理员
+// @Tags 管理端｜管理员管理
+// @Accept json
+// @Produce json
+// @Param body body admindto.CreateAdminRequest true "管理员参数"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/admins [post]
 func (h *ManagementHandler) CreateAdmin(c *gin.Context) {
 	var req admindto.CreateAdminRequest
 	if !httphandler.BindAndValidate(c, &req) {
@@ -86,6 +130,16 @@ func (h *ManagementHandler) CreateAdmin(c *gin.Context) {
 	response.Success(c, item)
 }
 
+// UpdateAdmin godoc
+// @Summary 更新管理员
+// @Description 更新指定管理员信息
+// @Tags 管理端｜管理员管理
+// @Accept json
+// @Produce json
+// @Param id path int true "管理员ID"
+// @Param body body admindto.UpdateAdminRequest true "管理员参数"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/admins/{id} [put]
 func (h *ManagementHandler) UpdateAdmin(c *gin.Context) {
 	var uri shareddto.IDURI
 	if !httphandler.BindURI(c, &uri) {
@@ -103,6 +157,16 @@ func (h *ManagementHandler) UpdateAdmin(c *gin.Context) {
 	response.Success(c, item)
 }
 
+// ResetAdminPassword godoc
+// @Summary 重置管理员密码
+// @Description 重置指定管理员的密码
+// @Tags 管理端｜管理员管理
+// @Accept json
+// @Produce json
+// @Param id path int true "管理员ID"
+// @Param body body admindto.ResetAdminPasswordRequest true "重置密码请求"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/admins/{id}/password [put]
 func (h *ManagementHandler) ResetAdminPassword(c *gin.Context) {
 	var uri shareddto.IDURI
 	if !httphandler.BindURI(c, &uri) {
@@ -119,6 +183,14 @@ func (h *ManagementHandler) ResetAdminPassword(c *gin.Context) {
 	response.Success(c, nil)
 }
 
+// DeleteAdmin godoc
+// @Summary 删除管理员
+// @Description 删除指定管理员
+// @Tags 管理端｜管理员管理
+// @Produce json
+// @Param id path int true "管理员ID"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/admins/{id} [delete]
 func (h *ManagementHandler) DeleteAdmin(c *gin.Context) {
 	var uri shareddto.IDURI
 	if !httphandler.BindURI(c, &uri) {
@@ -133,6 +205,16 @@ func (h *ManagementHandler) DeleteAdmin(c *gin.Context) {
 
 // ===== A4: User group CRUD =====
 
+// ListGroups godoc
+// @Summary 用户组列表
+// @Description 分页获取用户组列表
+// @Tags 管理端｜用户组管理
+// @Accept json
+// @Produce json
+// @Param page query int false "页码"
+// @Param page_size query int false "每页数量"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/groups [get]
 func (h *ManagementHandler) ListGroups(c *gin.Context) {
 	var req admindto.UserGroupListRequest
 	if !httphandler.BindQuery(c, &req) {
@@ -146,6 +228,15 @@ func (h *ManagementHandler) ListGroups(c *gin.Context) {
 	response.SuccessPage(c, list, int64(total), req.GetPage(), req.GetPageSize(), req.GetTotalPages(total))
 }
 
+// CreateGroup godoc
+// @Summary 新建用户组
+// @Description 创建一个新的用户组
+// @Tags 管理端｜用户组管理
+// @Accept json
+// @Produce json
+// @Param body body admindto.CreateUserGroupRequest true "用户组参数"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/groups [post]
 func (h *ManagementHandler) CreateGroup(c *gin.Context) {
 	var req admindto.CreateUserGroupRequest
 	if !httphandler.BindAndValidate(c, &req) {
@@ -159,6 +250,16 @@ func (h *ManagementHandler) CreateGroup(c *gin.Context) {
 	response.Success(c, item)
 }
 
+// UpdateGroup godoc
+// @Summary 更新用户组
+// @Description 更新指定用户组信息
+// @Tags 管理端｜用户组管理
+// @Accept json
+// @Produce json
+// @Param id path int true "用户组ID"
+// @Param body body admindto.UpdateUserGroupRequest true "用户组参数"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/groups/{id} [put]
 func (h *ManagementHandler) UpdateGroup(c *gin.Context) {
 	var uri shareddto.IDURI
 	if !httphandler.BindURI(c, &uri) {
@@ -176,6 +277,14 @@ func (h *ManagementHandler) UpdateGroup(c *gin.Context) {
 	response.Success(c, item)
 }
 
+// DeleteGroup godoc
+// @Summary 删除用户组
+// @Description 删除指定用户组
+// @Tags 管理端｜用户组管理
+// @Produce json
+// @Param id path int true "用户组ID"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/groups/{id} [delete]
 func (h *ManagementHandler) DeleteGroup(c *gin.Context) {
 	var uri shareddto.IDURI
 	if !httphandler.BindURI(c, &uri) {
@@ -190,6 +299,16 @@ func (h *ManagementHandler) DeleteGroup(c *gin.Context) {
 
 // ===== A5: Regular user CRUD =====
 
+// ListUsers godoc
+// @Summary 用户列表
+// @Description 分页获取普通用户列表
+// @Tags 管理端｜用户管理
+// @Accept json
+// @Produce json
+// @Param page query int false "页码"
+// @Param page_size query int false "每页数量"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/users [get]
 func (h *ManagementHandler) ListUsers(c *gin.Context) {
 	var req admindto.UserListRequest
 	if !httphandler.BindQuery(c, &req) {
@@ -203,6 +322,15 @@ func (h *ManagementHandler) ListUsers(c *gin.Context) {
 	response.SuccessPage(c, list, int64(total), req.GetPage(), req.GetPageSize(), req.GetTotalPages(total))
 }
 
+// CreateUser godoc
+// @Summary 新建用户
+// @Description 创建一个新的普通用户
+// @Tags 管理端｜用户管理
+// @Accept json
+// @Produce json
+// @Param body body admindto.CreateUserRequest true "用户参数"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/users [post]
 func (h *ManagementHandler) CreateUser(c *gin.Context) {
 	var req admindto.CreateUserRequest
 	if !httphandler.BindAndValidate(c, &req) {
@@ -216,6 +344,16 @@ func (h *ManagementHandler) CreateUser(c *gin.Context) {
 	response.Success(c, item)
 }
 
+// UpdateUser godoc
+// @Summary 更新用户
+// @Description 更新指定普通用户信息
+// @Tags 管理端｜用户管理
+// @Accept json
+// @Produce json
+// @Param id path int true "用户ID"
+// @Param body body admindto.UpdateUserRequest true "用户参数"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/users/{id} [put]
 func (h *ManagementHandler) UpdateUser(c *gin.Context) {
 	var uri shareddto.IDURI
 	if !httphandler.BindURI(c, &uri) {
@@ -233,6 +371,16 @@ func (h *ManagementHandler) UpdateUser(c *gin.Context) {
 	response.Success(c, item)
 }
 
+// ResetUserPassword godoc
+// @Summary 重置用户密码
+// @Description 重置指定普通用户的密码
+// @Tags 管理端｜用户管理
+// @Accept json
+// @Produce json
+// @Param id path int true "用户ID"
+// @Param body body admindto.ResetUserPasswordRequest true "重置密码请求"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/users/{id}/password [put]
 func (h *ManagementHandler) ResetUserPassword(c *gin.Context) {
 	var uri shareddto.IDURI
 	if !httphandler.BindURI(c, &uri) {
@@ -249,6 +397,14 @@ func (h *ManagementHandler) ResetUserPassword(c *gin.Context) {
 	response.Success(c, nil)
 }
 
+// DeleteUser godoc
+// @Summary 删除用户
+// @Description 删除指定普通用户
+// @Tags 管理端｜用户管理
+// @Produce json
+// @Param id path int true "用户ID"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/users/{id} [delete]
 func (h *ManagementHandler) DeleteUser(c *gin.Context) {
 	var uri shareddto.IDURI
 	if !httphandler.BindURI(c, &uri) {
@@ -261,6 +417,16 @@ func (h *ManagementHandler) DeleteUser(c *gin.Context) {
 	response.Success(c, nil)
 }
 
+// ListUserLoginLogs godoc
+// @Summary 用户登录日志列表
+// @Description 分页获取普通用户登录日志
+// @Tags 管理端｜日志管理
+// @Accept json
+// @Produce json
+// @Param page query int false "页码"
+// @Param page_size query int false "每页数量"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/user-login-logs [get]
 func (h *ManagementHandler) ListUserLoginLogs(c *gin.Context) {
 	var req admindto.UserLoginLogListRequest
 	if !httphandler.BindQuery(c, &req) {
@@ -276,6 +442,16 @@ func (h *ManagementHandler) ListUserLoginLogs(c *gin.Context) {
 
 // ===== C1: Banner CRUD =====
 
+// ListBanners godoc
+// @Summary Banner列表
+// @Description 分页获取Banner列表
+// @Tags 管理端｜Banner管理
+// @Accept json
+// @Produce json
+// @Param page query int false "页码"
+// @Param page_size query int false "每页数量"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/banners [get]
 func (h *ManagementHandler) ListBanners(c *gin.Context) {
 	var page shareddto.PaginationRequest
 	if !httphandler.BindQuery(c, &page) {
@@ -289,6 +465,15 @@ func (h *ManagementHandler) ListBanners(c *gin.Context) {
 	response.SuccessPage(c, list, int64(total), page.GetPage(), page.GetPageSize(), page.GetTotalPages(total))
 }
 
+// CreateBanner godoc
+// @Summary 新建Banner
+// @Description 创建一个新的Banner
+// @Tags 管理端｜Banner管理
+// @Accept json
+// @Produce json
+// @Param body body admindto.CreateBannerRequest true "Banner参数"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/banners [post]
 func (h *ManagementHandler) CreateBanner(c *gin.Context) {
 	var req admindto.CreateBannerRequest
 	if !httphandler.BindAndValidate(c, &req) {
@@ -302,6 +487,16 @@ func (h *ManagementHandler) CreateBanner(c *gin.Context) {
 	response.Success(c, item)
 }
 
+// UpdateBanner godoc
+// @Summary 更新Banner
+// @Description 更新指定Banner信息
+// @Tags 管理端｜Banner管理
+// @Accept json
+// @Produce json
+// @Param id path int true "BannerID"
+// @Param body body admindto.UpdateBannerRequest true "Banner参数"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/banners/{id} [put]
 func (h *ManagementHandler) UpdateBanner(c *gin.Context) {
 	var uri shareddto.IDURI
 	if !httphandler.BindURI(c, &uri) {
@@ -319,6 +514,14 @@ func (h *ManagementHandler) UpdateBanner(c *gin.Context) {
 	response.Success(c, item)
 }
 
+// DeleteBanner godoc
+// @Summary 删除Banner
+// @Description 删除指定Banner
+// @Tags 管理端｜Banner管理
+// @Produce json
+// @Param id path int true "BannerID"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/banners/{id} [delete]
 func (h *ManagementHandler) DeleteBanner(c *gin.Context) {
 	var uri shareddto.IDURI
 	if !httphandler.BindURI(c, &uri) {

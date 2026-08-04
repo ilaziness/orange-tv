@@ -25,7 +25,7 @@ func NewSettingsHandler(svc adminsvc.SettingsService, recorder *audit.Recorder) 
 // GetSettings godoc
 // @Summary 获取系统设置
 // @Description 按分组获取系统设置（site/api/ad/feature）
-// @Tags 系统设置
+// @Tags 管理端｜系统设置
 // @Accept json
 // @Produce json
 // @Param group query string true "设置分组 (site/api/ad/feature)"
@@ -48,7 +48,7 @@ func (h *SettingsHandler) Get(c *gin.Context) {
 // UpdateSettings godoc
 // @Summary 更新系统设置
 // @Description 按分组更新系统设置，data 为对应分组的 key-value JSON（site/api/ad/feature）
-// @Tags 系统设置
+// @Tags 管理端｜系统设置
 // @Accept json
 // @Produce json
 // @Param body body admindto.UpdateSettingsRequest true "更新设置请求"

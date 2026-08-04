@@ -23,6 +23,16 @@ func NewLiveHandler(svc clientsvc.LiveService, proxySvc clientsvc.LiveProxyServi
 	return &LiveHandler{svc: svc, proxySvc: proxySvc}
 }
 
+// List godoc
+// @Summary 直播频道列表
+// @Description 分页获取直播频道列表
+// @Tags 用户端｜直播观看
+// @Accept json
+// @Produce json
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页数量" default(20)
+// @Success 200 {object} response.Response
+// @Router /api/client/v1/live [get]
 func (h *LiveHandler) List(c *gin.Context) {
 	var req clientdto.LiveListRequest
 	if !httphandler.BindAndValidate(c, &req) {
@@ -37,6 +47,14 @@ func (h *LiveHandler) List(c *gin.Context) {
 }
 
 // Play proxies a live stream by delegating to LiveProxyService.
+// @Summary 直播播放代理
+// @Description 代理指定直播频道的播放流
+// @Tags 用户端｜直播观看
+// @Produce octet-stream
+// @Param id path int true "频道ID"
+// @Param u query string false "分片 URL（用于代理具体分片）"
+// @Success 200 {file} binary "直播流"
+// @Router /api/client/v1/live/play/{id} [get]
 func (h *LiveHandler) Play(c *gin.Context) {
 	id := c.Param("id")
 	channelID, err := parseID(id)

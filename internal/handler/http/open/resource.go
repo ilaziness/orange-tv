@@ -26,7 +26,7 @@ func (h *ResourceHandler) Service() opensvc.ResourceService {
 // ListVideos handles GET /api/open/v1/videos
 // @Summary 开放影视列表
 // @Description 返回启用的影视列表，每项只包含 id、title、category_id、created_at
-// @Tags 开放资源
+// @Tags 开放端｜开放资源
 // @Param page query int false "页码" default(1)
 // @Param page_size query int false "每页数量" default(20)
 // @Param limit query int false "每页数量（兼容）" default(20)
@@ -50,7 +50,7 @@ func (h *ResourceHandler) ListVideos(c *gin.Context) {
 // GetVideo handles GET /api/open/v1/videos/detail
 // @Summary 开放影视详情
 // @Description 支持多个视频 id，返回视频详情数组
-// @Tags 开放资源
+// @Tags 开放端｜开放资源
 // @Param id query []int true "视频 id，可重复" collectionFormat(multi)
 // @Success 200 {object} response.Response{data=[]opendto.VideoDetailItem}
 // @Router /api/open/v1/videos/detail [get]
@@ -70,7 +70,7 @@ func (h *ResourceHandler) GetVideo(c *gin.Context) {
 // ListCategories handles GET /api/open/v1/categories
 // @Summary 开放分类列表
 // @Description 返回启用中的分类扁平列表
-// @Tags 开放资源
+// @Tags 开放端｜开放资源
 // @Success 200 {object} response.Response{data=[]opendto.CategoryItem}
 // @Router /api/open/v1/categories [get]
 func (h *ResourceHandler) ListCategories(c *gin.Context) {

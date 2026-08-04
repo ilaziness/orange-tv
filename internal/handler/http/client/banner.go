@@ -16,6 +16,13 @@ func NewBannerHandler(svc clientsvc.BannerService) *BannerHandler {
 	return &BannerHandler{svc: svc}
 }
 
+// List godoc
+// @Summary Banner列表
+// @Description 获取公开启用的Banner列表
+// @Tags 用户端｜Banner
+// @Produce json
+// @Success 200 {object} response.Response
+// @Router /api/client/v1/banners [get]
 func (h *BannerHandler) List(c *gin.Context) {
 	list, err := h.svc.ListBanners(c.Request.Context())
 	if err != nil {
