@@ -31,12 +31,21 @@ type redisLockProvider struct {
 	lock *redislock.Lock
 }
 
-// NewRedisLockProvider 基于 redis client 创建调度器分布式锁实现。
-// client 为 nil 时应返回 nil（由调用方处理），这里不做防御以保持显式。
-func NewRedisLockProvider(client redis.UniversalClient) LockProvider {
-	if client == nil {
-		return nil
+// NewScheduler 创建调度器。redisClient 为 nil 时使用空锁（单实例模式），
+// 非 nil 时使用 Redis 分布式锁（多实例互斥保护）。
+// 调用方只需传入 redis client，无需关心锁的具体实现。
+func NewScheduler(redisClient *redis.Client) *Scheduler {
+	var lock LockProvider
+	if redisClient == nil {
+		lock = NoopLockProvider{}
+	} else {
+		lock = newRedisLockProvider(redisClient)
 	}
+	return newSchedulerWithLock(lock)
+}
+
+// newRedisLockProvider 基于 redis client 创建调度器分布式锁实现。
+func newRedisLockProvider(client redis.UniversalClient) LockProvider {
 	return &redisLockProvider{locker: redislock.New(client)}
 }
 

@@ -5,7 +5,7 @@
 //
 // 新增任务只需实现 Job 接口并调用 Register 注册：
 //
-//	sched := scheduler.NewScheduler(lock)
+//	sched := scheduler.NewScheduler(redisClient)
 //	sched.Register(scheduler.NewCollectJob(repo, runner))
 //	sched.Start(ctx)
 package scheduler
@@ -47,7 +47,9 @@ var ErrLockNotHeld = errors.New("scheduler: lock not held")
 
 // LockProvider 提供调度器单实例分布式锁能力。
 // 多机部署时，通过分布式锁保证只有一个实例运行 cron 调度，
-// 避免重复执行采集等定时任务。未提供时（nil）退化为单实例模式，不做保护。
+// 避免重复执行采集等定时任务。
+// 单实例部署时使用 NoopLockProvider（空锁），不做互斥保护。
+// 调用方通过 NewScheduler 传入 redis client，由其自动选择锁策略，无需直接构造。
 type LockProvider interface {
 	// AcquireSchedulerLock 尝试获取调度器锁，成功返回 true。
 	AcquireSchedulerLock(ctx context.Context) (bool, error)
@@ -59,6 +61,29 @@ type LockProvider interface {
 
 // defaultLockRenewInterval 默认锁续期间隔，需小于锁 TTL 以留出续期余量。
 const defaultLockRenewInterval = 10 * time.Second
+
+// NoopLockProvider 是空锁实现，用于未启用 Redis 的单实例部署场景。
+// Acquire 始终返回 true，Renew/Release 为空操作，不提供任何互斥保护。
+// 实现 noHeartbeatLock 接口，Scheduler 会跳过心跳 goroutine（空锁无需续期）。
+type NoopLockProvider struct{}
+
+// AcquireSchedulerLock 始终返回成功（true, nil）。
+func (NoopLockProvider) AcquireSchedulerLock(ctx context.Context) (bool, error) {
+	return true, nil
+}
+
+// RenewSchedulerLock 空操作，始终返回 nil。
+func (NoopLockProvider) RenewSchedulerLock(ctx context.Context) error {
+	return nil
+}
+
+// ReleaseSchedulerLock 空操作，始终返回 nil。
+func (NoopLockProvider) ReleaseSchedulerLock(ctx context.Context) error {
+	return nil
+}
+
+// noHeartbeat 标记此锁不需要心跳续期，Scheduler 据此跳过 startHeartbeat。
+func (NoopLockProvider) noHeartbeat() {}
 
 // Scheduler 封装 robfig/cron/v3，提供通用 cron 调度生命周期管理。
 // 持有所有注册的 Job，统一启动（Start）和停止（Stop）。
@@ -87,8 +112,9 @@ type Scheduler struct {
 	heartbeatDone   chan struct{}
 }
 
-// NewScheduler 创建调度器。lock 为 nil 时不启用分布式锁保护（单实例模式）。
-func NewScheduler(lock LockProvider) *Scheduler {
+// newSchedulerWithLock 是内部构造函数，用指定的锁创建调度器。
+// 外部应使用 NewScheduler（redislock.go）传入 redis client，由其决定锁策略。
+func newSchedulerWithLock(lock LockProvider) *Scheduler {
 	return &Scheduler{
 		cron: cron.New(
 			cron.WithParser(defaultParser),
@@ -106,14 +132,16 @@ func (s *Scheduler) Register(job Job) {
 
 // Start 启动 cron 调度，并依次调用所有已注册 Job 的 Init。
 //
-// 若配置了分布式锁（LockProvider 非 nil），会先尝试获取锁：
-//   - 获取失败：说明已有其他实例在运行调度，本实例跳过启动（不启动 cron、不执行 Job Init），
-//     直接返回 nil。HTTP 服务等其他模块不受影响，仍正常运行。
-//   - 获取成功：启动 cron 与 Job Init，并开启后台 goroutine 定期续期锁。
+// 若配置了锁（LockProvider 非 nil），会先尝试获取锁：
+//   - 获取失败（Redis 锁被其他实例持有）：本实例跳过启动，直接返回 nil。
+//     HTTP 服务等其他模块不受影响，仍正常运行。
+//   - 获取成功：启动 cron 与 Job Init。Redis 锁会开启后台 goroutine 定期续期，
+//     NoopLockProvider 跳过心跳（空锁无需续期）。
 //
 // 某个 Job Init 失败会中止后续 Job 的初始化，停止 cron、释放锁并返回错误。
+// s.lock 为 nil 时（仅测试场景，通过 newSchedulerWithLock(nil)）跳过锁逻辑直接启动 cron。
 func (s *Scheduler) Start(ctx context.Context) error {
-	// 多实例保护：尝试获取分布式锁
+	// 多实例保护：尝试获取锁（NoopLockProvider 始终成功，Redis 锁竞争失败则跳过启动）
 	if s.lock != nil {
 		ok, err := s.lock.AcquireSchedulerLock(ctx)
 		if err != nil {
@@ -124,7 +152,10 @@ func (s *Scheduler) Start(ctx context.Context) error {
 			return nil
 		}
 		s.lockOwned = true
-		s.startHeartbeat()
+		// NoopLockProvider 等实现 noHeartbeatLock 接口的锁不需要续期，跳过心跳 goroutine。
+		if _, skip := s.lock.(interface{ noHeartbeat() }); !skip {
+			s.startHeartbeat()
+		}
 	}
 
 	s.cron.Start()

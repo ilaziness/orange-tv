@@ -101,12 +101,7 @@ func (a *App) wireHTTP() error {
 	handlers.OpenResource = openhandler.NewResourceHandler(openResourceSvc)
 
 	// ── scheduler ──────────────────────────────────────────────────────────
-	// 创建调度器、注册所有调度任务，并绑定生命周期 hook。
-	// Scheduler 统一启动/停止所有注册的 Job。
-	// 多机部署时通过 Redis 分布式锁保证只有一个实例运行 cron 调度，
-	// 避免定时任务重复执行；未配置 Redis 时退化为单实例模式（不做保护）。
-	// 新增任务只需实现 Job 接口并调用 sched.Register 注册。
-	sched := scheduler.NewScheduler(scheduler.NewRedisLockProvider(a.redisClient))
+	sched := scheduler.NewScheduler(a.redisClient)
 	sched.Register(scheduler.NewCollectJob(collectRepo, adminCollectSvc.RunScheduledJob))
 
 	a.addHook(Hook{

@@ -38,7 +38,7 @@ func TestRedisLockProvider_AcquireAndRelease(t *testing.T) {
 	ctx := context.Background()
 
 	client := setupTestRedisClient(t)
-	p := NewRedisLockProvider(client)
+	p := newRedisLockProvider(client)
 
 	// 首次获取成功
 	ok, err := p.AcquireSchedulerLock(ctx)
@@ -81,8 +81,8 @@ func TestRedisLockProvider_MutualExclusion(t *testing.T) {
 	client := setupTestRedisClient(t)
 
 	// 两个独立 provider 共享同一 Redis，模拟两个实例
-	p1 := NewRedisLockProvider(client)
-	p2 := NewRedisLockProvider(client)
+	p1 := newRedisLockProvider(client)
+	p2 := newRedisLockProvider(client)
 
 	// p1 获取锁
 	ok1, err := p1.AcquireSchedulerLock(ctx)
@@ -115,7 +115,7 @@ func TestRedisLockProvider_Renew(t *testing.T) {
 	ctx := context.Background()
 
 	client := setupTestRedisClient(t)
-	p := NewRedisLockProvider(client)
+	p := newRedisLockProvider(client)
 
 	if _, err := p.AcquireSchedulerLock(ctx); err != nil {
 		t.Fatalf("Acquire failed: %v", err)
@@ -134,7 +134,7 @@ func TestRedisLockProvider_RenewWithoutAcquire(t *testing.T) {
 	ctx := context.Background()
 
 	client := setupTestRedisClient(t)
-	p := NewRedisLockProvider(client)
+	p := newRedisLockProvider(client)
 
 	// 未获取锁时续期应返回 ErrLockNotHeld
 	err := p.RenewSchedulerLock(ctx)
@@ -146,11 +146,30 @@ func TestRedisLockProvider_RenewWithoutAcquire(t *testing.T) {
 	}
 }
 
-func TestRedisLockProvider_NilClientReturnsNil(t *testing.T) {
-	// client 为 nil 时应返回 nil（单实例模式），由 Manager 处理
-	p := NewRedisLockProvider(nil)
-	if p != nil {
-		t.Error("expected nil LockProvider when client is nil")
+// TestNewScheduler_NilClientUsesNoopLock 验证 NewScheduler 在 redisClient 为 nil 时
+// 使用 NoopLockProvider（空锁），不 panic、不启动心跳。
+func TestNewScheduler_NilClientUsesNoopLock(t *testing.T) {
+	initLoggerForTest(t)
+	ctx := context.Background()
+
+	sched := NewScheduler(nil)
+	job := &mockJob{}
+	sched.Register(job)
+
+	if err := sched.Start(ctx); err != nil {
+		t.Fatalf("Start with nil redisClient failed: %v", err)
+	}
+	if !sched.cronStarted.Load() {
+		t.Error("expected cronStarted to be true")
+	}
+	if !sched.lockOwned {
+		t.Error("expected lockOwned to be true (NoopLockProvider always acquires)")
+	}
+	if sched.heartbeatCancel != nil {
+		t.Error("expected no heartbeat goroutine with NoopLockProvider")
+	}
+	if err := sched.Stop(ctx); err != nil {
+		t.Fatalf("Stop failed: %v", err)
 	}
 }
 
@@ -159,7 +178,7 @@ func TestRedisLockProvider_ReleaseWithoutAcquire(t *testing.T) {
 	ctx := context.Background()
 
 	client := setupTestRedisClient(t)
-	p := NewRedisLockProvider(client)
+	p := newRedisLockProvider(client)
 
 	// 未获取锁时 Release 应安全返回（无 panic）
 	if err := p.ReleaseSchedulerLock(ctx); err != nil {
