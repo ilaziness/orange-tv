@@ -21,6 +21,7 @@ import (
 	"github.com/ilaziness/orange-tv/internal/metrics"
 	"github.com/ilaziness/orange-tv/internal/server"
 	"github.com/ilaziness/orange-tv/internal/tracing"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )
 
@@ -35,6 +36,10 @@ type App struct {
 	tracer  *tracing.Tracer
 	metrics *metrics.Metrics
 	jwtMgr  *auth.JWTManager
+
+	// redisClient 独立的 Redis 客户端，用于调度器分布式锁等非缓存用途。
+	// 仅在 cfg.Redis.Enabled 时创建，与 cache 内部 client 分离，职责清晰。
+	redisClient *redis.Client
 
 	httpServer *server.HTTPServer
 

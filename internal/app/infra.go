@@ -2,15 +2,20 @@ package app
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/ilaziness/orange-tv/internal/auth"
 	internalcache "github.com/ilaziness/orange-tv/internal/cache"
+	"github.com/ilaziness/orange-tv/internal/config"
 	"github.com/ilaziness/orange-tv/internal/event"
 	"github.com/ilaziness/orange-tv/internal/logger"
 	"github.com/ilaziness/orange-tv/internal/metrics"
 	"github.com/ilaziness/orange-tv/internal/tracing"
+	"github.com/ilaziness/orange-tv/internal/utils"
 	pkgcache "github.com/ilaziness/orange-tv/pkg/cache"
 	pkgevent "github.com/ilaziness/orange-tv/pkg/event"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )
 
@@ -30,6 +35,9 @@ func (a *App) wireInfra() error {
 	logInst := logger.Log
 	a.logger = logInst
 	a.log = logInst.Logger
+
+	// 为 utils.Go 的 panic recovery 设置 logger，确保 goroutine panic 能被记录。
+	utils.SetLogger(a.log)
 
 	db, err := newDatabase(a.cfg, a.log)
 	if err != nil {
@@ -72,6 +80,20 @@ func (a *App) wireInfra() error {
 		OnStop: func(ctx context.Context) error { return a.cache.Close() },
 	})
 
+	// 独立的 Redis 客户端，用于调度器分布式锁等非缓存用途。
+	// 仅在 Redis 启用时创建，与 cache 内部 client 分离，职责清晰。
+	if a.cfg.Redis.Enabled {
+		redisClient, err := newRedisClient(a.cfg)
+		if err != nil {
+			return err
+		}
+		a.redisClient = redisClient
+		a.addHook(Hook{
+			Name:   "redis_client",
+			OnStop: func(ctx context.Context) error { return a.redisClient.Close() },
+		})
+	}
+
 	bus := pkgevent.NewEventBusWithLogger(a.log)
 	pkgevent.SetDefault(bus)
 	a.registerBuiltinEventListeners()
@@ -111,4 +133,27 @@ func (a *App) registerBuiltinEventListeners() {
 	}); err != nil && a.log != nil {
 		a.log.Warn("Failed to subscribe to app stopped event", zap.Error(err))
 	}
+}
+
+// newRedisClient 创建独立的 Redis 客户端，用于调度器分布式锁等非缓存用途。
+// 与 cache 内部 client 分离，避免职责耦合。
+func newRedisClient(cfg *config.Config) (*redis.Client, error) {
+	client := redis.NewClient(&redis.Options{
+		Addr:            fmt.Sprintf("%s:%d", cfg.Redis.Host, cfg.Redis.Port),
+		Password:        cfg.Redis.Password,
+		DB:              cfg.Redis.DB,
+		PoolSize:        cfg.Redis.PoolSize,
+		MinIdleConns:    cfg.Redis.MinIdleConns,
+		ConnMaxIdleTime: time.Duration(cfg.Redis.IdleTimeout) * time.Second,
+	})
+
+	// 健康检查
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := client.Ping(ctx).Err(); err != nil {
+		_ = client.Close()
+		return nil, fmt.Errorf("failed to connect to Redis for scheduler lock: %w", err)
+	}
+
+	return client, nil
 }
