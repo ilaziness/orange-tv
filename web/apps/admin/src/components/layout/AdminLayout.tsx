@@ -48,7 +48,7 @@ export function AdminLayout() {
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
-                <BreadcrumbPage>Orange TV Admin</BreadcrumbPage>
+                <BreadcrumbPage>小橘TV Admin</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>

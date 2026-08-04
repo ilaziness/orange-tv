@@ -1,352 +1,76 @@
-# App Template
+# 小橘TV 影视系统
 
-A flexible Go application template framework that supports multiple service types and optional component integration, suitable for quickly building various backend services.
+> English version: [README_EN.md](README_EN.md) · 技术文档：[docs/README.md](docs/README.md)
 
-## Features
+一个开箱即用的影视站点系统，用来搭建面向观众的在线影视网站。支持影视采集、内容管理、播放和后台运营，前端自适应手机、平板和电脑。
 
-- **Modular design**: Enable only what you need
-- **Dependency injection**: Using Uber Fx
-- **Configuration management**: YAML/JSON with environment variable override for sensitive data only
-- **Structured logging**: Zap with log rotation
-- **Graceful shutdown**: Signal handling and resource cleanup
-- **Health checks**: /health, /readiness, /liveness endpoints
-- **CLI tools**: Built with Cobra
-- **Database integration**: Bun ORM with support for MySQL, PostgreSQL, SQLite
-- **Database migrations**: Built-in migration tool for schema management
-- **Code generation**: Model generation from database tables
-- **Observability**: Configurable distributed tracing (OpenTelemetry) and metrics (Prometheus)
+## 这个系统能做什么？
 
-## Quick Start
+面向普通观众的观影网站。观众打开网站就能：
 
-### Prerequisites
+- 在**首页**看到推荐影视、分类入口和最新内容
+- 按**分类**（电影、电视剧、综艺、动漫等）浏览影视
+- 按**地区、年份、语言**筛选和排序影视
+- 进入**影视详情页**查看海报、简介、导演、演员、评分、播放源和剧集列表
+- 在**播放页**流畅观看视频，支持切换播放源、选集、快进快退、全屏
+- 通过**搜索**快速找到想看的影视
+- 在手机、平板、电脑上都有良好的浏览体验（自适应屏幕）
+- 切换明暗主题
 
-- Go 1.26.4 or higher
+## 谁来使用？
 
-### Installation
+系统分为两个独立的部分，分别面向不同的人：
 
-```bash
-# Clone the repository
-git clone https://github.com/ilaziness/orange-tv.git
-cd orange-tv
+| 部分 | 使用者 | 用来做什么 |
+| ------ | ------ | ------ |
+| **用户端**（前台网站） | 普通观众 | 浏览、搜索、观看影视 |
+| **管理后台** | 站长 / 运营 / 录入员 | 管理影视内容、配置采集、管理用户、设置站点 |
 
-# Download dependencies
-make deps
-```
+## 管理后台能做的事
 
-### Running the Application
+- **首页概况**：一眼看到今日新增影视数、总影视数、采集任务状态等运营数据
+- **内容管理**
+  - 分类管理：多级分类的增删改查、排序、启用/禁用
+  - 影视管理：新增、编辑、删除、上下架、批量操作
+  - 直播管理：电视直播频道的增删改查、分类和播放地址配置
+  - 导演 / 演员 / 标签管理
+  - 播放源管理：全局播放源和剧集播放链接
+  - Banner 管理：首页轮播图配置
+  - 数据采集：配置采集源、定时采集、分类映射、播放源绑定、查看采集日志
+- **用户管理**：管理员账号、用户组（角色）、普通用户、登录日志
+- **系统设置**：站点名称、Logo、版权、备案号、SEO 关键词、API 配置、系统日志
 
-```bash
-# Run with default configuration
-make run
+## 数据采集（重点功能）
 
-# Run with development configuration
-make run-dev
+如果你不想一部一部影视手动录入，可以使用采集功能自动拉取其他站点的影视数据：
 
-# Or build and run
-make build
-./build/orange-tv serve
-```
+- 支持**默认格式**（系统自定义）和**苹果 CMS 格式**两种采集源
+- 支持**定时采集**（用 cron 表达式配置，留空则不自动采集）
+- 也支持**手动一键触发**某个采集源立即采集
+- 支持**字段映射**和**分类映射**，把外部数据对齐到你的站点结构
+- 采集到的播放链接会自动归入你绑定的播放源
+- 完整的**采集日志**，方便排查问题
 
-### Available Commands
+## 我想用起来，怎么开始？
 
-```bash
-# Start the server with default config
-./build/orange-tv serve
+如果你是开发者或运维人员，请按以下步骤部署：
 
-# Start with specific environment (dev/prod/test)
-./build/orange-tv serve -e dev
-./build/orange-tv serve -e prod
-./build/orange-tv serve -e test
+1. 准备一台服务器，安装好 Go 1.26.4+ 和 MySQL 8.x/9.x
+2. 克隆本仓库：`git clone https://github.com/ilaziness/orange-tv.git`
+3. 按照 [部署文档](docs/deployment.md) 完成配置、迁移和启动
+4. 用命令行创建第一个管理员账号，然后登录管理后台开始录入或采集影视
 
-# Start with specific config file
-./build/orange-tv serve -c configs/config.prod.yaml
+详细的安装、配置、命令和技术说明请查阅 [技术文档](docs/README.md)。
 
-# Show version
-./build/orange-tv version
+## 文档导航
 
-# Validate configuration
-./build/orange-tv config validate -e dev
-./build/orange-tv config validate -c configs/config.prod.yaml
-
-# Show current configuration
-./build/orange-tv config show -e dev
-./build/orange-tv config show -c configs/config.prod.yaml
-
-# Database migrations
-./build/orange-tv migrate up              # Run all pending migrations
-./build/orange-tv migrate down            # Rollback last migration
-./build/orange-tv migrate status          # Show migration status
-./build/orange-tv migrate create <name>   # Create new migration files
-./build/orange-tv migrate up --dry-run    # Preview migrations without executing
-
-# Code generation
-./build/orange-tv gen model               # Generate models from database
-./build/orange-tv gen model --table users --output ./internal/model
-
-# Show help
-./build/orange-tv --help
-```
-
-## Configuration
-
-Configuration can be provided via:
-
-1. **YAML files**: `configs/config.yaml` (base), `config.dev.yaml`, `config.prod.yaml`, `config.test.yaml`
-2. **Command-line**: `--env dev|prod|test` or `--config <path>`
-3. **Environment variables**: Only for sensitive data (passwords, API keys)
-
-### Configuration Priority
-
-`--config` > `--env` > `config.yaml` defaults
-
-### Configuration Files
-
-- `config.yaml` - Base configuration
-- `config.dev.yaml` - Development environment (use `--env dev`)
-- `config.prod.yaml` - Production environment (use `--env prod`)
-- `config.test.yaml` - Test environment (use `--env test`)
-
-### Environment Variables
-
-Environment variables are only used for sensitive data:
-
-```bash
-# Database configuration (MySQL default)
-export DATABASE_DRIVER=mysql
-export DATABASE_HOST=127.0.0.1
-export DATABASE_PORT=3306
-export DATABASE_USER=orange
-export DATABASE_PASSWORD=orange_password
-export DATABASE_DATABASE=orange_tv
-
-# Redis configuration
-export REDIS_ENABLED=false
-export REDIS_HOST=localhost
-export REDIS_PORT=6379
-export REDIS_PASSWORD=
-```
-
-See `.env.example` for all available environment variables.
-
-## Database Integration
-
-This project uses Bun ORM with **MySQL as the default** for development and production. PostgreSQL and SQLite remain supported by the driver layer (SQLite is still used in unit tests).
-
-### Supported Databases
-
-- **MySQL**: Default for development and production
-- **PostgreSQL**: Optional
-- **SQLite**: Optional / unit tests
-
-### Database Configuration
-
-Configure the database in your config files:
-
-```yaml
-database:
-  driver: mysql
-  host: 127.0.0.1
-  port: 3306
-  database: orange_tv
-  user: orange
-  password: orange_password
-  max_open_conns: 25
-  max_idle_conns: 10
-  conn_max_lifetime: 300
-```
-
-### Running Migrations
-
-```bash
-# Create a new migration
-./build/orange-tv migrate create add_users_table
-
-# Run migrations
-./build/orange-tv migrate up
-
-# Check migration status
-./build/orange-tv migrate status
-
-# Rollback last migration
-./build/orange-tv migrate down
-```
-
-### Generating Models
-
-```bash
-# Generate models from all tables
-./build/orange-tv gen model
-
-# Generate model for specific table
-./build/orange-tv gen model --table users
-
-# Customize output
-./build/orange-tv gen model --table users --output ./internal/model --package model
-```
-
-## Project Structure
-
-```
-.
-├── cmd/                    # Command line interface
-│   ├── root.go            # Root command
-│   ├── serve.go           # Serve command
-│   ├── config.go          # Config management commands
-│   ├── version.go         # Version command
-│   ├── migrate.go         # Database migration commands
-│   └── gen.go             # Code generation commands
-├── configs/               # Configuration files
-├── migrations/            # Database migration files
-│   ├── *.up.sql          # Up migration files
-│   └── *.down.sql        # Down migration files
-├── internal/              # Private application code
-│   ├── app/              # Application wiring and lifecycle
-│   ├── config/           # Configuration structures
-│   ├── constant/         # Application constants
-│   ├── database/         # Database initialization
-│   ├── errcode/          # Error codes
-│   ├── handler/          # Request handlers
-│   │   ├── http/         # HTTP handlers
-│   │   │   ├── user.go   # User handler
-│   │   │   └── health.go # Health check handler
-│   ├── logger/           # Logging wrapper
-│   ├── middleware/       # Middlewares
-│   │   └── http/         # HTTP-specific middlewares
-│   ├── response/         # API response structures
-│   ├── router/           # Route registration
-│   ├── server/           # Server implementations
-│   │   └── http.go       # HTTP server
-│   ├── service/          # Business logic layer
-│   │   └── user.go       # User service
-│   ├── repository/       # Data access layer
-│   │   └── user.go       # User repository
-│   ├── model/            # Data models
-│   │   └── user.go       # User model
-│   └── dto/              # Data transfer objects
-│       └── user.go       # User DTOs
-├── main.go               # Application entry point
-├── Makefile              # Build commands
-├── .env.example          # Environment variables example
-└── README.md             # This file
-```
-
-## Error Codes
-
-Error codes follow the format `{3-digit module code}{4-digit business code}`:
-
-- `100xxxx` - General module (parameter errors, data not found, etc.)
-- `200xxxx` - User module (user not found, user exists, etc.)
-- `300xxxx` - Auth module (auth failed, token expired, permissions, etc.)
-- `900xxxx` - System module (internal error, database error, cache error, etc.)
-
-Examples:
-
-- `1000001` - Parameter error
-- `1000002` - Data not found
-- `2000001` - User not found
-- `3000001` - Authentication failed
-- `3000003` - Insufficient permission
-- `9000001` - Internal server error
-
-Each error code includes an associated HTTP status code.
-
-## Development
-
-### Make Commands
-
-```bash
-make build          # Build the application
-make run            # Run the application
-make run-dev        # Run with development config
-make test           # Run tests
-make test-coverage  # Run tests with coverage
-make clean          # Clean build artifacts
-make deps           # Download dependencies
-make lint           # Run linter
-make fmt            # Format code
-make vet            # Run go vet
-```
-
-### Health Check Endpoints
-
-Once the server is running, you can access:
-
-- `GET /health` - Basic health check
-- `GET /readiness` - Readiness check (includes dependency checks)
-- `GET /liveness` - Liveness check
-- `GET /version` - Application version
-- `GET /version` - Application version
-- `GET /metrics` - Prometheus metrics (requires `metrics.enabled: true`)
-
-Example:
-
-```bash
-curl http://localhost:8080/health
-```
-
-## Observability
-
-The application supports configurable distributed tracing and metrics monitoring. See [Observability Guide](docs/observability.md) for detailed documentation.
-
-### Features
-
-- **Distributed Tracing**: OpenTelemetry with OTLP protocol (supports Jaeger, Tempo, etc.)
-- **Metrics Monitoring**: Prometheus native client with HTTP, database, Redis metrics
-- **Data Correlation**: trace_id automatically injected into logs and HTTP response headers
-
-### Quick Start
-
-Enable observability in `configs/config.yaml`:
-
-```yaml
-# Enable distributed tracing
-tracing:
-  enabled: true
-  endpoint: localhost:4317  # OTLP gRPC endpoint
-  sample_rate: 1.0
-
-# Enable metrics monitoring
-metrics:
-  enabled: true
-  path: /metrics
-  labels:
-    env: dev
-    version: "1.0.0"
-```
-
-Access metrics endpoint: http://localhost:8080/metrics
-
-For detailed configuration and usage, see [Observability Guide](docs/observability.md).
-
-## API Documentation
-
-The application integrates Swagger API documentation. Access the following URLs to view:
-
-- Swagger UI: http://localhost:8080/swagger/index.html
-
-### Generate API Documentation
-
-```bash
-# Generate Swagger documentation
-make swagger
-
-# Clean generated documentation
-make swagger-clean
-```
-
-## Example Code
-
-The project includes multiple example code snippets demonstrating how to use various components:
-
-- **HTTP Service**: Endpoints like `/api/v1/users/{id}` are complete HTTP service examples
-- `internal/event/example_test.go` - Event system usage examples
-- `internal/cache/example_test.go` - Cache usage examples
-
-## Documentation
-
-- [Module Usage Guide](docs/module-usage.md) - How to select and remove unnecessary service modules
-- [Deployment Documentation](docs/deployment.md) - Single instance, multi-instance, and Docker deployment guides
-- [Observability Guide](docs/observability.md) - Distributed tracing and metrics monitoring configuration
+| 文档 | 内容 |
+| ------ | ------ |
+| [技术文档](docs/README.md) | 项目结构、配置、命令、数据库、可观测性等技术说明 |
+| [产品需求文档](docs/PRD.md) | 完整的产品功能需求与接口设计 |
+| [部署文档](docs/deployment.md) | 单实例、多实例、Docker 部署指南 |
+| [模块使用说明](docs/module-usage.md) | 如何选择和删除不需要的服务模块 |
+| [可观测性指南](docs/observability.md) | 日志、链路追踪、指标监控配置 |
 
 ## License
 

@@ -56,7 +56,7 @@ export default function LoginPage() {
           <div className="mx-auto mb-2 flex size-12 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Tv className="size-6" />
           </div>
-          <CardTitle className="text-xl">Orange TV 管理后台</CardTitle>
+          <CardTitle className="text-xl">小橘TV 管理后台</CardTitle>
           <CardDescription>使用管理员账号登录</CardDescription>
         </CardHeader>
         <CardContent>

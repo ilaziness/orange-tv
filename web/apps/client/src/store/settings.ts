@@ -32,7 +32,7 @@ interface SettingsState {
 }
 
 const DEFAULT_SETTINGS: Omit<SettingsState, 'loadSettings'> = {
-  name: 'Orange TV',
+  name: '小橘TV',
   logo: '/logo.svg',
   copyright: '',
   icp: '',

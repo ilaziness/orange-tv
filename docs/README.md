@@ -1,15 +1,34 @@
-# App Template
+# 小橘TV 技术文档
 
-一个灵活的 Go 应用模板框架，支持多种服务类型和可选组件集成，适合快速构建各种后端服务。
+> 本文件汇总项目的技术性说明，面向开发者与运维人员。业务介绍请参阅根目录 [README.md](../README.md)。
+
+## 技术栈
+
+| 类别 | 技术 |
+| ------ | ------ |
+| 语言 | Go 1.26.4 |
+| Web | Gin |
+| 依赖组装 | 手动构造函数注入（`internal/app`） |
+| CLI | Cobra |
+| 配置 | Viper |
+| 日志 | Zap + Lumberjack |
+| ORM | Bun（MySQL / PostgreSQL / SQLite） |
+| 迁移 | 内置 migrate 命令 |
+| 可观测性 | OpenTelemetry（链路追踪）、Prometheus（指标） |
+| API 文档 | Swagger |
+
+支持 HTTP 服务，通过 `configs/config.yaml` 中 `enabled` 控制。
+
+开发默认 **MySQL**；迁移为 MySQL DDL；业务模型优先用 `orange-tv gen model` 从库表生成。
 
 ## 功能特性
 
 - **模块化设计**：按需启用所需功能
-- **依赖注入**：使用 Uber Fx
+- **依赖注入**：手动构造函数注入，仅在 `internal/app` 组装
 - **配置管理**：YAML/JSON 配置，仅敏感数据使用环境变量覆盖
 - **结构化日志**：Zap 日志，支持日志轮转
 - **优雅关闭**：信号处理和资源清理
-- **健康检查**：/health、/readiness、/liveness 端点
+- **健康检查**：`/health`、`/readiness`、`/liveness` 端点
 - **CLI 工具**：基于 Cobra 构建
 - **数据库集成**：Bun ORM，支持 MySQL、PostgreSQL、SQLite
 - **数据库迁移**：内置迁移工具管理数据库架构
@@ -82,6 +101,9 @@ make build
 # 代码生成
 ./build/orange-tv gen model               # 从数据库生成模型
 ./build/orange-tv gen model --table users --output ./internal/model
+
+# 创建管理员账号
+./build/orange-tv admin create --username <name> --password <pass>
 
 # 显示帮助信息
 ./build/orange-tv --help
@@ -224,11 +246,22 @@ database:
 │   │   └── user.go       # 用户模型
 │   └── dto/              # 数据传输对象
 │       └── user.go       # 用户 DTO
+├── web/                   # 前端 monorepo
+│   ├── apps/client/      # 用户端
+│   ├── apps/admin/       # 管理后台
+│   └── packages/shared/  # 共享包
 ├── main.go               # 应用入口
 ├── Makefile              # 构建命令
 ├── .env.example          # 环境变量示例
-└── README.md             # 本文件
+└── README.md             # 业务介绍（中文主文档）
 ```
+
+### API 路径约定
+
+- 用户端：`/api/client/v1`、`/api/client/v2`
+- 管理端：`/api/admin/v1`、`/api/admin/v2`
+- 内网：`/api/internal/v1`
+- 开放：`/api/open/v1`
 
 ## 错误码
 
@@ -237,6 +270,7 @@ database:
 - `100xxxx` - 通用模块（参数错误、数据未找到等）
 - `200xxxx` - 用户模块（用户不存在、用户已存在等）
 - `300xxxx` - 认证模块（认证失败、令牌过期、权限不足等）
+- `400xxxx` - 内容模块
 - `900xxxx` - 系统模块（内部错误、数据库错误、缓存错误等）
 
 示例：
@@ -267,6 +301,14 @@ make fmt            # 格式化代码
 make vet            # 运行 go vet
 ```
 
+### 修改后验证
+
+```bash
+make fmt && make vet && make build && make test
+```
+
+详见 [验证流程](agents/verification.md)。
+
 ### 健康检查端点
 
 服务器启动后，可以访问以下端点：
@@ -285,7 +327,7 @@ curl http://localhost:8080/health
 
 ## 可观测性
 
-应用支持可配置的分布式追踪和指标监控。详细文档请参阅 [可观测性指南](docs/observability.md)。
+应用支持可配置的分布式追踪和指标监控。详细文档请参阅 [可观测性指南](observability.md)。
 
 ### 功能特性
 
@@ -315,7 +357,7 @@ metrics:
 
 访问指标端点：http://localhost:8080/metrics
 
-详细配置和用法请参阅 [可观测性指南](docs/observability.md)。
+详细配置和用法请参阅 [可观测性指南](observability.md)。
 
 ## API 文档
 
@@ -341,12 +383,16 @@ make swagger-clean
 - `internal/event/example_test.go` - 事件系统使用示例
 - `internal/cache/example_test.go` - 缓存使用示例
 
-## 文档
+## 相关文档
 
-- [模块使用说明](docs/module-usage.md) - 如何选择和删除不需要的服务模块
-- [部署文档](docs/deployment.md) - 单实例、多实例和 Docker 部署指南
-- [可观测性指南](docs/observability.md) - 分布式追踪和指标监控配置
+- [业务介绍](../README.md) - 面向用户的业务说明
+- [产品需求文档](PRD.md) - 完整产品需求与接口设计
+- [Agent 编码指南](../AGENTS.md) - AI 编码规范总览
+- [Agent 专题文档](agents/README.md) - 目录结构、编码规范、依赖注入等
+- [模块使用说明](module-usage.md) - 如何选择和删除不需要的服务模块
+- [部署文档](deployment.md) - 单实例、多实例和 Docker 部署指南
+- [可观测性指南](observability.md) - 分布式追踪和指标监控配置
 
-## 许可证
+## License
 
 MIT License

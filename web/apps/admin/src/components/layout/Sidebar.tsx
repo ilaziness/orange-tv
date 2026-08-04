@@ -73,7 +73,7 @@ export function AppSidebar() {
                 <LayoutDashboard />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-semibold">Orange TV</span>
+                <span className="truncate font-semibold">小橘TV</span>
                 <span className="truncate text-xs">管理后台</span>
               </div>
             </SidebarMenuButton>

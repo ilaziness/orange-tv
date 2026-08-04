@@ -323,7 +323,7 @@ func (d *mysqlDumper) listTables(ctx context.Context) ([]string, error) {
 }
 
 func (d *mysqlDumper) dumpHeader(ctx context.Context, w io.Writer) error {
-	_, err := fmt.Fprintf(w, "-- Orange TV database backup\n-- Driver: mysql\n-- Database: %s\n-- Generated at: %s\n\nSET NAMES utf8mb4;\nSET FOREIGN_KEY_CHECKS = 0;\n\n", d.cfg.Database, time.Now().Format(time.RFC3339))
+	_, err := fmt.Fprintf(w, "-- 小橘TV database backup\n-- Driver: mysql\n-- Database: %s\n-- Generated at: %s\n\nSET NAMES utf8mb4;\nSET FOREIGN_KEY_CHECKS = 0;\n\n", d.cfg.Database, time.Now().Format(time.RFC3339))
 	return err
 }
 
@@ -489,7 +489,7 @@ func (d *pgDumper) listTables(ctx context.Context) ([]string, error) {
 }
 
 func (d *pgDumper) dumpHeader(ctx context.Context, w io.Writer) error {
-	_, err := fmt.Fprintf(w, "-- Orange TV database backup\n-- Driver: postgres\n-- Database: %s\n-- Generated at: %s\n\n", d.cfg.Database, time.Now().Format(time.RFC3339))
+	_, err := fmt.Fprintf(w, "-- 小橘TV database backup\n-- Driver: postgres\n-- Database: %s\n-- Generated at: %s\n\n", d.cfg.Database, time.Now().Format(time.RFC3339))
 	return err
 }
 
