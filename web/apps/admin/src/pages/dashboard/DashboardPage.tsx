@@ -1,13 +1,10 @@
 import { useEffect, useState } from 'react'
 import { adminApi, errorMessage } from '@/lib/api'
 import { PageContainer } from '@/components/shared'
-import { Link } from 'react-router'
 import type { DashboardData } from '@orange-tv/shared'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Film, FolderTree, Settings, ScrollText, ShieldCheck, Users, Image } from 'lucide-react'
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null)
@@ -40,16 +37,6 @@ export default function DashboardPage() {
     { label: '今日UV', value: data?.today_uv },
   ]
 
-  const quickLinks = [
-    { to: '/content/videos', label: '影视管理', icon: Film },
-    { to: '/content/categories', label: '分类管理', icon: FolderTree },
-    { to: '/system/site', label: '站点设置', icon: Settings },
-    { to: '/system/log', label: '系统日志', icon: ScrollText },
-    { to: '/user/admins', label: '管理员', icon: ShieldCheck },
-    { to: '/user/users', label: '用户', icon: Users },
-    { to: '/content/banners', label: '首页Banner', icon: Image },
-  ]
-
   return (
     <PageContainer>
       <Card>
@@ -75,14 +62,6 @@ export default function DashboardPage() {
                   <div className="mt-1 text-sm text-muted-foreground">{s.label}</div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-          <div className="mt-6 flex flex-wrap gap-2">
-            {quickLinks.map((link) => (
-              <Button key={link.to} variant="outline" size="sm" render={<Link to={link.to} />}>
-                <link.icon data-icon="inline-start" />
-                {link.label}
-              </Button>
             ))}
           </div>
         </CardContent>
