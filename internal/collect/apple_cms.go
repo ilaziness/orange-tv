@@ -19,21 +19,24 @@ type appleCMSCollector struct {
 	log     *zap.Logger
 }
 
-// FetchListPage GET the collect URL with ac=list mode to retrieve vod_id list and class info.
+// FetchListPage GET {base}/provide/vod with ac=list mode to retrieve vod_id list and class info.
+// baseURL is the collect source base address (e.g. https://host or https://host/api.php);
+// the /provide/vod path is appended by endpointURL.
 // dataRange filters by time via the h parameter (today/last1d/last3d/last1w/last1m/all).
 // limit=50 is set to get more items per page (default is 20).
 func (c *appleCMSCollector) FetchListPage(ctx context.Context, source *model.CollectSources, page int, dataRange string) (*ListPage, error) {
-	body, err := c.fetchAppleList(ctx, source.CollectURL, source.APIKey, page, dataRange)
+	body, err := c.fetchList(ctx, source.CollectURL, source.APIKey, page, dataRange)
 	if err != nil {
 		return nil, err
 	}
 	return parseAppleCMSList(body)
 }
 
-// FetchDetail GET the collect URL with ac=detail mode to retrieve full vod info for given IDs.
+// FetchDetail GET {base}/provide/vod with ac=detail mode to retrieve full vod info for given IDs.
+// baseURL is the collect source base address; the /provide/vod path is appended by endpointURL.
 // The caller should batch IDs (max 25 per call) to avoid URL length limits.
 func (c *appleCMSCollector) FetchDetail(ctx context.Context, source *model.CollectSources, ids []uint32) (*Page, error) {
-	body, err := c.fetchAppleDetail(ctx, source.CollectURL, source.APIKey, ids)
+	body, err := c.fetchDetail(ctx, source.CollectURL, source.APIKey, ids)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +45,7 @@ func (c *appleCMSCollector) FetchDetail(ctx context.Context, source *model.Colle
 
 // FetchCategories fetches Apple CMS class info via ac=list first page.
 func (c *appleCMSCollector) FetchCategories(ctx context.Context, source *model.CollectSources) ([]RemoteCategory, error) {
-	body, err := c.fetchAppleList(ctx, source.CollectURL, source.APIKey, 1, "all")
+	body, err := c.fetchList(ctx, source.CollectURL, source.APIKey, 1, "all")
 	if err != nil {
 		return nil, err
 	}
@@ -53,13 +56,14 @@ func (c *appleCMSCollector) FetchCategories(ctx context.Context, source *model.C
 	return lp.Categories, nil
 }
 
-// fetchAppleList GET the collect URL with ac=list mode to retrieve vod_id list and class info.
+// fetchList GET {base}/provide/vod with ac=list mode to retrieve vod_id list and class info.
+// baseURL is the collect source base address; the /provide/vod path is appended by endpointURL.
 // dataRange filters by time via the h parameter (today/last1d/last3d/last1w/last1m/all).
 // limit=50 is set to get more items per page (default is 20).
-func (c *appleCMSCollector) fetchAppleList(ctx context.Context, baseURL, apiKey string, page int, dataRange string) ([]byte, error) {
-	u, err := url.Parse(strings.TrimSpace(baseURL))
+func (c *appleCMSCollector) fetchList(ctx context.Context, baseURL, apiKey string, page int, dataRange string) ([]byte, error) {
+	u, err := endpointURL(baseURL)
 	if err != nil {
-		return nil, fmt.Errorf("parse collect url: %w", err)
+		return nil, err
 	}
 	q := u.Query()
 	if page < 1 {
@@ -80,12 +84,13 @@ func (c *appleCMSCollector) fetchAppleList(ctx context.Context, baseURL, apiKey 
 	return c.fetcher.doGet(ctx, u.String(), apiKey)
 }
 
-// fetchAppleDetail GET the collect URL with ac=detail mode to retrieve full vod info for given IDs.
+// fetchDetail GET {base}/provide/vod with ac=detail mode to retrieve full vod info for given IDs.
+// baseURL is the collect source base address; the /provide/vod path is appended by endpointURL.
 // The caller should batch IDs (max 25 per call) to avoid URL length limits.
-func (c *appleCMSCollector) fetchAppleDetail(ctx context.Context, baseURL, apiKey string, ids []uint32) ([]byte, error) {
-	u, err := url.Parse(strings.TrimSpace(baseURL))
+func (c *appleCMSCollector) fetchDetail(ctx context.Context, baseURL, apiKey string, ids []uint32) ([]byte, error) {
+	u, err := endpointURL(baseURL)
 	if err != nil {
-		return nil, fmt.Errorf("parse collect url: %w", err)
+		return nil, err
 	}
 	q := u.Query()
 	q.Set("ac", "detail")
@@ -107,6 +112,28 @@ func (c *appleCMSCollector) fetchAppleDetail(ctx context.Context, baseURL, apiKe
 	}
 	u.RawQuery = q.Encode()
 	return c.fetcher.doGet(ctx, u.String(), apiKey)
+}
+
+// endpointURL joins the Apple CMS base address with the /provide/vod path.
+// baseURL is the collect source base address (e.g. https://host or https://host/api.php);
+// existing query params on baseURL are preserved; the /provide/vod path is appended to the path only.
+func endpointURL(baseURL string) (*url.URL, error) {
+	base := strings.TrimSpace(baseURL)
+	if base == "" {
+		return nil, fmt.Errorf("采集地址为空")
+	}
+	u, err := url.Parse(base)
+	if err != nil {
+		return nil, fmt.Errorf("parse collect url: %w", err)
+	}
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return nil, fmt.Errorf("采集地址协议无效: %s", u.Scheme)
+	}
+	if u.Host == "" {
+		return nil, fmt.Errorf("采集地址主机为空")
+	}
+	u.Path = strings.TrimRight(u.Path, "/") + "/provide/vod"
+	return u, nil
 }
 
 // dataRangeToHours converts a data range string to hours for Apple CMS h parameter.
@@ -133,19 +160,19 @@ func dataRangeToHours(dataRange string) int {
 // Detailed fields are obtained separately via the detail API.
 func parseAppleCMSList(body []byte) (*ListPage, error) {
 	var raw struct {
-		Code      any             `json:"code"`
-		Page      any             `json:"page"`
-		PageCount any             `json:"pagecount"`
-		Total     any             `json:"total"`
+		Code      flexInt         `json:"code"`
+		Page      flexInt         `json:"page"`
+		PageCount flexInt         `json:"pagecount"`
+		Total     flexInt         `json:"total"`
 		List      json.RawMessage `json:"list"`
 		Class     json.RawMessage `json:"class"`
 	}
 	if err := json.Unmarshal(body, &raw); err != nil {
 		return nil, fmt.Errorf("apple cms list unmarshal: %w", err)
 	}
-	page := utils.AnyToInt(raw.Page)
-	pageCount := utils.AnyToInt(raw.PageCount)
-	total := utils.AnyToInt(raw.Total)
+	page := raw.Page.int()
+	pageCount := raw.PageCount.int()
+	total := raw.Total.int()
 	if page < 1 {
 		page = 1
 	}
@@ -162,7 +189,7 @@ func parseAppleCMSList(body []byte) (*ListPage, error) {
 	ids := make([]uint32, 0, len(rows))
 	times := make([]string, 0, len(rows))
 	for _, row := range rows {
-		ids = append(ids, utils.IntToUint32(utils.AnyToInt(row.VodID)))
+		ids = append(ids, utils.IntToUint32(row.VodID.int()))
 		times = append(times, strings.TrimSpace(row.VodTime))
 	}
 
@@ -175,19 +202,19 @@ func parseAppleCMSList(body []byte) (*ListPage, error) {
 // It extracts full vod fields for each item, including directors, actors, tags, and episodes.
 func parseAppleCMSDetail(body []byte) (*Page, error) {
 	var raw struct {
-		Code      any             `json:"code"`
-		Page      any             `json:"page"`
-		PageCount any             `json:"pagecount"`
-		Total     any             `json:"total"`
+		Code      flexInt         `json:"code"`
+		Page      flexInt         `json:"page"`
+		PageCount flexInt         `json:"pagecount"`
+		Total     flexInt         `json:"total"`
 		List      json.RawMessage `json:"list"`
 		Class     json.RawMessage `json:"class"`
 	}
 	if err := json.Unmarshal(body, &raw); err != nil {
 		return nil, fmt.Errorf("apple cms detail unmarshal: %w", err)
 	}
-	page := utils.AnyToInt(raw.Page)
-	pageCount := utils.AnyToInt(raw.PageCount)
-	total := utils.AnyToInt(raw.Total)
+	page := raw.Page.int()
+	pageCount := raw.PageCount.int()
+	total := raw.Total.int()
 	if page < 1 {
 		page = 1
 	}
@@ -207,18 +234,18 @@ func parseAppleCMSDetail(body []byte) (*Page, error) {
 			continue
 		}
 		it := Item{
-			ExternalID:         utils.AnyToString(row.VodID),
+			ExternalID:         strconv.Itoa(row.VodID.int()),
 			Title:              title,
 			Subtitle:           strings.TrimSpace(row.VodSub),
 			Description:        utils.StripHTMLTags(row.Content),
 			Cover:              strings.TrimSpace(row.Pic),
 			Poster:             strings.TrimSpace(row.Pic),
-			Year:               utils.IntToInt32(utils.AnyToInt(row.VodYear)),
+			Year:               utils.IntToInt32(utils.StringToInt(row.VodYear)),
 			Region:             strings.TrimSpace(row.VodArea),
 			Language:           strings.TrimSpace(row.VodLang),
-			Duration:           utils.IntToInt32(utils.AnyToInt(row.VodDuration)),
+			Duration:           utils.IntToInt32(utils.StringToInt(row.VodDuration)),
 			ReleaseDate:        strings.TrimSpace(row.Pubdate),
-			ExternalCategoryID: utils.IntToUint32(utils.AnyToInt(row.TypeID)),
+			ExternalCategoryID: utils.IntToUint32(row.TypeID.int()),
 			Directors:          utils.SplitNames(row.Director),
 			Actors:             utils.SplitNames(row.Actor),
 			Tags:               utils.SplitNames(row.VodTag, row.Class),
@@ -248,48 +275,48 @@ func parseAppleCMSClasses(raw json.RawMessage) []RemoteCategory {
 	out := make([]RemoteCategory, 0, len(classRows))
 	for _, c := range classRows {
 		out = append(out, RemoteCategory{
-			ID:       utils.IntToUint32(utils.AnyToInt(c.TypeID)),
+			ID:       utils.IntToUint32(c.TypeID.int()),
 			Name:     strings.TrimSpace(c.TypeName),
-			ParentID: utils.IntToUint32(utils.AnyToInt(c.TypePID)),
+			ParentID: utils.IntToUint32(c.TypePID.int()),
 		})
 	}
 	return out
 }
 
 type appleClass struct {
-	TypeID   any    `json:"type_id"`
-	TypeName string `json:"type_name"`
-	TypePID  any    `json:"type_pid"`
+	TypeID   flexInt `json:"type_id"`
+	TypeName string  `json:"type_name"`
+	TypePID  flexInt `json:"type_pid"`
 }
 
 // appleListItem is the minimal struct for parsing list API responses.
 // Only vod_id and vod_time are needed from the list endpoint.
 type appleListItem struct {
-	VodID   any    `json:"vod_id"`
-	VodTime string `json:"vod_time"`
+	VodID   flexInt `json:"vod_id"`
+	VodTime string  `json:"vod_time"`
 }
 
 type appleItem struct {
-	VodID       any    `json:"vod_id"`
-	TypeID      any    `json:"type_id"`
-	TypeName    string `json:"type_name"`
-	Class       string `json:"vod_class"`
-	VodName     string `json:"vod_name"`
-	VodSub      string `json:"vod_sub"`
-	VodTag      string `json:"vod_tag"`
-	Pic         string `json:"vod_pic"`
-	Actor       string `json:"vod_actor"`
-	Director    string `json:"vod_director"`
-	Content     string `json:"vod_content"`
-	Pubdate     string `json:"vod_pubdate"`
-	VodYear     any    `json:"vod_year"`
-	VodArea     string `json:"vod_area"`
-	VodLang     string `json:"vod_lang"`
-	VodDuration any    `json:"vod_duration"`
-	VodPlayFrom string `json:"vod_play_from"`
-	VodPlayURL  string `json:"vod_play_url"`
-	VodTime     string `json:"vod_time"`
-	VodRemarks  string `json:"vod_remarks"`
+	VodID       flexInt `json:"vod_id"`
+	TypeID      flexInt `json:"type_id"`
+	TypeName    string  `json:"type_name"`
+	Class       string  `json:"vod_class"`
+	VodName     string  `json:"vod_name"`
+	VodSub      string  `json:"vod_sub"`
+	VodTag      string  `json:"vod_tag"`
+	Pic         string  `json:"vod_pic"`
+	Actor       string  `json:"vod_actor"`
+	Director    string  `json:"vod_director"`
+	Content     string  `json:"vod_content"`
+	Pubdate     string  `json:"vod_pubdate"`
+	VodYear     string  `json:"vod_year"`
+	VodArea     string  `json:"vod_area"`
+	VodLang     string  `json:"vod_lang"`
+	VodDuration string  `json:"vod_duration"`
+	VodPlayFrom string  `json:"vod_play_from"`
+	VodPlayURL  string  `json:"vod_play_url"`
+	VodTime     string  `json:"vod_time"`
+	VodRemarks  string  `json:"vod_remarks"`
 }
 
 func parseApplePlayURLs(raw string) []Episode {

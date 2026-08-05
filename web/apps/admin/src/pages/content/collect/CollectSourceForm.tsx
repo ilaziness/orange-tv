@@ -62,7 +62,7 @@ export function CollectSourceForm({
   const collectUrlPlaceholder =
     form.type === '1'
       ? 'Open API 基础路径，如 https://example.com/api/open/v1'
-      : '数据列表接口，如 https://example.com/api.php/provide/vod/from/m3u8/at/json/'
+      : 'https://www.example.com 或者 https://www.example.com/api.php'
 
   return (
     <Dialog
