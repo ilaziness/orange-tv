@@ -183,7 +183,8 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRang
 				}
 			}
 
-			if err := e.upsertItem(ctx, source, catMap, parentMap, item); err != nil {
+			written, err := e.upsertItem(ctx, source, catMap, parentMap, item)
+			if err != nil {
 				e.log.Warn("collect item failed",
 					zap.Uint32("source_id", source.ID),
 					zap.String("title", item.Title),
@@ -191,7 +192,9 @@ func (e *Engine) Run(ctx context.Context, source *model.CollectSources, dataRang
 				)
 				continue
 			}
-			pageCollected++
+			if written {
+				pageCollected++
+			}
 		}
 
 		if logID > 0 && pageCollected > 0 {
@@ -236,22 +239,26 @@ func extractHost(raw string) string {
 	return u.Host
 }
 
-func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, catMap map[uint32]uint32, parentMap map[uint32]uint32, item Item) error {
+// upsertItem inserts or updates a single collected item. The returned written
+// flag is true only when the item actually triggered a database write (create
+// or update); it is false for skipped items (e.g. category not bound) so the
+// caller can avoid inflating the collect count.
+func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, catMap map[uint32]uint32, parentMap map[uint32]uint32, item Item) (bool, error) {
 	if item.ExternalCategoryID == 0 {
-		return fmt.Errorf("外部分类ID无效")
+		return false, fmt.Errorf("外部分类ID无效")
 	}
 	categoryID, ok := catMap[item.ExternalCategoryID]
 	if !ok {
-		// 未绑定分类
-		return nil
+		// 未绑定分类，跳过不写入
+		return false, nil
 	}
 	if item.Title == "" {
-		return fmt.Errorf("标题为空")
+		return false, fmt.Errorf("标题为空")
 	}
 
 	existing, err := e.collectRepo.FindVideoByTitleYear(ctx, item.Title, item.Year)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	serialStatus := parseSerialStatus(item.Remarks)
@@ -263,7 +270,7 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 	// Cross-source: existing video was collected by a different source.
 	// Supplement empty basic fields (no cover, no associations, no PublishStatus) + upsert episodes.
 	if existing != nil && existing.CollectSourceID != 0 && existing.CollectSourceID != source.ID {
-		return e.videoRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
+		err := e.videoRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
 			vRepo := e.videoRepo.WithTx(tx)
 			pRepo := e.playRepo.WithTx(tx)
 			applySupplementFields(existing, item, catID, parentCatID, serialStatus, false)
@@ -272,20 +279,24 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 			}
 			return e.upsertEpisodes(ctx, pRepo, source, existing.ID, item)
 		})
+		if err != nil {
+			return false, err
+		}
+		return true, nil
 	}
 
 	// Same source or manually created (CollectSourceID==0): ensure metadata names
 	directorIDs, err := e.ensureDirectors(ctx, item.Directors)
 	if err != nil {
-		return err
+		return false, err
 	}
 	actorIDs, err := e.ensureActors(ctx, item.Actors)
 	if err != nil {
-		return err
+		return false, err
 	}
 	tagIDs, err := e.ensureTags(ctx, item.Tags)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	// Same-source domain migration: detect remote host changes and batch-migrate
@@ -300,7 +311,7 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 		}
 	}
 
-	return e.videoRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
+	err = e.videoRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
 		vRepo := e.videoRepo.WithTx(tx)
 		pRepo := e.playRepo.WithTx(tx)
 		var videoID uint32
@@ -400,6 +411,10 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 		}
 		return nil
 	})
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // resolveCategoryFields determines the video's category_id and parent_category_id
