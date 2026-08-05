@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS `videos` (
     `deleted_at` DATETIME NULL DEFAULT NULL COMMENT '软删除时间',
     INDEX `idx_category` (`category_id`),
     INDEX `idx_parent_category` (`parent_category_id`),
-    INDEX `idx_year` (`year`),
+    INDEX `idx_year_desc` (`year` DESC, `id` DESC),
     INDEX `idx_collect_source` (`collect_source_id`),
     FULLTEXT `idx_search` (`title`, `subtitle`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='影视表';
