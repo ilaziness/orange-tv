@@ -55,6 +55,7 @@ func NewJWTManagerFromConfig(cfg *config.Config) *JWTManager {
 		if cfg.App.Env != constant.EnvDev {
 			return nil
 		}
+		//nolint:gosec // G101: intentional dev-only fallback secret, never used in production
 		secret = "orange-tv-development-secret-change-in-production"
 	}
 	return NewJWTManager(secret, cfg.JWT.AccessTokenTTL, cfg.JWT.RefreshTokenTTL)

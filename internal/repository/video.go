@@ -129,7 +129,7 @@ func (r *videoRepo) List(ctx context.Context, f VideoListFilter) ([]model.Videos
 		q = q.Where("parent_category_id = ?", f.ParentCategoryID)
 	}
 	if len(f.CategoryIDs) > 0 {
-		q = q.Where("category_id IN (?)", bun.In(f.CategoryIDs))
+		q = q.Where("category_id IN (?)", bun.List(f.CategoryIDs))
 	}
 	if f.Year > 0 {
 		q = q.Where("year = ?", f.Year)
@@ -225,7 +225,7 @@ func (r *videoRepo) GetByIDs(ctx context.Context, ids []uint32) ([]model.Videos,
 	}
 	var items []model.Videos
 	err := r.db.NewSelect().Model(&items).
-		Where("id IN (?)", bun.In(ids)).
+		Where("id IN (?)", bun.List(ids)).
 		Where("deleted_at IS NULL").
 		Where("publish_status = ?", constant.PublishStatusOnline).
 		OrderExpr("id ASC").
@@ -371,7 +371,7 @@ func (r *videoRepo) ListTagsByVideoIDs(ctx context.Context, videoIDs []uint32) (
 		Model((*model.VideoTags)(nil)).
 		ColumnExpr("vt.video_id, vt.tag_id, ta.name").
 		Join("JOIN tags AS ta ON ta.id = vt.tag_id AND ta.deleted_at IS NULL").
-		Where("vt.video_id IN (?)", bun.In(videoIDs)).
+		Where("vt.video_id IN (?)", bun.List(videoIDs)).
 		OrderExpr("vt.id ASC").
 		Scan(ctx, &rows)
 	if err != nil {
@@ -390,7 +390,7 @@ func (r *videoRepo) BatchUpdatePublishStatus(ctx context.Context, ids []uint32, 
 	res, err := r.db.NewUpdate().Model((*model.Videos)(nil)).
 		Set("publish_status = ?", status).
 		Set("updated_at = ?", now).
-		Where("id IN (?)", bun.In(ids)).
+		Where("id IN (?)", bun.List(ids)).
 		Where("deleted_at IS NULL").
 		Exec(ctx)
 	if err != nil {
@@ -408,7 +408,7 @@ func (r *videoRepo) BatchSoftDelete(ctx context.Context, ids []uint32) (int, err
 	res, err := r.db.NewUpdate().Model((*model.Videos)(nil)).
 		Set("deleted_at = ?", now).
 		Set("updated_at = ?", now).
-		Where("id IN (?)", bun.In(ids)).
+		Where("id IN (?)", bun.List(ids)).
 		Where("deleted_at IS NULL").
 		Exec(ctx)
 	if err != nil {

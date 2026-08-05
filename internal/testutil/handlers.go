@@ -436,7 +436,7 @@ func NewBusinessHandlers() BusinessHandlers {
 	mgmt := adminMgmtSvc{}
 	userSvc := clientUserSvc{}
 	bannerSvc := clientBannerSvc{}
-	clientLiveSvc := clientLiveSvc{}
+	liveSvc := clientLiveSvc{}
 	return BusinessHandlers{
 		AuthService:    auth,
 		AdminAuth:      adminhandler.NewAuthHandler(auth),
@@ -453,7 +453,7 @@ func NewBusinessHandlers() BusinessHandlers {
 		AdminData:      adminhandler.NewDataHandler(adminDataSvc{}),
 		ClientCategory: clienthandler.NewCategoryHandler(clientCategorySvc{}),
 		ClientVideo:    clienthandler.NewVideoHandler(clientVideoSvc{}),
-		ClientLive:     clienthandler.NewLiveHandler(clientLiveSvc, clientLiveProxySvc{}),
+		ClientLive:     clienthandler.NewLiveHandler(liveSvc, clientLiveProxySvc{}),
 		ClientSettings: clienthandler.NewSettingsHandler(clientSettingsSvc{}),
 		ClientUser:     clienthandler.NewUserHandler(userSvc),
 		ClientBanner:   clienthandler.NewBannerHandler(bannerSvc),

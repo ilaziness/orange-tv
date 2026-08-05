@@ -108,7 +108,7 @@ func (s *liveProxyService) proxyURL(c *gin.Context, channelID uint32, realURL st
 		s.log.Error("[LIVE-PROXY] fetch failed", zap.String("url", realURL), zap.Error(err))
 		return errcode.WithMessage(errcode.LiveSyncFailed, "拉取直播流失败")
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	contentType := resp.Header.Get("Content-Type")
 	finalURL := resp.Request.URL.String()
@@ -324,7 +324,7 @@ func isM3U8URL(rawURL string) bool {
 // segmentContentType infers the correct Content-Type for a segment from its URL extension
 // or, for extensionless/octet-stream responses, by sniffing the first bytes of the body.
 // Many IPTV sources return application/octet-stream for ts segments, which players cannot
-// recognise, so the type is corrected here.
+// recognize, so the type is corrected here.
 func segmentContentType(rawURL, upstreamCT string, peek []byte) string {
 	u, err := url.Parse(rawURL)
 	if err != nil {
@@ -347,7 +347,7 @@ func segmentContentType(rawURL, upstreamCT string, peek []byte) string {
 		return "application/vnd.apple.mpegurl"
 	}
 
-	// No recognised extension: trust upstream if it gives a concrete type.
+	// No recognized extension: trust upstream if it gives a concrete type.
 	lower := strings.ToLower(upstreamCT)
 	if upstreamCT != "" && !strings.Contains(lower, "octet-stream") {
 		return upstreamCT

@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"fmt"
-	"net/http"
 	stdhttp "net/http"
 	"time"
 
@@ -117,7 +116,7 @@ func NewHTTPServer(cfg *config.Config, logger *zap.Logger, accessLogger *zap.Log
 	// Always-on login rate limit (IP-based, independent of global rate_limit config).
 	loginStore := httpmiddleware.NewMemoryRateLimitStore(10000)
 	ginRouter.Use(func(c *gin.Context) {
-		if c.Request.Method == http.MethodPost && (c.Request.URL.Path == router.PathAdminV1+"/auth/login" || c.Request.URL.Path == router.PathClientV1+"/auth/login") {
+		if c.Request.Method == stdhttp.MethodPost && (c.Request.URL.Path == router.PathAdminV1+"/auth/login" || c.Request.URL.Path == router.PathClientV1+"/auth/login") {
 			ok, _, _, err := loginStore.Allow(c.Request.Context(), "login:"+c.ClientIP(), 5)
 			if err == nil && !ok {
 				response.Error(c, errcode.TooManyRequests)

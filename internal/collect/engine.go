@@ -267,8 +267,8 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 			vRepo := e.videoRepo.WithTx(tx)
 			pRepo := e.playRepo.WithTx(tx)
 			applySupplementFields(existing, item, catID, parentCatID, serialStatus, false)
-			if err := vRepo.Update(ctx, existing); err != nil {
-				return err
+			if updateErr := vRepo.Update(ctx, existing); updateErr != nil {
+				return updateErr
 			}
 			return e.upsertEpisodes(ctx, pRepo, source, existing.ID, item)
 		})
@@ -326,10 +326,10 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 				SerialStatus:     serialStatus,
 				CoverImage:       item.Cover,
 				PosterImage:      "",
-				Year:             uint32(item.Year),
+				Year:             utils.Int32ToUint32(item.Year),
 				Region:           item.Region,
 				Language:         item.Language,
-				Duration:         uint32(item.Duration),
+				Duration:         utils.Int32ToUint32(item.Duration),
 				ReleaseDate:      strings.TrimSpace(item.ReleaseDate),
 				CollectSourceID:  source.ID,
 			}

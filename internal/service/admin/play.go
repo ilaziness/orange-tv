@@ -165,7 +165,7 @@ func (s *playService) CreateEpisode(ctx context.Context, req *dto.CreatePlayEpis
 	}
 	title := strings.TrimSpace(req.Title)
 	if title == "" {
-		title = formatEpisodeTitle(int32(req.EpisodeNumber))
+		title = formatEpisodeTitle(utils.Uint32ToInt32(req.EpisodeNumber))
 	}
 	m := &model.PlayEpisodes{
 		SourceID:      req.SourceID,
@@ -180,7 +180,7 @@ func (s *playService) CreateEpisode(ctx context.Context, req *dto.CreatePlayEpis
 	}
 
 	// Unique index covers soft-deleted rows. Reuse a soft-deleted slot when present.
-	existing, err := s.playRepo.GetEpisodeByKey(ctx, req.VideoID, req.SourceID, int32(req.EpisodeNumber))
+	existing, err := s.playRepo.GetEpisodeByKey(ctx, req.VideoID, req.SourceID, utils.Uint32ToInt32(req.EpisodeNumber))
 	if err != nil {
 		s.log.Error("play: get episode by key failed", zap.Uint32("video_id", req.VideoID), zap.Uint32("source_id", req.SourceID), zap.Uint32("episode_number", req.EpisodeNumber), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
@@ -223,7 +223,7 @@ func (s *playService) UpdateEpisode(ctx context.Context, id uint32, req *dto.Upd
 		return nil, err
 	}
 	if videoID != m.VideoID || sourceID != m.SourceID || episodeNumber != m.EpisodeNumber {
-		existing, err := s.playRepo.GetEpisodeByKey(ctx, videoID, sourceID, int32(episodeNumber))
+		existing, err := s.playRepo.GetEpisodeByKey(ctx, videoID, sourceID, utils.Uint32ToInt32(episodeNumber))
 		if err != nil {
 			s.log.Error("play: get episode by key for update failed", zap.Uint32("video_id", videoID), zap.Uint32("source_id", sourceID), zap.Uint32("episode_number", episodeNumber), zap.Error(err))
 			return nil, errcode.Wrap(errcode.DatabaseError, err)

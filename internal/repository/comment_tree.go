@@ -18,7 +18,7 @@ func getCommentDescendantIDs(ctx context.Context, db bun.IDB, id uint32) ([]uint
 		var ids []uint32
 		err := db.NewSelect().TableExpr("video_comments").
 			ColumnExpr("id").
-			Where("parent_id IN (?)", bun.In(current)).
+			Where("parent_id IN (?)", bun.List(current)).
 			Scan(ctx, &ids)
 		if err != nil {
 			return nil, fmt.Errorf("get comment descendants: %w", err)
@@ -46,7 +46,7 @@ func deleteCommentTreeByID(ctx context.Context, db bun.IDB, id uint32) error {
 	ids = append(ids, id)
 	ids = append(ids, descendants...)
 	_, err = db.NewDelete().Model((*model.VideoComments)(nil)).
-		Where("id IN (?)", bun.In(ids)).
+		Where("id IN (?)", bun.List(ids)).
 		Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("delete comment tree: %w", err)

@@ -23,11 +23,11 @@ func AnyToInt(v any) int {
 	case int64:
 		return int(t)
 	case uint:
-		return int(t)
+		return Uint64ToInt(uint64(t))
 	case uint32:
 		return int(t)
 	case uint64:
-		return int(t)
+		return Uint64ToInt(t)
 	case json.Number:
 		i, _ := t.Int64()
 		return int(i)

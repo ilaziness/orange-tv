@@ -3,6 +3,8 @@ package collect
 import (
 	"strconv"
 	"strings"
+
+	"github.com/ilaziness/orange-tv/internal/utils"
 )
 
 // extractEpisodeNumber extracts a positive episode number from a title like
@@ -25,7 +27,7 @@ func extractEpisodeNumber(s string) int32 {
 	if err != nil || n <= 0 {
 		return 0
 	}
-	return int32(n)
+	return utils.IntToInt32(n)
 }
 
 // guessFormat infers the play format from the URL extension.

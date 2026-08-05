@@ -36,7 +36,7 @@ func (f *defaultLiveSourceFetcher) Fetch(ctx context.Context) ([]LiveSourceEntry
 	if err != nil {
 		return nil, fmt.Errorf("fetch live source: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("fetch live source: unexpected status %d", resp.StatusCode)

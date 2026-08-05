@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/ilaziness/orange-tv/internal/model"
+	"github.com/ilaziness/orange-tv/internal/utils"
 	"go.uber.org/zap"
 )
 
@@ -219,7 +220,7 @@ func mapDefaultDetailRow(row defaultDetailRow) Item {
 		Subtitle:           strings.TrimSpace(row.Subtitle),
 		Description:        strings.TrimSpace(row.Description),
 		Cover:              strings.TrimSpace(row.Cover),
-		Year:               int32(row.Year),
+		Year:               utils.Uint32ToInt32(row.Year),
 		Region:             strings.TrimSpace(row.Region),
 		Language:           strings.TrimSpace(row.Language),
 		ReleaseDate:        strings.TrimSpace(row.ReleaseDate),
@@ -239,7 +240,7 @@ func mapDefaultDetailRow(row defaultDetailRow) Item {
 			if url == "" {
 				continue
 			}
-			num := int32(ep.Episode)
+			num := utils.Uint32ToInt32(ep.Episode)
 			if num <= 0 {
 				num = 1
 			}

@@ -167,24 +167,24 @@ func (s *videoService) Update(ctx context.Context, id uint32, req *dto.UpdateVid
 		return nil, errcode.VideoNotFound
 	}
 	if req.CategoryID != nil {
-		if err := s.ensureCategory(ctx, *req.CategoryID); err != nil {
-			return nil, err
+		if ensureErr := s.ensureCategory(ctx, *req.CategoryID); ensureErr != nil {
+			return nil, ensureErr
 		}
 		video.CategoryID = *req.CategoryID
 	}
 	if req.DirectorIDs != nil {
-		if err := s.ensureDirectors(ctx, *req.DirectorIDs); err != nil {
-			return nil, err
+		if ensureErr := s.ensureDirectors(ctx, *req.DirectorIDs); ensureErr != nil {
+			return nil, ensureErr
 		}
 	}
 	if req.Actors != nil {
-		if err := s.ensureActors(ctx, *req.Actors); err != nil {
-			return nil, err
+		if ensureErr := s.ensureActors(ctx, *req.Actors); ensureErr != nil {
+			return nil, ensureErr
 		}
 	}
 	if req.TagIDs != nil {
-		if err := s.ensureTags(ctx, *req.TagIDs); err != nil {
-			return nil, err
+		if ensureErr := s.ensureTags(ctx, *req.TagIDs); ensureErr != nil {
+			return nil, ensureErr
 		}
 	}
 
@@ -227,22 +227,22 @@ func (s *videoService) Update(ctx context.Context, id uint32, req *dto.UpdateVid
 
 	err = s.videoRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
 		txRepo := s.videoRepo.WithTx(tx)
-		if err := txRepo.Update(ctx, video); err != nil {
-			return err
+		if txErr := txRepo.Update(ctx, video); txErr != nil {
+			return txErr
 		}
 		if req.DirectorIDs != nil {
-			if err := txRepo.ReplaceDirectors(ctx, id, utils.UniqueUint32IDs(*req.DirectorIDs)); err != nil {
-				return err
+			if txErr := txRepo.ReplaceDirectors(ctx, id, utils.UniqueUint32IDs(*req.DirectorIDs)); txErr != nil {
+				return txErr
 			}
 		}
 		if req.Actors != nil {
-			if err := txRepo.ReplaceActors(ctx, id, toActorRels(*req.Actors)); err != nil {
-				return err
+			if txErr := txRepo.ReplaceActors(ctx, id, toActorRels(*req.Actors)); txErr != nil {
+				return txErr
 			}
 		}
 		if req.TagIDs != nil {
-			if err := txRepo.ReplaceTags(ctx, id, utils.UniqueUint32IDs(*req.TagIDs)); err != nil {
-				return err
+			if txErr := txRepo.ReplaceTags(ctx, id, utils.UniqueUint32IDs(*req.TagIDs)); txErr != nil {
+				return txErr
 			}
 		}
 		return nil
@@ -267,14 +267,14 @@ func (s *videoService) Delete(ctx context.Context, id uint32) error {
 	// Clear association rows so directors/actors/tags are not blocked by soft-deleted videos.
 	err = s.videoRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
 		txRepo := s.videoRepo.WithTx(tx)
-		if err := txRepo.ReplaceDirectors(ctx, id, nil); err != nil {
-			return err
+		if txErr := txRepo.ReplaceDirectors(ctx, id, nil); txErr != nil {
+			return txErr
 		}
-		if err := txRepo.ReplaceActors(ctx, id, nil); err != nil {
-			return err
+		if txErr := txRepo.ReplaceActors(ctx, id, nil); txErr != nil {
+			return txErr
 		}
-		if err := txRepo.ReplaceTags(ctx, id, nil); err != nil {
-			return err
+		if txErr := txRepo.ReplaceTags(ctx, id, nil); txErr != nil {
+			return txErr
 		}
 		return txRepo.SoftDelete(ctx, id)
 	})

@@ -83,9 +83,9 @@ func (a *App) wireInfra() error {
 	// 独立的 Redis 客户端，用于调度器分布式锁等非缓存用途。
 	// 仅在 Redis 启用时创建，与 cache 内部 client 分离，职责清晰。
 	if a.cfg.Redis.Enabled {
-		redisClient, err := newRedisClient(a.cfg)
-		if err != nil {
-			return err
+		redisClient, redisErr := newRedisClient(a.cfg)
+		if redisErr != nil {
+			return redisErr
 		}
 		a.redisClient = redisClient
 		a.addHook(Hook{
@@ -100,9 +100,9 @@ func (a *App) wireInfra() error {
 	a.addHook(Hook{
 		Name: "event_bus",
 		OnStop: func(ctx context.Context) error {
-			err := pkgevent.Default().Close()
+			closeErr := pkgevent.Default().Close()
 			pkgevent.SetDefault(nil)
-			return err
+			return closeErr
 		},
 	})
 

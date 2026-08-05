@@ -432,7 +432,7 @@ func (s *collectService) validateSourceInput(ctx context.Context, typ uint8, col
 		return errcode.WithMessage(errcode.ParamError, "采集地址格式无效")
 	}
 	if strings.TrimSpace(cronExpr) != "" {
-		if _, err := scheduler.DefaultParser().Parse(strings.TrimSpace(cronExpr)); err != nil {
+		if _, cronErr := scheduler.DefaultParser().Parse(strings.TrimSpace(cronExpr)); cronErr != nil {
 			return errcode.CollectInvalidCron
 		}
 	}

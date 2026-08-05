@@ -162,7 +162,7 @@ func parseAppleCMSList(body []byte) (*ListPage, error) {
 	ids := make([]uint32, 0, len(rows))
 	times := make([]string, 0, len(rows))
 	for _, row := range rows {
-		ids = append(ids, uint32(utils.AnyToInt(row.VodID)))
+		ids = append(ids, utils.IntToUint32(utils.AnyToInt(row.VodID)))
 		times = append(times, strings.TrimSpace(row.VodTime))
 	}
 
@@ -213,12 +213,12 @@ func parseAppleCMSDetail(body []byte) (*Page, error) {
 			Description:        utils.StripHTMLTags(row.Content),
 			Cover:              strings.TrimSpace(row.Pic),
 			Poster:             strings.TrimSpace(row.Pic),
-			Year:               int32(utils.AnyToInt(row.VodYear)),
+			Year:               utils.IntToInt32(utils.AnyToInt(row.VodYear)),
 			Region:             strings.TrimSpace(row.VodArea),
 			Language:           strings.TrimSpace(row.VodLang),
-			Duration:           int32(utils.AnyToInt(row.VodDuration)),
+			Duration:           utils.IntToInt32(utils.AnyToInt(row.VodDuration)),
 			ReleaseDate:        strings.TrimSpace(row.Pubdate),
-			ExternalCategoryID: uint32(utils.AnyToInt(row.TypeID)),
+			ExternalCategoryID: utils.IntToUint32(utils.AnyToInt(row.TypeID)),
 			Directors:          utils.SplitNames(row.Director),
 			Actors:             utils.SplitNames(row.Actor),
 			Tags:               utils.SplitNames(row.VodTag, row.Class),
@@ -248,9 +248,9 @@ func parseAppleCMSClasses(raw json.RawMessage) []RemoteCategory {
 	out := make([]RemoteCategory, 0, len(classRows))
 	for _, c := range classRows {
 		out = append(out, RemoteCategory{
-			ID:       uint32(utils.AnyToInt(c.TypeID)),
+			ID:       utils.IntToUint32(utils.AnyToInt(c.TypeID)),
 			Name:     strings.TrimSpace(c.TypeName),
-			ParentID: uint32(utils.AnyToInt(c.TypePID)),
+			ParentID: utils.IntToUint32(utils.AnyToInt(c.TypePID)),
 		})
 	}
 	return out

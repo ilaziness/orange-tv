@@ -62,8 +62,8 @@ func (s *settingsService) Update(ctx context.Context, group string, data json.Ra
 		return nil, errcode.WithMessage(errcode.ParamError, "无更新内容")
 	}
 
-	if err := s.shared.UpsertMany(ctx, group, upserts); err != nil {
-		return nil, err
+	if upsertErr := s.shared.UpsertMany(ctx, group, upserts); upsertErr != nil {
+		return nil, upsertErr
 	}
 
 	m, err := s.shared.LoadMapByGroup(ctx, group)

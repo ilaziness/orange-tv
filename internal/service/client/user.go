@@ -172,7 +172,7 @@ func (s *userService) Login(ctx context.Context, req *clientdto.LoginRequest, ip
 		recordLog(false)
 		return nil, errcode.UserDisabled
 	}
-	if err := crypto.CheckPassword(password, u.Password); err != nil {
+	if pwdErr := crypto.CheckPassword(password, u.Password); pwdErr != nil {
 		recordLog(false)
 		return nil, errcode.InvalidCredentials
 	}
@@ -239,7 +239,7 @@ func (s *userService) ChangePassword(ctx context.Context, userID uint32, req *cl
 	if u == nil {
 		return errcode.UserNotFound
 	}
-	if err := crypto.CheckPassword(req.CurrentPassword, u.Password); err != nil {
+	if pwdErr := crypto.CheckPassword(req.CurrentPassword, u.Password); pwdErr != nil {
 		return errcode.InvalidCredentials
 	}
 	hash, err := crypto.HashPassword(req.NewPassword)
@@ -624,9 +624,9 @@ func (s *userService) VoteComment(ctx context.Context, userID, commentID uint32,
 
 	err = s.userRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
 		txRepo := s.userRepo.WithTx(tx)
-		oldVote, err := txRepo.GetCommentVote(ctx, userID, commentID)
-		if err != nil {
-			return err
+		oldVote, voteErr := txRepo.GetCommentVote(ctx, userID, commentID)
+		if voteErr != nil {
+			return voteErr
 		}
 		oldDir := 0
 		if oldVote != nil {
@@ -651,21 +651,21 @@ func (s *userService) VoteComment(ctx context.Context, userID, commentID uint32,
 		}
 
 		if newDir != 0 {
-			if err := txRepo.UpsertCommentVote(ctx, &model.UserCommentVotes{
+			if voteErr := txRepo.UpsertCommentVote(ctx, &model.UserCommentVotes{
 				UserID:    userID,
 				CommentID: commentID,
-				Direction: int8(newDir),
-			}); err != nil {
-				return err
+				Direction: utils.IntToInt8(newDir),
+			}); voteErr != nil {
+				return voteErr
 			}
 		} else {
-			if err := txRepo.DeleteCommentVote(ctx, userID, commentID); err != nil {
-				return err
+			if voteErr := txRepo.DeleteCommentVote(ctx, userID, commentID); voteErr != nil {
+				return voteErr
 			}
 		}
 		if likeDelta != 0 || dislikeDelta != 0 {
-			if err := txRepo.UpdateCommentVoteCounts(ctx, commentID, likeDelta, dislikeDelta); err != nil {
-				return err
+			if voteErr := txRepo.UpdateCommentVoteCounts(ctx, commentID, likeDelta, dislikeDelta); voteErr != nil {
+				return voteErr
 			}
 		}
 		return nil
@@ -739,9 +739,9 @@ func (s *userService) RateVideo(ctx context.Context, userID, videoID uint32, req
 			VideoID: videoID,
 			Score:   score,
 		}
-		if err := txUserRepo.UpsertRating(ctx, ur); err != nil {
-			s.log.Error("client user: upsert rating failed", zap.Uint32("video_id", videoID), zap.Uint32("user_id", userID), zap.Error(err))
-			return errcode.Wrap(errcode.DatabaseError, err)
+		if upsertErr := txUserRepo.UpsertRating(ctx, ur); upsertErr != nil {
+			s.log.Error("client user: upsert rating failed", zap.Uint32("video_id", videoID), zap.Uint32("user_id", userID), zap.Error(upsertErr))
+			return errcode.Wrap(errcode.DatabaseError, upsertErr)
 		}
 
 		avg, count, err = txUserRepo.GetRatingStats(ctx, videoID)
@@ -752,9 +752,9 @@ func (s *userService) RateVideo(ctx context.Context, userID, videoID uint32, req
 
 		// Round to 1 decimal place
 		rounded := math.Round(avg*10) / 10
-		if err := txVideoRepo.UpdateRatingStats(ctx, videoID, rounded, uint32(count)); err != nil {
-			s.log.Error("client user: update video rating stats failed", zap.Uint32("video_id", videoID), zap.Error(err))
-			return errcode.Wrap(errcode.DatabaseError, err)
+		if updateErr := txVideoRepo.UpdateRatingStats(ctx, videoID, rounded, utils.IntToUint32(count)); updateErr != nil {
+			s.log.Error("client user: update video rating stats failed", zap.Uint32("video_id", videoID), zap.Error(updateErr))
+			return errcode.Wrap(errcode.DatabaseError, updateErr)
 		}
 		return nil
 	})
@@ -765,7 +765,7 @@ func (s *userService) RateVideo(ctx context.Context, userID, videoID uint32, req
 	return &clientdto.RatingResult{
 		MyScore:     score,
 		Rating:      math.Round(avg*10) / 10,
-		RatingCount: uint32(count),
+		RatingCount: utils.IntToUint32(count),
 	}, nil
 }
 

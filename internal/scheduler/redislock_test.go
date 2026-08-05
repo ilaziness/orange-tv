@@ -59,8 +59,8 @@ func TestRedisLockProvider_AcquireAndRelease(t *testing.T) {
 	}
 
 	// 释放
-	if err := p.ReleaseSchedulerLock(ctx); err != nil {
-		t.Fatalf("Release failed: %v", err)
+	if releaseErr := p.ReleaseSchedulerLock(ctx); releaseErr != nil {
+		t.Fatalf("Release failed: %v", releaseErr)
 	}
 
 	// 释放后可再次获取
@@ -100,8 +100,8 @@ func TestRedisLockProvider_MutualExclusion(t *testing.T) {
 	}
 
 	// p1 释放后 p2 可获取
-	if err := p1.ReleaseSchedulerLock(ctx); err != nil {
-		t.Fatalf("p1 Release failed: %v", err)
+	if releaseErr := p1.ReleaseSchedulerLock(ctx); releaseErr != nil {
+		t.Fatalf("p1 Release failed: %v", releaseErr)
 	}
 	ok3, err := p2.AcquireSchedulerLock(ctx)
 	if err != nil || !ok3 {

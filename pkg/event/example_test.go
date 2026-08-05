@@ -161,7 +161,7 @@ func ExampleEventBus_withContext() {
 	err := bus.Subscribe("timeout.event", func(ctx context.Context, e *event.Event) error {
 		select {
 		case <-ctx.Done():
-			fmt.Println("Context cancelled:", ctx.Err())
+			fmt.Println("Context canceled:", ctx.Err())
 			return ctx.Err()
 		case <-time.After(2 * time.Second):
 			fmt.Println("Handler completed")
@@ -183,7 +183,7 @@ func ExampleEventBus_withContext() {
 	// 等待 handler 执行
 	time.Sleep(200 * time.Millisecond)
 
-	// Output: Context cancelled: context deadline exceeded
+	// Output: Context canceled: context deadline exceeded
 }
 
 // ExampleEventBus_multipleHandlers 多个订阅者示例

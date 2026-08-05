@@ -160,8 +160,8 @@ func (s *managementService) Dashboard(ctx context.Context) (*dto.DashboardRespon
 		resp.TodayPV = 0
 		resp.TodayUV = 0
 	} else if stats != nil {
-		resp.TodayPV = int64(stats.PV)
-		resp.TodayUV = int64(stats.UV)
+		resp.TodayPV = utils.Uint64ToInt64(stats.PV)
+		resp.TodayUV = utils.Uint64ToInt64(stats.UV)
 	}
 
 	return resp, nil

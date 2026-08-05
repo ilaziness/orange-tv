@@ -103,7 +103,7 @@ func (r *metadataRepo) GetDirectorsByIDs(ctx context.Context, ids []uint32) ([]m
 	}
 	var items []model.Directors
 	err := r.db.NewSelect().Model(&items).
-		Where("id IN (?)", bun.In(ids)).
+		Where("id IN (?)", bun.List(ids)).
 		Where("deleted_at IS NULL").
 		Scan(ctx)
 	if err != nil {
@@ -210,7 +210,7 @@ func (r *metadataRepo) GetActorsByIDs(ctx context.Context, ids []uint32) ([]mode
 	}
 	var items []model.Actors
 	err := r.db.NewSelect().Model(&items).
-		Where("id IN (?)", bun.In(ids)).
+		Where("id IN (?)", bun.List(ids)).
 		Where("deleted_at IS NULL").
 		Scan(ctx)
 	if err != nil {
@@ -316,7 +316,7 @@ func (r *metadataRepo) GetTagsByIDs(ctx context.Context, ids []uint32) ([]model.
 	}
 	var items []model.Tags
 	err := r.db.NewSelect().Model(&items).
-		Where("id IN (?)", bun.In(ids)).
+		Where("id IN (?)", bun.List(ids)).
 		Where("deleted_at IS NULL").
 		Scan(ctx)
 	if err != nil {

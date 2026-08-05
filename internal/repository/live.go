@@ -139,7 +139,7 @@ func (r *liveRepo) DeleteByIDs(ctx context.Context, ids []uint32) error {
 		return nil
 	}
 	_, err := r.db.NewDelete().Model((*model.LiveChannels)(nil)).
-		Where("id IN (?)", bun.In(ids)).
+		Where("id IN (?)", bun.List(ids)).
 		Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("delete live channels by ids: %w", err)

@@ -129,7 +129,7 @@ func (s *logService) ListAppLogs(ctx context.Context, req *admindto.AppLogListRe
 		s.log.Error("logs: open app log file failed", zap.Error(err))
 		return nil, errcode.Wrap(errcode.InternalError, err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	const chunkSize = 4096
 	var collected []admindto.AppLogItem

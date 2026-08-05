@@ -67,7 +67,7 @@ func (r *settingsRepo) ListByGroups(ctx context.Context, groups []string) ([]mod
 		return nil, nil
 	}
 	var items []model.SystemSettings
-	err := r.db.NewSelect().Model(&items).Where("setting_group IN (?)", bun.In(groups)).Order("setting_key ASC").Scan(ctx)
+	err := r.db.NewSelect().Model(&items).Where("setting_group IN (?)", bun.List(groups)).Order("setting_key ASC").Scan(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("list settings by groups: %w", err)
 	}
@@ -92,7 +92,7 @@ func (r *settingsRepo) GetByKeys(ctx context.Context, keys []string) (map[string
 		return out, nil
 	}
 	var items []model.SystemSettings
-	err := r.db.NewSelect().Model(&items).Where("setting_key IN (?)", bun.In(keys)).Scan(ctx)
+	err := r.db.NewSelect().Model(&items).Where("setting_key IN (?)", bun.List(keys)).Scan(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("get settings by keys: %w", err)
 	}
@@ -149,8 +149,8 @@ func (r *settingsRepo) UpsertMany(ctx context.Context, items []SettingUpsert) er
 					SettingType:  it.SettingType,
 					Description:  it.Description,
 				}
-				if _, err := tx.NewInsert().Model(row).Exec(ctx); err != nil {
-					return fmt.Errorf("insert setting %s: %w", it.Key, err)
+				if _, insertErr := tx.NewInsert().Model(row).Exec(ctx); insertErr != nil {
+					return fmt.Errorf("insert setting %s: %w", it.Key, insertErr)
 				}
 				continue
 			}

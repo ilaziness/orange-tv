@@ -10,6 +10,7 @@ import (
 
 	"github.com/ilaziness/orange-tv/internal/database"
 	"github.com/ilaziness/orange-tv/internal/model"
+	"github.com/ilaziness/orange-tv/internal/utils"
 	"github.com/uptrace/bun"
 )
 
@@ -284,7 +285,7 @@ func (r *userFeatureRepo) CountRepliesByParents(ctx context.Context, parentIDs [
 	}
 	err := r.db.NewSelect().TableExpr("video_comments AS vc").
 		ColumnExpr("vc.parent_id, COUNT(*) AS cnt").
-		Where("vc.parent_id IN (?)", bun.In(parentIDs)).
+		Where("vc.parent_id IN (?)", bun.List(parentIDs)).
 		Where("vc.status = ?", 1).
 		Group("vc.parent_id").
 		Scan(ctx, &rows)
@@ -369,7 +370,7 @@ func (r *userFeatureRepo) BatchGetCommentVotes(ctx context.Context, userID uint3
 	err := r.db.NewSelect().TableExpr("user_comment_votes").
 		ColumnExpr("comment_id, direction").
 		Where("user_id = ?", userID).
-		Where("comment_id IN (?)", bun.In(commentIDs)).
+		Where("comment_id IN (?)", bun.List(commentIDs)).
 		Scan(ctx, &rows)
 	if err != nil {
 		return nil, fmt.Errorf("batch get comment votes: %w", err)
@@ -524,8 +525,8 @@ func (r *userFeatureRepo) IncrDailyStats(ctx context.Context, date time.Time, pv
 	d := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, date.Location())
 	_, err := r.db.NewInsert().Model(&model.SiteStatsDaily{
 		StatDate: d,
-		PV:       uint64(pv),
-		UV:       uint64(uv),
+		PV:       utils.IntToUint64(pv),
+		UV:       utils.IntToUint64(uv),
 	}).
 		On("DUPLICATE KEY UPDATE").
 		Set("pv = pv + VALUES(pv)").

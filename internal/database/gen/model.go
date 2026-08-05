@@ -280,13 +280,13 @@ func getSQLiteColumns(ctx context.Context, db *database.DB, tableName string) ([
 	var rawCols []rawColumn
 	for rows.Next() {
 		var r rawColumn
-		if err := rows.Scan(&r.cid, &r.name, &r.dataType, &r.notNull, &r.dfltValue, &r.pk); err != nil {
-			return nil, err
+		if scanErr := rows.Scan(&r.cid, &r.name, &r.dataType, &r.notNull, &r.dfltValue, &r.pk); scanErr != nil {
+			return nil, scanErr
 		}
 		rawCols = append(rawCols, r)
 	}
-	if err := rows.Err(); err != nil {
-		return nil, err
+	if rowsErr := rows.Err(); rowsErr != nil {
+		return nil, rowsErr
 	}
 
 	pkCount := 0

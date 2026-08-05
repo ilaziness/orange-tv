@@ -48,7 +48,7 @@ func (f *Fetcher) doGet(ctx context.Context, rawURL, apiKey string) ([]byte, err
 		f.log.Error("fetcher: http request failed", zap.String("url", rawURL), zap.Error(err))
 		return nil, fmt.Errorf("http get: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 16<<20))
 	if err != nil {
 		f.log.Error("fetcher: read body failed", zap.String("url", rawURL), zap.Error(err))

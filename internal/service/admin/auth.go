@@ -87,7 +87,7 @@ func (s *authService) Login(ctx context.Context, req *dto.LoginRequest, meta *Lo
 		recordFail(admin.ID, username)
 		return nil, errcode.AdminDisabled
 	}
-	if err := crypto.CheckPassword(req.Password, admin.Password); err != nil {
+	if pwdErr := crypto.CheckPassword(req.Password, admin.Password); pwdErr != nil {
 		recordFail(admin.ID, username)
 		return nil, errcode.InvalidCredentials
 	}
@@ -162,7 +162,7 @@ func (s *authService) ChangePassword(ctx context.Context, adminID uint32, req *d
 	if err != nil {
 		return err
 	}
-	if err := crypto.CheckPassword(req.OldPassword, admin.Password); err != nil {
+	if pwdErr := crypto.CheckPassword(req.OldPassword, admin.Password); pwdErr != nil {
 		return errcode.InvalidCredentials
 	}
 	if req.OldPassword == req.NewPassword {
