@@ -28,6 +28,7 @@ type Handlers struct {
 	AdminLog      *adminhandler.LogHandler
 	AdminMgmt     *adminhandler.ManagementHandler
 	AdminData     *adminhandler.DataHandler
+	AdminAd       *adminhandler.AdHandler
 	AuthService   adminsvc.AuthService
 
 	// Client surface
@@ -37,6 +38,7 @@ type Handlers struct {
 	ClientSettings *clienthandler.SettingsHandler
 	ClientUser     *clienthandler.UserHandler
 	ClientBanner   *clienthandler.BannerHandler
+	ClientAd       *clienthandler.AdHandler
 
 	// Open resource station
 	OpenResource *openhandler.ResourceHandler
@@ -93,12 +95,14 @@ func (h *Handlers) validateForRoutes() error {
 		{"admin log handler", h.AdminLog != nil},
 		{"admin management handler", h.AdminMgmt != nil},
 		{"admin data handler", h.AdminData != nil},
+		{"admin ad handler", h.AdminAd != nil},
 		{"client category handler", h.ClientCategory != nil},
 		{"client video handler", h.ClientVideo != nil},
 		{"client live handler", h.ClientLive != nil},
 		{"client settings handler", h.ClientSettings != nil},
 		{"client user handler", h.ClientUser != nil},
 		{"client banner handler", h.ClientBanner != nil},
+		{"client ad handler", h.ClientAd != nil},
 		{"open resource handler", h.OpenResource != nil},
 	}
 	for _, item := range required {

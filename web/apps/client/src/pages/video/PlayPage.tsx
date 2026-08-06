@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useParams, useNavigate, Link, useLoaderData } from 'react-router'
 import type {
+  ClientAdItem,
   ClientVideoDetail,
   PlayEpisodeResponse,
   VideoDetailSourceGroup,
 } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
 import { useAuth } from '@/hooks/useAuth'
-import { useSettingsStore } from '@/store/settings'
 import { VideoPlayer } from '@/components/Player'
 import { saveHistory } from '@/lib/playbackHistory'
 import { Button } from '@/components/ui/button'
@@ -51,7 +51,7 @@ export async function loader({
 export function Component() {
   const { id, sourceId, episodeId } = useParams()
   const navigate = useNavigate()
-  const ad = useSettingsStore((s) => s.ad)
+  const [videoAds, setVideoAds] = useState<ClientAdItem[]>([])
   const { profile } = useAuth()
   const data = useLoaderData<PlayLoaderData>()
   const { detail, episode, error } = data
@@ -61,6 +61,22 @@ export function Component() {
   const sourceIdNum = Number(sourceId || 0)
   const epIdNum = Number(episodeId || 0)
   const videoIdNum = Number(id || 0)
+
+  // Load video loading ads once on mount
+  useEffect(() => {
+    let mounted = true
+    clientApi
+      .ads('video_loading')
+      .then((res) => {
+        if (mounted) setVideoAds(res.data || [])
+      })
+      .catch(() => {
+        if (mounted) setVideoAds([])
+      })
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   const currentEpNumber = detail?.sources
     ?.flatMap((s) => s.episodes)
@@ -173,7 +189,7 @@ export function Component() {
             sourceId={sourceIdNum}
             episodeId={epIdNum}
             resumeAt={resumeAt}
-            adConfig={ad.enabled ? ad : null}
+            ads={videoAds}
             playlist={playlist}
             currentEpisodeId={epIdNum}
             onEpisodeChange={(epId) => navigate(`/play/${id}/${sourceIdNum}/${epId}`)}

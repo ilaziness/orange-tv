@@ -40,6 +40,8 @@ API 路径：用户端 `/api/client/v1`、`/api/client/v2`，管理端 `/api/adm
 13. api接口需要在`handler`函数添加`swagger`注释，方便生成api文档
 14. 更新新增数据不需要填充`updated_at`和`created_at`通过模型操作会按需自动加上这两个字段
 15. **文件拆分**：单个源文件超过 1000 行时，应合理拆分为多个文件，避免单个文件过大，保持代码可维护性
+16. **HTTP 参数接收与校验**：Handler 接收 HTTP 参数必须通过 gin binding（`ShouldBindQuery` / `ShouldBindJSON` / `ShouldBindUri`）绑定到结构体，用 `binding` tag 声明校验规则（`required`、`oneof`、`min`、`max` 等），禁止用 `c.Query` / `c.Param` / `c.PostForm` 手动取参后再手动校验；统一使用 `httphandler.BindQuery` / `httphandler.BindAndValidate` / `httphandler.BindURI` helper 处理绑定与校验；binding tag 已校验的规则（如枚举值）不在 service 层重复校验
+17. **constant 包职责**：`internal/constant` 包只负责定义常量（含常量映射表如 `map[string]string`），禁止放置验证方法（如 `IsValid*`）；枚举校验由 DTO 的 `binding`/`validate` tag 在 handler 层完成
 
 ## 前端项目指南
 

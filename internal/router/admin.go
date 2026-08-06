@@ -135,6 +135,12 @@ func registerAdminManagementRoutes(v1 *gin.RouterGroup, h *Handlers) {
 	v1.POST("/banners", h.AdminMgmt.CreateBanner)
 	v1.PUT("/banners/:id", h.AdminMgmt.UpdateBanner)
 	v1.DELETE("/banners/:id", h.AdminMgmt.DeleteBanner)
+
+	// Ads
+	v1.GET("/ads", h.AdminAd.ListAds)
+	v1.POST("/ads", h.AdminAd.CreateAd)
+	v1.PUT("/ads/:id", h.AdminAd.UpdateAd)
+	v1.DELETE("/ads/:id", h.AdminAd.DeleteAd)
 }
 
 func registerAdminSystemRoutes(v1 *gin.RouterGroup, h *Handlers) {

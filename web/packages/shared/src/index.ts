@@ -402,13 +402,28 @@ export type APISettings = {
   enable_third_party_collect: boolean
 }
 
-export type AdSettings = {
-  enabled: boolean
+export type AdItem = {
+  id: number
+  ad_key: string
+  title: string
+  scene: string
   type: string
-  url: string
-  link: string
+  content_url: string
+  content_code: string | null
+  link_url: string
   duration: number
-  skipable: boolean
+  sort: number
+  status: number
+}
+
+export type ClientAdItem = {
+  id: number
+  ad_key: string
+  type: string
+  content_url: string
+  content_code: string | null
+  link_url: string
+  duration: number
 }
 
 export type FeatureSettings = {
@@ -420,9 +435,8 @@ export type FeatureSettings = {
 
 export type SettingsResponse =
   | SiteSettings
-  | AdSettings
   | FeatureSettings
-  | Record<string, SiteSettings | AdSettings | FeatureSettings>
+  | Record<string, SiteSettings | FeatureSettings>
 
 export type UpdateSettingsRequest = {
   group: string

@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import Artplayer from 'artplayer'
 import Hls from 'hls.js'
 import artplayerPluginHlsControl from 'artplayer-plugin-hls-control'
-import type { AdSettings } from '@orange-tv/shared'
+import type { ClientAdItem } from '@orange-tv/shared'
 import { cn } from '@/lib/utils'
+import { injectAdScripts } from '@/lib/adCode'
 
 // Disable the built-in right-click context menu globally
 Artplayer.CONTEXTMENU = false
@@ -19,7 +20,7 @@ type Props = {
   sourceId?: number
   episodeId?: number
   resumeAt?: number
-  adConfig?: AdSettings | null
+  ads?: ClientAdItem[]
   playlist?: PlaylistItem[]
   currentEpisodeId?: number
   onEpisodeChange?: (episodeId: number) => void
@@ -40,19 +41,21 @@ function escapeAttr(str: string): string {
     .replace(/>/g, '&gt;')
 }
 
-function buildAdLayer(adConfig: AdSettings) {
-  const url = escapeAttr(adConfig.url)
-  const link = escapeAttr(adConfig.link)
+function buildAdLayerFromItem(item: ClientAdItem) {
+  const url = escapeAttr(item.content_url)
+  const link = escapeAttr(item.link_url)
   const adHTML =
-    adConfig.type === 'image'
+    item.type === 'image'
       ? `<img src="${url}" style="width:100%;height:100%;object-fit:contain" />`
-      : adConfig.type === 'video'
+      : item.type === 'video'
         ? `<video src="${url}" autoplay muted playsinline style="width:100%;height:100%;object-fit:contain" />`
-        : `<iframe src="${url}" style="width:100%;height:100%;border:0" allowfullscreen></iframe>`
+        : item.type === 'code'
+          ? `<div class="ad-code-container" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden"></div>`
+          : `<iframe src="${url}" style="width:100%;height:100%;border:0" allowfullscreen sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>`
 
-  const skipBtn = adConfig.skipable
-    ? `<div class="ad-skip-btn" style="position:absolute;bottom:12px;right:12px;padding:6px 16px;background:rgba(0,0,0,0.7);color:#fff;border-radius:4px;cursor:pointer;font-size:14px">跳过广告</div>`
-    : ''
+  const skipBtn = `<div class="ad-skip-btn" style="position:absolute;bottom:12px;right:12px;padding:6px 16px;background:rgba(0,0,0,0.7);color:#fff;border-radius:4px;cursor:pointer;font-size:14px">跳过广告</div>`
+
+  const countdown = `<div class="ad-countdown" style="position:absolute;top:12px;right:12px;padding:4px 12px;background:rgba(0,0,0,0.7);color:#fff;border-radius:4px;font-size:14px">广告 ${item.duration}s</div>`
 
   const linkHTML = link
     ? `<a href="${link}" target="_blank" rel="noopener noreferrer" style="position:absolute;inset:0;display:block;z-index:1"></a>`
@@ -60,7 +63,7 @@ function buildAdLayer(adConfig: AdSettings) {
 
   return {
     name: 'loadingAd',
-    html: `<div style="position:absolute;inset:0;background:#000;display:flex;align-items:center;justify-content:center">${linkHTML}${adHTML}${skipBtn}</div>`,
+    html: `<div style="position:absolute;inset:0;background:#000;display:flex;align-items:center;justify-content:center">${countdown}${linkHTML}${adHTML}${skipBtn}</div>`,
     style: {
       position: 'absolute' as const,
       inset: '0',
@@ -147,7 +150,7 @@ export function VideoPlayer({
   sourceId,
   episodeId,
   resumeAt,
-  adConfig,
+  ads,
   playlist,
   currentEpisodeId,
   onEpisodeChange,
@@ -179,8 +182,8 @@ export function VideoPlayer({
   onToggleRef.current = () => setPlaylistVisible((v) => !v)
   onProgressRef.current = onProgress
 
-  // Serialize adConfig to a stable string so the effect doesn't re-run on object identity changes
-  const adConfigKey = adConfig ? JSON.stringify(adConfig) : ''
+  // Serialize ads to a stable string so the effect doesn't re-run on array identity changes
+  const adsKey = ads ? JSON.stringify(ads) : ''
 
   useEffect(() => {
     const el = containerRef.current
@@ -220,12 +223,13 @@ export function VideoPlayer({
     // Clear any leftover DOM from a previous instance (StrictMode remount or re-render)
     el.innerHTML = ''
 
-    // Parse adConfig back from the serialized string
-    const ad: AdSettings | null = adConfigKey ? JSON.parse(adConfigKey) : null
+    // Parse ads back from the serialized string
+    const adList: ClientAdItem[] = adsKey ? JSON.parse(adsKey) : []
 
     const layers: NonNullable<Artplayer['option']['layers']> = []
-    if (ad?.enabled && ad.url) {
-      layers.push(buildAdLayer(ad) as NonNullable<Artplayer['option']['layers']>[number])
+    if (adList.length > 0) {
+      const first = adList[0]
+      layers.push(buildAdLayerFromItem(first) as NonNullable<Artplayer['option']['layers']>[number])
     }
 
     const playbackId =
@@ -279,42 +283,136 @@ export function VideoPlayer({
       ],
     })
 
-    // Remove ad layer when video is ready
+    // Multi-ad rotation: play ads in sequence, remove layer when video is ready.
+    // Minimum total display: 5 seconds. If video loads faster, keep showing until 5s elapsed.
     let adTimeoutId: ReturnType<typeof setTimeout> | null = null
-    if (ad?.enabled && ad.url) {
+    let adIntervalId: ReturnType<typeof setInterval> | null = null
+    let videoReady = false
+    const adStartTime = Date.now()
+    const MIN_DISPLAY_MS = 5000
+    let onLayerClick: ((e: Event) => void) | null = null
+
+    if (adList.length > 0) {
       const removeAd = () => {
         if (adTimeoutId) {
           clearTimeout(adTimeoutId)
           adTimeoutId = null
         }
+        if (adIntervalId) {
+          clearInterval(adIntervalId)
+          adIntervalId = null
+        }
         if (art.layers?.loadingAd) {
           art.layers.loadingAd.remove()
         }
       }
-      art.once('video:canplay', removeAd)
-      art.once('video:playing', removeAd)
 
-      // Auto-remove after duration
-      if (ad.duration > 0) {
-        adTimeoutId = setTimeout(() => {
-          adTimeoutId = null
-          if (art.layers?.loadingAd) {
-            removeAd()
-          }
-        }, ad.duration * 1000)
+      const tryRemove = () => {
+        if (videoReady && Date.now() - adStartTime >= MIN_DISPLAY_MS) {
+          removeAd()
+        }
       }
 
-      // Skip button click handler
-      art.on('ready', () => {
-        const skipBtn = el.querySelector('.ad-skip-btn')
-        if (skipBtn) {
-          skipBtn.addEventListener('click', (e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            removeAd()
-          })
+      // Start countdown timer for the current ad
+      const startCountdown = (duration: number) => {
+        if (adIntervalId) {
+          clearInterval(adIntervalId)
         }
-      })
+        let remaining = duration
+        const updateText = () => {
+          const countdownEl = el.querySelector('.ad-countdown')
+          if (countdownEl) {
+            countdownEl.textContent = `广告 ${remaining}s`
+          }
+        }
+        updateText()
+        adIntervalId = setInterval(() => {
+          remaining--
+          if (remaining <= 0) {
+            if (adIntervalId) {
+              clearInterval(adIntervalId)
+              adIntervalId = null
+            }
+            return
+          }
+          updateText()
+        }, 1000)
+      }
+
+      const showAd = (index: number) => {
+        const item = adList[index]
+        if (!item) {
+          // All ads played, stay on last until video ready
+          return
+        }
+        const layer = art.layers?.loadingAd as HTMLElement | undefined
+        if (layer) {
+          const newLayer = buildAdLayerFromItem(item)
+          layer.innerHTML = newLayer.html
+          // Inject code for type=code ads
+          if (item.type === 'code' && item.content_code) {
+            const codeContainer = layer.querySelector('.ad-code-container') as HTMLElement | null
+            if (codeContainer) {
+              injectAdScripts(codeContainer, item.content_code)
+            }
+          }
+        }
+        // Start countdown for this ad
+        startCountdown(item.duration)
+        // Schedule next ad or removal
+        adTimeoutId = setTimeout(() => {
+          if (index < adList.length - 1) {
+            showAd(index + 1)
+          } else {
+            // Last ad played, wait for video ready + min display
+            tryRemove()
+          }
+        }, item.duration * 1000)
+      }
+
+      // Mark video ready and try to remove ad
+      const onVideoReady = () => {
+        videoReady = true
+        tryRemove()
+      }
+      art.once('video:canplay', onVideoReady)
+      art.once('video:playing', onVideoReady)
+
+      // Start countdown for first ad (already in layers)
+      startCountdown(adList[0].duration)
+      const firstAdCode = adList[0].content_code
+      if (adList[0].type === 'code' && firstAdCode) {
+        art.on('ready', () => {
+          const codeContainer = el.querySelector('.ad-code-container') as HTMLElement | null
+          if (codeContainer) {
+            injectAdScripts(codeContainer, firstAdCode)
+          }
+        })
+      }
+
+      // If only one ad, schedule its removal
+      if (adList.length === 1) {
+        adTimeoutId = setTimeout(() => {
+          tryRemove()
+        }, adList[0].duration * 1000)
+      } else {
+        // Multiple ads: schedule rotation from second ad
+        adTimeoutId = setTimeout(() => {
+          showAd(1)
+        }, adList[0].duration * 1000)
+      }
+
+      // Skip button: use event delegation on the player container so it
+      // survives innerHTML replacements during ad rotation.
+      onLayerClick = (e: Event) => {
+        const target = e.target as HTMLElement
+        if (target.classList.contains('ad-skip-btn')) {
+          e.preventDefault()
+          e.stopPropagation()
+          removeAd()
+        }
+      }
+      el.addEventListener('click', onLayerClick)
     }
 
     // Resume playback from a saved position (e.g. remote history) — once only
@@ -364,6 +462,14 @@ export function VideoPlayer({
       if (adTimeoutId) {
         clearTimeout(adTimeoutId)
         adTimeoutId = null
+      }
+      if (adIntervalId) {
+        clearInterval(adIntervalId)
+        adIntervalId = null
+      }
+      if (onLayerClick) {
+        el.removeEventListener('click', onLayerClick)
+        onLayerClick = null
       }
 
       // Mute first to immediately stop audio, even if later steps fail
@@ -419,7 +525,7 @@ export function VideoPlayer({
     // playlist/onEpisodeChange are read via refs (playlistRef/onChangeRef) updated every render,
     // so they are intentionally omitted from the dependency array.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [src, format, poster, autoplay, adConfigKey, videoId, sourceId, episodeId, resumeAt])
+  }, [src, format, poster, autoplay, adsKey, videoId, sourceId, episodeId, resumeAt])
 
   // Resize ArtPlayer when sidebar toggles (container width changes)
   useEffect(() => {

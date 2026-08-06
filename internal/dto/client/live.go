@@ -9,6 +9,12 @@ type LiveListRequest struct {
 	Category string `form:"category"`
 }
 
+// LivePlayRequest binds the live play URI id and optional segment URL query param.
+type LivePlayRequest struct {
+	ID uint32 `uri:"id" binding:"required,gt=0"`
+	U  string `form:"u"`
+}
+
 // LiveChannelItem is a live channel payload for client (no status, no stream_url).
 type LiveChannelItem struct {
 	ID          uint32 `json:"id"`

@@ -15,14 +15,14 @@ import (
 )
 
 // SettingsService is the shared service for reading and writing system settings.
-// It provides cached reads, DTO mapping for client-visible groups (site/ad/feature),
+// It provides cached reads, DTO mapping for client-visible groups (site/feature),
 // and upsert execution with cache invalidation for admin writes.
 type SettingsService interface {
 	// LoadMapByGroup loads settings for a single group as a key→model map (with cache).
 	LoadMapByGroup(ctx context.Context, group string) (map[string]model.SystemSettings, error)
 	// LoadGroupMaps loads multiple groups, returning group→key→model maps.
 	LoadGroupMaps(ctx context.Context, groups []string) (map[string]map[string]model.SystemSettings, error)
-	// MapGroupToResponse maps a single group's settings to its shared DTO (site/ad/feature only).
+	// MapGroupToResponse maps a single group's settings to its shared DTO (site/feature only).
 	MapGroupToResponse(group string, m map[string]model.SystemSettings) (any, error)
 	// MapGroupsToResponse maps multiple groups: single group → flat DTO, multiple → map[string]any.
 	MapGroupsToResponse(groups []string, maps map[string]map[string]model.SystemSettings) (any, error)
@@ -73,8 +73,6 @@ func (s *settingsService) MapGroupToResponse(group string, m map[string]model.Sy
 	switch group {
 	case constant.SettingGroupSite:
 		return mapToSiteSettings(m), nil
-	case constant.SettingGroupAd:
-		return mapToAdSettings(m), nil
 	case constant.SettingGroupFeature:
 		return mapToFeatureSettings(m), nil
 	default:
@@ -116,17 +114,6 @@ func mapToSiteSettings(m map[string]model.SystemSettings) dto.SiteSettings {
 		ICP:         StrVal(m, constant.SettingSiteICP),
 		SEOKeywords: StrVal(m, constant.SettingSiteSEOKeywords),
 		Description: StrVal(m, constant.SettingSiteDescription),
-	}
-}
-
-func mapToAdSettings(m map[string]model.SystemSettings) dto.AdSettings {
-	return dto.AdSettings{
-		Enabled:  BoolVal(m, constant.SettingVideoAdEnabled, false),
-		Type:     StrVal(m, constant.SettingVideoAdType),
-		URL:      StrVal(m, constant.SettingVideoAdUrl),
-		Link:     StrVal(m, constant.SettingVideoAdLink),
-		Duration: IntVal(m, constant.SettingVideoAdDuration, 5),
-		Skipable: BoolVal(m, constant.SettingVideoAdSkipable, true),
 	}
 }
 

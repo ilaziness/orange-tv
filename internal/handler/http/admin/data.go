@@ -26,16 +26,21 @@ func NewDataHandler(svc adminsvc.DataService) *DataHandler {
 // @Description 导出全量 SQL 备份文件
 // @Tags 管理端｜数据管理
 // @Produce octet-stream
-// @Param native query int false "是否使用原生备份工具：1/true 使用，0 使用 Go 实现"
+// @Param native query string false "是否使用原生备份工具：1/true 使用，0 使用 Go 实现"
 // @Success 200 {file} file "SQL 备份文件"
 // @Router /api/admin/v1/data/backup [get]
 func (h *DataHandler) Backup(c *gin.Context) {
+	var q admindto.BackupQuery
+	if !httphandler.BindQuery(c, &q) {
+		return
+	}
+
 	filename := adminsvc.BackupFilename()
 	c.Header("Content-Type", "application/sql")
 	c.Header("Content-Disposition", "attachment; filename=\""+filename+"\"")
 	c.Header("Cache-Control", "no-cache")
 
-	useNative := c.Query("native") == "1" || strings.EqualFold(c.Query("native"), "true")
+	useNative := q.Native == "1" || strings.EqualFold(q.Native, "true")
 	if err := h.svc.Backup(c.Request.Context(), c.Writer, useNative); err != nil {
 		response.Error(c, err)
 		return

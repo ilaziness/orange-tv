@@ -1,12 +1,10 @@
 package client
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	clientdto "github.com/ilaziness/orange-tv/internal/dto/client"
-	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	httphandler "github.com/ilaziness/orange-tv/internal/handler/http"
 	"github.com/ilaziness/orange-tv/internal/response"
 	clientsvc "github.com/ilaziness/orange-tv/internal/service/client"
@@ -56,27 +54,16 @@ func (h *LiveHandler) List(c *gin.Context) {
 // @Success 200 {file} binary "直播流"
 // @Router /api/client/v1/live/play/{id} [get]
 func (h *LiveHandler) Play(c *gin.Context) {
-	id := c.Param("id")
-	channelID, err := parseID(id)
-	if err != nil {
-		response.Error(c, errcode.WithMessage(errcode.ParamError, "无效的频道 id"))
+	var req clientdto.LivePlayRequest
+	if !httphandler.BindURI(c, &req) {
+		return
+	}
+	if !httphandler.BindQuery(c, &req) {
 		return
 	}
 
-	segURL := strings.TrimSpace(c.Query("u"))
-	if err := h.proxySvc.Proxy(c, channelID, segURL); err != nil {
+	segURL := strings.TrimSpace(req.U)
+	if err := h.proxySvc.Proxy(c, req.ID, segURL); err != nil {
 		response.Error(c, err)
 	}
-}
-
-// parseID 解析频道 id。
-func parseID(s string) (uint32, error) {
-	var id uint32
-	if _, err := fmt.Sscanf(s, "%d", &id); err != nil {
-		return 0, err
-	}
-	if id == 0 {
-		return 0, fmt.Errorf("id must be positive")
-	}
-	return id, nil
 }

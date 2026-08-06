@@ -103,7 +103,9 @@ func (h *VideoHandler) Related(c *gin.Context) {
 		return
 	}
 	var req clientdto.RelatedRequest
-	_ = c.ShouldBindQuery(&req)
+	if !httphandler.BindQuery(c, &req) {
+		return
+	}
 	list, err := h.svc.Related(c.Request.Context(), uri.ID, req.Limit)
 	if err != nil {
 		response.Error(c, err)

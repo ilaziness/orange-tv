@@ -65,6 +65,10 @@ var (
 	PlayEpisodeNotFound  = &Code{4000060, "剧集不存在", 404, nil}
 	PlayEpisodeDuplicate = &Code{4000061, "同一影视与播放源下集数已存在", 409, nil}
 
+	// 广告 (40009xx)
+	AdNotFound  = &Code{4000090, "广告不存在", 404, nil}
+	AdKeyExists = &Code{4000091, "广告标识已存在", 409, nil}
+
 	// 直播 (40007xx)
 	LiveChannelNotFound = &Code{4000070, "直播频道不存在", 404, nil}
 	LiveSyncFailed      = &Code{4000071, "直播源同步失败", 502, nil}

@@ -24,7 +24,7 @@ const UsersPage = lazy(() => import('@/pages/user/users/UsersPage'))
 const LoginLogsPage = lazy(() => import('@/pages/user/loginLogs/LoginLogsPage'))
 const SiteSettingsPage = lazy(() => import('@/pages/system/site/SiteSettingsPage'))
 const APISettingsPage = lazy(() => import('@/pages/system/api/APISettingsPage'))
-const AdSettingsPage = lazy(() => import('@/pages/system/ad/AdSettingsPage'))
+const AdsPage = lazy(() => import('@/pages/system/ad/AdsPage'))
 const SystemLogPage = lazy(() => import('@/pages/system/log/SystemLogPage'))
 const DataManagementPage = lazy(() => import('@/pages/system/datamgmt/DataManagementPage'))
 const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage'))
@@ -212,7 +212,7 @@ export function AppRoutes() {
             path="/system/ad"
             element={
               <Lazy>
-                <AdSettingsPage />
+                <AdsPage />
               </Lazy>
             }
           />

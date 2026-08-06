@@ -4,44 +4,12 @@ package constant
 const (
 	SettingGroupSite    = "site"    // 站点设置
 	SettingGroupAPI     = "api"     // API/资源站设置
-	SettingGroupAd      = "ad"      // 视频广告设置
 	SettingGroupFeature = "feature" // 功能设置
 )
 
-// SettingGroupsDesc maps group constant to human-readable description.
-var SettingGroupsDesc = map[string]string{
-	SettingGroupSite:    "站点设置",
-	SettingGroupAPI:     "API/资源站设置",
-	SettingGroupAd:      "视频广告设置",
-	SettingGroupFeature: "功能设置",
-}
-
 // AllSettingGroups returns all valid setting group names.
 func AllSettingGroups() []string {
-	return []string{SettingGroupSite, SettingGroupAPI, SettingGroupAd, SettingGroupFeature}
-}
-
-// IsValidSettingGroup reports whether the given group is a known setting group.
-func IsValidSettingGroup(group string) bool {
-	_, ok := SettingGroupsDesc[group]
-	return ok
-}
-
-// ClientSettingGroupWhitelist defines which setting groups are visible to the client API.
-var ClientSettingGroupWhitelist = map[string]bool{
-	SettingGroupSite:    true,
-	SettingGroupAd:      true,
-	SettingGroupFeature: true,
-}
-
-// IsClientAllowedGroup reports whether the given group is in the client whitelist.
-func IsClientAllowedGroup(group string) bool {
-	return ClientSettingGroupWhitelist[group]
-}
-
-// ClientAllowedGroups returns whitelisted groups in a deterministic order.
-func ClientAllowedGroups() []string {
-	return []string{SettingGroupSite, SettingGroupAd, SettingGroupFeature}
+	return []string{SettingGroupSite, SettingGroupAPI, SettingGroupFeature}
 }
 
 // System setting keys.
@@ -53,12 +21,6 @@ const (
 	SettingSiteICP                 = "site_icp"
 	SettingSiteSEOKeywords         = "site_seo_keywords"
 	SettingSiteDescription         = "site_description"
-	SettingVideoAdEnabled          = "video_ad_enabled"
-	SettingVideoAdType             = "video_ad_type"
-	SettingVideoAdUrl              = "video_ad_url"
-	SettingVideoAdLink             = "video_ad_link"
-	SettingVideoAdDuration         = "video_ad_duration"
-	SettingVideoAdSkipable         = "video_ad_skipable"
 
 	// Feature settings keys.
 	SettingFeatureLiveEnabled    = "live_enabled"    // 电视直播开关
@@ -80,14 +42,6 @@ var GroupKeys = map[string][]string{
 	SettingGroupAPI: {
 		SettingEnableThirdPartyCollect,
 	},
-	SettingGroupAd: {
-		SettingVideoAdEnabled,
-		SettingVideoAdType,
-		SettingVideoAdUrl,
-		SettingVideoAdLink,
-		SettingVideoAdDuration,
-		SettingVideoAdSkipable,
-	},
 	SettingGroupFeature: {
 		SettingFeatureLiveEnabled,
 		SettingFeatureCommentEnabled,
@@ -105,21 +59,8 @@ var KeyToGroup = map[string]string{
 	SettingSiteSEOKeywords:         SettingGroupSite,
 	SettingSiteDescription:         SettingGroupSite,
 	SettingEnableThirdPartyCollect: SettingGroupAPI,
-	SettingVideoAdEnabled:          SettingGroupAd,
-	SettingVideoAdType:             SettingGroupAd,
-	SettingVideoAdUrl:              SettingGroupAd,
-	SettingVideoAdLink:             SettingGroupAd,
-	SettingVideoAdDuration:         SettingGroupAd,
-	SettingVideoAdSkipable:         SettingGroupAd,
 	SettingFeatureLiveEnabled:      SettingGroupFeature,
 	SettingFeatureCommentEnabled:   SettingGroupFeature,
 	SettingFeatureCommentReview:    SettingGroupFeature,
 	SettingFeatureRatingEnabled:    SettingGroupFeature,
 }
-
-// Video ad type values.
-const (
-	VideoAdTypeImage = "image"
-	VideoAdTypeVideo = "video"
-	VideoAdTypeHTML  = "html"
-)

@@ -49,6 +49,7 @@ func (a *App) wireHTTP() error {
 	logRepo := repository.NewLogRepo(a.db)
 	userFeatureRepo := repository.NewUserFeatureRepo(a.db)
 	commentRepo := repository.NewCommentRepo(a.db)
+	adRepo := repository.NewAdRepo(a.db)
 
 	sharedSettingsSvc := service.NewSettingsService(settingsRepo, a.cache, a.log)
 
@@ -75,6 +76,8 @@ func (a *App) wireHTTP() error {
 	clientLiveProxySvc := clientsvc.NewLiveProxyService(clientLiveSvc, a.log)
 	clientUserSvc := clientsvc.NewUserService(adminRepo, userFeatureRepo, videoRepo, categoryRepo, a.jwtMgr, a.cfg.JWT.AccessTokenTTL, sharedSettingsSvc, a.log)
 	clientBannerSvc := clientsvc.NewBannerService(userFeatureRepo, a.log)
+	adminAdSvc := adminsvc.NewAdService(adRepo, a.log)
+	clientAdSvc := clientsvc.NewAdService(adRepo, a.log)
 
 	openResourceSvc := opensvc.NewResourceService(settingsRepo, videoRepo, metaRepo, playRepo, categoryRepo, a.cache, a.log)
 
@@ -91,6 +94,7 @@ func (a *App) wireHTTP() error {
 	handlers.AdminLog = adminhandler.NewLogHandler(adminLogSvc)
 	handlers.AdminMgmt = adminhandler.NewManagementHandler(adminMgmtSvc)
 	handlers.AdminData = adminhandler.NewDataHandler(adminDataSvc)
+	handlers.AdminAd = adminhandler.NewAdHandler(adminAdSvc)
 
 	handlers.ClientCategory = clienthandler.NewCategoryHandler(clientCategorySvc)
 	handlers.ClientVideo = clienthandler.NewVideoHandler(clientVideoSvc)
@@ -98,6 +102,7 @@ func (a *App) wireHTTP() error {
 	handlers.ClientSettings = clienthandler.NewSettingsHandler(clientSettingsSvc)
 	handlers.ClientUser = clienthandler.NewUserHandler(clientUserSvc)
 	handlers.ClientBanner = clienthandler.NewBannerHandler(clientBannerSvc)
+	handlers.ClientAd = clienthandler.NewAdHandler(clientAdSvc)
 	handlers.OpenResource = openhandler.NewResourceHandler(openResourceSvc)
 
 	// ── scheduler ──────────────────────────────────────────────────────────

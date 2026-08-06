@@ -9,9 +9,6 @@ import (
 // SiteSettings is an alias to the shared DTO for admin convenience.
 type SiteSettings = dto.SiteSettings
 
-// AdSettings is an alias to the shared DTO for admin convenience.
-type AdSettings = dto.AdSettings
-
 // FeatureSettings is an alias to the shared DTO for admin convenience.
 type FeatureSettings = dto.FeatureSettings
 
@@ -20,10 +17,15 @@ type APISettings struct {
 	EnableThirdPartyCollect bool `json:"enable_third_party_collect"`
 }
 
+// GetSettingsQuery binds the group query parameter.
+type GetSettingsQuery struct {
+	Group string `form:"group" binding:"required,oneof=site api feature"`
+}
+
 // UpdateSettingsRequest updates settings for a single group.
 // Data is the group-specific key-value JSON payload.
 type UpdateSettingsRequest struct {
-	Group string          `json:"group" validate:"required,oneof=site api ad feature"`
+	Group string          `json:"group" validate:"required,oneof=site api feature"`
 	Data  json.RawMessage `json:"data" validate:"required"`
 }
 
@@ -40,16 +42,6 @@ type UpdateSiteSettings struct {
 // UpdateAPISettings updates API / resource station fields (all optional).
 type UpdateAPISettings struct {
 	EnableThirdPartyCollect *bool `json:"enable_third_party_collect"`
-}
-
-// UpdateAdSettings updates video ad fields (all optional).
-type UpdateAdSettings struct {
-	Enabled  *bool   `json:"enabled"`
-	Type     *string `json:"type" validate:"omitempty,oneof=image video html"`
-	URL      *string `json:"url" validate:"omitempty,max=500"`
-	Link     *string `json:"link" validate:"omitempty,max=500"`
-	Duration *int    `json:"duration" validate:"omitempty,min=1,max=300"`
-	Skipable *bool   `json:"skipable"`
 }
 
 // UpdateFeatureSettings updates client feature toggles (all optional).

@@ -32,12 +32,14 @@ type BusinessHandlers struct {
 	AdminLog       *adminhandler.LogHandler
 	AdminMgmt      *adminhandler.ManagementHandler
 	AdminData      *adminhandler.DataHandler
+	AdminAd        *adminhandler.AdHandler
 	ClientCategory *clienthandler.CategoryHandler
 	ClientVideo    *clienthandler.VideoHandler
 	ClientLive     *clienthandler.LiveHandler
 	ClientSettings *clienthandler.SettingsHandler
 	ClientUser     *clienthandler.UserHandler
 	ClientBanner   *clienthandler.BannerHandler
+	ClientAd       *clienthandler.AdHandler
 	OpenResource   *openhandler.ResourceHandler
 }
 
@@ -430,6 +432,25 @@ func (s clientBannerSvc) ListBanners(ctx context.Context) ([]clientdto.BannerIte
 	return nil, nil
 }
 
+type adminAdSvc struct{}
+
+func (s adminAdSvc) List(ctx context.Context, offset, limit int) ([]admindto.AdItem, int, error) {
+	return nil, 0, nil
+}
+func (s adminAdSvc) Create(ctx context.Context, req *admindto.CreateAdRequest) (*admindto.AdItem, error) {
+	return &admindto.AdItem{}, nil
+}
+func (s adminAdSvc) Update(ctx context.Context, id uint32, req *admindto.UpdateAdRequest) (*admindto.AdItem, error) {
+	return &admindto.AdItem{ID: id}, nil
+}
+func (s adminAdSvc) Delete(ctx context.Context, id uint32) error { return nil }
+
+type clientAdSvc struct{}
+
+func (s clientAdSvc) ListByScene(ctx context.Context, scene string) ([]clientdto.AdItem, error) {
+	return nil, nil
+}
+
 // NewBusinessHandlers builds no-op business handlers for tests.
 func NewBusinessHandlers() BusinessHandlers {
 	auth := authSvc{}
@@ -451,12 +472,14 @@ func NewBusinessHandlers() BusinessHandlers {
 		AdminLog:       adminhandler.NewLogHandler(adminLogSvc{}),
 		AdminMgmt:      adminhandler.NewManagementHandler(mgmt),
 		AdminData:      adminhandler.NewDataHandler(adminDataSvc{}),
+		AdminAd:        adminhandler.NewAdHandler(adminAdSvc{}),
 		ClientCategory: clienthandler.NewCategoryHandler(clientCategorySvc{}),
 		ClientVideo:    clienthandler.NewVideoHandler(clientVideoSvc{}),
 		ClientLive:     clienthandler.NewLiveHandler(liveSvc, clientLiveProxySvc{}),
 		ClientSettings: clienthandler.NewSettingsHandler(clientSettingsSvc{}),
 		ClientUser:     clienthandler.NewUserHandler(userSvc),
 		ClientBanner:   clienthandler.NewBannerHandler(bannerSvc),
+		ClientAd:       clienthandler.NewAdHandler(clientAdSvc{}),
 		OpenResource:   openhandler.NewResourceHandler(openResourceSvc{}),
 	}
 }

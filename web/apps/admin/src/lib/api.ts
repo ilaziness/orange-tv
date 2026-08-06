@@ -32,7 +32,7 @@ import {
   type SystemLogItem,
   type SiteSettings,
   type APISettings,
-  type AdSettings,
+  type AdItem,
   type FeatureSettings,
   type UpdateSettingsRequest,
   type UpdateProfileRequest,
@@ -265,10 +265,6 @@ export const adminApi = {
     withAuth((token) =>
       apiGet<APISettings>(ADMIN_API_BASE, '/settings', { token, query: { group: 'api' } }),
     ),
-  getAdSettings: () =>
-    withAuth((token) =>
-      apiGet<AdSettings>(ADMIN_API_BASE, '/settings', { token, query: { group: 'ad' } }),
-    ),
   getFeatureSettings: () =>
     withAuth((token) =>
       apiGet<FeatureSettings>(ADMIN_API_BASE, '/settings', { token, query: { group: 'feature' } }),
@@ -356,6 +352,15 @@ export const adminApi = {
     withAuth((token) => apiPut(ADMIN_API_BASE, `/banners/${id}`, body, { token })),
   deleteBanner: (id: number) =>
     withAuth((token) => apiDelete(ADMIN_API_BASE, `/banners/${id}`, { token })),
+
+  listAds: (query?: Record<string, string | number | undefined>) =>
+    withAuth((token) => apiGet<PageData<AdItem>>(ADMIN_API_BASE, '/ads', { token, query })),
+  createAd: (body: unknown) =>
+    withAuth((token) => apiPost(ADMIN_API_BASE, '/ads', body, { token })),
+  updateAd: (id: number, body: unknown) =>
+    withAuth((token) => apiPut(ADMIN_API_BASE, `/ads/${id}`, body, { token })),
+  deleteAd: (id: number) =>
+    withAuth((token) => apiDelete(ADMIN_API_BASE, `/ads/${id}`, { token })),
 
   batchUpdatePreview: (body: { target: string; old_value: string }) =>
     withAuth((token) =>

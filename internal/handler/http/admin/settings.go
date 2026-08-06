@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/ilaziness/orange-tv/internal/audit"
 	admindto "github.com/ilaziness/orange-tv/internal/dto/admin"
-	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	httphandler "github.com/ilaziness/orange-tv/internal/handler/http"
 	httpmiddleware "github.com/ilaziness/orange-tv/internal/middleware/http"
 	"github.com/ilaziness/orange-tv/internal/response"
@@ -24,20 +23,19 @@ func NewSettingsHandler(svc adminsvc.SettingsService, recorder *audit.Recorder) 
 
 // GetSettings godoc
 // @Summary 获取系统设置
-// @Description 按分组获取系统设置（site/api/ad/feature）
+// @Description 按分组获取系统设置（site/api/feature）
 // @Tags 管理端｜系统设置
 // @Accept json
 // @Produce json
-// @Param group query string true "设置分组 (site/api/ad/feature)"
+// @Param group query string true "设置分组 (site/api/feature)" Enums(site, api, feature)
 // @Success 200 {object} response.Response
 // @Router /api/admin/v1/settings [get]
 func (h *SettingsHandler) Get(c *gin.Context) {
-	group := c.Query("group")
-	if group == "" {
-		response.Error(c, errcode.WithMessage(errcode.ParamError, "group 参数不能为空"))
+	var q admindto.GetSettingsQuery
+	if !httphandler.BindQuery(c, &q) {
 		return
 	}
-	resp, err := h.svc.Get(c.Request.Context(), group)
+	resp, err := h.svc.Get(c.Request.Context(), q.Group)
 	if err != nil {
 		response.Error(c, err)
 		return
@@ -47,7 +45,7 @@ func (h *SettingsHandler) Get(c *gin.Context) {
 
 // UpdateSettings godoc
 // @Summary 更新系统设置
-// @Description 按分组更新系统设置，data 为对应分组的 key-value JSON（site/api/ad/feature）
+// @Description 按分组更新系统设置，data 为对应分组的 key-value JSON（site/api/feature）
 // @Tags 管理端｜系统设置
 // @Accept json
 // @Produce json

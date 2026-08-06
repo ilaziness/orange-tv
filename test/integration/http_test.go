@@ -57,12 +57,14 @@ func setupTestRouter(t *testing.T) *gin.Engine {
 	handlers.AdminLog = b.AdminLog
 	handlers.AdminMgmt = b.AdminMgmt
 	handlers.AdminData = b.AdminData
+	handlers.AdminAd = b.AdminAd
 	handlers.ClientCategory = b.ClientCategory
 	handlers.ClientVideo = b.ClientVideo
 	handlers.ClientLive = b.ClientLive
 	handlers.ClientSettings = b.ClientSettings
 	handlers.ClientUser = b.ClientUser
 	handlers.ClientBanner = b.ClientBanner
+	handlers.ClientAd = b.ClientAd
 	handlers.OpenResource = b.OpenResource
 
 	engine := gin.New()

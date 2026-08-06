@@ -3,7 +3,6 @@ package admin
 import (
 	"context"
 	"encoding/json"
-	"strconv"
 	"strings"
 
 	"github.com/ilaziness/orange-tv/internal/constant"
@@ -36,9 +35,6 @@ func NewSettingsService(shared service.SettingsService, log *zap.Logger) Setting
 }
 
 func (s *settingsService) Get(ctx context.Context, group string) (any, error) {
-	if !constant.IsValidSettingGroup(group) {
-		return nil, errcode.WithMessage(errcode.ParamError, "无效的设置分组")
-	}
 	m, err := s.shared.LoadMapByGroup(ctx, group)
 	if err != nil {
 		return nil, err
@@ -47,9 +43,6 @@ func (s *settingsService) Get(ctx context.Context, group string) (any, error) {
 }
 
 func (s *settingsService) Update(ctx context.Context, group string, data json.RawMessage) (any, error) {
-	if !constant.IsValidSettingGroup(group) {
-		return nil, errcode.WithMessage(errcode.ParamError, "无效的设置分组")
-	}
 	if len(data) == 0 {
 		return nil, errcode.WithMessage(errcode.ParamError, "无更新内容")
 	}
@@ -93,15 +86,6 @@ func (s *settingsService) parseUpdateData(group string, data json.RawMessage) ([
 			return nil, errcode.WithMessage(errcode.ParamError, err.Error())
 		}
 		return s.buildAPIUpserts(&req), nil
-	case constant.SettingGroupAd:
-		var req admindto.UpdateAdSettings
-		if err := json.Unmarshal(data, &req); err != nil {
-			return nil, errcode.WithMessage(errcode.ParamError, "无效的设置数据")
-		}
-		if err := validator.Validate(&req); err != nil {
-			return nil, errcode.WithMessage(errcode.ParamError, err.Error())
-		}
-		return s.buildAdUpserts(&req), nil
 	case constant.SettingGroupFeature:
 		var req admindto.UpdateFeatureSettings
 		if err := json.Unmarshal(data, &req); err != nil {
@@ -172,59 +156,9 @@ func (s *settingsService) buildAPIUpserts(api *admindto.UpdateAPISettings) []rep
 	return upserts
 }
 
-func (s *settingsService) buildAdUpserts(ad *admindto.UpdateAdSettings) []repository.SettingUpsert {
-	var upserts []repository.SettingUpsert
-	if ad.Enabled != nil {
-		v := "0"
-		if *ad.Enabled {
-			v = "1"
-		}
-		upserts = append(upserts, repository.SettingUpsert{
-			Key: constant.SettingVideoAdEnabled, Group: constant.SettingGroupAd, Value: v,
-			SettingType: constant.SettingTypeBoolean, Description: "是否启用视频广告",
-		})
-	}
-	if ad.Type != nil {
-		t := strings.TrimSpace(*ad.Type)
-		upserts = append(upserts, repository.SettingUpsert{
-			Key: constant.SettingVideoAdType, Group: constant.SettingGroupAd, Value: t,
-			SettingType: constant.SettingTypeString, Description: "视频广告类型",
-		})
-	}
-	if ad.URL != nil {
-		upserts = append(upserts, repository.SettingUpsert{
-			Key: constant.SettingVideoAdUrl, Group: constant.SettingGroupAd, Value: strings.TrimSpace(*ad.URL),
-			SettingType: constant.SettingTypeString, Description: "视频广告素材 URL",
-		})
-	}
-	if ad.Link != nil {
-		upserts = append(upserts, repository.SettingUpsert{
-			Key: constant.SettingVideoAdLink, Group: constant.SettingGroupAd, Value: strings.TrimSpace(*ad.Link),
-			SettingType: constant.SettingTypeString, Description: "视频广告点击跳转链接",
-		})
-	}
-	if ad.Duration != nil {
-		upserts = append(upserts, repository.SettingUpsert{
-			Key: constant.SettingVideoAdDuration, Group: constant.SettingGroupAd, Value: strconv.Itoa(*ad.Duration),
-			SettingType: constant.SettingTypeNumber, Description: "视频广告展示时长（秒）",
-		})
-	}
-	if ad.Skipable != nil {
-		v := "0"
-		if *ad.Skipable {
-			v = "1"
-		}
-		upserts = append(upserts, repository.SettingUpsert{
-			Key: constant.SettingVideoAdSkipable, Group: constant.SettingGroupAd, Value: v,
-			SettingType: constant.SettingTypeBoolean, Description: "视频广告是否可跳过",
-		})
-	}
-	return upserts
-}
-
 func (s *settingsService) mapToResponse(group string, m map[string]model.SystemSettings) any {
 	switch group {
-	case constant.SettingGroupSite, constant.SettingGroupAd, constant.SettingGroupFeature:
+	case constant.SettingGroupSite, constant.SettingGroupFeature:
 		resp, err := s.shared.MapGroupToResponse(group, m)
 		if err != nil {
 			s.log.Error("settings: map group to response failed", zap.String("group", group), zap.Error(err))

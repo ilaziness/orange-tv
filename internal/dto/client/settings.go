@@ -5,8 +5,10 @@ import dto "github.com/ilaziness/orange-tv/internal/dto"
 // SiteSettings is an alias to the shared DTO for client convenience.
 type SiteSettings = dto.SiteSettings
 
-// AdSettings is an alias to the shared DTO for client convenience.
-type AdSettings = dto.AdSettings
-
 // FeatureSettings is an alias to the shared DTO for client convenience.
 type FeatureSettings = dto.FeatureSettings
+
+// GetSettingsQuery binds the multi-value groups query parameter.
+type GetSettingsQuery struct {
+	Groups []string `form:"groups" binding:"required,min=1,dive,oneof=site feature"`
+}

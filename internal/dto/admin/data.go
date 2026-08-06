@@ -6,6 +6,11 @@ const (
 	TargetEpisodeURL = "episode_url"
 )
 
+// BackupQuery binds the backup query parameter.
+type BackupQuery struct {
+	Native string `form:"native"`
+}
+
 // BatchUpdatePreviewRequest 批量更新预览请求。
 type BatchUpdatePreviewRequest struct {
 	Target   string `json:"target" validate:"required,oneof=video_cover episode_url"`

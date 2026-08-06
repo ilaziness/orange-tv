@@ -2,7 +2,8 @@ package client
 
 import (
 	"github.com/gin-gonic/gin"
-	errcode "github.com/ilaziness/orange-tv/internal/errcode"
+	clientdto "github.com/ilaziness/orange-tv/internal/dto/client"
+	httphandler "github.com/ilaziness/orange-tv/internal/handler/http"
 	"github.com/ilaziness/orange-tv/internal/response"
 	clientsvc "github.com/ilaziness/orange-tv/internal/service/client"
 )
@@ -17,24 +18,18 @@ func NewSettingsHandler(settings clientsvc.ClientSettingsService) *SettingsHandl
 	return &SettingsHandler{settings: settings}
 }
 
-// GetSettingsQuery binds the multi-value groups query parameter.
-type GetSettingsQuery struct {
-	Groups []string `form:"groups" binding:"required,min=1,dive,oneof=site ad feature"`
-}
-
 // GetSettings godoc
 // @Summary 获取客户端设置
-// @Description 按分组获取客户端设置（支持多分组：site/ad/feature）
+// @Description 按分组获取客户端设置（支持多分组：site/feature）
 // @Tags 用户端｜站点设置
 // @Accept json
 // @Produce json
-// @Param groups query []string true "设置分组 (site/ad/feature)" collectionFormat(multi)
+// @Param groups query []string true "设置分组 (site/feature)" collectionFormat(multi)
 // @Success 200 {object} response.Response
 // @Router /api/client/v1/settings [get]
 func (h *SettingsHandler) GetSettings(c *gin.Context) {
-	var q GetSettingsQuery
-	if err := c.ShouldBindQuery(&q); err != nil {
-		response.Error(c, errcode.WithMessage(errcode.ParamError, "groups 参数无效，仅支持 site/ad/feature"))
+	var q clientdto.GetSettingsQuery
+	if !httphandler.BindQuery(c, &q) {
 		return
 	}
 	resp, err := h.settings.GetByGroups(c.Request.Context(), q.Groups)
