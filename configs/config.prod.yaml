@@ -24,8 +24,7 @@ log:
   max_age: 7
   compress: true
 
-# Database configuration (MySQL/PostgreSQL for production)
-# 下方为占位默认值，实际部署时通过环境变量注入。
+# Database configuration
 database:
   driver: mysql
   host: localhost

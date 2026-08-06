@@ -1,19 +1,21 @@
 # Orange TV 一键 Docker Compose 部署
 # 包含：orange-tv 应用（后端 + 前端 + nginx 一体化镜像）+ MySQL 数据库
 #
-# 使用方式（在 pack 产物目录 build/<version>/ 下执行）：
-#   1. 按需修改下方环境变量（或创建 .env 文件）
+# 使用方式：
+#   1. 复制 .env.example 为 .env 并按需修改变量（或直接使用默认值）
 #   2. docker compose up -d
-#   3. 首次启动需执行数据库迁移：
-#      docker compose exec app /app/orange-tv migrate up -c /app/configs/config.prod.yaml
 #
-# 环境变量说明（app 服务）：
-#   DATABASE_HOST / DATABASE_PORT / DATABASE_USER / DATABASE_PASSWORD / DATABASE_NAME
-#     覆盖 config.prod.yaml 中的数据库连接字段。
-#   JWT_SECRET
-#     生产环境必填（至少 32 字节），用于 JWT 签名。
+# app 容器启动时会自动执行数据库迁移（AUTO_MIGRATE=true），
+# 无需手动运行 migrate 命令。如需关闭自动迁移，设 AUTO_MIGRATE=false。
 #
-# 访问地址：
+# 环境变量说明（可通过 .env 文件配置）：
+#   DB_USER / DB_PASSWORD / DB_NAME — 数据库账号（同步注入 MySQL 和 app）
+#   MYSQL_ROOT_PASSWORD             — MySQL root 密码
+#   JWT_SECRET                      — JWT 签名密钥（生产环境必填，至少 32 字节）
+#   HTTP_PORT / ADMIN_PORT / MYSQL_PORT — 端口映射
+#   AUTO_MIGRATE                    — 是否在启动前自动迁移（true/false，默认 true）
+#
+# 访问地址（默认端口，可通过 .env 修改）：
 #   用户端：http://<host>:80
 #   管理端：http://<host>:81
 
@@ -39,6 +41,8 @@ services:
       - DATABASE_NAME=${DB_NAME:-orange_tv}
       # JWT 密钥（生产环境必填，至少 32 字节，请务必修改为随机字符串）
       - JWT_SECRET=${JWT_SECRET:-change-me-to-a-random-secret-at-least-32-bytes}
+      # 自动迁移：app 启动前自动执行 migrate up
+      - AUTO_MIGRATE=${AUTO_MIGRATE:-true}
     volumes:
       - app-logs:/app/logs
       # 如需自定义配置，取消注释挂载本地 configs 目录：

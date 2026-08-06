@@ -1,12 +1,11 @@
 # Orange TV 发布包
 
-本目录由 `make pack` 生成，包含运行 Orange TV 所需的全部资源。修改配置后即可直接启动。
-
 ## 目录结构
 
-```
+```shell
 .
-├── orange-tv                  # 后端二进制（默认 linux/amd64）
+├── orange-tv                  # 后端二进制（linux/amd64）
+├── orange-tv.exe              # 后端二进制（windows/amd64）
 ├── configs/                   # 配置文件
 │   ├── config.yaml            # 默认/示例配置（含完整字段说明，开发用）
 │   └── config.prod.yaml       # 生产环境配置（裸机与 Docker 共用，可通过环境变量覆盖）
@@ -16,22 +15,63 @@
 │   └── admin/                 # 管理端前端构建产物
 ├── nginx/
 │   └── nginx.conf             # nginx 示例配置（用户端 80 / 管理端 81）
+├── .env.example               # Docker Compose 环境变量示例
 ├── Dockerfile                 # 一体化镜像构建文件（后端 + 前端 + nginx）
 ├── docker-compose.yml         # 一键 Docker Compose（应用 + MySQL）
-├── docker-entrypoint.sh       # 容器入口脚本
+├── docker-entrypoint.sh       # 容器入口脚本（自动迁移 + 启动后端 + nginx）
 └── README.md
 ```
 
-## 方式一：裸机运行
+## 方式一：Docker Compose 一键部署（推荐）
+
+> 前置条件：服务器已安装 Docker 和 Docker Compose（Docker 20.10+）。
+
+使用 `docker-compose.yml` 一键启动应用（后端 + 前端 + nginx）和 MySQL 数据库。
+
+```sh
+# 1. 复制环境变量示例文件并按需修改
+cp .env.example .env
+#    可配置的变量：
+#      DB_USER, DB_PASSWORD, DB_NAME  — 数据库账号（同步注入 MySQL 和 app）
+#      MYSQL_ROOT_PASSWORD            — MySQL root 密码
+#      JWT_SECRET                     — JWT 签名密钥（生产环境必填，至少 32 字节）
+#      HTTP_PORT, ADMIN_PORT, MYSQL_PORT — 端口映射
+#      AUTO_MIGRATE                   — 是否自动迁移（true/false，默认 true）
+
+# 2. 启动所有服务（首次启动会自动创建数据库并执行迁移）
+docker compose up -d
+
+# 3. 等待 app 容器启动完成，查看日志确认无报错
+docker compose logs -f app
+
+# 4. 创建管理员账号（见下方「初始化管理员账号」章节），否则无法登录管理端
+
+# 停止
+docker compose down
+
+# 停止并删除数据卷（清空数据库，慎用）
+docker compose down -v
+```
+
+app 容器启动时会自动执行数据库迁移（`AUTO_MIGRATE=true`），无需手动运行 migrate 命令。
+
+启动后（将 `<host>` 替换为服务器 IP，本机访问用 `localhost`）：
+
+- 用户端：`http://<host>:80`（默认，可通过 `HTTP_PORT` 修改）
+- 管理端：`http://<host>:81`（默认，可通过 `ADMIN_PORT` 修改）
+
+## 方式二：裸机运行（Linux）
 
 1. 修改配置：编辑 `configs/config.prod.yaml`，确认数据库连接等信息正确（或通过环境变量覆盖）。
 
 2. 执行数据库迁移：
+
    ```sh
    ./orange-tv migrate up -c configs/config.prod.yaml
    ```
 
 3. 启动后端：
+
    ```sh
    ./orange-tv serve -c configs/config.prod.yaml
    ```
@@ -41,41 +81,25 @@
    - 确认静态资源路径与配置一致（默认指向本目录下的 `web/client` 与 `web/admin`，请按实际部署路径调整）
    - reload nginx：`nginx -s reload`
 
-## 方式二：Docker Compose 一键部署（推荐）
+## 方式三：裸机运行（Windows）
 
-使用 `docker-compose.yml` 一键启动应用（后端 + 前端 + nginx）和 MySQL 数据库：
+1. 修改配置：编辑 `configs\config.prod.yaml`，确认数据库连接等信息正确。
 
-```sh
-# 1.（可选）创建 .env 文件自定义密码等变量，或直接使用默认值
-#    可配置的变量：
-#      DB_USER, DB_PASSWORD, DB_NAME  — 数据库账号（同步注入 MySQL 和 app）
-#      MYSQL_ROOT_PASSWORD            — MySQL root 密码
-#      JWT_SECRET                     — JWT 签名密钥（生产环境必填，至少 32 字节）
-#      HTTP_PORT, ADMIN_PORT, MYSQL_PORT — 端口映射
+2. 执行数据库迁移：
 
-# 2. 启动所有服务
-docker compose up -d
+   ```sh
+   orange-tv.exe migrate up -c configs\config.prod.yaml
+   ```
 
-# 3. 首次启动执行数据库迁移
-docker compose exec app /app/orange-tv migrate up -c /app/configs/config.prod.yaml
+3. 启动后端：
 
-# 4. 查看日志
-docker compose logs -f app
+   ```sh
+   orange-tv.exe serve -c configs\config.prod.yaml
+   ```
 
-# 停止
-docker compose down
+4. 用 IIS 或其他 Web 服务器托管 `web\client` 与 `web\admin` 下的前端静态资源，将 `/api` 反向代理到 `http://127.0.0.1:8080`。
 
-# 停止并删除数据卷（清空数据库）
-docker compose down -v
-```
-
-启动后：
-- 用户端：`http://<host>:80`
-- 管理端：`http://<host>:81`
-
-> Docker 容器内后端监听 `0.0.0.0:8080`，由同容器 nginx 反代访问，无需对外暴露。配置文件为 `configs/config.prod.yaml`，数据库连接通过环境变量注入。
-
-## 方式三：Docker 单独构建（可选）
+## 方式四：Docker 单独构建（可选）
 
 如不使用 docker-compose，也可单独构建一体化镜像（需自行准备 MySQL）：
 
@@ -99,6 +123,38 @@ docker run -d -p 80:80 -p 81:81 \
   orange-tv:1.0.0
 ```
 
+## 初始化管理员账号
+
+服务启动且数据库迁移完成后，需要创建一个超级管理员账号才能登录管理端。`admin create` 命令会创建一个 `super_admin` 角色的启用账号。
+
+**参数：**
+
+- `--username`（必填，3-50 字符）
+- `--password`（必填，6-72 字符）
+- `--email`（可选）
+
+> 下面的命令中请将 `your_password` 替换为你自己的密码。
+
+### Docker Compose
+
+```sh
+docker compose exec app /app/orange-tv admin create --username admin --password your_password --email admin@example.com
+```
+
+### 裸机（Linux）
+
+```sh
+./orange-tv admin create --username admin --password your_password --email admin@example.com -c configs/config.prod.yaml
+```
+
+### 裸机（Windows）
+
+```sh
+orange-tv.exe admin create --username admin --password your_password --email admin@example.com -c configs\config.prod.yaml
+```
+
+创建成功后输出类似 `Created super_admin: id=1 username=admin`，即可用该账号登录管理端 `http://<host>:81`。
+
 ## 访问地址
 
 | 端口 | 用途 |
@@ -106,9 +162,3 @@ docker run -d -p 80:80 -p 81:81 \
 | 80   | 用户端（nginx） |
 | 81   | 管理端（nginx） |
 | 8080 | 后端 HTTP（容器内 / nginx 反代，无需对外暴露） |
-
-## 备注
-
-- 生产环境（裸机与 Docker）统一使用 `configs/config.prod.yaml`，通过环境变量注入 `DATABASE_HOST` / `DATABASE_PORT` / `DATABASE_USER` / `DATABASE_PASSWORD` / `DATABASE_NAME` / `JWT_SECRET` 等敏感信息，无需修改配置文件。
-- 如需 HTTPS，自行在 nginx 中添加 ssl 配置并替换 listen 端口。
-- 后端二进制默认为 `linux/amd64`，打包时可通过 `make pack PACK_GOOS=<os> PACK_GOARCH=<arch>` 覆盖。

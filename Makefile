@@ -8,8 +8,6 @@ MAIN_PATH := ./main.go
 
 # Pack variables
 PACK_DIR := $(BUILD_DIR)/$(VERSION)
-PACK_GOOS ?= linux
-PACK_GOARCH ?= amd64
 PACK_DIR_TEMPLATE := pack
 
 # Go parameters
@@ -167,17 +165,23 @@ swagger-clean:
 	@echo "Swagger documentation cleaned"
 
 ## pack: Build frontend + backend and assemble a self-contained release directory at build/$(VERSION)
+##        生成 Linux (orange-tv) 与 Windows (orange-tv.exe) 两种后端二进制，
+##        前端构建产物、配置、迁移脚本、Docker 部署文件一并打包。
 pack:
-	@echo "==> [1/4] Cleaning pack directory $(PACK_DIR)..."
+	@echo "==> [1/5] Cleaning pack directory $(PACK_DIR)..."
 	@rm -rf $(PACK_DIR)
 	@mkdir -p $(PACK_DIR)/configs $(PACK_DIR)/migrations $(PACK_DIR)/web/client $(PACK_DIR)/web/admin $(PACK_DIR)/nginx
-	@echo "==> [2/4] Building backend ($(PACK_GOOS)/$(PACK_GOARCH))..."
-	CGO_ENABLED=0 GOOS=$(PACK_GOOS) GOARCH=$(PACK_GOARCH) $(GOBUILD) \
+	@echo "==> [2/5] Building backend for linux/amd64..."
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) \
 		-ldflags="-s -w -X github.com/ilaziness/orange-tv/cmd.version=$(VERSION)" \
 		-o $(PACK_DIR)/$(APP_NAME) $(MAIN_PATH)
-	@echo "==> [3/4] Building frontend (shared -> client -> admin)..."
+	@echo "==> [3/5] Building backend for windows/amd64..."
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) \
+		-ldflags="-s -w -X github.com/ilaziness/orange-tv/cmd.version=$(VERSION)" \
+		-o $(PACK_DIR)/$(APP_NAME).exe $(MAIN_PATH)
+	@echo "==> [4/5] Building frontend (shared -> client -> admin)..."
 	cd web && npm run build
-	@echo "==> [4/4] Assembling release directory..."
+	@echo "==> [5/5] Assembling release directory..."
 	@cp configs/config.yaml      $(PACK_DIR)/configs/config.yaml
 	@cp configs/config.prod.yaml $(PACK_DIR)/configs/config.prod.yaml
 	@cp -r migrations/.          $(PACK_DIR)/migrations/
@@ -187,6 +191,7 @@ pack:
 	@cp $(PACK_DIR_TEMPLATE)/Dockerfile          $(PACK_DIR)/Dockerfile
 	@cp $(PACK_DIR_TEMPLATE)/docker-entrypoint.sh $(PACK_DIR)/docker-entrypoint.sh
 	@cp $(PACK_DIR_TEMPLATE)/docker-compose.yml  $(PACK_DIR)/docker-compose.yml
+	@cp $(PACK_DIR_TEMPLATE)/.env.example        $(PACK_DIR)/.env.example
 	@cp $(PACK_DIR_TEMPLATE)/README.md           $(PACK_DIR)/README.md
 	@chmod +x $(PACK_DIR)/docker-entrypoint.sh
 	@echo ""
@@ -194,24 +199,26 @@ pack:
 	@echo "  Pack complete: $(PACK_DIR)"
 	@echo "================================================"
 	@echo ""
-	@echo "  Next steps:"
-	@echo "    1. Edit $(PACK_DIR)/configs/config.prod.yaml"
-	@echo "    2. cd $(PACK_DIR)"
-	@echo "    3. ./$(APP_NAME) migrate up -c configs/config.prod.yaml"
-	@echo "    4. ./$(APP_NAME) serve -c configs/config.prod.yaml"
+	@echo "  Binaries:"
+	@echo "    $(PACK_DIR)/$(APP_NAME)      (linux/amd64)"
+	@echo "    $(PACK_DIR)/$(APP_NAME).exe  (windows/amd64)"
 	@echo ""
-	@echo "  Or run with Docker Compose (includes MySQL):"
+	@echo "  Docker Compose (includes MySQL, auto-migrates on start):"
 	@echo "    cd $(PACK_DIR) && docker compose up -d"
-	@echo "    docker compose exec app /app/$(APP_NAME) migrate up -c /app/configs/config.prod.yaml"
+	@echo ""
+	@echo "  Bare metal (Linux):"
+	@echo "    cd $(PACK_DIR)"
+	@echo "    ./$(APP_NAME) migrate up -c configs/config.prod.yaml"
+	@echo "    ./$(APP_NAME) serve -c configs/config.prod.yaml"
 	@echo ""
 
-## pack-clean: Clean the pack release directory
+## pack-clean: Clean the entire build directory (pack release + build output)
 pack-clean:
-	@echo "Cleaning pack directory $(PACK_DIR)..."
-	@rm -rf $(PACK_DIR)
+	@echo "Cleaning build directory $(BUILD_DIR)..."
+	@rm -rf $(BUILD_DIR)
 	@echo ""
 	@echo "================================================"
-	@echo "  Pack directory cleaned: $(PACK_DIR)"
+	@echo "  Build directory cleaned: $(BUILD_DIR)"
 	@echo "================================================"
 
 ## help: Show this help message
@@ -244,6 +251,6 @@ help:
 	@echo "  clean-all          Clean all artifacts including Docker"
 	@echo "  swagger            Generate Swagger documentation"
 	@echo "  swagger-clean      Clean generated Swagger documentation"
-	@echo "  pack               Build frontend + backend and assemble build/$(VERSION) release dir"
+	@echo "  pack               Build frontend + backend (linux+windows) and assemble build/$(VERSION) release dir"
 	@echo "  pack-clean         Clean the pack release directory"
 	@echo "  help               Show this help message"

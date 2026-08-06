@@ -1,10 +1,21 @@
 #!/bin/sh
-# Orange TV container entrypoint: start backend in background, nginx in foreground.
+# Orange TV container entrypoint: run migrations (if AUTO_MIGRATE=true), start backend in background, nginx in foreground.
 set -e
 
 CONFIG_FILE="${CONFIG_FILE:-/app/configs/config.prod.yaml}"
+AUTO_MIGRATE="${AUTO_MIGRATE:-true}"
 
 echo "[entrypoint] starting orange-tv with config: ${CONFIG_FILE}"
+
+# Auto-migrate before starting the server.
+# The scheduler queries DB tables during startup; without migrations the
+# backend crashes immediately. This makes docker compose truly one-click.
+if [ "${AUTO_MIGRATE}" = "true" ]; then
+    echo "[entrypoint] running database migrations..."
+    /app/orange-tv migrate up -c "${CONFIG_FILE}" --dir /app/migrations
+    echo "[entrypoint] migrations complete"
+fi
+
 /app/orange-tv serve -c "${CONFIG_FILE}" &
 BACKEND_PID=$!
 
