@@ -19,7 +19,10 @@ GOGET := $(GOCMD) get
 GOMOD := $(GOCMD) mod
 
 # Build flags
-LDFLAGS := -ldflags "-X github.com/ilaziness/orange-tv/cmd.version=$(VERSION)"
+# -s : strip symbol table
+# -w : strip DWARF debug info
+# -trimpath : remove absolute local paths from the binary
+LDFLAGS := -trimpath -ldflags "-s -w -X github.com/ilaziness/orange-tv/cmd.version=$(VERSION)"
 
 # Fail if $(1) is not in PATH; $(2) = suggested install command
 define require_tool
@@ -172,12 +175,10 @@ pack:
 	@rm -rf $(PACK_DIR)
 	@mkdir -p $(PACK_DIR)/configs $(PACK_DIR)/migrations $(PACK_DIR)/web/client $(PACK_DIR)/web/admin $(PACK_DIR)/nginx
 	@echo "==> [2/5] Building backend for linux/amd64..."
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) \
-		-ldflags="-s -w -X github.com/ilaziness/orange-tv/cmd.version=$(VERSION)" \
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 $(GOBUILD) $(LDFLAGS) \
 		-o $(PACK_DIR)/$(APP_NAME) $(MAIN_PATH)
 	@echo "==> [3/5] Building backend for windows/amd64..."
-	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) \
-		-ldflags="-s -w -X github.com/ilaziness/orange-tv/cmd.version=$(VERSION)" \
+	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) $(LDFLAGS) \
 		-o $(PACK_DIR)/$(APP_NAME).exe $(MAIN_PATH)
 	@echo "==> [4/5] Building frontend (shared -> client -> admin)..."
 	cd web && npm run build
