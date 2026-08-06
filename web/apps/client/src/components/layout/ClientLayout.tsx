@@ -155,7 +155,11 @@ export function ClientLayout() {
           onChange={(e) => setKeyword(sanitizeSearchInput(e.target.value))}
         />
         <InputGroupAddon align="inline-end">
-          <Button type="submit" size="icon-sm" variant="ghost">
+          <Button
+            type="submit"
+            size="icon-sm"
+            variant="nav"
+          >
             <SearchIcon data-icon="inline-start" />
             <span className="sr-only">搜索</span>
           </Button>
@@ -168,7 +172,7 @@ export function ClientLayout() {
     <Popover open={categoryOpen} onOpenChange={(open) => setCategoryOpen(open)}>
       <PopoverTrigger
         render={
-          <Button variant="ghost" size="sm">
+          <Button variant="nav" size="lg">
             <FilterIcon data-icon="inline-start" />
             筛选
           </Button>
@@ -227,7 +231,12 @@ export function ClientLayout() {
     <>
       {renderCategoryPopover()}
       {feature.live_enabled ? (
-        <Button variant="ghost" size="sm" nativeButton={false} render={<Link to="/live" />}>
+        <Button
+          variant="nav"
+          size="lg"
+          nativeButton={false}
+          render={<Link to="/live" />}
+        >
           <TvIcon data-icon="inline-start" />
           电视
         </Button>
@@ -245,13 +254,10 @@ export function ClientLayout() {
     >
       <PopoverTrigger
         render={
-          <button
-            type="button"
-            className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-primary focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          >
-            <HistoryIcon className="size-4" />
+          <Button variant="nav" size="lg">
+            <HistoryIcon data-icon="inline-start" />
             历史
-          </button>
+          </Button>
         }
       />
       <PopoverContent align="start" side="bottom" className="w-72 p-2">
@@ -298,7 +304,7 @@ export function ClientLayout() {
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <Button variant="ghost" size="icon">
+              <Button variant="nav" size="icon">
                 <Avatar size="sm">
                   {profile.avatar ? <AvatarImage src={profile.avatar} /> : null}
                   <AvatarFallback>
@@ -345,10 +351,20 @@ export function ClientLayout() {
 
     return (
       <div className="flex gap-2">
-        <Button variant="ghost" size="sm" nativeButton={false} render={<Link to="/login" />}>
+        <Button
+          variant="nav-outline"
+          size="lg"
+          nativeButton={false}
+          render={<Link to="/login" />}
+        >
           登录
         </Button>
-        <Button variant="outline" size="sm" nativeButton={false} render={<Link to="/register" />}>
+        <Button
+          variant="nav-outline"
+          size="lg"
+          nativeButton={false}
+          render={<Link to="/register" />}
+        >
           注册
         </Button>
       </div>
@@ -385,7 +401,11 @@ export function ClientLayout() {
               >
                 <SheetTrigger
                   render={
-                    <Button variant="ghost" size="icon" className="md:hidden">
+                    <Button
+                      variant="nav"
+                      size="icon"
+                      className="md:hidden"
+                    >
                       <MenuIcon data-icon="inline-start" />
                       <span className="sr-only">菜单</span>
                     </Button>
