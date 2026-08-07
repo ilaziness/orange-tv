@@ -51,3 +51,8 @@ type LiveSyncResult struct {
 	Updated int `json:"updated"`
 	Deleted int `json:"deleted"`
 }
+
+// LiveSyncRequest is the request body for live source synchronization.
+type LiveSyncRequest struct {
+	SourceURL string `json:"source_url" validate:"required,min=1,max=2000"`
+}

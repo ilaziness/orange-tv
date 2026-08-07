@@ -270,7 +270,7 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 	// Cross-source: existing video was collected by a different source.
 	// Supplement empty basic fields (no cover, no associations, no PublishStatus) + upsert episodes.
 	if existing != nil && existing.CollectSourceID != 0 && existing.CollectSourceID != source.ID {
-		err := e.videoRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
+		err = e.videoRepo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
 			vRepo := e.videoRepo.WithTx(tx)
 			pRepo := e.playRepo.WithTx(tx)
 			applySupplementFields(existing, item, catID, parentCatID, serialStatus, false)
@@ -302,11 +302,11 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 	// Same-source domain migration: detect remote host changes and batch-migrate
 	// all historical records of this source. Non-fatal: warn on failure.
 	if existing != nil {
-		if err := e.migrateDomainIfChanged(ctx, source, existing, item); err != nil {
+		if mErr := e.migrateDomainIfChanged(ctx, source, existing, item); mErr != nil {
 			e.log.Warn("collect: domain migration failed",
 				zap.Uint32("source_id", source.ID),
 				zap.String("title", item.Title),
-				zap.Error(err),
+				zap.Error(mErr),
 			)
 		}
 	}
@@ -323,8 +323,8 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 			}
 			// Same source: supplement empty basic fields + override cover (capture domain/path changes)
 			applySupplementFields(existing, item, catID, parentCatID, serialStatus, true)
-			if err := vRepo.Update(ctx, existing); err != nil {
-				return err
+			if txErr := vRepo.Update(ctx, existing); txErr != nil {
+				return txErr
 			}
 		} else {
 			v := &model.Videos{
@@ -347,24 +347,24 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 			if v.SerialStatus == 0 {
 				v.SerialStatus = constant.SerialStatusFinished
 			}
-			if err := vRepo.Create(ctx, v); err != nil {
-				return err
+			if txErr := vRepo.Create(ctx, v); txErr != nil {
+				return txErr
 			}
 			videoID = v.ID
 		}
 
-		if err := vRepo.ReplaceDirectors(ctx, videoID, directorIDs); err != nil {
-			return err
+		if txErr := vRepo.ReplaceDirectors(ctx, videoID, directorIDs); txErr != nil {
+			return txErr
 		}
 		actorRels := make([]model.VideoActors, 0, len(actorIDs))
 		for _, id := range actorIDs {
 			actorRels = append(actorRels, model.VideoActors{VideoID: videoID, ActorID: id})
 		}
-		if err := vRepo.ReplaceActors(ctx, videoID, actorRels); err != nil {
-			return err
+		if txErr := vRepo.ReplaceActors(ctx, videoID, actorRels); txErr != nil {
+			return txErr
 		}
-		if err := vRepo.ReplaceTags(ctx, videoID, tagIDs); err != nil {
-			return err
+		if txErr := vRepo.ReplaceTags(ctx, videoID, tagIDs); txErr != nil {
+			return txErr
 		}
 
 		// episodes into bound play source
@@ -380,9 +380,9 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 			if format == "" {
 				format = constant.PlayFormatHLS
 			}
-			existingEp, err := pRepo.GetEpisodeByKey(ctx, videoID, source.PlaySourceID, num)
-			if err != nil {
-				return err
+			existingEp, epErr := pRepo.GetEpisodeByKey(ctx, videoID, source.PlaySourceID, num)
+			if epErr != nil {
+				return epErr
 			}
 			if existingEp != nil {
 				existingEp.Title = ep.Title
@@ -390,8 +390,8 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 				existingEp.Quality = ep.Quality
 				existingEp.Format = format
 				existingEp.Status = constant.StatusEnabled
-				if err := pRepo.UpdateEpisode(ctx, existingEp); err != nil {
-					return err
+				if epErr := pRepo.UpdateEpisode(ctx, existingEp); epErr != nil {
+					return epErr
 				}
 				continue
 			}
@@ -405,8 +405,8 @@ func (e *Engine) upsertItem(ctx context.Context, source *model.CollectSources, c
 				Format:        format,
 				Status:        constant.StatusEnabled,
 			}
-			if err := pRepo.CreateEpisode(ctx, m); err != nil {
-				return err
+			if epErr := pRepo.CreateEpisode(ctx, m); epErr != nil {
+				return epErr
 			}
 		}
 		return nil

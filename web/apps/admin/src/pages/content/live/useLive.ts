@@ -47,6 +47,8 @@ export function useLive() {
   const [submitting, setSubmitting] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [syncing, setSyncing] = useState(false)
+  const [syncDialogOpen, setSyncDialogOpen] = useState(false)
+  const [syncUrl, setSyncUrl] = useState('')
 
   const load = useCallback(async (p = pageRef.current) => {
     setLoading(true)
@@ -110,18 +112,37 @@ export function useLive() {
     }
   }
 
-  async function syncLiveSource() {
+  async function confirmSync() {
+    const url = syncUrl.trim()
+    if (!url) {
+      toast.error('请输入直播源地址')
+      return
+    }
+    setSyncDialogOpen(false)
     setSyncing(true)
     try {
-      const res = await adminApi.syncLiveSource()
+      const res = await adminApi.syncLiveSource(url)
       toast.success(
         `同步完成：共 ${res.data.total} 条，新增 ${res.data.created}，更新 ${res.data.updated}，删除 ${res.data.deleted}`,
       )
+      setSyncUrl('')
       await load(1)
     } catch (err) {
       toast.error(errorMessage(err))
     } finally {
       setSyncing(false)
+    }
+  }
+
+  function openSyncDialog() {
+    setSyncUrl('')
+    setSyncDialogOpen(true)
+  }
+
+  function closeSyncDialog(open: boolean) {
+    setSyncDialogOpen(open)
+    if (!open) {
+      setSyncUrl('')
     }
   }
 
@@ -174,9 +195,14 @@ export function useLive() {
     submitting,
     deleting,
     syncing,
+    syncDialogOpen,
+    syncUrl,
+    setSyncUrl,
+    closeSyncDialog,
+    confirmSync,
+    openSyncDialog,
     onSubmit,
     confirmDelete,
-    syncLiveSource,
     openCreate,
     openEdit,
     load,

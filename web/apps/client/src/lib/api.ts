@@ -71,8 +71,7 @@ export const clientApi = {
   // liveStreamUrl 返回直播流的代理播放地址，前端不接触真实 stream_url。
   liveStreamUrl: (id: number) => `${CLIENT_API_BASE}/live/play/${id}`,
   banners: () => apiGet<ClientBanner[]>(CLIENT_API_BASE, '/banners'),
-  ads: (scene: string) =>
-    apiGet<ClientAdItem[]>(CLIENT_API_BASE, '/ads', { query: { scene } }),
+  ads: (scene: string) => apiGet<ClientAdItem[]>(CLIENT_API_BASE, '/ads', { query: { scene } }),
   systemSettings: (groups: string[] = ['site', 'feature']) =>
     apiGet<SettingsResponse>(CLIENT_API_BASE, '/settings', {
       query: { groups },

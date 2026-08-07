@@ -209,8 +209,10 @@ export const adminApi = {
     withAuth((token) => apiPut<LiveChannel>(ADMIN_API_BASE, `/live/${id}`, body, { token })),
   deleteLive: (id: number) =>
     withAuth((token) => apiDelete(ADMIN_API_BASE, `/live/${id}`, { token })),
-  syncLiveSource: () =>
-    withAuth((token) => apiPost<LiveSyncResult>(ADMIN_API_BASE, '/live/sync', {}, { token })),
+  syncLiveSource: (sourceUrl: string) =>
+    withAuth((token) =>
+      apiPost<LiveSyncResult>(ADMIN_API_BASE, '/live/sync', { source_url: sourceUrl }, { token }),
+    ),
 
   listCollectSources: (query?: Record<string, string | number | undefined>) =>
     withAuth((token) =>
@@ -359,8 +361,7 @@ export const adminApi = {
     withAuth((token) => apiPost(ADMIN_API_BASE, '/ads', body, { token })),
   updateAd: (id: number, body: unknown) =>
     withAuth((token) => apiPut(ADMIN_API_BASE, `/ads/${id}`, body, { token })),
-  deleteAd: (id: number) =>
-    withAuth((token) => apiDelete(ADMIN_API_BASE, `/ads/${id}`, { token })),
+  deleteAd: (id: number) => withAuth((token) => apiDelete(ADMIN_API_BASE, `/ads/${id}`, { token })),
 
   batchUpdatePreview: (body: { target: string; old_value: string }) =>
     withAuth((token) =>

@@ -155,11 +155,7 @@ export function ClientLayout() {
           onChange={(e) => setKeyword(sanitizeSearchInput(e.target.value))}
         />
         <InputGroupAddon align="inline-end">
-          <Button
-            type="submit"
-            size="icon-sm"
-            variant="nav"
-          >
+          <Button type="submit" size="icon-sm" variant="nav">
             <SearchIcon data-icon="inline-start" />
             <span className="sr-only">搜索</span>
           </Button>
@@ -231,12 +227,7 @@ export function ClientLayout() {
     <>
       {renderCategoryPopover()}
       {feature.live_enabled ? (
-        <Button
-          variant="nav"
-          size="lg"
-          nativeButton={false}
-          render={<Link to="/live" />}
-        >
+        <Button variant="nav" size="lg" nativeButton={false} render={<Link to="/live" />}>
           <TvIcon data-icon="inline-start" />
           电视
         </Button>
@@ -351,12 +342,7 @@ export function ClientLayout() {
 
     return (
       <div className="flex gap-2">
-        <Button
-          variant="nav-outline"
-          size="lg"
-          nativeButton={false}
-          render={<Link to="/login" />}
-        >
+        <Button variant="nav-outline" size="lg" nativeButton={false} render={<Link to="/login" />}>
           登录
         </Button>
         <Button
@@ -401,11 +387,7 @@ export function ClientLayout() {
               >
                 <SheetTrigger
                   render={
-                    <Button
-                      variant="nav"
-                      size="icon"
-                      className="md:hidden"
-                    >
+                    <Button variant="nav" size="icon" className="md:hidden">
                       <MenuIcon data-icon="inline-start" />
                       <span className="sr-only">菜单</span>
                     </Button>

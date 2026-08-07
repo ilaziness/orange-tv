@@ -113,13 +113,19 @@ func (h *LiveHandler) Delete(c *gin.Context) {
 
 // Sync godoc
 // @Summary 同步直播源
-// @Description 从外部直播源同步频道列表
+// @Description 从外部直播源同步频道列表，支持 txt 和 m3u 格式
 // @Tags 管理端｜直播管理
+// @Accept json
 // @Produce json
+// @Param body body admindto.LiveSyncRequest true "直播源地址"
 // @Success 200 {object} response.Response
 // @Router /api/admin/v1/live/sync [post]
 func (h *LiveHandler) Sync(c *gin.Context) {
-	result, err := h.svc.SyncFromSource(c.Request.Context())
+	var req admindto.LiveSyncRequest
+	if !httphandler.BindAndValidate(c, &req) {
+		return
+	}
+	result, err := h.svc.SyncFromSource(c.Request.Context(), req.SourceURL)
 	if err != nil {
 		response.Error(c, err)
 		return

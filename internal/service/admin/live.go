@@ -19,7 +19,7 @@ type LiveService interface {
 	Create(ctx context.Context, req *admindto.CreateLiveRequest) (*admindto.LiveChannelItem, error)
 	Update(ctx context.Context, id uint32, req *admindto.UpdateLiveRequest) (*admindto.LiveChannelItem, error)
 	Delete(ctx context.Context, id uint32) error
-	SyncFromSource(ctx context.Context) (*admindto.LiveSyncResult, error)
+	SyncFromSource(ctx context.Context, sourceURL string) (*admindto.LiveSyncResult, error)
 }
 
 type liveService struct {
@@ -171,12 +171,23 @@ func toLiveItem(m *model.LiveChannels, withStatus bool) admindto.LiveChannelItem
 	return item
 }
 
-func (s *liveService) SyncFromSource(ctx context.Context) (*admindto.LiveSyncResult, error) {
-	fetcher := &defaultLiveSourceFetcher{url: liveSourceURL}
-	entries, err := fetcher.Fetch(ctx)
+func (s *liveService) SyncFromSource(ctx context.Context, sourceURL string) (*admindto.LiveSyncResult, error) {
+	parser, err := selectParser(sourceURL)
 	if err != nil {
-		s.log.Error("live: fetch from source failed", zap.String("url", liveSourceURL), zap.Error(err))
+		s.log.Error("live: select parser failed", zap.String("url", sourceURL), zap.Error(err))
 		return nil, errcode.WithMessage(errcode.LiveSyncFailed, err.Error())
+	}
+
+	raw, err := fetchLiveSource(ctx, sourceURL)
+	if err != nil {
+		s.log.Error("live: fetch from source failed", zap.String("url", sourceURL), zap.Error(err))
+		return nil, errcode.WithMessage(errcode.LiveSyncFailed, err.Error())
+	}
+
+	entries := parser.Parse(raw)
+	if len(entries) == 0 {
+		s.log.Warn("live: no entries parsed from source", zap.String("url", sourceURL))
+		return nil, errcode.WithMessage(errcode.LiveSyncFailed, "no valid entries parsed from source")
 	}
 
 	existing, err := s.repo.ListAll(ctx)
@@ -199,6 +210,7 @@ func (s *liveService) SyncFromSource(ctx context.Context) (*admindto.LiveSyncRes
 		if item, ok := existingMap[entry.Name]; ok {
 			item.Category = entry.Category
 			item.StreamURL = entry.StreamURL
+			item.Logo = entry.Logo
 			item.SortOrder = entry.SortOrder
 			if err := s.repo.Update(ctx, item); err != nil {
 				s.log.Error("live: sync update failed", zap.String("name", entry.Name), zap.Error(err))
@@ -209,6 +221,7 @@ func (s *liveService) SyncFromSource(ctx context.Context) (*admindto.LiveSyncRes
 				Name:      entry.Name,
 				Category:  entry.Category,
 				StreamURL: entry.StreamURL,
+				Logo:      entry.Logo,
 				SortOrder: entry.SortOrder,
 				Status:    constant.StatusEnabled,
 			})

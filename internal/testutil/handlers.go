@@ -161,7 +161,7 @@ func (s adminLiveSvc) Update(ctx context.Context, id uint32, req *admindto.Updat
 	return &admindto.LiveChannelItem{ID: id}, nil
 }
 func (s adminLiveSvc) Delete(ctx context.Context, id uint32) error { return nil }
-func (s adminLiveSvc) SyncFromSource(ctx context.Context) (*admindto.LiveSyncResult, error) {
+func (s adminLiveSvc) SyncFromSource(ctx context.Context, sourceURL string) (*admindto.LiveSyncResult, error) {
 	return &admindto.LiveSyncResult{}, nil
 }
 

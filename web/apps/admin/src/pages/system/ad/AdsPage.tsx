@@ -76,12 +76,7 @@ export default function AdsPage() {
                     <Spinner />
                   </div>
                 )}
-                <AdList
-                  list={list}
-                  onEdit={openEdit}
-                  onToggle={onToggle}
-                  onDelete={setDeleteId}
-                />
+                <AdList list={list} onEdit={openEdit} onToggle={onToggle} onDelete={setDeleteId} />
               </div>
               <Pagination
                 page={page}
