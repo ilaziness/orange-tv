@@ -142,24 +142,28 @@ export function Component() {
                       <Button
                         key={ch.id}
                         variant="ghost"
-                        size="sm"
+                        size="default"
                         className={cn(
-                          'justify-start gap-2',
+                          'h-10 w-full justify-start gap-2.5 px-2',
                           ch.id === selectedId && 'bg-primary/10 text-primary',
                         )}
                         onClick={() => handleChannelClick(ch)}
                       >
                         {ch.logo ? (
-                          <img
-                            src={ch.logo}
-                            alt={ch.name}
-                            className="size-6 rounded object-cover"
-                            onError={(e) => {
-                              ;(e.currentTarget as HTMLImageElement).style.display = 'none'
-                            }}
-                          />
+                          <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted p-1.5 ring-1 ring-foreground/15 shadow-sm">
+                            <img
+                              src={ch.logo}
+                              alt={ch.name}
+                              className="max-h-full max-w-full object-contain"
+                              onError={(e) => {
+                                ;(e.currentTarget as HTMLImageElement).style.display = 'none'
+                              }}
+                            />
+                          </span>
                         ) : (
-                          <TvIcon className="size-4 shrink-0 text-muted-foreground" />
+                          <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted p-1.5 ring-1 ring-foreground/15 shadow-sm">
+                            <TvIcon className="size-5 shrink-0 text-muted-foreground" />
+                          </span>
                         )}
                         <span className="truncate">{ch.name}</span>
                       </Button>
