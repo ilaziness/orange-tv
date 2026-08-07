@@ -10,12 +10,12 @@ type NameSearchRequest struct {
 
 // CreateNamedRequest creates a named resource.
 type CreateNamedRequest struct {
-	Name string `json:"name" validate:"required,min=1,max=100"`
+	Name string `json:"name" binding:"required,min=1,max=100"`
 }
 
 // UpdateNamedRequest updates a named resource.
 type UpdateNamedRequest struct {
-	Name string `json:"name" validate:"required,min=1,max=100"`
+	Name string `json:"name" binding:"required,min=1,max=100"`
 }
 
 // NamedResponse is a generic named entity response.

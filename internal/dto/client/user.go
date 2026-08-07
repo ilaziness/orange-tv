@@ -6,15 +6,15 @@ import "github.com/ilaziness/orange-tv/internal/dto"
 
 // RegisterRequest is the user registration payload.
 type RegisterRequest struct {
-	Username string `json:"username" validate:"required,min=2,max=15,alphanum"`
-	Password string `json:"password" validate:"required,min=5,max=30"`
-	Email    string `json:"email" validate:"omitempty,email,max=128"`
+	Username string `json:"username" binding:"required,min=2,max=15,alphanum"`
+	Password string `json:"password" binding:"required,min=5,max=30"`
+	Email    string `json:"email" binding:"omitempty,email,max=128"`
 }
 
 // LoginRequest is the user login payload.
 type LoginRequest struct {
-	Username string `json:"username" validate:"required,min=2,max=15,alphanum"`
-	Password string `json:"password" validate:"required,min=5,max=30"`
+	Username string `json:"username" binding:"required,min=2,max=15,alphanum"`
+	Password string `json:"password" binding:"required,min=5,max=30"`
 }
 
 // LoginResponse is returned after successful user login.
@@ -38,15 +38,15 @@ type Profile struct {
 
 // UpdateProfileRequest updates the current user's profile.
 type UpdateProfileRequest struct {
-	Nickname string `json:"nickname" validate:"omitempty,min=3,max=15"`
-	Email    string `json:"email" validate:"omitempty,email,max=20"`
-	Avatar   string `json:"avatar" validate:"omitempty,url,max=120"`
+	Nickname string `json:"nickname" binding:"omitempty,min=3,max=15"`
+	Email    string `json:"email" binding:"omitempty,email,max=20"`
+	Avatar   string `json:"avatar" binding:"omitempty,url,max=120"`
 }
 
 // ChangePasswordRequest changes the current user's password.
 type ChangePasswordRequest struct {
-	CurrentPassword string `json:"current_password" validate:"required,min=5,max=30"`
-	NewPassword     string `json:"new_password" validate:"required,min=5,max=30"`
+	CurrentPassword string `json:"current_password" binding:"required,min=5,max=30"`
+	NewPassword     string `json:"new_password" binding:"required,min=5,max=30"`
 }
 
 // LoginHistoryListRequest filters user login history.
@@ -109,11 +109,11 @@ type HistoryItem struct {
 
 // UpsertHistoryRequest upserts play progress.
 type UpsertHistoryRequest struct {
-	VideoID      uint32 `json:"video_id" validate:"required,min=1"`
-	PlaySourceID uint32 `json:"play_source_id" validate:"omitempty,min=1"`
-	EpisodeID    uint32 `json:"episode_id" validate:"omitempty,min=1"`
-	Progress     uint32 `json:"progress" validate:"omitempty,min=0"`
-	Duration     uint32 `json:"duration" validate:"omitempty,min=0"`
+	VideoID      uint32 `json:"video_id" binding:"required,min=1"`
+	PlaySourceID uint32 `json:"play_source_id" binding:"omitempty,min=1"`
+	EpisodeID    uint32 `json:"episode_id" binding:"omitempty,min=1"`
+	Progress     uint32 `json:"progress" binding:"omitempty,min=0"`
+	Duration     uint32 `json:"duration" binding:"omitempty,min=0"`
 }
 
 // ===== Comments (C6) =====
@@ -142,14 +142,14 @@ type CommentItem struct {
 
 // CreateCommentRequest creates a comment.
 type CreateCommentRequest struct {
-	VideoID  uint32 `json:"video_id" validate:"required,min=1"`
-	ParentID uint32 `json:"parent_id" validate:"omitempty,min=1"`
-	Content  string `json:"content" validate:"required,min=1,max=200"`
+	VideoID  uint32 `json:"video_id" binding:"required,min=1"`
+	ParentID uint32 `json:"parent_id" binding:"omitempty,min=1"`
+	Content  string `json:"content" binding:"required,min=1,max=200"`
 }
 
 // VoteCommentRequest votes on a comment.
 type VoteCommentRequest struct {
-	Action string `json:"action" validate:"required,oneof=like dislike cancel"`
+	Action string `json:"action" binding:"required,oneof=like dislike cancel"`
 }
 
 // VoteCommentResult is returned after a comment vote.
@@ -174,7 +174,7 @@ type BannerItem struct {
 
 // RateVideoRequest is the user video rating payload.
 type RateVideoRequest struct {
-	Score float64 `json:"score" validate:"required"`
+	Score float64 `json:"score" binding:"required"`
 }
 
 // RatingResult is the rating response containing the user's score and video stats.

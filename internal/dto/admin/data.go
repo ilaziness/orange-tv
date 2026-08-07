@@ -13,8 +13,8 @@ type BackupQuery struct {
 
 // BatchUpdatePreviewRequest 批量更新预览请求。
 type BatchUpdatePreviewRequest struct {
-	Target   string `json:"target" validate:"required,oneof=video_cover episode_url"`
-	OldValue string `json:"old_value" validate:"required,max=2000"`
+	Target   string `json:"target" binding:"required,oneof=video_cover episode_url"`
+	OldValue string `json:"old_value" binding:"required,max=2000"`
 }
 
 // BatchUpdatePreviewResponse 批量更新预览响应。
@@ -24,9 +24,9 @@ type BatchUpdatePreviewResponse struct {
 
 // BatchUpdateExecuteRequest 批量更新执行请求。
 type BatchUpdateExecuteRequest struct {
-	Target   string `json:"target" validate:"required,oneof=video_cover episode_url"`
-	OldValue string `json:"old_value" validate:"required,max=2000"`
-	NewValue string `json:"new_value" validate:"required,max=2000"`
+	Target   string `json:"target" binding:"required,oneof=video_cover episode_url"`
+	OldValue string `json:"old_value" binding:"required,max=2000"`
+	NewValue string `json:"new_value" binding:"required,max=2000"`
 }
 
 // BatchUpdateExecuteResponse 批量更新执行响应。

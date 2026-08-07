@@ -2,8 +2,8 @@ package admin
 
 // LoginRequest is the admin login payload.
 type LoginRequest struct {
-	Username string `json:"username" validate:"required,min=3,max=50"`
-	Password string `json:"password" validate:"required,min=6,max=72"`
+	Username string `json:"username" binding:"required,min=3,max=50"`
+	Password string `json:"password" binding:"required,min=6,max=72"`
 }
 
 // LoginResponse is returned after successful admin login.
@@ -27,13 +27,13 @@ type Profile struct {
 
 // UpdateProfileRequest is the payload for self-service profile update.
 type UpdateProfileRequest struct {
-	Nickname string `json:"nickname" validate:"max=50"`
-	Email    string `json:"email" validate:"omitempty,max=100,email"`
-	Avatar   string `json:"avatar" validate:"max=500"`
+	Nickname string `json:"nickname" binding:"max=50"`
+	Email    string `json:"email" binding:"omitempty,max=100,email"`
+	Avatar   string `json:"avatar" binding:"max=500"`
 }
 
 // ChangePasswordRequest is the payload for self-service password change.
 type ChangePasswordRequest struct {
-	OldPassword string `json:"old_password" validate:"required,min=6,max=72"`
-	NewPassword string `json:"new_password" validate:"required,min=6,max=72"`
+	OldPassword string `json:"old_password" binding:"required,min=6,max=72"`
+	NewPassword string `json:"new_password" binding:"required,min=6,max=72"`
 }

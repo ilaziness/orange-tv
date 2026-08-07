@@ -8,49 +8,39 @@ import (
 )
 
 // BindAndValidate 绑定并验证请求参数
-// 使用gin的ShouldBindJSON/ShouldBindQuery/ShouldBindUri等绑定方法
-// 绑定后自动调用validator.Validate进行验证
+// 使用gin的ShouldBind绑定方法，binding标签自动校验
 // 如果绑定或验证失败，自动返回错误响应并返回false
 func BindAndValidate(c *gin.Context, obj any) bool {
 	if err := c.ShouldBind(obj); err != nil {
-		response.Error(c, errcode.Wrap(errcode.ParamError, err))
-		return false
-	}
-
-	if err := validator.Validate(obj); err != nil {
-		response.Error(c, errcode.Wrap(errcode.ParamError, err))
+		response.Error(c, errcode.Wrap(errcode.ParamError, validator.TranslateError(err)))
 		return false
 	}
 
 	return true
 }
 
-// BindJSON 绑定JSON请求体
+// BindJSON 绑定JSON请求体，binding标签自动校验。
 func BindJSON(c *gin.Context, obj any) bool {
 	if err := c.ShouldBindJSON(obj); err != nil {
-		response.Error(c, errcode.Wrap(errcode.ParamError, err))
+		response.Error(c, errcode.Wrap(errcode.ParamError, validator.TranslateError(err)))
 		return false
 	}
 	return true
 }
 
-// BindQuery 绑定查询参数，并执行 validate 标签校验。
+// BindQuery 绑定查询参数，binding标签自动校验。
 func BindQuery(c *gin.Context, obj any) bool {
 	if err := c.ShouldBindQuery(obj); err != nil {
-		response.Error(c, errcode.Wrap(errcode.ParamError, err))
-		return false
-	}
-	if err := validator.Validate(obj); err != nil {
-		response.Error(c, errcode.Wrap(errcode.ParamError, err))
+		response.Error(c, errcode.Wrap(errcode.ParamError, validator.TranslateError(err)))
 		return false
 	}
 	return true
 }
 
-// BindURI 绑定URI参数
+// BindURI 绑定URI参数，binding标签自动校验。
 func BindURI(c *gin.Context, obj any) bool {
 	if err := c.ShouldBindUri(obj); err != nil {
-		response.Error(c, errcode.Wrap(errcode.ParamError, err))
+		response.Error(c, errcode.Wrap(errcode.ParamError, validator.TranslateError(err)))
 		return false
 	}
 	return true

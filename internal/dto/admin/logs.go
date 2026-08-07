@@ -5,9 +5,9 @@ import shareddto "github.com/ilaziness/orange-tv/internal/dto"
 // SystemLogListRequest queries system_logs.
 type SystemLogListRequest struct {
 	shareddto.PaginationRequest
-	Level   *uint8  `form:"level" validate:"omitempty,oneof=1 2 3 4"`
+	Level   *uint8  `form:"level" binding:"omitempty,oneof=1 2 3 4"`
 	Module  string  `form:"module"`
-	AdminID *uint32 `form:"admin_id" validate:"omitempty,min=1"`
+	AdminID *uint32 `form:"admin_id" binding:"omitempty,min=1"`
 	// Start / End are RFC3339 or date strings; optional.
 	Start string `form:"start"`
 	End   string `form:"end"`
@@ -17,7 +17,7 @@ type SystemLogListRequest struct {
 type AdminLoginLogListRequest struct {
 	shareddto.PaginationRequest
 	Username string `form:"username"`
-	Status   *uint8 `form:"status" validate:"omitempty,oneof=1 2"`
+	Status   *uint8 `form:"status" binding:"omitempty,oneof=1 2"`
 	Start    string `form:"start"`
 	End      string `form:"end"`
 }
@@ -25,9 +25,9 @@ type AdminLoginLogListRequest struct {
 // UserLoginLogListRequest queries user_login_logs.
 type UserLoginLogListRequest struct {
 	shareddto.PaginationRequest
-	UserID   *uint32 `form:"user_id" validate:"omitempty,min=1"`
+	UserID   *uint32 `form:"user_id" binding:"omitempty,min=1"`
 	Username string  `form:"username"`
-	Status   *uint8  `form:"status" validate:"omitempty,oneof=1 2"`
+	Status   *uint8  `form:"status" binding:"omitempty,oneof=1 2"`
 	Start    string  `form:"start"`
 	End      string  `form:"end"`
 }
@@ -71,7 +71,7 @@ type AppLogListRequest struct {
 	// Offset is the byte offset from the end of file; 0 means start from the last byte.
 	Offset int64 `form:"offset"`
 	// Limit is the max number of log lines to return (default 50, max 200).
-	Limit int `form:"limit" validate:"omitempty,min=1,max=200"`
+	Limit int `form:"limit" binding:"omitempty,min=1,max=200"`
 }
 
 // GetLimit returns a sanitized limit value.

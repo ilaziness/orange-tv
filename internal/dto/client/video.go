@@ -16,7 +16,7 @@ type VideoListRequest struct {
 // SearchRequest is the public search query with optional filters.
 type SearchRequest struct {
 	dto.PaginationRequest
-	Keyword          string `form:"keyword" validate:"required,min=1,max=10,search"`
+	Keyword          string `form:"keyword" binding:"required,min=1,max=10,search"`
 	CategoryID       uint32 `form:"category_id"`
 	ParentCategoryID uint32 `form:"parent_category_id"`
 	YearStart        uint32 `form:"year_start"`
@@ -27,7 +27,7 @@ type SearchRequest struct {
 
 // RelatedRequest loads related videos for a detail page.
 type RelatedRequest struct {
-	Limit int `form:"limit" validate:"omitempty,min=1,max=50"`
+	Limit int `form:"limit" binding:"omitempty,min=1,max=50"`
 }
 
 // EpisodeURI captures route params for single-episode play URL.

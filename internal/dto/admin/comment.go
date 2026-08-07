@@ -6,13 +6,13 @@ import "github.com/ilaziness/orange-tv/internal/dto"
 type CommentListRequest struct {
 	dto.PaginationRequest
 	Keyword string  `form:"keyword"`
-	Status  *uint8  `form:"status" validate:"omitempty,oneof=0 1"`
-	VideoID *uint32 `form:"video_id" validate:"omitempty,min=1"`
+	Status  *uint8  `form:"status" binding:"omitempty,oneof=0 1"`
+	VideoID *uint32 `form:"video_id" binding:"omitempty,min=1"`
 }
 
 // UpdateCommentStatusRequest updates comment audit status.
 type UpdateCommentStatusRequest struct {
-	Status uint8 `json:"status" validate:"required,oneof=0 1"`
+	Status uint8 `json:"status" binding:"required,oneof=0 1"`
 }
 
 // CommentListItem is one admin comment list row.

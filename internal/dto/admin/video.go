@@ -18,47 +18,47 @@ type VideoListRequest struct {
 
 // CreateVideoRequest creates a video with associations.
 type CreateVideoRequest struct {
-	Title         string            `json:"title" validate:"required,min=1,max=255"`
-	Subtitle      string            `json:"subtitle" validate:"omitempty,max=255"`
-	Description   string            `json:"description" validate:"omitempty,max=10000"`
-	CategoryID    uint32            `json:"category_id" validate:"required,min=1"`
-	PublishStatus *uint8            `json:"publish_status" validate:"omitempty,oneof=0 1"`
-	SerialStatus  *uint8            `json:"serial_status" validate:"omitempty,oneof=1 2 3"`
-	CoverImage    string            `json:"cover_image" validate:"omitempty,max=500"`
-	PosterImage   string            `json:"poster_image" validate:"omitempty,max=500"`
-	Year          uint32            `json:"year" validate:"omitempty,min=0,max=9999"`
-	Region        string            `json:"region" validate:"omitempty,max=50"`
-	Duration      uint32            `json:"duration" validate:"omitempty,min=0"`
-	Language      string            `json:"language" validate:"omitempty,max=50"`
-	ReleaseDate   string            `json:"release_date" validate:"omitempty,max=64"`
-	DirectorIDs   []uint32          `json:"director_ids" validate:"omitempty,dive,min=1"`
-	Actors        []VideoActorInput `json:"actors" validate:"omitempty,dive"`
-	TagIDs        []uint32          `json:"tag_ids" validate:"omitempty,dive,min=1"`
+	Title         string            `json:"title" binding:"required,min=1,max=255"`
+	Subtitle      string            `json:"subtitle" binding:"omitempty,max=255"`
+	Description   string            `json:"description" binding:"omitempty,max=10000"`
+	CategoryID    uint32            `json:"category_id" binding:"required,min=1"`
+	PublishStatus *uint8            `json:"publish_status" binding:"omitempty,oneof=0 1"`
+	SerialStatus  *uint8            `json:"serial_status" binding:"omitempty,oneof=1 2 3"`
+	CoverImage    string            `json:"cover_image" binding:"omitempty,max=500"`
+	PosterImage   string            `json:"poster_image" binding:"omitempty,max=500"`
+	Year          uint32            `json:"year" binding:"omitempty,min=0,max=9999"`
+	Region        string            `json:"region" binding:"omitempty,max=50"`
+	Duration      uint32            `json:"duration" binding:"omitempty,min=0"`
+	Language      string            `json:"language" binding:"omitempty,max=50"`
+	ReleaseDate   string            `json:"release_date" binding:"omitempty,max=64"`
+	DirectorIDs   []uint32          `json:"director_ids" binding:"omitempty,dive,min=1"`
+	Actors        []VideoActorInput `json:"actors" binding:"omitempty,dive"`
+	TagIDs        []uint32          `json:"tag_ids" binding:"omitempty,dive,min=1"`
 }
 
 // UpdateVideoRequest updates a video and optional associations.
 type UpdateVideoRequest struct {
-	Title         *string            `json:"title" validate:"omitempty,min=1,max=255"`
-	Subtitle      *string            `json:"subtitle" validate:"omitempty,max=255"`
-	Description   *string            `json:"description" validate:"omitempty,max=10000"`
-	CategoryID    *uint32            `json:"category_id" validate:"omitempty,min=1"`
-	PublishStatus *uint8             `json:"publish_status" validate:"omitempty,oneof=0 1"`
-	SerialStatus  *uint8             `json:"serial_status" validate:"omitempty,oneof=1 2 3"`
-	CoverImage    *string            `json:"cover_image" validate:"omitempty,max=500"`
-	PosterImage   *string            `json:"poster_image" validate:"omitempty,max=500"`
-	Year          *uint32            `json:"year" validate:"omitempty,min=0,max=9999"`
-	Region        *string            `json:"region" validate:"omitempty,max=50"`
-	Duration      *uint32            `json:"duration" validate:"omitempty,min=0"`
-	Language      *string            `json:"language" validate:"omitempty,max=50"`
-	ReleaseDate   *string            `json:"release_date" validate:"omitempty,max=64"`
-	DirectorIDs   *[]uint32          `json:"director_ids" validate:"omitempty,dive,min=1"`
-	Actors        *[]VideoActorInput `json:"actors" validate:"omitempty,dive"`
-	TagIDs        *[]uint32          `json:"tag_ids" validate:"omitempty,dive,min=1"`
+	Title         *string            `json:"title" binding:"omitempty,min=1,max=255"`
+	Subtitle      *string            `json:"subtitle" binding:"omitempty,max=255"`
+	Description   *string            `json:"description" binding:"omitempty,max=10000"`
+	CategoryID    *uint32            `json:"category_id" binding:"omitempty,min=1"`
+	PublishStatus *uint8             `json:"publish_status" binding:"omitempty,oneof=0 1"`
+	SerialStatus  *uint8             `json:"serial_status" binding:"omitempty,oneof=1 2 3"`
+	CoverImage    *string            `json:"cover_image" binding:"omitempty,max=500"`
+	PosterImage   *string            `json:"poster_image" binding:"omitempty,max=500"`
+	Year          *uint32            `json:"year" binding:"omitempty,min=0,max=9999"`
+	Region        *string            `json:"region" binding:"omitempty,max=50"`
+	Duration      *uint32            `json:"duration" binding:"omitempty,min=0"`
+	Language      *string            `json:"language" binding:"omitempty,max=50"`
+	ReleaseDate   *string            `json:"release_date" binding:"omitempty,max=64"`
+	DirectorIDs   *[]uint32          `json:"director_ids" binding:"omitempty,dive,min=1"`
+	Actors        *[]VideoActorInput `json:"actors" binding:"omitempty,dive"`
+	TagIDs        *[]uint32          `json:"tag_ids" binding:"omitempty,dive,min=1"`
 }
 
 // VideoActorInput binds actor to video.
 type VideoActorInput struct {
-	ActorID uint32 `json:"actor_id" validate:"required,min=1"`
+	ActorID uint32 `json:"actor_id" binding:"required,min=1"`
 }
 
 // VideoListItem is a compact video card payload for admin (includes publish_status, timestamps).

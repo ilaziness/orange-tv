@@ -12,16 +12,16 @@ type CategoryResponse struct {
 
 // CreateCategoryRequest creates a category.
 type CreateCategoryRequest struct {
-	Name      string `json:"name" validate:"required,min=1,max=100"`
-	ParentID  uint32 `json:"parent_id" validate:"omitempty,min=0"`
-	SortOrder uint32 `json:"sort_order" validate:"omitempty,min=0"`
-	Status    *uint8 `json:"status" validate:"omitempty,oneof=0 1"`
+	Name      string `json:"name" binding:"required,min=1,max=100"`
+	ParentID  uint32 `json:"parent_id" binding:"omitempty,min=0"`
+	SortOrder uint32 `json:"sort_order" binding:"omitempty,min=0"`
+	Status    *uint8 `json:"status" binding:"omitempty,oneof=0 1"`
 }
 
 // UpdateCategoryRequest updates a category.
 type UpdateCategoryRequest struct {
-	Name      *string `json:"name" validate:"omitempty,min=1,max=100"`
-	ParentID  *uint32 `json:"parent_id" validate:"omitempty,min=0"`
-	SortOrder *uint32 `json:"sort_order" validate:"omitempty,min=0"`
-	Status    *uint8  `json:"status" validate:"omitempty,oneof=0 1"`
+	Name      *string `json:"name" binding:"omitempty,min=1,max=100"`
+	ParentID  *uint32 `json:"parent_id" binding:"omitempty,min=0"`
+	SortOrder *uint32 `json:"sort_order" binding:"omitempty,min=0"`
+	Status    *uint8  `json:"status" binding:"omitempty,oneof=0 1"`
 }

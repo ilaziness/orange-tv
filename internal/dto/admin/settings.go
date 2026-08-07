@@ -25,18 +25,18 @@ type GetSettingsQuery struct {
 // UpdateSettingsRequest updates settings for a single group.
 // Data is the group-specific key-value JSON payload.
 type UpdateSettingsRequest struct {
-	Group string          `json:"group" validate:"required,oneof=site api feature"`
-	Data  json.RawMessage `json:"data" validate:"required"`
+	Group string          `json:"group" binding:"required,oneof=site api feature"`
+	Data  json.RawMessage `json:"data" binding:"required"`
 }
 
 // UpdateSiteSettings updates public site fields (all optional).
 type UpdateSiteSettings struct {
-	Name        *string `json:"name" validate:"omitempty,max=100"`
-	Logo        *string `json:"logo" validate:"omitempty,max=500"`
-	Copyright   *string `json:"copyright" validate:"omitempty,max=255"`
-	ICP         *string `json:"icp" validate:"omitempty,max=100"`
-	SEOKeywords *string `json:"seo_keywords" validate:"omitempty,max=255"`
-	Description *string `json:"description" validate:"omitempty,max=500"`
+	Name        *string `json:"name" binding:"omitempty,max=100"`
+	Logo        *string `json:"logo" binding:"omitempty,max=500"`
+	Copyright   *string `json:"copyright" binding:"omitempty,max=255"`
+	ICP         *string `json:"icp" binding:"omitempty,max=100"`
+	SEOKeywords *string `json:"seo_keywords" binding:"omitempty,max=255"`
+	Description *string `json:"description" binding:"omitempty,max=500"`
 }
 
 // UpdateAPISettings updates API / resource station fields (all optional).

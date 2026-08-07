@@ -235,7 +235,7 @@ func GenerateModelCode(opts GenerateOptions, modelName, tableName string, column
 			tags = append(tags, fmt.Sprintf(`json:"%s"`, jsonName))
 		}
 		if opts.ValidatorTags && !col.Nullable && !isSensitiveColumn(col.Name) {
-			tags = append(tags, `validate:"required"`)
+			tags = append(tags, `binding:"required"`)
 		}
 
 		sb.WriteString(fmt.Sprintf("\t%s %s `%s`\n", fieldName, goType, strings.Join(tags, " ")))

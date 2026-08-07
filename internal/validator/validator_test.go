@@ -8,10 +8,10 @@ import (
 )
 
 type TestStruct struct {
-	Email    string `json:"email" validate:"required,email"`
-	Name     string `json:"name" validate:"required,min=3,max=50"`
-	Age      int    `json:"age" validate:"gte=0,lte=130"`
-	Password string `json:"password" validate:"required,min=8"`
+	Email    string `json:"email" binding:"required,email"`
+	Name     string `json:"name" binding:"required,min=3,max=50"`
+	Age      int    `json:"age" binding:"gte=0,lte=130"`
+	Password string `json:"password" binding:"required,min=8"`
 }
 
 func TestValidate(t *testing.T) {

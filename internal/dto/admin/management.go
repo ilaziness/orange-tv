@@ -23,8 +23,8 @@ type DashboardResponse struct {
 
 // BatchVideoRequest is the batch video operation payload.
 type BatchVideoRequest struct {
-	IDs    []uint32 `json:"ids" validate:"required,min=1,max=500"`
-	Status *uint8   `json:"status" validate:"omitempty,oneof=0 1"`
+	IDs    []uint32 `json:"ids" binding:"required,min=1,max=500"`
+	Status *uint8   `json:"status" binding:"omitempty,oneof=0 1"`
 }
 
 // BatchVideoResponse is the batch operation result.
@@ -57,26 +57,26 @@ type AdminItem struct {
 
 // CreateAdminRequest creates a new admin.
 type CreateAdminRequest struct {
-	Username string `json:"username" validate:"required,min=3,max=50"`
-	Password string `json:"password" validate:"required,min=6,max=72"`
-	Email    string `json:"email" validate:"omitempty,email,max=128"`
-	Avatar   string `json:"avatar" validate:"omitempty,max=500"`
-	GroupID  uint32 `json:"group_id" validate:"required,min=1"`
-	Status   *uint8 `json:"status" validate:"omitempty,oneof=0 1"`
+	Username string `json:"username" binding:"required,min=3,max=50"`
+	Password string `json:"password" binding:"required,min=6,max=72"`
+	Email    string `json:"email" binding:"omitempty,email,max=128"`
+	Avatar   string `json:"avatar" binding:"omitempty,max=500"`
+	GroupID  uint32 `json:"group_id" binding:"required,min=1"`
+	Status   *uint8 `json:"status" binding:"omitempty,oneof=0 1"`
 }
 
 // UpdateAdminRequest updates an admin.
 type UpdateAdminRequest struct {
-	Username string  `json:"username" validate:"omitempty,min=3,max=50"`
-	Email    *string `json:"email" validate:"omitempty,max=128"`
-	Avatar   string  `json:"avatar" validate:"omitempty,max=500"`
-	GroupID  *uint32 `json:"group_id" validate:"omitempty,min=1"`
-	Status   *uint8  `json:"status" validate:"omitempty,oneof=0 1"`
+	Username string  `json:"username" binding:"omitempty,min=3,max=50"`
+	Email    *string `json:"email" binding:"omitempty,max=128"`
+	Avatar   string  `json:"avatar" binding:"omitempty,max=500"`
+	GroupID  *uint32 `json:"group_id" binding:"omitempty,min=1"`
+	Status   *uint8  `json:"status" binding:"omitempty,oneof=0 1"`
 }
 
 // ResetAdminPasswordRequest resets admin password.
 type ResetAdminPasswordRequest struct {
-	Password string `json:"password" validate:"required,min=6,max=72"`
+	Password string `json:"password" binding:"required,min=6,max=72"`
 }
 
 // ===== User group CRUD (A4) =====
@@ -98,16 +98,16 @@ type UserGroupItem struct {
 
 // CreateUserGroupRequest creates a user group.
 type CreateUserGroupRequest struct {
-	Name        string `json:"name" validate:"required,min=1,max=64"`
-	Permissions string `json:"permissions" validate:"omitempty,max=2000"`
-	Description string `json:"description" validate:"omitempty,max=255"`
+	Name        string `json:"name" binding:"required,min=1,max=64"`
+	Permissions string `json:"permissions" binding:"omitempty,max=2000"`
+	Description string `json:"description" binding:"omitempty,max=255"`
 }
 
 // UpdateUserGroupRequest updates a user group.
 type UpdateUserGroupRequest struct {
-	Name        string `json:"name" validate:"omitempty,min=1,max=64"`
-	Permissions string `json:"permissions" validate:"omitempty,max=2000"`
-	Description string `json:"description" validate:"omitempty,max=255"`
+	Name        string `json:"name" binding:"omitempty,min=1,max=64"`
+	Permissions string `json:"permissions" binding:"omitempty,max=2000"`
+	Description string `json:"description" binding:"omitempty,max=255"`
 }
 
 // ===== Regular user CRUD (A5) =====
@@ -134,26 +134,26 @@ type UserItem struct {
 
 // CreateUserRequest creates a new regular user.
 type CreateUserRequest struct {
-	Username string `json:"username" validate:"required,min=3,max=50"`
-	Password string `json:"password" validate:"required,min=6,max=72"`
-	Nickname string `json:"nickname" validate:"omitempty,min=3,max=15"`
-	Email    string `json:"email" validate:"omitempty,email,max=128"`
-	Avatar   string `json:"avatar" validate:"omitempty,max=500"`
-	Status   *uint8 `json:"status" validate:"omitempty,oneof=0 1"`
+	Username string `json:"username" binding:"required,min=3,max=50"`
+	Password string `json:"password" binding:"required,min=6,max=72"`
+	Nickname string `json:"nickname" binding:"omitempty,min=3,max=15"`
+	Email    string `json:"email" binding:"omitempty,email,max=128"`
+	Avatar   string `json:"avatar" binding:"omitempty,max=500"`
+	Status   *uint8 `json:"status" binding:"omitempty,oneof=0 1"`
 }
 
 // UpdateUserRequest updates a regular user.
 type UpdateUserRequest struct {
-	Username string  `json:"username" validate:"omitempty,min=3,max=50"`
-	Nickname string  `json:"nickname" validate:"omitempty,min=3,max=15"`
-	Email    *string `json:"email" validate:"omitempty,max=128"`
-	Avatar   string  `json:"avatar" validate:"omitempty,max=500"`
-	Status   *uint8  `json:"status" validate:"omitempty,oneof=0 1"`
+	Username string  `json:"username" binding:"omitempty,min=3,max=50"`
+	Nickname string  `json:"nickname" binding:"omitempty,min=3,max=15"`
+	Email    *string `json:"email" binding:"omitempty,max=128"`
+	Avatar   string  `json:"avatar" binding:"omitempty,max=500"`
+	Status   *uint8  `json:"status" binding:"omitempty,oneof=0 1"`
 }
 
 // ResetUserPasswordRequest resets user password.
 type ResetUserPasswordRequest struct {
-	Password string `json:"password" validate:"required,min=6,max=72"`
+	Password string `json:"password" binding:"required,min=6,max=72"`
 }
 
 // ===== Banner CRUD (C1) =====
@@ -171,20 +171,20 @@ type BannerItem struct {
 
 // CreateBannerRequest creates a banner.
 type CreateBannerRequest struct {
-	Title   string `json:"title" validate:"required,min=1,max=128"`
-	Cover   string `json:"cover" validate:"required,max=500"`
-	Link    string `json:"link" validate:"omitempty,max=500"`
-	VideoID uint32 `json:"video_id" validate:"omitempty,min=1"`
-	Sort    uint32 `json:"sort" validate:"omitempty,min=0"`
-	Status  *uint8 `json:"status" validate:"omitempty,oneof=0 1"`
+	Title   string `json:"title" binding:"required,min=1,max=128"`
+	Cover   string `json:"cover" binding:"required,max=500"`
+	Link    string `json:"link" binding:"omitempty,max=500"`
+	VideoID uint32 `json:"video_id" binding:"omitempty,min=1"`
+	Sort    uint32 `json:"sort" binding:"omitempty,min=0"`
+	Status  *uint8 `json:"status" binding:"omitempty,oneof=0 1"`
 }
 
 // UpdateBannerRequest updates a banner.
 type UpdateBannerRequest struct {
-	Title   string  `json:"title" validate:"omitempty,min=1,max=128"`
-	Cover   string  `json:"cover" validate:"omitempty,max=500"`
-	Link    string  `json:"link" validate:"omitempty,max=500"`
-	VideoID *uint32 `json:"video_id" validate:"omitempty,min=1"`
-	Sort    *uint32 `json:"sort" validate:"omitempty,min=0"`
-	Status  *uint8  `json:"status" validate:"omitempty,oneof=0 1"`
+	Title   string  `json:"title" binding:"omitempty,min=1,max=128"`
+	Cover   string  `json:"cover" binding:"omitempty,max=500"`
+	Link    string  `json:"link" binding:"omitempty,max=500"`
+	VideoID *uint32 `json:"video_id" binding:"omitempty,min=1"`
+	Sort    *uint32 `json:"sort" binding:"omitempty,min=0"`
+	Status  *uint8  `json:"status" binding:"omitempty,oneof=0 1"`
 }

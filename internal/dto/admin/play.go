@@ -4,16 +4,16 @@ import "github.com/ilaziness/orange-tv/internal/dto"
 
 // CreatePlaySourceRequest creates a global play source.
 type CreatePlaySourceRequest struct {
-	Name      string `json:"name" validate:"required,min=1,max=100"`
-	SortOrder uint32 `json:"sort_order" validate:"omitempty,min=0"`
-	Status    *uint8 `json:"status" validate:"omitempty,oneof=0 1"`
+	Name      string `json:"name" binding:"required,min=1,max=100"`
+	SortOrder uint32 `json:"sort_order" binding:"omitempty,min=0"`
+	Status    *uint8 `json:"status" binding:"omitempty,oneof=0 1"`
 }
 
 // UpdatePlaySourceRequest updates a global play source.
 type UpdatePlaySourceRequest struct {
-	Name      *string `json:"name" validate:"omitempty,min=1,max=100"`
-	SortOrder *uint32 `json:"sort_order" validate:"omitempty,min=0"`
-	Status    *uint8  `json:"status" validate:"omitempty,oneof=0 1"`
+	Name      *string `json:"name" binding:"omitempty,min=1,max=100"`
+	SortOrder *uint32 `json:"sort_order" binding:"omitempty,min=0"`
+	Status    *uint8  `json:"status" binding:"omitempty,oneof=0 1"`
 }
 
 // PlaySourceResponse is a play source payload.
@@ -27,34 +27,34 @@ type PlaySourceResponse struct {
 // PlayEpisodeListRequest filters episode list.
 type PlayEpisodeListRequest struct {
 	dto.PaginationRequest
-	VideoID  uint32 `form:"video_id" validate:"required,min=1"`
-	SourceID uint32 `form:"source_id" validate:"required,min=1"`
+	VideoID  uint32 `form:"video_id" binding:"required,min=1"`
+	SourceID uint32 `form:"source_id" binding:"required,min=1"`
 }
 
 // CreatePlayEpisodeRequest creates a play episode.
 type CreatePlayEpisodeRequest struct {
-	SourceID      uint32 `json:"source_id" validate:"required,min=1"`
-	VideoID       uint32 `json:"video_id" validate:"required,min=1"`
-	EpisodeNumber uint32 `json:"episode_number" validate:"required,min=1"`
-	Title         string `json:"title" validate:"omitempty,max=255"`
-	PlayURL       string `json:"play_url" validate:"required,min=1,max=1000"`
-	Quality       string `json:"quality" validate:"omitempty,max=50"`
-	Format        string `json:"format" validate:"required,oneof=hls mp4 dash flv"`
-	SortOrder     uint32 `json:"sort_order" validate:"omitempty,min=0"`
-	Status        *uint8 `json:"status" validate:"omitempty,oneof=0 1"`
+	SourceID      uint32 `json:"source_id" binding:"required,min=1"`
+	VideoID       uint32 `json:"video_id" binding:"required,min=1"`
+	EpisodeNumber uint32 `json:"episode_number" binding:"required,min=1"`
+	Title         string `json:"title" binding:"omitempty,max=255"`
+	PlayURL       string `json:"play_url" binding:"required,min=1,max=1000"`
+	Quality       string `json:"quality" binding:"omitempty,max=50"`
+	Format        string `json:"format" binding:"required,oneof=hls mp4 dash flv"`
+	SortOrder     uint32 `json:"sort_order" binding:"omitempty,min=0"`
+	Status        *uint8 `json:"status" binding:"omitempty,oneof=0 1"`
 }
 
 // UpdatePlayEpisodeRequest updates a play episode.
 type UpdatePlayEpisodeRequest struct {
-	SourceID      *uint32 `json:"source_id" validate:"omitempty,min=1"`
-	VideoID       *uint32 `json:"video_id" validate:"omitempty,min=1"`
-	EpisodeNumber *uint32 `json:"episode_number" validate:"omitempty,min=1"`
-	Title         *string `json:"title" validate:"omitempty,max=255"`
-	PlayURL       *string `json:"play_url" validate:"omitempty,min=1,max=1000"`
-	Quality       *string `json:"quality" validate:"omitempty,max=50"`
-	Format        *string `json:"format" validate:"omitempty,oneof=hls mp4 dash flv"`
-	SortOrder     *uint32 `json:"sort_order" validate:"omitempty,min=0"`
-	Status        *uint8  `json:"status" validate:"omitempty,oneof=0 1"`
+	SourceID      *uint32 `json:"source_id" binding:"omitempty,min=1"`
+	VideoID       *uint32 `json:"video_id" binding:"omitempty,min=1"`
+	EpisodeNumber *uint32 `json:"episode_number" binding:"omitempty,min=1"`
+	Title         *string `json:"title" binding:"omitempty,max=255"`
+	PlayURL       *string `json:"play_url" binding:"omitempty,min=1,max=1000"`
+	Quality       *string `json:"quality" binding:"omitempty,max=50"`
+	Format        *string `json:"format" binding:"omitempty,oneof=hls mp4 dash flv"`
+	SortOrder     *uint32 `json:"sort_order" binding:"omitempty,min=0"`
+	Status        *uint8  `json:"status" binding:"omitempty,oneof=0 1"`
 }
 
 // PlayEpisodeResponse is a play episode payload.
@@ -73,9 +73,9 @@ type PlayEpisodeResponse struct {
 
 // BatchUpdateEpisodeStatusRequest 批量更新某影视下指定播放源的全部剧集状态。
 type BatchUpdateEpisodeStatusRequest struct {
-	VideoID  uint32 `json:"video_id" validate:"required,min=1"`
-	SourceID uint32 `json:"source_id" validate:"required,min=1"`
-	Status   uint8  `json:"status" validate:"oneof=0 1"`
+	VideoID  uint32 `json:"video_id" binding:"required,min=1"`
+	SourceID uint32 `json:"source_id" binding:"required,min=1"`
+	Status   uint8  `json:"status" binding:"oneof=0 1"`
 }
 
 // BatchUpdateEpisodeStatusResponse 批量更新剧集状态响应。

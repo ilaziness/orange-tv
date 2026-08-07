@@ -12,24 +12,24 @@ type LiveListRequest struct {
 
 // CreateLiveRequest creates a live channel.
 type CreateLiveRequest struct {
-	Name        string `json:"name" validate:"required,min=1,max=100"`
-	Category    string `json:"category" validate:"omitempty,max=50"`
-	StreamURL   string `json:"stream_url" validate:"required,min=1,max=1000"`
-	Logo        string `json:"logo" validate:"omitempty,max=500"`
-	Description string `json:"description" validate:"omitempty,max=2000"`
-	SortOrder   uint32 `json:"sort_order" validate:"omitempty,min=0"`
-	Status      *uint8 `json:"status" validate:"omitempty,oneof=0 1"`
+	Name        string `json:"name" binding:"required,min=1,max=100"`
+	Category    string `json:"category" binding:"omitempty,max=50"`
+	StreamURL   string `json:"stream_url" binding:"required,min=1,max=1000"`
+	Logo        string `json:"logo" binding:"omitempty,max=500"`
+	Description string `json:"description" binding:"omitempty,max=2000"`
+	SortOrder   uint32 `json:"sort_order" binding:"omitempty,min=0"`
+	Status      *uint8 `json:"status" binding:"omitempty,oneof=0 1"`
 }
 
 // UpdateLiveRequest updates a live channel.
 type UpdateLiveRequest struct {
-	Name        *string `json:"name" validate:"omitempty,min=1,max=100"`
-	Category    *string `json:"category" validate:"omitempty,max=50"`
-	StreamURL   *string `json:"stream_url" validate:"omitempty,min=1,max=1000"`
-	Logo        *string `json:"logo" validate:"omitempty,max=500"`
-	Description *string `json:"description" validate:"omitempty,max=2000"`
-	SortOrder   *uint32 `json:"sort_order" validate:"omitempty,min=0"`
-	Status      *uint8  `json:"status" validate:"omitempty,oneof=0 1"`
+	Name        *string `json:"name" binding:"omitempty,min=1,max=100"`
+	Category    *string `json:"category" binding:"omitempty,max=50"`
+	StreamURL   *string `json:"stream_url" binding:"omitempty,min=1,max=1000"`
+	Logo        *string `json:"logo" binding:"omitempty,max=500"`
+	Description *string `json:"description" binding:"omitempty,max=2000"`
+	SortOrder   *uint32 `json:"sort_order" binding:"omitempty,min=0"`
+	Status      *uint8  `json:"status" binding:"omitempty,oneof=0 1"`
 }
 
 // LiveChannelItem is a live channel payload for admin (includes status, sort_order, stream_url).
@@ -54,5 +54,5 @@ type LiveSyncResult struct {
 
 // LiveSyncRequest is the request body for live source synchronization.
 type LiveSyncRequest struct {
-	SourceURL string `json:"source_url" validate:"required,min=1,max=2000"`
+	SourceURL string `json:"source_url" binding:"required,min=1,max=2000"`
 }
