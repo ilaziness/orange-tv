@@ -266,10 +266,6 @@ func (s clientLiveSvc) GetStreamURL(ctx context.Context, id uint32) (string, err
 	return "", nil
 }
 
-func (s clientLiveSvc) AllowedStreamDomains(ctx context.Context) (map[string]struct{}, error) {
-	return nil, nil
-}
-
 type clientLiveProxySvc struct{}
 
 func (s clientLiveProxySvc) Proxy(c *gin.Context, channelID uint32, segURL string) error { return nil }

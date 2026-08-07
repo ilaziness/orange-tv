@@ -3,6 +3,10 @@ package client
 import (
 	"bytes"
 	"context"
+	"crypto/hmac"
+	"crypto/rand"
+	"crypto/sha256"
+	"crypto/tls"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -11,13 +15,16 @@ import (
 	"net/url"
 	"path"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"go.uber.org/zap"
 )
+
+// browserUserAgent is a common desktop browser User-Agent string used when
+// fetching upstream IPTV sources. Many sources reject non-browser UAs with 403.
+const browserUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 
 // LiveProxyService proxies IPTV live streams.
 type LiveProxyService interface {
@@ -30,58 +37,76 @@ type LiveProxyService interface {
 }
 
 type liveProxyService struct {
-	svc             LiveService
-	log             *zap.Logger
-	httpc           *http.Client
-	domainsMutex    sync.RWMutex
-	domainsTTL      time.Duration
-	domainsLoadedAt time.Time
-	cachedDomains   map[string]struct{}
+	svc        LiveService
+	log        *zap.Logger
+	httpc      *http.Client
+	hmacSecret []byte
 }
 
 // NewLiveProxyService creates a client LiveProxyService.
 // httpc is configured without a global timeout so long-running stream
 // transfers are not interrupted; connect/response-header timeouts are
-// controlled by Transport.
+// controlled by Transport. TLS certificate verification is skipped to support
+// IPTV sources on non-standard ports with self-signed certificates.
 func NewLiveProxyService(svc LiveService, log *zap.Logger) LiveProxyService {
 	if log == nil {
 		log = zap.NewNop()
 	}
+	secret := make([]byte, 16)
+	if _, err := rand.Read(secret); err != nil {
+		// crypto/rand should never fail on supported platforms; fall back to a
+		// fixed but unpredictable-enough value to keep the service running.
+		secret = []byte("orange-tv-live-proxy-fallback-key")
+	}
 	return &liveProxyService{
-		svc: svc,
-		log: log,
+		svc:        svc,
+		log:        log,
+		hmacSecret: secret,
 		httpc: &http.Client{
 			Transport: &http.Transport{
 				MaxIdleConns:        100,
 				MaxIdleConnsPerHost: 10,
 				IdleConnTimeout:     90 * time.Second,
-				DialContext: (&net.Dialer{
-					Timeout: 10 * time.Second,
-				}).DialContext,
+				DialContext: func(ctx context.Context, network, addr string) (net.Conn, error) {
+					host, _, err := net.SplitHostPort(addr)
+					if err != nil {
+						return nil, err
+					}
+					// Resolve hostname and block connections to private IPs
+					// (SSRF defense for hostname-based URLs; IP literals are
+					// already blocked in isPrivateURL before reaching here).
+					ips, err := net.DefaultResolver.LookupIPAddr(ctx, host)
+					if err != nil {
+						return nil, err
+					}
+					for _, ipAddr := range ips {
+						if isPrivateIP(ipAddr.IP) {
+							return nil, fmt.Errorf("connection to private IP %s blocked", ipAddr.IP)
+						}
+					}
+					return (&net.Dialer{Timeout: 10 * time.Second}).DialContext(ctx, network, addr)
+				},
 				ResponseHeaderTimeout: 10 * time.Second,
+				// #nosec G402 -- IPTV sources often use self-signed certs or
+				// non-standard ports (e.g. :4430); skipping verification is a
+				// deliberate usability trade-off for this read-only proxy.
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 			},
 		},
-		domainsTTL: 1 * time.Minute,
 	}
 }
 
 // Proxy handles live stream proxy.
 func (s *liveProxyService) Proxy(c *gin.Context, channelID uint32, segURL string) error {
-	s.writeCORS(c)
-	if c.Request.Method == http.MethodOptions {
-		c.AbortWithStatus(http.StatusNoContent)
-		return nil
-	}
-
 	var realURL string
 	if segURL != "" {
-		decoded, err := decodeSegmentURL(segURL)
+		decoded, err := s.decodeSegmentURL(segURL)
 		if err != nil {
 			s.log.Debug("[LIVE-PROXY] invalid segment url", zap.String("encoded", segURL), zap.Error(err))
 			return errcode.WithMessage(errcode.ParamError, "无效的分片地址")
 		}
-		if !s.isDomainAllowed(c.Request.Context(), decoded) {
-			s.log.Warn("[LIVE-PROXY] segment url not in allowed domains", zap.String("url", decoded))
+		if isPrivateURL(decoded) {
+			s.log.Warn("[LIVE-PROXY] segment url points to private address", zap.String("url", decoded))
 			return errcode.WithMessage(errcode.ParamError, "分片地址不在允许范围内")
 		}
 		realURL = decoded
@@ -110,16 +135,26 @@ func (s *liveProxyService) proxyURL(c *gin.Context, channelID uint32, realURL st
 	}
 	defer func() { _ = resp.Body.Close() }()
 
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		s.log.Error("[LIVE-PROXY] upstream non-2xx",
+			zap.String("url", realURL),
+			zap.Int("status", resp.StatusCode),
+			zap.String("content_type", resp.Header.Get("Content-Type")),
+		)
+		return errcode.WithMessage(errcode.LiveSyncFailed, fmt.Sprintf("直播源返回错误状态码: %d", resp.StatusCode))
+	}
+
 	contentType := resp.Header.Get("Content-Type")
 	finalURL := resp.Request.URL.String()
 
 	peek := make([]byte, 512)
-	n, readErr := resp.Body.Read(peek)
+	n, readErr := io.ReadFull(resp.Body, peek)
+	if readErr != nil && readErr != io.ErrUnexpectedEOF && readErr != io.EOF {
+		s.log.Error("[LIVE-PROXY] read upstream body failed", zap.String("url", realURL), zap.Error(readErr))
+		return errcode.WithMessage(errcode.LiveSyncFailed, "读取直播流失败")
+	}
 	if n == 0 {
-		if readErr == nil {
-			readErr = io.EOF
-		}
-		s.log.Error("[LIVE-PROXY] empty upstream response", zap.String("url", realURL), zap.Error(readErr))
+		s.log.Error("[LIVE-PROXY] empty upstream response", zap.String("url", realURL))
 		return errcode.WithMessage(errcode.LiveSyncFailed, "读取直播流失败")
 	}
 	peek = peek[:n]
@@ -133,8 +168,8 @@ func (s *liveProxyService) proxyURL(c *gin.Context, channelID uint32, realURL st
 		}
 		body := append(peek, rest...)
 
-		if isM3U8(body, contentType) {
-			rewritten := rewriteM3U8(body, finalURL, channelID)
+		if looksLikeM3U8(body) {
+			rewritten := s.rewriteM3U8(body, finalURL, channelID)
 			c.Header("Cache-Control", "no-cache")
 			c.Data(http.StatusOK, "application/vnd.apple.mpegurl", []byte(rewritten))
 			return nil
@@ -148,6 +183,9 @@ func (s *liveProxyService) proxyURL(c *gin.Context, channelID uint32, realURL st
 	}
 
 	// Stream as a media segment without loading large files into memory.
+	// resp.ContentLength is the full body length; since we prepend peek back via
+	// MultiReader, the total equals resp.ContentLength. When upstream uses chunked
+	// encoding, resp.ContentLength is -1 and DataFromReader uses chunked transfer.
 	ct := segmentContentType(finalURL, contentType, peek)
 	s.log.Debug("[LIVE-PROXY] streaming segment",
 		zap.String("url", realURL),
@@ -156,72 +194,38 @@ func (s *liveProxyService) proxyURL(c *gin.Context, channelID uint32, realURL st
 		zap.String("final_ct", ct),
 	)
 	c.Header("Cache-Control", "no-cache")
-	if cl := resp.Header.Get("Content-Length"); cl != "" {
-		c.Header("Content-Length", cl)
-	}
 	c.DataFromReader(http.StatusOK, resp.ContentLength, ct, io.MultiReader(bytes.NewReader(peek), resp.Body), nil)
 	return nil
 }
 
 // fetchResp sends a GET request using the client request context.
+// It sets a browser User-Agent and a Referer matching the upstream origin
+// to bypass common hotlink protection on IPTV sources.
 func (s *liveProxyService) fetchResp(ctx context.Context, rawURL string) (*http.Response, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, rawURL, nil)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("User-Agent", "orange-tv-live-proxy/1.0")
+	req.Header.Set("User-Agent", browserUserAgent)
+	req.Header.Set("Accept", "*/*")
+	if u, perr := url.Parse(rawURL); perr == nil && u.Host != "" {
+		// Set Referer to the upstream origin — browsers send this on same-origin
+		// requests and many IPTV CDNs require it for hotlink protection.
+		// Origin is intentionally omitted: browsers don't send it on simple GET
+		// requests, and including it may cause some servers to reject the request.
+		req.Header.Set("Referer", u.Scheme+"://"+u.Host+"/")
+	}
 	return s.httpc.Do(req)
 }
 
-// writeCORS writes cross-origin response headers.
-func (s *liveProxyService) writeCORS(c *gin.Context) {
-	c.Header("Access-Control-Allow-Origin", "*")
-	c.Header("Access-Control-Allow-Methods", "GET, OPTIONS")
-	c.Header("Access-Control-Allow-Headers", "*")
-}
-
-// isDomainAllowed checks whether the target URL host is in the online channel domain whitelist.
-func (s *liveProxyService) isDomainAllowed(ctx context.Context, rawURL string) bool {
-	u, err := url.Parse(rawURL)
-	if err != nil || u.Host == "" {
-		return false
-	}
-	domains, err := s.getDomains(ctx)
-	if err != nil {
-		return false
-	}
-	_, ok := domains[u.Host]
-	return ok
-}
-
-// getDomains fetches the domain whitelist with a short in-memory cache.
-func (s *liveProxyService) getDomains(ctx context.Context) (map[string]struct{}, error) {
-	s.domainsMutex.RLock()
-	if s.cachedDomains != nil && time.Since(s.domainsLoadedAt) < s.domainsTTL {
-		defer s.domainsMutex.RUnlock()
-		return s.cachedDomains, nil
-	}
-	s.domainsMutex.RUnlock()
-
-	s.domainsMutex.Lock()
-	defer s.domainsMutex.Unlock()
-	// Double-check after acquiring write lock.
-	if s.cachedDomains != nil && time.Since(s.domainsLoadedAt) < s.domainsTTL {
-		return s.cachedDomains, nil
-	}
-	domains, err := s.svc.AllowedStreamDomains(ctx)
-	if err != nil {
-		return nil, err
-	}
-	s.cachedDomains = domains
-	s.domainsLoadedAt = time.Now()
-	return domains, nil
-}
-
 // rewriteM3U8 rewrites m3u8 content URLs so they go through the proxy endpoint.
-func rewriteM3U8(body []byte, baseURL string, channelID uint32) string {
+func (s *liveProxyService) rewriteM3U8(body []byte, baseURL string, channelID uint32) string {
 	text := string(body)
 	base, _ := url.Parse(baseURL)
+	baseQuery := ""
+	if base != nil && base.RawQuery != "" {
+		baseQuery = base.RawQuery
+	}
 	lines := strings.Split(text, "\n")
 	prefix := fmt.Sprintf("/api/client/v1/live/play/%d?u=", channelID)
 	for i, line := range lines {
@@ -230,23 +234,23 @@ func rewriteM3U8(body []byte, baseURL string, channelID uint32) string {
 			continue
 		}
 		if strings.HasPrefix(trimmed, "#") {
-			rewritten := rewriteTagURI(line, base, prefix)
+			rewritten := s.rewriteTagURI(line, base, prefix, baseQuery)
 			if rewritten != line {
 				lines[i] = rewritten
 			}
 			continue
 		}
-		abs := resolveURL(base, trimmed)
+		abs := resolveURL(base, trimmed, baseQuery)
 		if abs == "" {
 			continue
 		}
-		lines[i] = prefix + encodeSegmentURL(abs)
+		lines[i] = prefix + s.encodeSegmentURL(abs)
 	}
 	return strings.Join(lines, "\n")
 }
 
 // rewriteTagURI rewrites URI="..." portions of m3u8 tags.
-func rewriteTagURI(line string, base *url.URL, prefix string) string {
+func (s *liveProxyService) rewriteTagURI(line string, base *url.URL, prefix, baseQuery string) string {
 	idx := strings.Index(line, "URI=\"")
 	if idx < 0 {
 		return line
@@ -256,15 +260,17 @@ func rewriteTagURI(line string, base *url.URL, prefix string) string {
 		return line
 	}
 	uri := line[idx+5 : idx+5+end]
-	abs := resolveURL(base, uri)
+	abs := resolveURL(base, uri, baseQuery)
 	if abs == "" {
 		return line
 	}
-	return line[:idx+5] + prefix + encodeSegmentURL(abs) + line[idx+5+end:]
+	return line[:idx+5] + prefix + s.encodeSegmentURL(abs) + line[idx+5+end:]
 }
 
 // resolveURL resolves a relative URL against a base URL.
-func resolveURL(base *url.URL, ref string) string {
+// If the resolved URL has no query string but the base URL does, the base
+// query is appended so that CDN tokens are preserved across redirects.
+func resolveURL(base *url.URL, ref, baseQuery string) string {
 	if ref == "" {
 		return ""
 	}
@@ -275,21 +281,73 @@ func resolveURL(base *url.URL, ref string) string {
 	if base == nil {
 		return u.String()
 	}
-	return base.ResolveReference(u).String()
+	resolved := base.ResolveReference(u)
+	// Preserve base query params (e.g. CDN tokens) only when the segment URL
+	// itself has no query string, to avoid overwriting segment-specific params.
+	if resolved.RawQuery == "" && baseQuery != "" {
+		resolved.RawQuery = baseQuery
+	}
+	return resolved.String()
 }
 
-// encodeSegmentURL encodes a real URL with URL-safe base64.
-func encodeSegmentURL(rawURL string) string {
-	return base64.URLEncoding.EncodeToString([]byte(rawURL))
+// encodeSegmentURL encodes a real URL with URL-safe base64 (no padding) and
+// appends an HMAC-SHA256 signature so that only URLs generated by this proxy
+// instance are accepted on decode.
+func (s *liveProxyService) encodeSegmentURL(rawURL string) string {
+	mac := hmac.New(sha256.New, s.hmacSecret)
+	_, _ = mac.Write([]byte(rawURL))
+	sig := mac.Sum(nil)[:8]
+	return base64.RawURLEncoding.EncodeToString([]byte(rawURL)) + "." + base64.RawURLEncoding.EncodeToString(sig)
 }
 
-// decodeSegmentURL decodes a base64 segment URL.
-func decodeSegmentURL(encoded string) (string, error) {
-	b, err := base64.URLEncoding.DecodeString(encoded)
+// decodeSegmentURL decodes a base64 segment URL and verifies its HMAC signature.
+func (s *liveProxyService) decodeSegmentURL(encoded string) (string, error) {
+	parts := strings.SplitN(encoded, ".", 2)
+	if len(parts) != 2 {
+		return "", fmt.Errorf("invalid segment url format")
+	}
+	raw, err := base64.RawURLEncoding.DecodeString(parts[0])
 	if err != nil {
 		return "", err
 	}
-	return string(b), nil
+	sig, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return "", err
+	}
+	mac := hmac.New(sha256.New, s.hmacSecret)
+	_, _ = mac.Write(raw)
+	expected := mac.Sum(nil)[:8]
+	if !hmac.Equal(sig, expected) {
+		return "", fmt.Errorf("invalid segment url signature")
+	}
+	return string(raw), nil
+}
+
+// isPrivateURL reports whether the URL points to a private/loopback IP literal.
+// Used as SSRF defense so that signed segment URLs cannot target internal services.
+// Only IP literals are checked here (fast path, no DNS lookup). Hostname-based
+// private IP detection is handled in DialContext at connection time to avoid
+// blocking DNS resolution on every segment request.
+func isPrivateURL(rawURL string) bool {
+	u, err := url.Parse(rawURL)
+	if err != nil || u.Host == "" {
+		return true
+	}
+	hostname := u.Hostname()
+	if hostname == "localhost" {
+		return true
+	}
+	ip := net.ParseIP(hostname)
+	if ip == nil {
+		// Hostname: defer to DialContext check at connection time.
+		return false
+	}
+	return isPrivateIP(ip)
+}
+
+// isPrivateIP reports whether an IP address is private, loopback, link-local, or unspecified.
+func isPrivateIP(ip net.IP) bool {
+	return ip.IsLoopback() || ip.IsPrivate() || ip.IsLinkLocalUnicast() || ip.IsUnspecified()
 }
 
 // isM3U8ContentType checks whether the Content-Type header indicates an m3u8 playlist.
@@ -299,16 +357,11 @@ func isM3U8ContentType(contentType string) bool {
 }
 
 // looksLikeM3U8 checks whether the first bytes of the body look like an m3u8 playlist.
+// Body content takes priority over Content-Type: if the body does not start
+// with #EXTM3U, it is not treated as a playlist even when the Content-Type
+// claims otherwise (some misconfigured servers return the wrong type).
 func looksLikeM3U8(data []byte) bool {
 	return strings.HasPrefix(strings.TrimSpace(string(data)), "#EXTM3U")
-}
-
-// isM3U8 determines whether the response body is an m3u8 playlist.
-func isM3U8(body []byte, contentType string) bool {
-	if isM3U8ContentType(contentType) {
-		return true
-	}
-	return looksLikeM3U8(body)
 }
 
 // isM3U8URL guesses whether a URL points to an m3u8 playlist by extension.

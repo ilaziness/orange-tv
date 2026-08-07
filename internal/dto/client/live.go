@@ -23,4 +23,5 @@ type LiveChannelItem struct {
 	Logo        string `json:"logo"`
 	Description string `json:"description"`
 	SortOrder   uint32 `json:"sort_order"`
+	Format      string `json:"format"`
 }

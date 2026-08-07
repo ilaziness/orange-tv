@@ -339,6 +339,7 @@ export type ClientLiveChannel = {
   logo: string
   description: string
   sort_order: number
+  format?: string
 }
 
 export type LiveSyncResult = {

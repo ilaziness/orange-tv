@@ -2,7 +2,7 @@ package client
 
 import (
 	"context"
-	"net/url"
+	"path"
 	"strings"
 
 	"github.com/ilaziness/orange-tv/internal/cache"
@@ -17,8 +17,6 @@ import (
 type LiveService interface {
 	List(ctx context.Context, req *clientdto.LiveListRequest) ([]clientdto.LiveChannelItem, int, error)
 	GetStreamURL(ctx context.Context, id uint32) (string, error)
-	// AllowedStreamDomains 返回所有在线频道的流地址域名集合，用于代理 ts 分片时的 SSRF 校验。
-	AllowedStreamDomains(ctx context.Context) (map[string]struct{}, error)
 }
 
 type liveService struct {
@@ -71,24 +69,6 @@ func (s *liveService) GetStreamURL(ctx context.Context, id uint32) (string, erro
 	return item.StreamURL, nil
 }
 
-// AllowedStreamDomains 返回所有在线频道 stream_url 的 host 集合。
-func (s *liveService) AllowedStreamDomains(ctx context.Context) (map[string]struct{}, error) {
-	items, err := s.repo.ListAll(ctx)
-	if err != nil {
-		return nil, errcode.Wrap(errcode.DatabaseError, err)
-	}
-	domains := make(map[string]struct{}, len(items))
-	for i := range items {
-		if items[i].Status != 1 {
-			continue
-		}
-		if u, err := url.Parse(items[i].StreamURL); err == nil && u.Host != "" {
-			domains[u.Host] = struct{}{}
-		}
-	}
-	return domains, nil
-}
-
 func filterByCategory(items []clientdto.LiveChannelItem, category string) []clientdto.LiveChannelItem {
 	if category == "" {
 		return items
@@ -111,5 +91,20 @@ func toPublicLiveItem(m *model.LiveChannels) clientdto.LiveChannelItem {
 		Logo:        m.Logo,
 		Description: m.Description,
 		SortOrder:   m.SortOrder,
+		Format:      inferStreamFormat(m.StreamURL),
+	}
+}
+
+// inferStreamFormat 根据 stream_url 后缀推断播放格式。
+// 无后缀或无法识别时默认返回 "hls"（IPTV 源以 HLS 为主）。
+func inferStreamFormat(streamURL string) string {
+	ext := strings.ToLower(path.Ext(strings.TrimSpace(streamURL)))
+	switch ext {
+	case ".flv":
+		return "flv"
+	case ".mp4":
+		return "mp4"
+	default:
+		return "hls"
 	}
 }

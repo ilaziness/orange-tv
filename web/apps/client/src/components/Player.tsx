@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Artplayer from 'artplayer'
 import Hls from 'hls.js'
+import flvjs from 'flv.js'
 import artplayerPluginHlsControl from 'artplayer-plugin-hls-control'
 import type { ClientAdItem } from '@orange-tv/shared'
 import { cn } from '@/lib/utils'
@@ -27,10 +28,14 @@ type Props = {
   onProgress?: (currentTime: number, duration: number) => void
 }
 
-function isHlsSrc(format?: string, src?: string): boolean {
+/** Detect the Artplayer customType key for the given format/src. */
+function detectPlayerType(format?: string, src?: string): '' | 'm3u8' | 'flv' {
   const f = (format || '').toLowerCase()
   const u = (src || '').toLowerCase()
-  return f === 'hls' || u.includes('.m3u8')
+  if (f === 'flv' || u.includes('.flv')) return 'flv'
+  if (f === 'hls' || f === 'm3u8' || u.includes('.m3u8')) return 'm3u8'
+  // MP4 and other native formats don't need a customType — return ''.
+  return ''
 }
 
 function escapeAttr(str: string): string {
@@ -237,10 +242,12 @@ export function VideoPlayer({
         ? `video_${videoId}_source_${sourceId}_ep_${episodeId}`
         : undefined
 
+    const playerType = detectPlayerType(format, src)
+
     const art = new Artplayer({
       container: el,
       url: src,
-      type: isHlsSrc(format, src) ? 'm3u8' : '',
+      type: playerType,
       poster: poster || '',
       autoplay,
       playsInline: true,
@@ -268,7 +275,67 @@ export function VideoPlayer({
             hls.loadSource(url)
             hls.attachMedia(video)
             ;(art as unknown as { hls?: Hls }).hls = hls
+
+            // Error recovery: attempt to recover from fatal HLS errors with a
+            // bounded retry count. After maxRetries, destroy hls and show a
+            // user-visible error notice instead of looping indefinitely.
+            let retryCount = 0
+            const maxRetries = 3
+            hls.on(Hls.Events.ERROR, (_event, data) => {
+              if (!data.fatal) return
+              if (retryCount >= maxRetries) {
+                hls.destroy()
+                ;(art as unknown as { hls?: Hls }).hls = undefined
+                art.notice.show = '直播源加载失败，请稍后重试或切换频道'
+                return
+              }
+              retryCount++
+              switch (data.type) {
+                case Hls.ErrorTypes.NETWORK_ERROR:
+                  hls.startLoad()
+                  break
+                case Hls.ErrorTypes.MEDIA_ERROR:
+                  hls.recoverMediaError()
+                  break
+                default:
+                  hls.destroy()
+                  ;(art as unknown as { hls?: Hls }).hls = undefined
+                  art.notice.show = '直播源播放错误，请稍后重试或切换频道'
+                  break
+              }
+            })
           } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = url
+          }
+        },
+        flv: (video: HTMLVideoElement, url: string, art: Artplayer) => {
+          if (destroyed) return
+          if (flvjs.isSupported()) {
+            const prevFlv = (art as unknown as { flv?: flvjs.Player }).flv
+            if (prevFlv) {
+              try {
+                prevFlv.pause()
+                prevFlv.unload()
+                prevFlv.detachMediaElement()
+                prevFlv.destroy()
+              } catch {
+                /* ignore */
+              }
+            }
+            // isLive is determined by whether this is a live stream (no videoId)
+            // or a VOD episode (has videoId). Live streams use isLive=true for
+            // low-latency playback; VOD uses isLive=false for seekable playback.
+            const isLive = videoId == null
+            const player = flvjs.createPlayer({
+              type: 'flv',
+              isLive,
+              url,
+            })
+            player.attachMediaElement(video)
+            player.load()
+            ;(art as unknown as { flv?: flvjs.Player }).flv = player
+          } else {
+            // Fallback: set src directly (won't work in most browsers without MSE)
             video.src = url
           }
         },
@@ -488,6 +555,18 @@ export function VideoPlayer({
       if (artHls) {
         artHls.destroy()
         ;(art as unknown as { hls?: Hls }).hls = undefined
+      }
+      const artFlv = (art as unknown as { flv?: flvjs.Player }).flv
+      if (artFlv) {
+        try {
+          artFlv.pause()
+          artFlv.unload()
+          artFlv.detachMediaElement()
+          artFlv.destroy()
+        } catch {
+          /* ignore */
+        }
+        ;(art as unknown as { flv?: flvjs.Player }).flv = undefined
       }
       // Use the local `art` variable, not artRef.current, to ensure we destroy
       // the exact instance created in this effect run (StrictMode double-invoke safe)

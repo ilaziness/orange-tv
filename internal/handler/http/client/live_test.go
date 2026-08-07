@@ -61,10 +61,6 @@ func (s *stubLiveService) GetStreamURL(ctx context.Context, id uint32) (string, 
 	return "", nil
 }
 
-func (s *stubLiveService) AllowedStreamDomains(ctx context.Context) (map[string]struct{}, error) {
-	return nil, nil
-}
-
 type stubLiveProxyService struct {
 	proxyErr error
 }

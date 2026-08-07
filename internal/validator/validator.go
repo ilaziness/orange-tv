@@ -21,7 +21,12 @@ var (
 
 func init() {
 	// 获取 gin 默认 validator 引擎（已设置 SetTagName("binding")）
-	validate = binding.Validator.Engine().(*validator.Validate)
+	engine := binding.Validator.Engine()
+	v, ok := engine.(*validator.Validate)
+	if !ok {
+		panic(fmt.Sprintf("expected *validator.Validate, got %T", engine))
+	}
+	validate = v
 
 	// 注册中文翻译器
 	zhLocale := zh.New()
