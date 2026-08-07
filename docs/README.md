@@ -208,7 +208,7 @@ database:
 
 ## 项目结构
 
-```
+```text
 .
 ├── cmd/                    # 命令行接口
 │   ├── root.go            # 根命令
@@ -329,13 +329,13 @@ curl http://localhost:8080/health
 
 应用支持可配置的分布式追踪和指标监控。详细文档请参阅 [可观测性指南](observability.md)。
 
-### 功能特性
+### 可观测性特性
 
 - **分布式追踪**：OpenTelemetry with OTLP 协议（支持 Jaeger、Tempo 等）
 - **指标监控**：Prometheus 原生客户端，包含 HTTP、数据库、Redis 指标
 - **数据关联**：trace_id 自动注入到日志和 HTTP 响应头
 
-### 快速开始
+### 启用可观测性
 
 在 `configs/config.yaml` 中启用可观测性：
 
@@ -355,7 +355,7 @@ metrics:
     version: "1.0.0"
 ```
 
-访问指标端点：http://localhost:8080/metrics
+访问指标端点：<http://localhost:8080/metrics>
 
 详细配置和用法请参阅 [可观测性指南](observability.md)。
 
@@ -363,7 +363,7 @@ metrics:
 
 应用集成了 Swagger API 文档，访问以下地址查看：
 
-- Swagger UI: http://localhost:8080/swagger/index.html
+- Swagger UI: <http://localhost:8080/swagger/index.html>
 
 ### 生成 API 文档
 
@@ -386,7 +386,6 @@ make swagger-clean
 ## 相关文档
 
 - [业务介绍](../README.md) - 面向用户的业务说明
-- [产品需求文档](PRD.md) - 完整产品需求与接口设计
 - [Agent 编码指南](../AGENTS.md) - AI 编码规范总览
 - [Agent 专题文档](agents/README.md) - 目录结构、编码规范、依赖注入等
 - [模块使用说明](module-usage.md) - 如何选择和删除不需要的服务模块

@@ -30,5 +30,5 @@ service/
 - 构造函数注入 repository / JWT 等依赖；在 `internal/app` 组装
 - 不依赖 Gin；不直接写 HTTP 响应
 - 错误使用 `internal/errcode`，数据库错误向上包装
-- 列表/详情默认过滤软删除；删除冲突策略见 PRD 4.0
+- 列表/详情默认过滤软删除；删除冲突策略见相关业务文档
 - 管理端与用户端能力分离，避免在同一 service 混入两侧入口

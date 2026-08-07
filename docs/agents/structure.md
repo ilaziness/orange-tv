@@ -10,7 +10,6 @@ orange-tv/
 ├── migrations/                      # 数据库迁移脚本（MySQL *.up.sql / *.down.sql）
 ├── docs/                            # 项目文档
 │   ├── agents/                      # Agent 专题文档（从 AGENTS.md 拆分）
-│   ├── PRD.md                       # 产品需求
 │   └── swagger/                     # Swagger 生成代码与 OpenAPI 规范（make swagger）
 ├── web/                             # 前端 monorepo（apps/client、apps/admin）
 ├── scripts/                         # 构建、部署、测试脚本
