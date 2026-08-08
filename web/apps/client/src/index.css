@@ -27,6 +27,8 @@
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
+  --channel-logo: color-mix(in oklch, var(--foreground) 75%, var(--background));
+  --channel-logo-foreground: var(--background);
 }
 
 .dark {
@@ -83,6 +85,8 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-channel-logo: var(--channel-logo);
+  --color-channel-logo-foreground: var(--channel-logo-foreground);
 }
 
 @layer base {

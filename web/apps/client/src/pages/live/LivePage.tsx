@@ -124,10 +124,8 @@ export function Component() {
                       className={cn('w-full justify-start gap-2', isExpanded && 'bg-muted')}
                     >
                       <ChevronRightIcon
-                        className={cn(
-                          'size-4 shrink-0 transition-transform',
-                          isExpanded && 'rotate-90',
-                        )}
+                        data-icon="inline-start"
+                        className={cn('transition-transform', isExpanded && 'rotate-90')}
                       />
                       <span className="truncate">{group.category}</span>
                       <span className="ml-auto text-xs text-muted-foreground">
@@ -139,18 +137,18 @@ export function Component() {
                 <CollapsibleContent>
                   <div className="flex flex-col pl-6">
                     {group.channels.map((ch) => (
-                      <Button
+                      <button
                         key={ch.id}
-                        variant="ghost"
-                        size="default"
+                        type="button"
                         className={cn(
-                          'h-10 w-full justify-start gap-2.5 px-2',
+                          'inline-flex h-10 w-full select-none items-center gap-2.5 rounded-lg px-2 text-sm font-medium whitespace-nowrap transition-all',
+                          'hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:translate-y-px',
                           ch.id === selectedId && 'bg-primary/10 text-primary',
                         )}
                         onClick={() => handleChannelClick(ch)}
                       >
-                        {ch.logo ? (
-                          <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted p-1.5 ring-1 ring-foreground/15 shadow-sm">
+                        <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-channel-logo p-1.5 shadow-sm">
+                          {ch.logo ? (
                             <img
                               src={ch.logo}
                               alt={ch.name}
@@ -159,14 +157,12 @@ export function Component() {
                                 ;(e.currentTarget as HTMLImageElement).style.display = 'none'
                               }}
                             />
-                          </span>
-                        ) : (
-                          <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted p-1.5 ring-1 ring-foreground/15 shadow-sm">
-                            <TvIcon className="size-5 shrink-0 text-muted-foreground" />
-                          </span>
-                        )}
+                          ) : (
+                            <TvIcon className="size-5 shrink-0 text-channel-logo-foreground" />
+                          )}
+                        </span>
                         <span className="truncate">{ch.name}</span>
-                      </Button>
+                      </button>
                     ))}
                   </div>
                 </CollapsibleContent>
