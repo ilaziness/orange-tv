@@ -40,6 +40,7 @@ type BusinessHandlers struct {
 	ClientUser     *clienthandler.UserHandler
 	ClientBanner   *clienthandler.BannerHandler
 	ClientAd       *clienthandler.AdHandler
+	LiveFeature    gin.HandlerFunc
 	OpenResource   *openhandler.ResourceHandler
 }
 
@@ -163,6 +164,12 @@ func (s adminLiveSvc) Update(ctx context.Context, id uint32, req *admindto.Updat
 func (s adminLiveSvc) Delete(ctx context.Context, id uint32) error { return nil }
 func (s adminLiveSvc) SyncFromSource(ctx context.Context, sourceURL string) (*admindto.LiveSyncResult, error) {
 	return &admindto.LiveSyncResult{}, nil
+}
+func (s adminLiveSvc) GetSyncSourceURL(ctx context.Context) (string, error) {
+	return "", nil
+}
+func (s adminLiveSvc) SaveSyncSourceURL(ctx context.Context, sourceURL string) error {
+	return nil
 }
 
 type adminCommentSvc struct{}
@@ -476,6 +483,7 @@ func NewBusinessHandlers() BusinessHandlers {
 		ClientUser:     clienthandler.NewUserHandler(userSvc),
 		ClientBanner:   clienthandler.NewBannerHandler(bannerSvc),
 		ClientAd:       clienthandler.NewAdHandler(clientAdSvc{}),
+		LiveFeature:    func(c *gin.Context) { c.Next() },
 		OpenResource:   openhandler.NewResourceHandler(openResourceSvc{}),
 	}
 }

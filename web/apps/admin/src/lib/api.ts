@@ -18,6 +18,7 @@ import {
   type DashboardData,
   type LiveChannel,
   type LiveSyncResult,
+  type LiveSyncSourceResponse,
   type AppLogListResponse,
   type BatchUpdateExecuteResult,
   type BatchUpdatePreviewResult,
@@ -212,6 +213,10 @@ export const adminApi = {
   syncLiveSource: (sourceUrl: string) =>
     withAuth((token) =>
       apiPost<LiveSyncResult>(ADMIN_API_BASE, '/live/sync', { source_url: sourceUrl }, { token }),
+    ),
+  getLiveSyncSource: () =>
+    withAuth((token) =>
+      apiGet<LiveSyncSourceResponse>(ADMIN_API_BASE, '/live/sync-source', { token }),
     ),
 
   listCollectSources: (query?: Record<string, string | number | undefined>) =>

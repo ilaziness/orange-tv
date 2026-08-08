@@ -3,6 +3,7 @@ package router
 import (
 	"fmt"
 
+	"github.com/gin-gonic/gin"
 	httphandler "github.com/ilaziness/orange-tv/internal/handler/http"
 	adminhandler "github.com/ilaziness/orange-tv/internal/handler/http/admin"
 	clienthandler "github.com/ilaziness/orange-tv/internal/handler/http/client"
@@ -39,6 +40,9 @@ type Handlers struct {
 	ClientUser     *clienthandler.UserHandler
 	ClientBanner   *clienthandler.BannerHandler
 	ClientAd       *clienthandler.AdHandler
+
+	// LiveFeature guards client live endpoints based on the live_enabled setting.
+	LiveFeature gin.HandlerFunc
 
 	// Open resource station
 	OpenResource *openhandler.ResourceHandler
@@ -103,6 +107,7 @@ func (h *Handlers) validateForRoutes() error {
 		{"client user handler", h.ClientUser != nil},
 		{"client banner handler", h.ClientBanner != nil},
 		{"client ad handler", h.ClientAd != nil},
+		{"client live feature middleware", h.LiveFeature != nil},
 		{"open resource handler", h.OpenResource != nil},
 	}
 	for _, item := range required {

@@ -111,6 +111,22 @@ func (h *LiveHandler) Delete(c *gin.Context) {
 	response.Success(c, nil)
 }
 
+// GetSyncSource godoc
+// @Summary 获取上次同步的直播源地址
+// @Description 返回 system_settings 中保存的最近一次直播源同步地址
+// @Tags 管理端｜直播管理
+// @Produce json
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/live/sync-source [get]
+func (h *LiveHandler) GetSyncSource(c *gin.Context) {
+	sourceURL, err := h.svc.GetSyncSourceURL(c.Request.Context())
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	response.Success(c, admindto.LiveSyncSourceResponse{SourceURL: sourceURL})
+}
+
 // Sync godoc
 // @Summary 同步直播源
 // @Description 从外部直播源同步频道列表，支持 txt 和 m3u 格式
@@ -123,6 +139,10 @@ func (h *LiveHandler) Delete(c *gin.Context) {
 func (h *LiveHandler) Sync(c *gin.Context) {
 	var req admindto.LiveSyncRequest
 	if !httphandler.BindAndValidate(c, &req) {
+		return
+	}
+	if err := h.svc.SaveSyncSourceURL(c.Request.Context(), req.SourceURL); err != nil {
+		response.Error(c, err)
 		return
 	}
 	result, err := h.svc.SyncFromSource(c.Request.Context(), req.SourceURL)

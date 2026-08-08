@@ -20,8 +20,10 @@ func registerClientContentRoutes(v1 *gin.RouterGroup, h *Handlers) {
 	v1.GET("/search", h.ClientVideo.Search)
 	v1.GET("/videos/:id/related", h.ClientVideo.Related)
 
-	v1.GET("/live", h.ClientLive.List)
-	v1.GET("/live/play/:id", h.ClientLive.Play)
+	live := v1.Group("/live", h.LiveFeature)
+	live.GET("", h.ClientLive.List)
+	live.GET("/play/:id", h.ClientLive.Play)
+
 	v1.GET("/settings", h.ClientSettings.GetSettings)
 	v1.GET("/banners", h.ClientBanner.List)
 	v1.GET("/ads", h.ClientAd.List)

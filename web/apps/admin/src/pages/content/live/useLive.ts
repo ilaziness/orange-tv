@@ -134,9 +134,14 @@ export function useLive() {
     }
   }
 
-  function openSyncDialog() {
-    setSyncUrl('')
+  async function openSyncDialog() {
     setSyncDialogOpen(true)
+    try {
+      const res = await adminApi.getLiveSyncSource()
+      setSyncUrl(res.data.source_url || '')
+    } catch {
+      setSyncUrl('')
+    }
   }
 
   function closeSyncDialog(open: boolean) {

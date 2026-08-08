@@ -11,6 +11,7 @@ import (
 	openhandler "github.com/ilaziness/orange-tv/internal/handler/http/open"
 	"github.com/ilaziness/orange-tv/internal/health"
 	"github.com/ilaziness/orange-tv/internal/logger"
+	httpmiddleware "github.com/ilaziness/orange-tv/internal/middleware/http"
 	"github.com/ilaziness/orange-tv/internal/repository"
 	"github.com/ilaziness/orange-tv/internal/router"
 	"github.com/ilaziness/orange-tv/internal/scheduler"
@@ -53,6 +54,8 @@ func (a *App) wireHTTP() error {
 
 	sharedSettingsSvc := service.NewSettingsService(settingsRepo, a.cache, a.log)
 
+	handlers.LiveFeature = httpmiddleware.LiveFeatureMiddleware(sharedSettingsSvc, a.log)
+
 	recorder := audit.NewRecorder(logRepo, a.log)
 
 	authSvc := adminsvc.NewAuthService(adminRepo, a.jwtMgr, a.cfg, recorder, a.log)
@@ -60,7 +63,7 @@ func (a *App) wireHTTP() error {
 	adminMetaSvc := adminsvc.NewMetadataService(metaRepo, a.log)
 	adminPlaySvc := adminsvc.NewPlayService(playRepo, videoRepo, a.log)
 	adminVideoSvc := adminsvc.NewVideoService(videoRepo, categoryRepo, metaRepo, playRepo, a.cache, a.log)
-	adminLiveSvc := adminsvc.NewLiveService(liveRepo, a.cache, a.log)
+	adminLiveSvc := adminsvc.NewLiveService(liveRepo, a.cache, sharedSettingsSvc, a.log)
 	adminCommentSvc := adminsvc.NewCommentService(commentRepo, a.log)
 	collectEngine := collect.NewEngine(collectRepo, videoRepo, categoryRepo, metaRepo, playRepo, a.log)
 	adminCollectSvc := adminsvc.NewCollectService(collectRepo, playRepo, categoryRepo, collectEngine, a.log, a.cache)

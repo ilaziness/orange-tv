@@ -10,6 +10,7 @@ import (
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
+	"github.com/ilaziness/orange-tv/internal/service"
 	"go.uber.org/zap"
 )
 
@@ -20,20 +21,23 @@ type LiveService interface {
 	Update(ctx context.Context, id uint32, req *admindto.UpdateLiveRequest) (*admindto.LiveChannelItem, error)
 	Delete(ctx context.Context, id uint32) error
 	SyncFromSource(ctx context.Context, sourceURL string) (*admindto.LiveSyncResult, error)
+	GetSyncSourceURL(ctx context.Context) (string, error)
+	SaveSyncSourceURL(ctx context.Context, sourceURL string) error
 }
 
 type liveService struct {
-	repo  repository.LiveRepository
-	cache *cache.Manager
-	log   *zap.Logger
+	repo     repository.LiveRepository
+	cache    *cache.Manager
+	settings service.SettingsService
+	log      *zap.Logger
 }
 
 // NewLiveService creates a LiveService.
-func NewLiveService(repo repository.LiveRepository, c *cache.Manager, log *zap.Logger) LiveService {
+func NewLiveService(repo repository.LiveRepository, c *cache.Manager, settings service.SettingsService, log *zap.Logger) LiveService {
 	if log == nil {
 		log = zap.NewNop()
 	}
-	return &liveService{repo: repo, cache: c, log: log}
+	return &liveService{repo: repo, cache: c, settings: settings, log: log}
 }
 
 func (s *liveService) List(ctx context.Context, req *admindto.LiveListRequest) ([]admindto.LiveChannelItem, int, error) {
@@ -171,7 +175,35 @@ func toLiveItem(m *model.LiveChannels, withStatus bool) admindto.LiveChannelItem
 	return item
 }
 
+func (s *liveService) GetSyncSourceURL(ctx context.Context) (string, error) {
+	m, err := s.settings.LoadMapByGroup(ctx, constant.SettingGroupLive)
+	if err != nil {
+		s.log.Error("live: load sync source url failed", zap.Error(err))
+		return "", errcode.Wrap(errcode.DatabaseError, err)
+	}
+	return service.StrVal(m, constant.SettingLiveSyncSourceURL), nil
+}
+
+func (s *liveService) SaveSyncSourceURL(ctx context.Context, sourceURL string) error {
+	url := strings.TrimSpace(sourceURL)
+	if url == "" {
+		return errcode.WithMessage(errcode.ParamError, "直播源地址不能为空")
+	}
+	if err := s.settings.UpsertMany(ctx, constant.SettingGroupLive, []repository.SettingUpsert{{
+		Key:         constant.SettingLiveSyncSourceURL,
+		Group:       constant.SettingGroupLive,
+		Value:       url,
+		SettingType: constant.SettingTypeString,
+		Description: "直播源同步地址",
+	}}); err != nil {
+		s.log.Error("live: save sync source url failed", zap.String("url", url), zap.Error(err))
+		return err
+	}
+	return nil
+}
+
 func (s *liveService) SyncFromSource(ctx context.Context, sourceURL string) (*admindto.LiveSyncResult, error) {
+	sourceURL = strings.TrimSpace(sourceURL)
 	parser, err := selectParser(sourceURL)
 	if err != nil {
 		s.log.Error("live: select parser failed", zap.String("url", sourceURL), zap.Error(err))
@@ -206,22 +238,26 @@ func (s *liveService) SyncFromSource(ctx context.Context, sourceURL string) (*ad
 	var toDeleteIDs []uint32
 
 	for _, entry := range entries {
-		seenNames[entry.Name] = true
-		if item, ok := existingMap[entry.Name]; ok {
-			item.Category = entry.Category
-			item.StreamURL = entry.StreamURL
-			item.Logo = entry.Logo
+		name := strings.TrimSpace(entry.Name)
+		if name == "" {
+			continue
+		}
+		seenNames[name] = true
+		if item, ok := existingMap[name]; ok {
+			item.Category = strings.TrimSpace(entry.Category)
+			item.StreamURL = strings.TrimSpace(entry.StreamURL)
+			item.Logo = strings.TrimSpace(entry.Logo)
 			item.SortOrder = entry.SortOrder
 			if err := s.repo.Update(ctx, item); err != nil {
-				s.log.Error("live: sync update failed", zap.String("name", entry.Name), zap.Error(err))
+				s.log.Error("live: sync update failed", zap.String("name", name), zap.Error(err))
 				return nil, errcode.Wrap(errcode.DatabaseError, err)
 			}
 		} else {
 			toCreate = append(toCreate, model.LiveChannels{
-				Name:      entry.Name,
-				Category:  entry.Category,
-				StreamURL: entry.StreamURL,
-				Logo:      entry.Logo,
+				Name:      name,
+				Category:  strings.TrimSpace(entry.Category),
+				StreamURL: strings.TrimSpace(entry.StreamURL),
+				Logo:      strings.TrimSpace(entry.Logo),
 				SortOrder: entry.SortOrder,
 				Status:    constant.StatusEnabled,
 			})

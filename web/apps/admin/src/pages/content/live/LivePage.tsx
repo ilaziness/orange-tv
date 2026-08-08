@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
 
 export default function LivePage() {
   const {
@@ -133,28 +134,40 @@ export default function LivePage() {
 
       <Dialog open={syncDialogOpen} onOpenChange={closeSyncDialog}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>同步直播源</DialogTitle>
-            <DialogDescription>同步会删除当前数据并重新同步，请确认是否继续。</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            <Input
-              placeholder="请输入直播源文件地址，支持 txt 和 m3u 格式，如 https://example.com/live.txt"
-              value={syncUrl}
-              onChange={(e) => setSyncUrl(e.target.value)}
-            />
-            <p className="text-sm text-muted-foreground">
-              示例：https://example.com/live.txt 或 https://example.com/live.m3u
-            </p>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => closeSyncDialog(false)}>
-              取消
-            </Button>
-            <Button onClick={confirmSync} disabled={!syncUrl.trim()}>
-              确定同步
-            </Button>
-          </DialogFooter>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              void confirmSync()
+            }}
+            className="contents"
+          >
+            <DialogHeader>
+              <DialogTitle>同步直播源</DialogTitle>
+              <DialogDescription>同步会删除当前数据并重新同步，请确认是否继续。</DialogDescription>
+            </DialogHeader>
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="live-sync-url">直播源地址</FieldLabel>
+                <Input
+                  id="live-sync-url"
+                  placeholder="请输入直播源文件地址，支持 txt 和 m3u 格式，如 https://example.com/live.txt"
+                  value={syncUrl}
+                  onChange={(e) => setSyncUrl(e.target.value)}
+                />
+                <FieldDescription>
+                  示例：https://example.com/live.txt 或 https://example.com/live.m3u
+                </FieldDescription>
+              </Field>
+            </FieldGroup>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => closeSyncDialog(false)}>
+                取消
+              </Button>
+              <Button type="submit" disabled={!syncUrl.trim()}>
+                确定同步
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </PageContainer>

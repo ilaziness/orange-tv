@@ -52,7 +52,12 @@ type LiveSyncResult struct {
 	Deleted int `json:"deleted"`
 }
 
+// LiveSyncSourceResponse returns the last saved live source URL.
+type LiveSyncSourceResponse struct {
+	SourceURL string `json:"source_url"`
+}
+
 // LiveSyncRequest is the request body for live source synchronization.
 type LiveSyncRequest struct {
-	SourceURL string `json:"source_url" binding:"required,min=1,max=2000"`
+	SourceURL string `json:"source_url" binding:"required,url,min=1,max=2000"`
 }

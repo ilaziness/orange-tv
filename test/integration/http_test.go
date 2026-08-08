@@ -65,6 +65,7 @@ func setupTestRouter(t *testing.T) *gin.Engine {
 	handlers.ClientUser = b.ClientUser
 	handlers.ClientBanner = b.ClientBanner
 	handlers.ClientAd = b.ClientAd
+	handlers.LiveFeature = b.LiveFeature
 	handlers.OpenResource = b.OpenResource
 
 	engine := gin.New()

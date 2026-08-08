@@ -53,6 +53,7 @@ func TestNewHTTPServer_registersRoutes(t *testing.T) {
 	handlers.ClientUser = b.ClientUser
 	handlers.ClientBanner = b.ClientBanner
 	handlers.ClientAd = b.ClientAd
+	handlers.LiveFeature = b.LiveFeature
 	handlers.OpenResource = b.OpenResource
 
 	srv, err := NewHTTPServer(cfg, logger, logger, handlers, nil, nil)

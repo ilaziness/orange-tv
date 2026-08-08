@@ -349,6 +349,10 @@ export type LiveSyncResult = {
   deleted: number
 }
 
+export type LiveSyncSourceResponse = {
+  source_url: string
+}
+
 export type CollectSource = {
   id: number
   name: string
