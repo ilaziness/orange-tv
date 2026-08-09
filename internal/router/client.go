@@ -27,7 +27,7 @@ func registerClientContentRoutes(v1 *gin.RouterGroup, h *Handlers) {
 
 	v1.GET("/settings", h.ClientSettings.GetSettings)
 	v1.GET("/banners", h.ClientBanner.List)
-	v1.GET("/ads", h.ClientAd.List)
+	v1.GET("/promotions", h.ClientAd.List)
 
 	// User auth (C5) — public
 	v1.POST("/auth/register", h.ClientUser.Register)

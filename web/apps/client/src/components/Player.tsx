@@ -69,20 +69,16 @@ function buildAdLayerFromItem(item: ClientAdItem) {
       : item.type === 'video'
         ? `<video src="${url}" autoplay muted playsinline style="width:100%;height:100%;object-fit:contain" />`
         : item.type === 'code'
-          ? `<div class="ad-code-container" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden"></div>`
+          ? `<div class="promo-code-slot" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden"></div>`
           : `<iframe src="${url}" style="width:100%;height:100%;border:0" allowfullscreen sandbox="allow-scripts allow-same-origin allow-popups allow-forms"></iframe>`
-
-  const skipBtn = `<div class="ad-skip-btn" style="position:absolute;bottom:12px;right:12px;padding:6px 16px;background:rgba(0,0,0,0.7);color:#fff;border-radius:4px;cursor:pointer;font-size:14px">跳过广告</div>`
-
-  const countdown = `<div class="ad-countdown" style="position:absolute;top:12px;right:12px;padding:4px 12px;background:rgba(0,0,0,0.7);color:#fff;border-radius:4px;font-size:14px">广告 ${item.duration}s</div>`
 
   const linkHTML = link
     ? `<a href="${link}" target="_blank" rel="noopener noreferrer" style="position:absolute;inset:0;display:block;z-index:1"></a>`
     : ''
 
   return {
-    name: 'loadingAd',
-    html: `<div style="position:absolute;inset:0;background:#000;display:flex;align-items:center;justify-content:center">${countdown}${linkHTML}${adHTML}${skipBtn}</div>`,
+    name: 'prerollOverlay',
+    html: `<div style="position:absolute;inset:0;background:#000;display:flex;align-items:center;justify-content:center">${linkHTML}${adHTML}</div>`,
     style: {
       position: 'absolute' as const,
       inset: '0',
@@ -293,17 +289,24 @@ export function VideoPlayer({
 
     const playerType = detectPlayerType(format, src, probedContentType)
 
+    const hasAds = adList.length > 0
+
+    // Hook invoked by the HLS customType handler on a fatal, unrecoverable
+    // error, so the preroll ad logic (defined after `art` is constructed)
+    // can close the ad instead of leaving it stuck until the fallback timeout.
+    let onFatalPlaybackError: (() => void) | null = null
+
     const art = new Artplayer({
       container: el,
       url: src,
       type: playerType,
       poster: poster || '',
-      autoplay,
+      autoplay: hasAds ? false : autoplay,
       playsInline: true,
       autoSize: false,
       autoMini: false,
       loop: false,
-      muted: false,
+      muted: hasAds ? true : false,
       mutex: true,
       pip: false,
       fullscreen: true,
@@ -336,6 +339,7 @@ export function VideoPlayer({
                 hls.destroy()
                 ;(art as unknown as { hls?: Hls }).hls = undefined
                 art.notice.show = '直播源加载失败，请稍后重试或切换频道'
+                onFatalPlaybackError?.()
                 return
               }
               retryCount++
@@ -350,6 +354,7 @@ export function VideoPlayer({
                   hls.destroy()
                   ;(art as unknown as { hls?: Hls }).hls = undefined
                   art.notice.show = '直播源播放错误，请稍后重试或切换频道'
+                  onFatalPlaybackError?.()
                   break
               }
             })
@@ -399,136 +404,110 @@ export function VideoPlayer({
       ],
     })
 
-    // Multi-ad rotation: play ads in sequence, remove layer when video is ready.
-    // Minimum total display: 5 seconds. If video loads faster, keep showing until 5s elapsed.
+    // Ad overlay: loop ads by duration until video is ready, then remove and play.
+    // No skip button, no countdown. Video stays paused & muted during ads.
     let adTimeoutId: ReturnType<typeof setTimeout> | null = null
-    let adIntervalId: ReturnType<typeof setInterval> | null = null
-    let videoReady = false
-    const adStartTime = Date.now()
-    const MIN_DISPLAY_MS = 5000
-    let onLayerClick: ((e: Event) => void) | null = null
+    let adFallbackTimeoutId: ReturnType<typeof setTimeout> | null = null
+    const AD_FALLBACK_MS = 60_000
 
-    if (adList.length > 0) {
+    if (hasAds) {
+      let adRemoved = false
+
       const removeAd = () => {
+        if (adRemoved) return
+        adRemoved = true
         if (adTimeoutId) {
           clearTimeout(adTimeoutId)
           adTimeoutId = null
         }
-        if (adIntervalId) {
-          clearInterval(adIntervalId)
-          adIntervalId = null
+        if (adFallbackTimeoutId) {
+          clearTimeout(adFallbackTimeoutId)
+          adFallbackTimeoutId = null
         }
-        if (art.layers?.loadingAd) {
-          art.layers.loadingAd.remove()
-        }
+        art.layers.remove('prerollOverlay')
       }
 
-      const tryRemove = () => {
-        if (videoReady && Date.now() - adStartTime >= MIN_DISPLAY_MS) {
-          removeAd()
-        }
-      }
-
-      // Start countdown timer for the current ad
-      const startCountdown = (duration: number) => {
-        if (adIntervalId) {
-          clearInterval(adIntervalId)
-        }
-        let remaining = duration
-        const updateText = () => {
-          const countdownEl = el.querySelector('.ad-countdown')
-          if (countdownEl) {
-            countdownEl.textContent = `广告 ${remaining}s`
-          }
-        }
-        updateText()
-        adIntervalId = setInterval(() => {
-          remaining--
-          if (remaining <= 0) {
-            if (adIntervalId) {
-              clearInterval(adIntervalId)
-              adIntervalId = null
-            }
-            return
-          }
-          updateText()
-        }, 1000)
+      const finishAdAndPlay = () => {
+        removeAd()
+        art.muted = false
+        art.play().catch(() => {
+          /* autoplay may be blocked by browser */
+        })
       }
 
       const showAd = (index: number) => {
+        if (adRemoved) return
         const item = adList[index]
-        if (!item) {
-          // All ads played, stay on last until video ready
-          return
-        }
-        const layer = art.layers?.loadingAd as HTMLElement | undefined
+        if (!item) return
+        const layer = art.layers?.prerollOverlay as HTMLElement | undefined
         if (layer) {
           const newLayer = buildAdLayerFromItem(item)
           layer.innerHTML = newLayer.html
-          // Inject code for type=code ads
           if (item.type === 'code' && item.content_code) {
-            const codeContainer = layer.querySelector('.ad-code-container') as HTMLElement | null
+            const codeContainer = layer.querySelector('.promo-code-slot') as HTMLElement | null
             if (codeContainer) {
               injectAdScripts(codeContainer, item.content_code)
             }
           }
         }
-        // Start countdown for this ad
-        startCountdown(item.duration)
-        // Schedule next ad or removal
-        adTimeoutId = setTimeout(() => {
-          if (index < adList.length - 1) {
-            showAd(index + 1)
-          } else {
-            // Last ad played, wait for video ready + min display
-            tryRemove()
-          }
-        }, item.duration * 1000)
+        // Schedule next ad (loop back to 0 for multiple ads)
+        if (adList.length > 1) {
+          adTimeoutId = setTimeout(() => {
+            const next = (index + 1) % adList.length
+            showAd(next)
+          }, item.duration * 1000)
+        }
       }
 
-      // Mark video ready and try to remove ad
-      const onVideoReady = () => {
-        videoReady = true
-        tryRemove()
-      }
+      // When video is ready to play, close ad and start playback
+      const onVideoReady = () => finishAdAndPlay()
       art.once('video:canplay', onVideoReady)
-      art.once('video:playing', onVideoReady)
 
-      // Start countdown for first ad (already in layers)
-      startCountdown(adList[0].duration)
+      // Guard: if the video was already buffered (e.g. browser cache) before
+      // the listener was registered, canplay won't fire again — handle it now.
+      if (art.video && art.video.readyState >= 3) {
+        onVideoReady()
+      }
+
+      // Video load error: close ad and show error message
+      art.once('video:error', () => {
+        removeAd()
+        art.notice.show = '视频加载失败，请刷新重试'
+      })
+
+      // HLS fatal error (unrecoverable after retries): close ad. The
+      // customType m3u8 handler already shows its own notice message.
+      onFatalPlaybackError = () => removeAd()
+
+      // Inject code for first ad (already in layers from init)
       const firstAdCode = adList[0].content_code
       if (adList[0].type === 'code' && firstAdCode) {
         art.on('ready', () => {
-          const codeContainer = el.querySelector('.ad-code-container') as HTMLElement | null
+          const codeContainer = el.querySelector('.promo-code-slot') as HTMLElement | null
           if (codeContainer) {
             injectAdScripts(codeContainer, firstAdCode)
           }
         })
       }
 
-      // If only one ad, schedule its removal
-      if (adList.length === 1) {
-        adTimeoutId = setTimeout(() => {
-          tryRemove()
-        }, adList[0].duration * 1000)
-      } else {
-        // Multiple ads: schedule rotation from second ad
-        adTimeoutId = setTimeout(() => {
-          showAd(1)
-        }, adList[0].duration * 1000)
-      }
-
-      // Skip button: use event delegation on the player container so it
-      // survives innerHTML replacements during ad rotation.
-      onLayerClick = (e: Event) => {
-        const target = e.target as HTMLElement
-        if (target.classList.contains('ad-skip-btn')) {
-          e.preventDefault()
-          e.stopPropagation()
-          removeAd()
+      // Only set up rotation & fallback if ad wasn't already removed
+      // (e.g. by the readyState >= 3 guard above)
+      if (!adRemoved) {
+        // Schedule rotation from second ad (for multiple ads)
+        if (adList.length > 1) {
+          adTimeoutId = setTimeout(() => {
+            showAd(1)
+          }, adList[0].duration * 1000)
         }
+
+        // Fallback timeout: if video never loads within 60s, close ad and show notice
+        adFallbackTimeoutId = setTimeout(() => {
+          if (!adRemoved) {
+            removeAd()
+            art.notice.show = '视频加载超时，请刷新重试'
+          }
+        }, AD_FALLBACK_MS)
       }
-      el.addEventListener('click', onLayerClick)
     }
 
     // Resume playback from a saved position (e.g. remote history) — once only
@@ -579,13 +558,9 @@ export function VideoPlayer({
         clearTimeout(adTimeoutId)
         adTimeoutId = null
       }
-      if (adIntervalId) {
-        clearInterval(adIntervalId)
-        adIntervalId = null
-      }
-      if (onLayerClick) {
-        el.removeEventListener('click', onLayerClick)
-        onLayerClick = null
+      if (adFallbackTimeoutId) {
+        clearTimeout(adFallbackTimeoutId)
+        adFallbackTimeoutId = null
       }
 
       // Mute first to immediately stop audio, even if later steps fail

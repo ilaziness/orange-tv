@@ -25,7 +25,7 @@ func NewAdHandler(svc clientsvc.AdService) *AdHandler {
 // @Produce json
 // @Param scene query string true "广告场景：video_loading 播放前广告 / general 一般广告" Enums(video_loading, general)
 // @Success 200 {object} response.Response
-// @Router /api/client/v1/ads [get]
+// @Router /api/client/v1/promotions [get]
 func (h *AdHandler) List(c *gin.Context) {
 	var q clientdto.ListAdQuery
 	if !httphandler.BindQuery(c, &q) {
