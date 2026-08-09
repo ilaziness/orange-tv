@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 	"crypto/tls"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -84,9 +85,9 @@ func NewLiveProxyService(svc LiveService, log *zap.Logger) LiveProxyService {
 							return nil, fmt.Errorf("connection to private IP %s blocked", ipAddr.IP)
 						}
 					}
-					return (&net.Dialer{Timeout: 10 * time.Second}).DialContext(ctx, network, addr)
+					return (&net.Dialer{Timeout: 30 * time.Second}).DialContext(ctx, network, addr)
 				},
-				ResponseHeaderTimeout: 10 * time.Second,
+				ResponseHeaderTimeout: 30 * time.Second,
 				// #nosec G402 -- IPTV sources often use self-signed certs or
 				// non-standard ports (e.g. :4430); skipping verification is a
 				// deliberate usability trade-off for this read-only proxy.
@@ -121,15 +122,60 @@ func (s *liveProxyService) Proxy(c *gin.Context, channelID uint32, segURL string
 		s.log.Debug("[LIVE-PROXY] master playlist request", zap.Uint32("channel_id", channelID), zap.String("url", realURL))
 	}
 
+	if c.Request.Method == http.MethodHead {
+		return s.probeURL(c, realURL)
+	}
 	return s.proxyURL(c, channelID, realURL)
+}
+
+// probeURL sends a HEAD request upstream and returns only the content type/status.
+// It is used by the player to decide the correct customType for extensionless URLs.
+func (s *liveProxyService) probeURL(c *gin.Context, realURL string) error {
+	req, err := http.NewRequestWithContext(c.Request.Context(), http.MethodHead, realURL, nil)
+	if err != nil {
+		return errcode.WithMessage(errcode.LiveSyncFailed, "探测直播源失败")
+	}
+	req.Header.Set("User-Agent", browserUserAgent)
+	req.Header.Set("Accept", "*/*")
+	if u, perr := url.Parse(realURL); perr == nil && u.Host != "" {
+		req.Header.Set("Referer", u.Scheme+"://"+u.Host+"/")
+	}
+	resp, err := s.httpc.Do(req)
+	if err != nil {
+		if errors.Is(err, context.Canceled) {
+			return nil
+		}
+		s.log.Error("[LIVE-PROXY] probe failed", zap.String("url", realURL), zap.Error(err))
+		return errcode.WithMessage(errcode.LiveSyncFailed, "探测直播源失败")
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		s.log.Warn("[LIVE-PROXY] probe upstream non-2xx",
+			zap.String("url", realURL),
+			zap.Int("status", resp.StatusCode),
+		)
+		c.Status(resp.StatusCode)
+		return nil
+	}
+
+	contentType := resp.Header.Get("Content-Type")
+	ct := segmentContentType(resp.Request.URL.String(), contentType, nil)
+	c.Header("Content-Type", ct)
+	c.Header("Cache-Control", "no-cache")
+	c.Status(http.StatusOK)
+	return nil
 }
 
 // proxyURL fetches a URL and either rewrites an m3u8 playlist or streams a media segment.
 // Detection is based on Content-Type, URL extension, and a small body peek, so it works
 // for segment URLs without a .ts extension and for playlist URLs without a .m3u8 extension.
 func (s *liveProxyService) proxyURL(c *gin.Context, channelID uint32, realURL string) error {
-	resp, err := s.fetchResp(c.Request.Context(), realURL)
+	resp, err := s.fetchResp(c.Request.Context(), realURL, c.GetHeader("Range"))
 	if err != nil {
+		if errors.Is(err, context.Canceled) {
+			return nil
+		}
 		s.log.Error("[LIVE-PROXY] fetch failed", zap.String("url", realURL), zap.Error(err))
 		return errcode.WithMessage(errcode.LiveSyncFailed, "拉取直播流失败")
 	}
@@ -150,6 +196,9 @@ func (s *liveProxyService) proxyURL(c *gin.Context, channelID uint32, realURL st
 	peek := make([]byte, 512)
 	n, readErr := io.ReadFull(resp.Body, peek)
 	if readErr != nil && readErr != io.ErrUnexpectedEOF && readErr != io.EOF {
+		if errors.Is(readErr, context.Canceled) {
+			return nil
+		}
 		s.log.Error("[LIVE-PROXY] read upstream body failed", zap.String("url", realURL), zap.Error(readErr))
 		return errcode.WithMessage(errcode.LiveSyncFailed, "读取直播流失败")
 	}
@@ -163,6 +212,9 @@ func (s *liveProxyService) proxyURL(c *gin.Context, channelID uint32, realURL st
 	if isM3U8ContentType(contentType) || isM3U8URL(realURL) || looksLikeM3U8(peek) {
 		rest, readErr := io.ReadAll(resp.Body)
 		if readErr != nil {
+			if errors.Is(readErr, context.Canceled) {
+				return nil
+			}
 			s.log.Error("[LIVE-PROXY] read playlist failed", zap.String("url", realURL), zap.Error(readErr))
 			return errcode.WithMessage(errcode.LiveSyncFailed, "读取播放列表失败")
 		}
@@ -183,31 +235,41 @@ func (s *liveProxyService) proxyURL(c *gin.Context, channelID uint32, realURL st
 	}
 
 	// Stream as a media segment without loading large files into memory.
-	// resp.ContentLength is the full body length; since we prepend peek back via
-	// MultiReader, the total equals resp.ContentLength. When upstream uses chunked
-	// encoding, resp.ContentLength is -1 and DataFromReader uses chunked transfer.
+	// For live/MP4 streams, sending a finite Content-Length can make the player
+	// wait for the full download; force chunked transfer unless upstream already
+	// returned a 206 Range response (which has a known body length).
 	ct := segmentContentType(finalURL, contentType, peek)
 	s.log.Debug("[LIVE-PROXY] streaming segment",
 		zap.String("url", realURL),
 		zap.String("final_url", finalURL),
 		zap.String("content_type", contentType),
 		zap.String("final_ct", ct),
+		zap.Int("status", resp.StatusCode),
 	)
 	c.Header("Cache-Control", "no-cache")
-	c.DataFromReader(http.StatusOK, resp.ContentLength, ct, io.MultiReader(bytes.NewReader(peek), resp.Body), nil)
+	if resp.StatusCode == http.StatusPartialContent {
+		c.Header("Content-Range", resp.Header.Get("Content-Range"))
+		c.DataFromReader(http.StatusPartialContent, resp.ContentLength, ct, io.MultiReader(bytes.NewReader(peek), resp.Body), nil)
+		return nil
+	}
+	c.DataFromReader(http.StatusOK, -1, ct, io.MultiReader(bytes.NewReader(peek), resp.Body), nil)
 	return nil
 }
 
 // fetchResp sends a GET request using the client request context.
 // It sets a browser User-Agent and a Referer matching the upstream origin
 // to bypass common hotlink protection on IPTV sources.
-func (s *liveProxyService) fetchResp(ctx context.Context, rawURL string) (*http.Response, error) {
+// The Range header is forwarded so that MP4/VOD players can seek.
+func (s *liveProxyService) fetchResp(ctx context.Context, rawURL, rangeHeader string) (*http.Response, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, rawURL, nil)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("User-Agent", browserUserAgent)
 	req.Header.Set("Accept", "*/*")
+	if rangeHeader != "" {
+		req.Header.Set("Range", rangeHeader)
+	}
 	if u, perr := url.Parse(rawURL); perr == nil && u.Host != "" {
 		// Set Referer to the upstream origin — browsers send this on same-origin
 		// requests and many IPTV CDNs require it for hotlink protection.
@@ -411,6 +473,10 @@ func segmentContentType(rawURL, upstreamCT string, peek []byte) string {
 		// MPEG-TS sync byte.
 		if peek[0] == 0x47 {
 			return "video/mp2t"
+		}
+		// FLV signature: "FLV".
+		if len(peek) >= 3 && peek[0] == 'F' && peek[1] == 'L' && peek[2] == 'V' {
+			return "video/x-flv"
 		}
 		// fMP4 'ftyp' box signature (4-byte size followed by 'ftyp').
 		if len(peek) >= 8 && string(peek[4:8]) == "ftyp" {

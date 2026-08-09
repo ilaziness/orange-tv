@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Artplayer from 'artplayer'
 import Hls from 'hls.js'
 import flvjs from 'flv.js'
@@ -28,14 +28,28 @@ type Props = {
   onProgress?: (currentTime: number, duration: number) => void
 }
 
+/** Detect player type from a concrete Content-Type header. */
+function detectPlayerTypeFromContentType(contentType?: string): '' | 'mp4' | 'm3u8' | 'flv' {
+  const ct = (contentType || '').toLowerCase()
+  if (ct.includes('flv') || ct.includes('x-flv')) return 'flv'
+  if (ct.includes('mpegurl') || ct.includes('m3u8')) return 'm3u8'
+  if (ct.includes('mp4')) return 'mp4'
+  return ''
+}
+
 /** Detect the Artplayer customType key for the given format/src. */
-function detectPlayerType(format?: string, src?: string): '' | 'm3u8' | 'flv' {
+function detectPlayerType(
+  format?: string,
+  src?: string,
+  contentType?: string,
+): '' | 'mp4' | 'm3u8' | 'flv' {
   const f = (format || '').toLowerCase()
   const u = (src || '').toLowerCase()
   if (f === 'flv' || u.includes('.flv')) return 'flv'
   if (f === 'hls' || f === 'm3u8' || u.includes('.m3u8')) return 'm3u8'
-  // MP4 and other native formats don't need a customType — return ''.
-  return ''
+  if (f === 'mp4' || u.includes('.mp4')) return 'mp4'
+  // For extensionless URLs, trust the probed Content-Type (e.g. video/x-flv).
+  return detectPlayerTypeFromContentType(contentType)
 }
 
 function escapeAttr(str: string): string {
@@ -163,6 +177,9 @@ export function VideoPlayer({
 }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const [playlistVisible, setPlaylistVisible] = useState(false)
+  // Probed Content-Type for extensionless URLs (e.g. https://huyazhibo.de5.net/?id=xxx).
+  const [probedContentType, setProbedContentType] = useState<string | undefined>(undefined)
+  const [probing, setProbing] = useState(false)
 
   // Desktop shows playlist by default; mobile hides it to avoid narrowing the video
   useEffect(() => {
@@ -187,12 +204,44 @@ export function VideoPlayer({
   onToggleRef.current = () => setPlaylistVisible((v) => !v)
   onProgressRef.current = onProgress
 
+  // Determine whether we need to probe the actual Content-Type for extensionless URLs.
+  // We probe regardless of the declared format, because LivePage defaults to 'hls'
+  // and the backend format field is often empty for extensionless URLs.
+  const needsProbe = useMemo(() => {
+    const u = (src || '').toLowerCase()
+    return !u.includes('.m3u8') && !u.includes('.flv') && !u.includes('.mp4')
+  }, [src])
+
+  // Probe Content-Type via HEAD so the player can pick the right customType.
+  useEffect(() => {
+    if (!src || !needsProbe) {
+      setProbedContentType(undefined)
+      return
+    }
+    setProbing(true)
+    const controller = new AbortController()
+    fetch(src, { method: 'HEAD', signal: controller.signal })
+      .then(async (res) => {
+        const ct = res.headers.get('content-type') || ''
+        setProbedContentType(ct)
+      })
+      .catch(() => {
+        setProbedContentType('')
+      })
+      .finally(() => {
+        setProbing(false)
+      })
+    return () => controller.abort()
+  }, [src, needsProbe])
+
   // Serialize ads to a stable string so the effect doesn't re-run on array identity changes
   const adsKey = ads ? JSON.stringify(ads) : ''
 
   useEffect(() => {
     const el = containerRef.current
     if (!el || !src) return
+    // Wait for the HEAD probe to finish before creating the player.
+    if (probing) return
 
     // Guard to prevent the customType callback from creating an HLS instance
     // after this effect has been cleaned up (race condition with async loading)
@@ -242,7 +291,7 @@ export function VideoPlayer({
         ? `video_${videoId}_source_${sourceId}_ep_${episodeId}`
         : undefined
 
-    const playerType = detectPlayerType(format, src)
+    const playerType = detectPlayerType(format, src, probedContentType)
 
     const art = new Artplayer({
       container: el,
@@ -604,7 +653,19 @@ export function VideoPlayer({
     // playlist/onEpisodeChange are read via refs (playlistRef/onChangeRef) updated every render,
     // so they are intentionally omitted from the dependency array.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [src, format, poster, autoplay, adsKey, videoId, sourceId, episodeId, resumeAt])
+  }, [
+    src,
+    format,
+    poster,
+    autoplay,
+    adsKey,
+    videoId,
+    sourceId,
+    episodeId,
+    resumeAt,
+    probedContentType,
+    probing,
+  ])
 
   // Resize ArtPlayer when sidebar toggles (container width changes)
   useEffect(() => {

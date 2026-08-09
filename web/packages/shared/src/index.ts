@@ -439,9 +439,7 @@ export type FeatureSettings = {
 }
 
 export type SettingsResponse =
-  | SiteSettings
-  | FeatureSettings
-  | Record<string, SiteSettings | FeatureSettings>
+  SiteSettings | FeatureSettings | Record<string, SiteSettings | FeatureSettings>
 
 export type UpdateSettingsRequest = {
   group: string

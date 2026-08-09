@@ -7,6 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { cn } from '@/lib/utils'
 import { AlertCircleIcon, ChevronRightIcon, TvIcon } from 'lucide-react'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -19,6 +20,27 @@ type LiveLoaderData = {
 type ChannelGroup = {
   category: string
   channels: ClientLiveChannel[]
+}
+
+function ChannelLogo({ name, logo }: { name: string; logo?: string }) {
+  const [error, setError] = useState(false)
+  if (!logo || error) {
+    return (
+      <span className="flex size-6 items-center justify-center rounded-md bg-muted">
+        <TvIcon className="text-muted-foreground" />
+      </span>
+    )
+  }
+  return (
+    <span className="flex size-6 items-center justify-center rounded-md bg-muted p-1">
+      <img
+        src={logo}
+        alt={name}
+        className="max-h-full max-w-full object-contain"
+        onError={() => setError(true)}
+      />
+    </span>
+  )
 }
 
 export async function loader(): Promise<LiveLoaderData> {
@@ -105,7 +127,7 @@ export function Component() {
 
   return (
     <div className="flex h-[calc(100vh-8rem)] flex-col gap-4 lg:flex-row">
-      <aside className="flex h-auto max-h-48 w-full shrink-0 flex-col gap-2 lg:h-full lg:max-h-none lg:w-44">
+      <aside className="flex h-auto max-h-48 w-full shrink-0 flex-col gap-2 lg:h-full lg:max-h-none lg:w-56">
         <h2 className="text-base font-semibold">电视频道</h2>
         <div className="flex flex-1 flex-col gap-1 overflow-y-auto pr-1">
           {groups.map((group) => {
@@ -120,7 +142,6 @@ export function Component() {
                   render={
                     <Button
                       variant="ghost"
-                      size="sm"
                       className={cn('w-full justify-start gap-2', isExpanded && 'bg-muted')}
                     >
                       <ChevronRightIcon
@@ -137,32 +158,22 @@ export function Component() {
                 <CollapsibleContent>
                   <div className="flex flex-col pl-6">
                     {group.channels.map((ch) => (
-                      <button
+                      <Button
                         key={ch.id}
-                        type="button"
+                        variant="ghost"
                         className={cn(
-                          'inline-flex h-10 w-full select-none items-center gap-2.5 rounded-lg px-2 text-sm font-medium whitespace-nowrap transition-all',
-                          'hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:translate-y-px',
-                          ch.id === selectedId && 'bg-primary/10 text-primary',
+                          'w-full justify-start gap-2.5 px-2',
+                          ch.id === selectedId &&
+                            'bg-primary/10 text-primary hover:bg-primary/10 hover:text-primary',
                         )}
                         onClick={() => handleChannelClick(ch)}
                       >
-                        <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-channel-logo p-1.5 shadow-sm">
-                          {ch.logo ? (
-                            <img
-                              src={ch.logo}
-                              alt={ch.name}
-                              className="max-h-full max-w-full object-contain"
-                              onError={(e) => {
-                                ;(e.currentTarget as HTMLImageElement).style.display = 'none'
-                              }}
-                            />
-                          ) : (
-                            <TvIcon className="size-5 shrink-0 text-channel-logo-foreground" />
-                          )}
-                        </span>
-                        <span className="truncate">{ch.name}</span>
-                      </button>
+                        <ChannelLogo name={ch.name} logo={ch.logo} />
+                        <Tooltip>
+                          <TooltipTrigger render={<span className="truncate">{ch.name}</span>} />
+                          <TooltipContent>{ch.name}</TooltipContent>
+                        </Tooltip>
+                      </Button>
                     ))}
                   </div>
                 </CollapsibleContent>

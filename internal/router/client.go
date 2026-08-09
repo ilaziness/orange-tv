@@ -23,6 +23,7 @@ func registerClientContentRoutes(v1 *gin.RouterGroup, h *Handlers) {
 	live := v1.Group("/live", h.LiveFeature)
 	live.GET("", h.ClientLive.List)
 	live.GET("/play/:id", h.ClientLive.Play)
+	live.HEAD("/play/:id", h.ClientLive.Play)
 
 	v1.GET("/settings", h.ClientSettings.GetSettings)
 	v1.GET("/banners", h.ClientBanner.List)
