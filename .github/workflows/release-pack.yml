@@ -1,0 +1,54 @@
+name: Release Pack
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Go
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 25
+          cache: 'npm'
+          cache-dependency-path: 'web/package-lock.json'
+
+      - name: Install frontend dependencies
+        run: |
+          cd web
+          npm ci
+
+      - name: Pack release directory
+        run: make pack VERSION="${GITHUB_REF_NAME}"
+
+      - name: Archive tar.gz
+        run: |
+          tar -czf "orange-tv-${GITHUB_REF_NAME}.tar.gz" -C build "${GITHUB_REF_NAME}"
+
+      - name: Archive zip
+        run: |
+          cd build
+          zip -r "../orange-tv-${GITHUB_REF_NAME}.zip" "${GITHUB_REF_NAME}"
+
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --draft \
+            --generate-notes \
+            "orange-tv-${GITHUB_REF_NAME}.tar.gz" \
+            "orange-tv-${GITHUB_REF_NAME}.zip"
