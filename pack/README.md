@@ -162,3 +162,7 @@ orange-tv.exe admin create --username admin --password your_password --email adm
 | 80   | 用户端（nginx） |
 | 81   | 管理端（nginx） |
 | 8080 | 后端 HTTP（容器内 / nginx 反代，无需对外暴露） |
+
+## 项目源码
+
+[github.com/ilaziness/orange-tv](https://github.com/ilaziness/orange-tv)
