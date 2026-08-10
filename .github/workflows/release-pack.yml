@@ -43,12 +43,24 @@ jobs:
           cd build
           zip -r "../orange-tv-${GITHUB_REF_NAME}.zip" "${GITHUB_REF_NAME}"
 
+      - name: Generate release notes
+        run: |
+          cat > release-notes.md <<EOF
+          Orange TV ${GITHUB_REF_NAME} 发布包
+
+          打包产物：
+          - orange-tv-${GITHUB_REF_NAME}.tar.gz：推荐用于 Linux / macOS
+          - orange-tv-${GITHUB_REF_NAME}.zip：推荐用于 Windows
+
+          解压后请查看包内 README.md 了解部署方式。
+          EOF
+
       - name: Create draft release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create "${GITHUB_REF_NAME}" \
             --draft \
-            --generate-notes \
+            --notes-file release-notes.md \
             "orange-tv-${GITHUB_REF_NAME}.tar.gz" \
             "orange-tv-${GITHUB_REF_NAME}.zip"
