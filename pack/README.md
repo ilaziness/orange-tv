@@ -7,7 +7,6 @@
 ├── orange-tv                  # 后端二进制（linux/amd64）
 ├── orange-tv.exe              # 后端二进制（windows/amd64）
 ├── configs/                   # 配置文件
-│   ├── config.yaml            # 默认/示例配置（含完整字段说明，开发用）
 │   └── config.prod.yaml       # 生产环境配置（裸机与 Docker 共用，可通过环境变量覆盖）
 ├── migrations/                # 数据库迁移脚本
 ├── web/

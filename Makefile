@@ -183,7 +183,6 @@ pack:
 	@echo "==> [4/5] Building frontend (shared -> client -> admin)..."
 	cd web && npm run build
 	@echo "==> [5/5] Assembling release directory..."
-	@cp configs/config.yaml      $(PACK_DIR)/configs/config.yaml
 	@cp configs/config.prod.yaml $(PACK_DIR)/configs/config.prod.yaml
 	@cp -r migrations/.          $(PACK_DIR)/migrations/
 	@cp -r web/apps/client/dist/. $(PACK_DIR)/web/client/
