@@ -8,6 +8,10 @@ DROP TABLE IF EXISTS `site_stats_daily`;
 
 --bun:split
 
+DROP TABLE IF EXISTS `advertisements`;
+
+--bun:split
+
 DROP TABLE IF EXISTS `banners`;
 
 --bun:split
