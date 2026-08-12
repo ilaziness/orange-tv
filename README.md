@@ -168,6 +168,22 @@ orange-tv.exe admin create --username admin --password your_password --email adm
 
 > 发布包内附带的 `README.md` 包含更详细的部署说明，可一并参考。
 
+## 截图预览
+
+### 用户端
+
+| | |
+| --- | --- |
+| ![用户端 1](screenshot/01.png) | ![用户端 2](screenshot/02.png) |
+| ![用户端 3](screenshot/03.png) | ![用户端 4](screenshot/04.png) |
+| ![用户端 5](screenshot/05.png) | |
+
+### 管理后台
+
+| |
+| --- |
+| ![管理后台](screenshot/dashboard.png) |
+
 ## 我想用起来，怎么开始？（从源码构建）
 
 如果你是开发者或运维人员，希望从源码构建，请按以下步骤部署：

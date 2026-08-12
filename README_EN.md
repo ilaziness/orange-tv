@@ -168,6 +168,22 @@ On success it prints something like `Created super_admin: id=1 username=admin`. 
 
 > The `README.md` bundled in the release package has more detailed deployment notes.
 
+## Screenshots
+
+### Client
+
+| | |
+| --- | --- |
+| ![Client 1](screenshot/01.png) | ![Client 2](screenshot/02.png) |
+| ![Client 3](screenshot/03.png) | ![Client 4](screenshot/04.png) |
+| ![Client 5](screenshot/05.png) | |
+
+### Admin backend
+
+| |
+| --- |
+| ![Admin dashboard](screenshot/dashboard.png) |
+
 ## How do I get started? (build from source)
 
 If you are a developer or operator and want to build from source, deploy as follows:
