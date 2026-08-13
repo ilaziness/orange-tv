@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "小橘TV",
+        "description": "小橘TV - 影视站系统",
         "title": "小橘TV",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
@@ -358,6 +358,143 @@
                         "schema": {
                             "$ref": "#/definitions/admin.ResetAdminPasswordRequest"
                         }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/v1/ads": {
+            "get": {
+                "description": "分页获取广告列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理端｜广告管理"
+                ],
+                "summary": "广告列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "创建一个新的广告",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理端｜广告管理"
+                ],
+                "summary": "新建广告",
+                "parameters": [
+                    {
+                        "description": "广告参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/admin.CreateAdRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/v1/ads/{id}": {
+            "put": {
+                "description": "更新指定广告信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理端｜广告管理"
+                ],
+                "summary": "更新广告",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "广告ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "广告参数",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/admin.UpdateAdRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "删除指定广告",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理端｜广告管理"
+                ],
+                "summary": "删除广告",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "广告ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
                     }
                 ],
                 "responses": {
@@ -1431,7 +1568,7 @@
                 "summary": "数据库备份",
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "是否使用原生备份工具：1/true 使用，0 使用 Go 实现",
                         "name": "native",
                         "in": "query"
@@ -1884,7 +2021,10 @@
         },
         "/api/admin/v1/live/sync": {
             "post": {
-                "description": "从外部直播源同步频道列表",
+                "description": "从外部直播源同步频道列表，支持 txt 和 m3u 格式",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -1892,6 +2032,37 @@
                     "管理端｜直播管理"
                 ],
                 "summary": "同步直播源",
+                "parameters": [
+                    {
+                        "description": "直播源地址",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/admin.LiveSyncRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/admin/v1/live/sync-source": {
+            "get": {
+                "description": "返回 system_settings 中保存的最近一次直播源同步地址",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理端｜直播管理"
+                ],
+                "summary": "获取上次同步的直播源地址",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -2274,7 +2445,7 @@
         },
         "/api/admin/v1/settings": {
             "get": {
-                "description": "按分组获取系统设置（site/api/ad/feature）",
+                "description": "按分组获取系统设置（site/api/feature）",
                 "consumes": [
                     "application/json"
                 ],
@@ -2287,8 +2458,13 @@
                 "summary": "获取系统设置",
                 "parameters": [
                     {
+                        "enum": [
+                            "site",
+                            "api",
+                            "feature"
+                        ],
                         "type": "string",
-                        "description": "设置分组 (site/api/ad/feature)",
+                        "description": "设置分组 (site/api/feature)",
                         "name": "group",
                         "in": "query",
                         "required": true
@@ -2304,7 +2480,7 @@
                 }
             },
             "put": {
-                "description": "按分组更新系统设置，data 为对应分组的 key-value JSON（site/api/ad/feature）",
+                "description": "按分组更新系统设置，data 为对应分组的 key-value JSON（site/api/feature）",
                 "consumes": [
                     "application/json"
                 ],
@@ -3783,6 +3959,39 @@
                 }
             }
         },
+        "/api/client/v1/promotions": {
+            "get": {
+                "description": "按场景获取启用的广告列表",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户端｜广告"
+                ],
+                "summary": "广告列表",
+                "parameters": [
+                    {
+                        "enum": [
+                            "video_loading",
+                            "general"
+                        ],
+                        "type": "string",
+                        "description": "广告场景：video_loading 播放前广告 / general 一般广告",
+                        "name": "scene",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/client/v1/ratings/{id}": {
             "get": {
                 "description": "根据影视ID获取视频评分统计与当前用户评分（未登录时 my_score 为 0）",
@@ -3926,7 +4135,7 @@
         },
         "/api/client/v1/settings": {
             "get": {
-                "description": "按分组获取客户端设置（支持多分组：site/ad/feature）",
+                "description": "按分组获取客户端设置（支持多分组：site/feature）",
                 "consumes": [
                     "application/json"
                 ],
@@ -3944,7 +4153,7 @@
                             "type": "string"
                         },
                         "collectionFormat": "multi",
-                        "description": "设置分组 (site/ad/feature)",
+                        "description": "设置分组 (site/feature)",
                         "name": "groups",
                         "in": "query",
                         "required": true
@@ -4581,6 +4790,71 @@
                 }
             }
         },
+        "admin.CreateAdRequest": {
+            "type": "object",
+            "required": [
+                "ad_key",
+                "scene",
+                "title",
+                "type"
+            ],
+            "properties": {
+                "ad_key": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 1
+                },
+                "content_code": {
+                    "type": "string",
+                    "maxLength": 10000
+                },
+                "content_url": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "duration": {
+                    "type": "integer",
+                    "maximum": 300,
+                    "minimum": 1
+                },
+                "link_url": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "scene": {
+                    "type": "string",
+                    "enum": [
+                        "video_loading",
+                        "general"
+                    ]
+                },
+                "sort": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "status": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ]
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "minLength": 1
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "image",
+                        "video",
+                        "html",
+                        "code"
+                    ]
+                }
+            }
+        },
         "admin.CreateAdminRequest": {
             "type": "object",
             "required": [
@@ -5012,6 +5286,19 @@
                 }
             }
         },
+        "admin.LiveSyncRequest": {
+            "type": "object",
+            "required": [
+                "source_url"
+            ],
+            "properties": {
+                "source_url": {
+                    "type": "string",
+                    "maxLength": 2000,
+                    "minLength": 1
+                }
+            }
+        },
         "admin.LoginRequest": {
             "type": "object",
             "required": [
@@ -5108,6 +5395,65 @@
                     "items": {
                         "$ref": "#/definitions/admin.CollectCategoryInput"
                     }
+                }
+            }
+        },
+        "admin.UpdateAdRequest": {
+            "type": "object",
+            "properties": {
+                "ad_key": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 1
+                },
+                "content_code": {
+                    "type": "string",
+                    "maxLength": 10000
+                },
+                "content_url": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "duration": {
+                    "type": "integer",
+                    "maximum": 300,
+                    "minimum": 1
+                },
+                "link_url": {
+                    "type": "string",
+                    "maxLength": 500
+                },
+                "scene": {
+                    "type": "string",
+                    "enum": [
+                        "video_loading",
+                        "general"
+                    ]
+                },
+                "sort": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "status": {
+                    "type": "integer",
+                    "enum": [
+                        0,
+                        1
+                    ]
+                },
+                "title": {
+                    "type": "string",
+                    "maxLength": 128,
+                    "minLength": 1
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "image",
+                        "video",
+                        "html",
+                        "code"
+                    ]
                 }
             }
         },

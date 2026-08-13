@@ -8,7 +8,7 @@ import (
 
 // @title 小橘TV
 // @version 1.0
-// @description 小橘TV
+// @description 小橘TV - 影视站系统
 // @termsOfService http://swagger.io/terms/
 
 // @contact.name API Support

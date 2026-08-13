@@ -118,6 +118,55 @@ definitions:
     required:
     - data_range
     type: object
+  admin.CreateAdRequest:
+    properties:
+      ad_key:
+        maxLength: 50
+        minLength: 1
+        type: string
+      content_code:
+        maxLength: 10000
+        type: string
+      content_url:
+        maxLength: 500
+        type: string
+      duration:
+        maximum: 300
+        minimum: 1
+        type: integer
+      link_url:
+        maxLength: 500
+        type: string
+      scene:
+        enum:
+        - video_loading
+        - general
+        type: string
+      sort:
+        minimum: 0
+        type: integer
+      status:
+        enum:
+        - 0
+        - 1
+        type: integer
+      title:
+        maxLength: 128
+        minLength: 1
+        type: string
+      type:
+        enum:
+        - image
+        - video
+        - html
+        - code
+        type: string
+    required:
+    - ad_key
+    - scene
+    - title
+    - type
+    type: object
   admin.CreateAdminRequest:
     properties:
       avatar:
@@ -434,6 +483,15 @@ definitions:
     - category_id
     - title
     type: object
+  admin.LiveSyncRequest:
+    properties:
+      source_url:
+        maxLength: 2000
+        minLength: 1
+        type: string
+    required:
+    - source_url
+    type: object
   admin.LoginRequest:
     properties:
       password:
@@ -500,6 +558,50 @@ definitions:
         items:
           $ref: '#/definitions/admin.CollectCategoryInput'
         type: array
+    type: object
+  admin.UpdateAdRequest:
+    properties:
+      ad_key:
+        maxLength: 50
+        minLength: 1
+        type: string
+      content_code:
+        maxLength: 10000
+        type: string
+      content_url:
+        maxLength: 500
+        type: string
+      duration:
+        maximum: 300
+        minimum: 1
+        type: integer
+      link_url:
+        maxLength: 500
+        type: string
+      scene:
+        enum:
+        - video_loading
+        - general
+        type: string
+      sort:
+        minimum: 0
+        type: integer
+      status:
+        enum:
+        - 0
+        - 1
+        type: integer
+      title:
+        maxLength: 128
+        minLength: 1
+        type: string
+      type:
+        enum:
+        - image
+        - video
+        - html
+        - code
+        type: string
     type: object
   admin.UpdateAdminRequest:
     properties:
@@ -1115,7 +1217,7 @@ info:
     email: support@example.com
     name: API Support
     url: http://www.example.com/support
-  description: 小橘TV
+  description: 小橘TV - 影视站系统
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
@@ -1354,6 +1456,96 @@ paths:
       summary: 重置管理员密码
       tags:
       - 管理端｜管理员管理
+  /api/admin/v1/ads:
+    get:
+      consumes:
+      - application/json
+      description: 分页获取广告列表
+      parameters:
+      - description: 页码
+        in: query
+        name: page
+        type: integer
+      - description: 每页数量
+        in: query
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: 广告列表
+      tags:
+      - 管理端｜广告管理
+    post:
+      consumes:
+      - application/json
+      description: 创建一个新的广告
+      parameters:
+      - description: 广告参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/admin.CreateAdRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: 新建广告
+      tags:
+      - 管理端｜广告管理
+  /api/admin/v1/ads/{id}:
+    delete:
+      description: 删除指定广告
+      parameters:
+      - description: 广告ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: 删除广告
+      tags:
+      - 管理端｜广告管理
+    put:
+      consumes:
+      - application/json
+      description: 更新指定广告信息
+      parameters:
+      - description: 广告ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 广告参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/admin.UpdateAdRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: 更新广告
+      tags:
+      - 管理端｜广告管理
   /api/admin/v1/app-logs:
     get:
       consumes:
@@ -2036,7 +2228,7 @@ paths:
       - description: 是否使用原生备份工具：1/true 使用，0 使用 Go 实现
         in: query
         name: native
-        type: integer
+        type: string
       produces:
       - application/octet-stream
       responses:
@@ -2373,7 +2565,16 @@ paths:
       - 管理端｜直播管理
   /api/admin/v1/live/sync:
     post:
-      description: 从外部直播源同步频道列表
+      consumes:
+      - application/json
+      description: 从外部直播源同步频道列表，支持 txt 和 m3u 格式
+      parameters:
+      - description: 直播源地址
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/admin.LiveSyncRequest'
       produces:
       - application/json
       responses:
@@ -2382,6 +2583,19 @@ paths:
           schema:
             $ref: '#/definitions/response.Response'
       summary: 同步直播源
+      tags:
+      - 管理端｜直播管理
+  /api/admin/v1/live/sync-source:
+    get:
+      description: 返回 system_settings 中保存的最近一次直播源同步地址
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: 获取上次同步的直播源地址
       tags:
       - 管理端｜直播管理
   /api/admin/v1/play-episodes:
@@ -2583,9 +2797,13 @@ paths:
     get:
       consumes:
       - application/json
-      description: 按分组获取系统设置（site/api/ad/feature）
+      description: 按分组获取系统设置（site/api/feature）
       parameters:
-      - description: 设置分组 (site/api/ad/feature)
+      - description: 设置分组 (site/api/feature)
+        enum:
+        - site
+        - api
+        - feature
         in: query
         name: group
         required: true
@@ -2603,7 +2821,7 @@ paths:
     put:
       consumes:
       - application/json
-      description: 按分组更新系统设置，data 为对应分组的 key-value JSON（site/api/ad/feature）
+      description: 按分组更新系统设置，data 为对应分组的 key-value JSON（site/api/feature）
       parameters:
       - description: 更新设置请求
         in: body
@@ -3538,6 +3756,28 @@ paths:
       summary: 直播播放代理
       tags:
       - 用户端｜直播观看
+  /api/client/v1/promotions:
+    get:
+      description: 按场景获取启用的广告列表
+      parameters:
+      - description: 广告场景：video_loading 播放前广告 / general 一般广告
+        enum:
+        - video_loading
+        - general
+        in: query
+        name: scene
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      summary: 广告列表
+      tags:
+      - 用户端｜广告
   /api/client/v1/ratings/{id}:
     get:
       consumes:
@@ -3630,10 +3870,10 @@ paths:
     get:
       consumes:
       - application/json
-      description: 按分组获取客户端设置（支持多分组：site/ad/feature）
+      description: 按分组获取客户端设置（支持多分组：site/feature）
       parameters:
       - collectionFormat: multi
-        description: 设置分组 (site/ad/feature)
+        description: 设置分组 (site/feature)
         in: query
         items:
           type: string
