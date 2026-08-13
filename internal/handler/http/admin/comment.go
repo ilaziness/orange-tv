@@ -22,18 +22,15 @@ func NewCommentHandler(svc adminsvc.CommentService, recorder *audit.Recorder) *C
 	return &CommentHandler{svc: svc, audit: recorder}
 }
 
-// List godoc
+// List
 // @Summary 评论列表
 // @Description 分页获取评论列表，支持按关键词、状态、影视ID筛选
 // @Tags 管理端｜评论管理
 // @Accept json
 // @Produce json
-// @Param page query int false "页码" default(1)
-// @Param page_size query int false "每页数量" default(20)
-// @Param keyword query string false "关键词（评论内容）"
-// @Param status query int false "状态：0隐藏 1正常"
-// @Param video_id query int false "影视ID"
-// @Success 200 {object} response.Response
+// @Security BearerAuth
+// @Param req query admindto.CommentListRequest true "筛选参数"
+// @Success 200 {object} response.Response{data=response.PageData{list=[]admindto.CommentListItem}}
 // @Router /api/admin/v1/comments [get]
 func (h *CommentHandler) List(c *gin.Context) {
 	var req admindto.CommentListRequest
@@ -48,14 +45,15 @@ func (h *CommentHandler) List(c *gin.Context) {
 	response.SuccessPage(c, list, int64(total), req.GetPage(), req.GetLimit(), req.GetTotalPages(total))
 }
 
-// GetParents godoc
+// GetParents
 // @Summary 父级评论链
 // @Description 获取指定评论的所有父级评论（从根评论到直接父评论）
 // @Tags 管理端｜评论管理
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "评论ID"
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.Response{data=[]admindto.CommentParentItem}
 // @Router /api/admin/v1/comments/{id}/parents [get]
 func (h *CommentHandler) GetParents(c *gin.Context) {
 	var uri shareddto.IDURI
@@ -70,12 +68,13 @@ func (h *CommentHandler) GetParents(c *gin.Context) {
 	response.Success(c, chain)
 }
 
-// UpdateStatus godoc
+// UpdateStatus
 // @Summary 更新评论状态
 // @Description 审核/隐藏评论，status=1 为正常，status=0 为隐藏
 // @Tags 管理端｜评论管理
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "评论ID"
 // @Param body body admindto.UpdateCommentStatusRequest true "状态更新请求"
 // @Success 200 {object} response.Response
@@ -97,12 +96,13 @@ func (h *CommentHandler) UpdateStatus(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// Delete godoc
+// Delete
 // @Summary 删除评论
 // @Description 删除指定评论
 // @Tags 管理端｜评论管理
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "评论ID"
 // @Success 200 {object} response.Response
 // @Router /api/admin/v1/comments/{id} [delete]

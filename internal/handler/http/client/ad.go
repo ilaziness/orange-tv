@@ -18,13 +18,13 @@ func NewAdHandler(svc clientsvc.AdService) *AdHandler {
 	return &AdHandler{svc: svc}
 }
 
-// List godoc
+// List
 // @Summary 广告列表
 // @Description 按场景获取启用的广告列表
 // @Tags 用户端｜广告
 // @Produce json
-// @Param scene query string true "广告场景：video_loading 播放前广告 / general 一般广告" Enums(video_loading, general)
-// @Success 200 {object} response.Response
+// @Param q query clientdto.ListAdQuery true "查询参数"
+// @Success 200 {object} response.Response{data=[]clientdto.AdItem}
 // @Router /api/client/v1/promotions [get]
 func (h *AdHandler) List(c *gin.Context) {
 	var q clientdto.ListAdQuery

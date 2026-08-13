@@ -24,6 +24,15 @@ func NewUserHandler(svc clientsvc.UserService) *UserHandler {
 
 // ===== C5: Auth =====
 
+// Register
+// @Summary 用户注册
+// @Description 用户注册账号，返回个人资料
+// @Tags 用户端｜用户中心
+// @Accept json
+// @Produce json
+// @Param body body clientdto.RegisterRequest true "注册请求"
+// @Success 200 {object} response.Response{data=clientdto.Profile}
+// @Router /api/client/v1/auth/register [post]
 func (h *UserHandler) Register(c *gin.Context) {
 	var req clientdto.RegisterRequest
 	if !httphandler.BindAndValidate(c, &req) {
@@ -37,7 +46,7 @@ func (h *UserHandler) Register(c *gin.Context) {
 	response.Success(c, profile)
 }
 
-// Login godoc
+// Login
 // @Summary 用户登录
 // @Description 用户账号密码登录，返回 JWT
 // @Tags 用户端｜用户中心
@@ -59,11 +68,12 @@ func (h *UserHandler) Login(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// Profile godoc
+// Profile
 // @Summary 获取用户资料
 // @Description 获取当前登录用户的个人资料
 // @Tags 用户端｜用户中心
 // @Produce json
+// @Security BearerAuth
 // @Success 200 {object} response.Response{data=clientdto.Profile}
 // @Router /api/client/v1/auth/profile [get]
 func (h *UserHandler) Profile(c *gin.Context) {
@@ -86,6 +96,7 @@ func (h *UserHandler) Profile(c *gin.Context) {
 // @Tags 用户端｜用户中心
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param body body clientdto.UpdateProfileRequest true "用户资料"
 // @Success 200 {object} response.Response{data=clientdto.Profile}
 // @Router /api/client/v1/auth/profile [put]
@@ -113,8 +124,9 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 // @Tags 用户端｜用户中心
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param body body clientdto.ChangePasswordRequest true "修改密码"
-// @Success 200 {object} response.Response{}
+// @Success 200 {object} response.Response
 // @Router /api/client/v1/auth/profile/password [put]
 func (h *UserHandler) ChangePassword(c *gin.Context) {
 	userID := currentUserID(c)
@@ -139,8 +151,8 @@ func (h *UserHandler) ChangePassword(c *gin.Context) {
 // @Tags 用户端｜用户中心
 // @Accept json
 // @Produce json
-// @Param page query int false "页码" default(1)
-// @Param page_size query int false "每页数量" default(10)
+// @Security BearerAuth
+// @Param req query clientdto.LoginHistoryListRequest true "筛选参数"
 // @Success 200 {object} response.Response{data=response.PageData{list=[]clientdto.LoginHistoryItem}}
 // @Router /api/client/v1/auth/login-history [get]
 func (h *UserHandler) LoginHistory(c *gin.Context) {
@@ -169,8 +181,8 @@ func (h *UserHandler) LoginHistory(c *gin.Context) {
 // @Tags 用户端｜用户中心
 // @Accept json
 // @Produce json
-// @Param page query int false "页码" default(1)
-// @Param page_size query int false "每页数量" default(20)
+// @Security BearerAuth
+// @Param req query clientdto.FavoriteListRequest true "筛选参数"
 // @Success 200 {object} response.Response{data=response.PageData{list=[]clientdto.FavoriteItem}}
 // @Router /api/client/v1/favorites [get]
 func (h *UserHandler) ListFavorites(c *gin.Context) {
@@ -197,6 +209,7 @@ func (h *UserHandler) ListFavorites(c *gin.Context) {
 // @Tags 用户端｜用户中心
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "影视ID"
 // @Success 200 {object} response.Response
 // @Router /api/client/v1/favorites/{id} [post]
@@ -223,6 +236,7 @@ func (h *UserHandler) AddFavorite(c *gin.Context) {
 // @Tags 用户端｜用户中心
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "影视ID"
 // @Success 200 {object} response.Response
 // @Router /api/client/v1/favorites/{id} [delete]
@@ -249,6 +263,7 @@ func (h *UserHandler) RemoveFavorite(c *gin.Context) {
 // @Tags 用户端｜用户中心
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "影视ID"
 // @Success 200 {object} response.Response{data=clientdto.FavoriteCheckResult}
 // @Router /api/client/v1/favorites/{id} [get]
@@ -272,14 +287,14 @@ func (h *UserHandler) CheckFavorite(c *gin.Context) {
 
 // ===== C6: History =====
 
-// ListHistory godoc
+// ListHistory
 // @Summary 播放历史列表
 // @Description 分页获取当前用户的播放历史
 // @Tags 用户端｜用户中心
 // @Accept json
 // @Produce json
-// @Param page query int false "页码" default(1)
-// @Param page_size query int false "每页数量" default(20)
+// @Security BearerAuth
+// @Param req query clientdto.HistoryListRequest true "筛选参数"
 // @Success 200 {object} response.Response{data=response.PageData{list=[]clientdto.HistoryItem}}
 // @Router /api/client/v1/history [get]
 func (h *UserHandler) ListHistory(c *gin.Context) {
@@ -306,6 +321,7 @@ func (h *UserHandler) ListHistory(c *gin.Context) {
 // @Tags 用户端｜用户中心
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "影视ID"
 // @Success 200 {object} response.Response{data=clientdto.HistoryItem}
 // @Router /api/client/v1/history/{id} [get]
@@ -327,12 +343,13 @@ func (h *UserHandler) GetHistory(c *gin.Context) {
 	response.Success(c, item)
 }
 
-// UpsertHistory godoc
+// UpsertHistory
 // @Summary 上报播放进度
 // @Description 新增或更新当前用户的播放历史（用于恢复播放进度）
 // @Tags 用户端｜用户中心
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param body body clientdto.UpsertHistoryRequest true "播放历史请求"
 // @Success 200 {object} response.Response
 // @Router /api/client/v1/history [post]
@@ -353,11 +370,12 @@ func (h *UserHandler) UpsertHistory(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// DeleteHistory godoc
+// DeleteHistory
 // @Summary 删除单条播放历史
 // @Description 删除当前用户指定影视的播放历史
 // @Tags 用户端｜用户中心
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "影视ID"
 // @Success 200 {object} response.Response
 // @Router /api/client/v1/history/{id} [delete]
@@ -378,11 +396,12 @@ func (h *UserHandler) DeleteHistory(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// ClearHistory godoc
+// ClearHistory
 // @Summary 清空播放历史
 // @Description 清空当前用户的全部播放历史
 // @Tags 用户端｜用户中心
 // @Produce json
+// @Security BearerAuth
 // @Success 200 {object} response.Response
 // @Router /api/client/v1/history [delete]
 func (h *UserHandler) ClearHistory(c *gin.Context) {
@@ -400,16 +419,15 @@ func (h *UserHandler) ClearHistory(c *gin.Context) {
 
 // ===== C6: Comments =====
 
-// ListComments godoc
+// ListComments
 // @Summary 视频评论列表
 // @Description 分页获取视频顶级评论（parent_id=0），未登录时 my_vote 为 0
 // @Tags 用户端｜用户中心
 // @Accept json
 // @Produce json
 // @Param id path int true "影视ID"
-// @Param page query int false "页码" default(1)
-// @Param page_size query int false "每页数量" default(20)
-// @Success 200 {object} response.Response
+// @Param req query clientdto.CommentListRequest true "筛选参数"
+// @Success 200 {object} response.Response{data=response.PageData{list=[]clientdto.CommentItem}}
 // @Router /api/client/v1/videos/{id}/comments [get]
 func (h *UserHandler) ListComments(c *gin.Context) {
 	var uri shareddto.IDURI
@@ -428,16 +446,15 @@ func (h *UserHandler) ListComments(c *gin.Context) {
 	response.SuccessPage(c, list, int64(total), req.GetPage(), req.GetPageSize(), req.GetTotalPages(total))
 }
 
-// ListReplies godoc
+// ListReplies
 // @Summary 评论回复列表
 // @Description 分页获取某条评论的直接子回复
 // @Tags 用户端｜用户中心
 // @Accept json
 // @Produce json
 // @Param id path int true "评论ID"
-// @Param page query int false "页码" default(1)
-// @Param page_size query int false "每页数量" default(20)
-// @Success 200 {object} response.Response
+// @Param req query clientdto.CommentListRequest true "筛选参数"
+// @Success 200 {object} response.Response{data=response.PageData{list=[]clientdto.CommentItem}}
 // @Router /api/client/v1/comments/{id}/replies [get]
 func (h *UserHandler) ListReplies(c *gin.Context) {
 	var uri shareddto.IDURI
@@ -456,14 +473,15 @@ func (h *UserHandler) ListReplies(c *gin.Context) {
 	response.SuccessPage(c, list, int64(total), req.GetPage(), req.GetPageSize(), req.GetTotalPages(total))
 }
 
-// CreateComment godoc
+// CreateComment
 // @Summary 发表评论/回复
 // @Description 对视频发表评论或回复指定评论
 // @Tags 用户端｜用户中心
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param body body clientdto.CreateCommentRequest true "评论请求"
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.Response{data=clientdto.CommentItem}
 // @Router /api/client/v1/comments [post]
 func (h *UserHandler) CreateComment(c *gin.Context) {
 	userID := currentUserID(c)
@@ -483,12 +501,13 @@ func (h *UserHandler) CreateComment(c *gin.Context) {
 	response.Success(c, item)
 }
 
-// VoteComment godoc
+// VoteComment
 // @Summary 评论顶/踩
 // @Description 对评论进行顶（like）、踩（dislike）或取消（cancel）
 // @Tags 用户端｜用户中心
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "评论ID"
 // @Param body body clientdto.VoteCommentRequest true "投票请求"
 // @Success 200 {object} response.Response{data=clientdto.VoteCommentResult}
@@ -546,6 +565,7 @@ func (h *UserHandler) GetRating(c *gin.Context) {
 // @Tags 用户端｜用户中心
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "影视ID"
 // @Param body body clientdto.RateVideoRequest true "评分请求"
 // @Success 200 {object} response.Response{data=clientdto.RatingResult}

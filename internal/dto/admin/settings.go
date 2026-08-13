@@ -1,8 +1,6 @@
 package admin
 
 import (
-	"encoding/json"
-
 	dto "github.com/ilaziness/orange-tv/internal/dto"
 )
 
@@ -23,10 +21,16 @@ type GetSettingsQuery struct {
 }
 
 // UpdateSettingsRequest updates settings for a single group.
-// Data is the group-specific key-value JSON payload.
+// Data is the group-specific key-value JSON payload. The service layer unmarshals it
+// into the per-group struct (UpdateSiteSettings/UpdateAPISettings/UpdateFeatureSettings)
+// and upserts each string/bool value into its own system_settings row; the raw payload
+// is therefore never stored as a whole, so decoding it as `any` and re-marshaling is
+// semantically identical to keeping the raw bytes.
 type UpdateSettingsRequest struct {
-	Group string          `json:"group" binding:"required,oneof=site api feature"`
-	Data  json.RawMessage `json:"data" binding:"required"`
+	Group string `json:"group" binding:"required,oneof=site api feature"`
+	// Data is the group-specific key-value JSON payload; its structure varies by group
+	// (site=UpdateSiteSettings, api=UpdateAPISettings, feature=UpdateFeatureSettings).
+	Data any `json:"data" binding:"required"`
 }
 
 // UpdateSiteSettings updates public site fields (all optional).

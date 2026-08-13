@@ -19,15 +19,15 @@ func NewCollectHandler(svc adminsvc.CollectService) *CollectHandler {
 	return &CollectHandler{svc: svc}
 }
 
-// ListSources godoc
+// ListSources
 // @Summary 采集源列表
 // @Description 获取采集源分页列表
 // @Tags 管理端｜采集管理
 // @Accept json
 // @Produce json
-// @Param page query int false "页码"
-// @Param page_size query int false "每页数量"
-// @Success 200 {object} response.Response
+// @Security BearerAuth
+// @Param req query admindto.CollectSourceListRequest true "筛选参数"
+// @Success 200 {object} response.Response{data=response.PageData{list=[]admindto.CollectSourceItem}}
 // @Router /api/admin/v1/collect-sources [get]
 func (h *CollectHandler) ListSources(c *gin.Context) {
 	var req admindto.CollectSourceListRequest
@@ -42,14 +42,15 @@ func (h *CollectHandler) ListSources(c *gin.Context) {
 	response.SuccessPage(c, list, int64(total), req.GetPage(), req.GetPageSize(), req.GetTotalPages(total))
 }
 
-// CreateSource godoc
+// CreateSource
 // @Summary 新建采集源
 // @Description 创建一个新的采集源
 // @Tags 管理端｜采集管理
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param body body admindto.CreateCollectSourceRequest true "采集源参数"
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.Response{data=admindto.CollectSourceItem}
 // @Router /api/admin/v1/collect-sources [post]
 func (h *CollectHandler) CreateSource(c *gin.Context) {
 	var req admindto.CreateCollectSourceRequest
@@ -64,15 +65,16 @@ func (h *CollectHandler) CreateSource(c *gin.Context) {
 	response.Success(c, item)
 }
 
-// UpdateSource godoc
+// UpdateSource
 // @Summary 更新采集源
 // @Description 更新指定采集源信息
 // @Tags 管理端｜采集管理
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "采集源ID"
 // @Param body body admindto.UpdateCollectSourceRequest true "采集源参数"
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.Response{data=admindto.CollectSourceItem}
 // @Router /api/admin/v1/collect-sources/{id} [put]
 func (h *CollectHandler) UpdateSource(c *gin.Context) {
 	var uri shareddto.IDURI
@@ -91,12 +93,13 @@ func (h *CollectHandler) UpdateSource(c *gin.Context) {
 	response.Success(c, item)
 }
 
-// DeleteSource godoc
+// DeleteSource
 // @Summary 删除采集源
 // @Description 删除指定采集源
 // @Tags 管理端｜采集管理
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "采集源ID"
 // @Success 200 {object} response.Response
 // @Router /api/admin/v1/collect-sources/{id} [delete]
@@ -112,14 +115,15 @@ func (h *CollectHandler) DeleteSource(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// ListCategories godoc
+// ListCategories
 // @Summary 采集源分类映射列表
 // @Description 获取指定采集源的分类映射列表
 // @Tags 管理端｜采集管理
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "采集源ID"
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.Response{data=[]admindto.CollectCategoryMapItem}
 // @Router /api/admin/v1/collect-sources/{id}/categories [get]
 func (h *CollectHandler) ListCategories(c *gin.Context) {
 	var uri shareddto.IDURI
@@ -134,15 +138,16 @@ func (h *CollectHandler) ListCategories(c *gin.Context) {
 	response.Success(c, items)
 }
 
-// SetCategories godoc
+// SetCategories
 // @Summary 设置采集源分类映射
 // @Description 替换指定采集源的分类映射
 // @Tags 管理端｜采集管理
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "采集源ID"
 // @Param body body admindto.SetCollectCategoriesRequest true "分类映射参数"
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.Response{data=[]admindto.CollectCategoryMapItem}
 // @Router /api/admin/v1/collect-sources/{id}/categories [post]
 func (h *CollectHandler) SetCategories(c *gin.Context) {
 	var uri shareddto.IDURI
@@ -161,16 +166,15 @@ func (h *CollectHandler) SetCategories(c *gin.Context) {
 	response.Success(c, items)
 }
 
-// ListLogs godoc
+// ListLogs
 // @Summary 采集日志列表
 // @Description 获取采集日志分页列表
 // @Tags 管理端｜采集管理
 // @Accept json
 // @Produce json
-// @Param page query int false "页码"
-// @Param page_size query int false "每页数量"
-// @Param source_id query int false "采集源ID"
-// @Success 200 {object} response.Response
+// @Security BearerAuth
+// @Param req query admindto.CollectLogListRequest true "筛选参数"
+// @Success 200 {object} response.Response{data=response.PageData{list=[]admindto.CollectLogItem}}
 // @Router /api/admin/v1/collect/logs [get]
 func (h *CollectHandler) ListLogs(c *gin.Context) {
 	var req admindto.CollectLogListRequest
@@ -185,14 +189,15 @@ func (h *CollectHandler) ListLogs(c *gin.Context) {
 	response.SuccessPage(c, list, int64(total), req.GetPage(), req.GetPageSize(), req.GetTotalPages(total))
 }
 
-// FetchRemoteCategories godoc
+// FetchRemoteCategories
 // @Summary 获取远程分类
 // @Description 从远程采集源拉取分类列表（仅苹果CMS）
 // @Tags 管理端｜采集管理
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "采集源ID"
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.Response{data=admindto.RemoteCategoryResponse}
 // @Router /api/admin/v1/collect-sources/{id}/remote-categories [get]
 func (h *CollectHandler) FetchRemoteCategories(c *gin.Context) {
 	var uri shareddto.IDURI
@@ -207,14 +212,15 @@ func (h *CollectHandler) FetchRemoteCategories(c *gin.Context) {
 	response.Success(c, resp)
 }
 
-// EnableSchedule godoc
+// EnableSchedule
 // @Summary 启用定时采集
-// @Description 启用指定采集源的定时采集（需已绑定分类和设置cron表达式）
+// @Description 启用指定采集源的定时采集（需已绑定分类和设置cron表达式），返回 data.enabled=true
 // @Tags 管理端｜采集管理
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "采集源ID"
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.Response{data=map[string]bool}
 // @Router /api/admin/v1/collect-sources/{id}/schedule/enable [post]
 func (h *CollectHandler) EnableSchedule(c *gin.Context) {
 	var uri shareddto.IDURI
@@ -228,14 +234,15 @@ func (h *CollectHandler) EnableSchedule(c *gin.Context) {
 	response.Success(c, gin.H{"enabled": true})
 }
 
-// DisableSchedule godoc
+// DisableSchedule
 // @Summary 禁用定时采集
-// @Description 禁用指定采集源的定时采集
+// @Description 禁用指定采集源的定时采集，返回 data.disabled=true
 // @Tags 管理端｜采集管理
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "采集源ID"
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.Response{data=map[string]bool}
 // @Router /api/admin/v1/collect-sources/{id}/schedule/disable [post]
 func (h *CollectHandler) DisableSchedule(c *gin.Context) {
 	var uri shareddto.IDURI
@@ -249,15 +256,16 @@ func (h *CollectHandler) DisableSchedule(c *gin.Context) {
 	response.Success(c, gin.H{"disabled": true})
 }
 
-// CollectNow godoc
+// CollectNow
 // @Summary 立即采集
-// @Description 立即执行一次采集任务
+// @Description 立即执行一次采集任务，返回 data.started=true
 // @Tags 管理端｜采集管理
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "采集源ID"
 // @Param body body admindto.CollectNowRequest true "立即采集参数"
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.Response{data=map[string]bool}
 // @Router /api/admin/v1/collect-sources/{id}/collect [post]
 func (h *CollectHandler) CollectNow(c *gin.Context) {
 	var uri shareddto.IDURI

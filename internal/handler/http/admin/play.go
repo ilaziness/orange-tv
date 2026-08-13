@@ -19,12 +19,13 @@ func NewPlayHandler(svc adminsvc.PlayService) *PlayHandler {
 	return &PlayHandler{svc: svc}
 }
 
-// ListSources godoc
+// ListSources
 // @Summary 播放源列表
 // @Description 获取全部播放源列表
 // @Tags 管理端｜播放源管理
 // @Produce json
-// @Success 200 {object} response.Response
+// @Security BearerAuth
+// @Success 200 {object} response.Response{data=response.PageData{list=[]admindto.PlaySourceResponse}}
 // @Router /api/admin/v1/play-sources [get]
 func (h *PlayHandler) ListSources(c *gin.Context) {
 	items, err := h.svc.ListSources(c.Request.Context())
@@ -39,14 +40,15 @@ func (h *PlayHandler) ListSources(c *gin.Context) {
 	response.SuccessPage(c, items, int64(len(items)), 1, pageSize, 1)
 }
 
-// CreateSource godoc
+// CreateSource
 // @Summary 新建播放源
 // @Description 创建一个新的播放源
 // @Tags 管理端｜播放源管理
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param body body admindto.CreatePlaySourceRequest true "播放源参数"
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.Response{data=admindto.PlaySourceResponse}
 // @Router /api/admin/v1/play-sources [post]
 func (h *PlayHandler) CreateSource(c *gin.Context) {
 	var req admindto.CreatePlaySourceRequest
@@ -61,15 +63,16 @@ func (h *PlayHandler) CreateSource(c *gin.Context) {
 	response.Success(c, item)
 }
 
-// UpdateSource godoc
+// UpdateSource
 // @Summary 更新播放源
 // @Description 更新指定播放源信息
 // @Tags 管理端｜播放源管理
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "播放源ID"
 // @Param body body admindto.UpdatePlaySourceRequest true "播放源参数"
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.Response{data=admindto.PlaySourceResponse}
 // @Router /api/admin/v1/play-sources/{id} [put]
 func (h *PlayHandler) UpdateSource(c *gin.Context) {
 	var uri shareddto.IDURI
@@ -88,11 +91,12 @@ func (h *PlayHandler) UpdateSource(c *gin.Context) {
 	response.Success(c, item)
 }
 
-// DeleteSource godoc
+// DeleteSource
 // @Summary 删除播放源
 // @Description 删除指定播放源
 // @Tags 管理端｜播放源管理
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "播放源ID"
 // @Success 200 {object} response.Response
 // @Router /api/admin/v1/play-sources/{id} [delete]
@@ -108,15 +112,15 @@ func (h *PlayHandler) DeleteSource(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// ListEpisodes godoc
+// ListEpisodes
 // @Summary 剧集列表
 // @Description 分页获取剧集列表
 // @Tags 管理端｜播放源管理
 // @Accept json
 // @Produce json
-// @Param page query int false "页码"
-// @Param page_size query int false "每页数量"
-// @Success 200 {object} response.Response
+// @Security BearerAuth
+// @Param req query admindto.PlayEpisodeListRequest true "筛选参数"
+// @Success 200 {object} response.Response{data=response.PageData{list=[]admindto.PlayEpisodeResponse}}
 // @Router /api/admin/v1/play-episodes [get]
 func (h *PlayHandler) ListEpisodes(c *gin.Context) {
 	var req admindto.PlayEpisodeListRequest
@@ -131,14 +135,15 @@ func (h *PlayHandler) ListEpisodes(c *gin.Context) {
 	response.SuccessPage(c, list, int64(total), req.GetPage(), req.GetPageSize(), req.GetTotalPages(total))
 }
 
-// CreateEpisode godoc
+// CreateEpisode
 // @Summary 新建剧集
 // @Description 创建一条新的剧集
 // @Tags 管理端｜播放源管理
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param body body admindto.CreatePlayEpisodeRequest true "剧集参数"
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.Response{data=admindto.PlayEpisodeResponse}
 // @Router /api/admin/v1/play-episodes [post]
 func (h *PlayHandler) CreateEpisode(c *gin.Context) {
 	var req admindto.CreatePlayEpisodeRequest
@@ -153,15 +158,16 @@ func (h *PlayHandler) CreateEpisode(c *gin.Context) {
 	response.Success(c, item)
 }
 
-// UpdateEpisode godoc
+// UpdateEpisode
 // @Summary 更新剧集
 // @Description 更新指定剧集信息
 // @Tags 管理端｜播放源管理
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "剧集ID"
 // @Param body body admindto.UpdatePlayEpisodeRequest true "剧集参数"
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.Response{data=admindto.PlayEpisodeResponse}
 // @Router /api/admin/v1/play-episodes/{id} [put]
 func (h *PlayHandler) UpdateEpisode(c *gin.Context) {
 	var uri shareddto.IDURI
@@ -180,11 +186,12 @@ func (h *PlayHandler) UpdateEpisode(c *gin.Context) {
 	response.Success(c, item)
 }
 
-// DeleteEpisode godoc
+// DeleteEpisode
 // @Summary 删除剧集
 // @Description 删除指定剧集
 // @Tags 管理端｜播放源管理
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "剧集ID"
 // @Success 200 {object} response.Response
 // @Router /api/admin/v1/play-episodes/{id} [delete]
@@ -205,6 +212,7 @@ func (h *PlayHandler) DeleteEpisode(c *gin.Context) {
 // @Tags 管理端｜播放源管理
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param body body admindto.BatchUpdateEpisodeStatusRequest true "批量更新剧集状态请求"
 // @Success 200 {object} response.Response{data=admindto.BatchUpdateEpisodeStatusResponse}
 // @Router /api/admin/v1/play-episodes/batch-status [post]

@@ -1,5 +1,108 @@
 basePath: /
 definitions:
+  admin.AdItem:
+    properties:
+      ad_key:
+        type: string
+      content_code:
+        type: string
+      content_url:
+        type: string
+      duration:
+        type: integer
+      id:
+        type: integer
+      link_url:
+        type: string
+      scene:
+        type: string
+      sort:
+        type: integer
+      status:
+        type: integer
+      title:
+        type: string
+      type:
+        type: string
+    type: object
+  admin.AdminItem:
+    properties:
+      avatar:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      group_id:
+        type: integer
+      group_name:
+        type: string
+      id:
+        type: integer
+      last_login_at:
+        type: string
+      status:
+        type: integer
+      username:
+        type: string
+    type: object
+  admin.AdminLoginLogItem:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      ip:
+        type: string
+      status:
+        type: integer
+      user_agent:
+        type: string
+      user_id:
+        type: integer
+      username:
+        type: string
+    type: object
+  admin.AppLogItem:
+    properties:
+      fields:
+        additionalProperties: {}
+        type: object
+      level:
+        type: string
+      msg:
+        type: string
+      time:
+        type: string
+    type: object
+  admin.AppLogListResponse:
+    properties:
+      has_more:
+        type: boolean
+      list:
+        items:
+          $ref: '#/definitions/admin.AppLogItem'
+        type: array
+      next_offset:
+        type: integer
+    type: object
+  admin.BannerItem:
+    properties:
+      cover:
+        type: string
+      id:
+        type: integer
+      link:
+        type: string
+      sort:
+        type: integer
+      status:
+        type: integer
+      title:
+        type: string
+      video_id:
+        type: integer
+    type: object
   admin.BatchUpdateEpisodeStatusRequest:
     properties:
       source_id:
@@ -80,6 +183,28 @@ definitions:
     required:
     - ids
     type: object
+  admin.BatchVideoResponse:
+    properties:
+      affected:
+        type: integer
+    type: object
+  admin.CategoryResponse:
+    properties:
+      children:
+        items:
+          $ref: '#/definitions/admin.CategoryResponse'
+        type: array
+      id:
+        type: integer
+      name:
+        type: string
+      parent_id:
+        type: integer
+      sort_order:
+        type: integer
+      status:
+        type: integer
+    type: object
   admin.ChangePasswordRequest:
     properties:
       new_password:
@@ -104,6 +229,34 @@ definitions:
     - category_id
     - external_category_id
     type: object
+  admin.CollectCategoryMapItem:
+    properties:
+      category_id:
+        type: integer
+      external_category_id:
+        type: integer
+      id:
+        type: integer
+      source_id:
+        type: integer
+    type: object
+  admin.CollectLogItem:
+    properties:
+      collect_count:
+        type: integer
+      created_at:
+        type: string
+      duration_sec:
+        type: integer
+      id:
+        type: integer
+      source_id:
+        type: integer
+      source_name:
+        type: string
+      status:
+        type: integer
+    type: object
   admin.CollectNowRequest:
     properties:
       data_range:
@@ -117,6 +270,71 @@ definitions:
         type: string
     required:
     - data_range
+    type: object
+  admin.CollectSourceItem:
+    properties:
+      collect_url:
+        type: string
+      cron_expr:
+        type: string
+      data_range:
+        type: string
+      id:
+        type: integer
+      last_collect_at:
+        type: string
+      name:
+        type: string
+      play_source_id:
+        type: integer
+      play_source_name:
+        type: string
+      schedule_enabled:
+        type: integer
+      status:
+        type: integer
+      type:
+        type: integer
+    type: object
+  admin.CommentListItem:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      dislike_count:
+        type: integer
+      id:
+        type: integer
+      like_count:
+        type: integer
+      parent_id:
+        type: integer
+      status:
+        type: integer
+      user_id:
+        type: integer
+      username:
+        type: string
+      video_id:
+        type: integer
+      video_title:
+        type: string
+    type: object
+  admin.CommentParentItem:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      parent_id:
+        type: integer
+      user_id:
+        type: integer
+      username:
+        type: string
     type: object
   admin.CreateAdRequest:
     properties:
@@ -483,6 +701,50 @@ definitions:
     - category_id
     - title
     type: object
+  admin.DashboardResponse:
+    properties:
+      collect_running:
+        type: integer
+      offline_videos:
+        type: integer
+      online_count:
+        type: integer
+      online_videos:
+        type: integer
+      today_pv:
+        type: integer
+      today_uv:
+        type: integer
+      today_videos:
+        type: integer
+      total_admins:
+        type: integer
+      total_categories:
+        type: integer
+      total_users:
+        type: integer
+      total_videos:
+        type: integer
+    type: object
+  admin.LiveChannelItem:
+    properties:
+      category:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      logo:
+        type: string
+      name:
+        type: string
+      sort_order:
+        type: integer
+      status:
+        type: integer
+      stream_url:
+        type: string
+    type: object
   admin.LiveSyncRequest:
     properties:
       source_url:
@@ -491,6 +753,22 @@ definitions:
         type: string
     required:
     - source_url
+    type: object
+  admin.LiveSyncResult:
+    properties:
+      created:
+        type: integer
+      deleted:
+        type: integer
+      total:
+        type: integer
+      updated:
+        type: integer
+    type: object
+  admin.LiveSyncSourceResponse:
+    properties:
+      source_url:
+        type: string
     type: object
   admin.LoginRequest:
     properties:
@@ -517,6 +795,47 @@ definitions:
       token_type:
         type: string
     type: object
+  admin.NamedResponse:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  admin.PlayEpisodeResponse:
+    properties:
+      episode_number:
+        type: integer
+      format:
+        type: string
+      id:
+        type: integer
+      play_url:
+        type: string
+      quality:
+        type: string
+      sort_order:
+        type: integer
+      source_id:
+        type: integer
+      status:
+        type: integer
+      title:
+        type: string
+      video_id:
+        type: integer
+    type: object
+  admin.PlaySourceResponse:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+      sort_order:
+        type: integer
+      status:
+        type: integer
+    type: object
   admin.Profile:
     properties:
       avatar:
@@ -533,6 +852,22 @@ definitions:
         type: integer
       username:
         type: string
+    type: object
+  admin.RemoteCategoryItem:
+    properties:
+      type_id:
+        type: integer
+      type_name:
+        type: string
+      type_pid:
+        type: integer
+    type: object
+  admin.RemoteCategoryResponse:
+    properties:
+      list:
+        items:
+          $ref: '#/definitions/admin.RemoteCategoryItem'
+        type: array
     type: object
   admin.ResetAdminPasswordRequest:
     properties:
@@ -558,6 +893,25 @@ definitions:
         items:
           $ref: '#/definitions/admin.CollectCategoryInput'
         type: array
+    type: object
+  admin.SystemLogItem:
+    properties:
+      action:
+        type: string
+      admin_id:
+        type: integer
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      ip_address:
+        type: string
+      level:
+        type: integer
+      module:
+        type: string
     type: object
   admin.UpdateAdRequest:
     properties:
@@ -805,6 +1159,20 @@ definitions:
         type: string
     type: object
   admin.UpdateSettingsRequest:
+    properties:
+      data:
+        description: |-
+          Data is the group-specific key-value JSON payload; its structure varies by group
+          (site=UpdateSiteSettings, api=UpdateAPISettings, feature=UpdateFeatureSettings).
+      group:
+        enum:
+        - site
+        - api
+        - feature
+        type: string
+    required:
+    - data
+    - group
     type: object
   admin.UpdateUserGroupRequest:
     properties:
@@ -902,6 +1270,57 @@ definitions:
         minimum: 0
         type: integer
     type: object
+  admin.UserGroupItem:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      permissions:
+        type: string
+    type: object
+  admin.UserItem:
+    properties:
+      avatar:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      last_login_at:
+        type: string
+      nickname:
+        type: string
+      status:
+        type: integer
+      str_id:
+        type: string
+      username:
+        type: string
+    type: object
+  admin.UserLoginLogItem:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      ip:
+        type: string
+      status:
+        type: integer
+      user_agent:
+        type: string
+      user_id:
+        type: integer
+      username:
+        type: string
+    type: object
   admin.VideoActorInput:
     properties:
       actor_id:
@@ -909,6 +1328,171 @@ definitions:
         type: integer
     required:
     - actor_id
+    type: object
+  admin.VideoDetailResponse:
+    properties:
+      actors:
+        items:
+          $ref: '#/definitions/dto.NamedItem'
+        type: array
+      category_id:
+        type: integer
+      cover:
+        type: string
+      description:
+        type: string
+      directors:
+        items:
+          $ref: '#/definitions/dto.NamedItem'
+        type: array
+      duration:
+        type: integer
+      id:
+        type: integer
+      language:
+        type: string
+      poster:
+        type: string
+      publish_status:
+        type: integer
+      rating:
+        type: number
+      region:
+        type: string
+      release_date:
+        type: string
+      serial_status:
+        type: integer
+      sources:
+        items:
+          $ref: '#/definitions/admin.VideoSourceGroup'
+        type: array
+      subtitle:
+        type: string
+      tags:
+        items:
+          $ref: '#/definitions/dto.NamedItem'
+        type: array
+      title:
+        type: string
+      view_count:
+        type: integer
+      year:
+        type: integer
+    type: object
+  admin.VideoListItem:
+    properties:
+      category_id:
+        type: integer
+      category_name:
+        type: string
+      cover:
+        type: string
+      created_at:
+        type: string
+      duration:
+        type: integer
+      id:
+        type: integer
+      language:
+        type: string
+      poster:
+        type: string
+      publish_status:
+        type: integer
+      rating:
+        type: number
+      region:
+        type: string
+      serial_status:
+        type: integer
+      subtitle:
+        type: string
+      tags:
+        items:
+          $ref: '#/definitions/dto.NamedItem'
+        type: array
+      title:
+        type: string
+      updated_at:
+        type: string
+      view_count:
+        type: integer
+      year:
+        type: integer
+    type: object
+  admin.VideoSourceEpisode:
+    properties:
+      episode:
+        type: integer
+      format:
+        type: string
+      id:
+        type: integer
+      quality:
+        type: string
+      status:
+        type: integer
+      title:
+        type: string
+      url:
+        type: string
+    type: object
+  admin.VideoSourceGroup:
+    properties:
+      episodes:
+        items:
+          $ref: '#/definitions/admin.VideoSourceEpisode'
+        type: array
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  client.AdItem:
+    properties:
+      ad_key:
+        type: string
+      content_code:
+        type: string
+      content_url:
+        type: string
+      duration:
+        type: integer
+      id:
+        type: integer
+      link_url:
+        type: string
+      type:
+        type: string
+    type: object
+  client.BannerItem:
+    properties:
+      cover:
+        type: string
+      id:
+        type: integer
+      link:
+        type: string
+      title:
+        type: string
+      video_id:
+        type: integer
+    type: object
+  client.CategoryResponse:
+    properties:
+      children:
+        items:
+          $ref: '#/definitions/client.CategoryResponse'
+        type: array
+      id:
+        type: integer
+      name:
+        type: string
+      parent_id:
+        type: integer
+      sort_order:
+        type: integer
     type: object
   client.ChangePasswordRequest:
     properties:
@@ -923,6 +1507,38 @@ definitions:
     required:
     - current_password
     - new_password
+    type: object
+  client.CommentItem:
+    properties:
+      avatar:
+        type: string
+      content:
+        type: string
+      created_at:
+        type: string
+      dislike_count:
+        type: integer
+      id:
+        type: integer
+      like_count:
+        type: integer
+      my_vote:
+        description: 1=顶 -1=踩 0=未投票
+        type: integer
+      parent_id:
+        type: integer
+      replies:
+        items:
+          $ref: '#/definitions/client.CommentItem'
+        type: array
+      reply_count:
+        type: integer
+      user_id:
+        type: integer
+      username:
+        type: string
+      video_id:
+        type: integer
     type: object
   client.CreateCommentRequest:
     properties:
@@ -984,6 +1600,23 @@ definitions:
         type: integer
       year:
         type: string
+    type: object
+  client.LiveChannelItem:
+    properties:
+      category:
+        type: string
+      description:
+        type: string
+      format:
+        type: string
+      id:
+        type: integer
+      logo:
+        type: string
+      name:
+        type: string
+      sort_order:
+        type: integer
     type: object
   client.LoginHistoryItem:
     properties:
@@ -1068,6 +1701,23 @@ definitions:
         description: 评分人数
         type: integer
     type: object
+  client.RegisterRequest:
+    properties:
+      email:
+        maxLength: 128
+        type: string
+      password:
+        maxLength: 30
+        minLength: 5
+        type: string
+      username:
+        maxLength: 15
+        minLength: 2
+        type: string
+    required:
+    - password
+    - username
+    type: object
   client.UpdateProfileRequest:
     properties:
       avatar:
@@ -1101,6 +1751,110 @@ definitions:
     required:
     - video_id
     type: object
+  client.VideoDetailEpisode:
+    properties:
+      episode:
+        type: integer
+      id:
+        type: integer
+      title:
+        type: string
+    type: object
+  client.VideoDetailResponse:
+    properties:
+      actors:
+        items:
+          $ref: '#/definitions/dto.NamedItem'
+        type: array
+      category_id:
+        type: integer
+      cover:
+        type: string
+      description:
+        type: string
+      directors:
+        items:
+          $ref: '#/definitions/dto.NamedItem'
+        type: array
+      duration:
+        type: integer
+      id:
+        type: integer
+      language:
+        type: string
+      poster:
+        type: string
+      rating:
+        type: number
+      rating_count:
+        type: integer
+      region:
+        type: string
+      release_date:
+        type: string
+      serial_status:
+        type: integer
+      sources:
+        items:
+          $ref: '#/definitions/client.VideoDetailSourceGroup'
+        type: array
+      subtitle:
+        type: string
+      tags:
+        items:
+          $ref: '#/definitions/dto.NamedItem'
+        type: array
+      title:
+        type: string
+      view_count:
+        type: integer
+      year:
+        type: integer
+    type: object
+  client.VideoDetailSourceGroup:
+    properties:
+      episodes:
+        items:
+          $ref: '#/definitions/client.VideoDetailEpisode'
+        type: array
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  client.VideoListItem:
+    properties:
+      category_id:
+        type: integer
+      cover:
+        type: string
+      duration:
+        type: integer
+      id:
+        type: integer
+      language:
+        type: string
+      poster:
+        type: string
+      rating:
+        type: number
+      region:
+        type: string
+      serial_status:
+        type: integer
+      subtitle:
+        type: string
+      tags:
+        items:
+          $ref: '#/definitions/dto.NamedItem'
+        type: array
+      title:
+        type: string
+      view_count:
+        type: integer
+      year:
+        type: integer
+    type: object
   client.VoteCommentRequest:
     properties:
       action:
@@ -1120,6 +1874,13 @@ definitions:
         type: integer
       my_vote:
         type: integer
+    type: object
+  dto.NamedItem:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
     type: object
   open.CategoryItem:
     properties:
@@ -1168,6 +1929,17 @@ definitions:
         type: string
       year:
         type: integer
+    type: object
+  open.VideoListItem:
+    properties:
+      category_id:
+        type: integer
+      created_at:
+        type: string
+      id:
+        type: integer
+      title:
+        type: string
     type: object
   open.VideoSource:
     properties:
@@ -1231,12 +2003,22 @@ paths:
       - application/json
       description: 分页获取演员列表
       parameters:
-      - description: 页码
-        in: query
+      - in: query
+        name: keyword
+        type: string
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - in: query
+        maximum: 1000000
+        minimum: 1
         name: page
         type: integer
-      - description: 每页数量
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
         name: page_size
         type: integer
       produces:
@@ -1245,7 +2027,21 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/admin.NamedResponse'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
       summary: 演员列表
       tags:
       - 管理端｜元数据管理
@@ -1266,7 +2062,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.NamedResponse'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 新建演员
       tags:
       - 管理端｜元数据管理
@@ -1286,6 +2089,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
       summary: 删除演员
       tags:
       - 管理端｜元数据管理
@@ -1311,7 +2116,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.NamedResponse'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 更新演员
       tags:
       - 管理端｜元数据管理
@@ -1321,21 +2133,57 @@ paths:
       - application/json
       description: 分页获取管理员登录日志
       parameters:
-      - description: 页码
-        in: query
+      - in: query
+        name: end
+        type: string
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - in: query
+        maximum: 1000000
+        minimum: 1
         name: page
         type: integer
-      - description: 每页数量
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
         name: page_size
         type: integer
+      - in: query
+        name: start
+        type: string
+      - enum:
+        - 1
+        - 2
+        in: query
+        name: status
+        type: integer
+      - in: query
+        name: username
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/admin.AdminLoginLogItem'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
       summary: 管理员登录日志列表
       tags:
       - 管理端｜日志管理
@@ -1345,13 +2193,29 @@ paths:
       - application/json
       description: 分页获取管理员列表
       parameters:
-      - description: 页码
-        in: query
+      - in: query
+        name: group_id
+        type: integer
+      - in: query
+        name: keyword
+        type: string
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - in: query
+        maximum: 1000000
+        minimum: 1
         name: page
         type: integer
-      - description: 每页数量
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
         name: page_size
+        type: integer
+      - in: query
+        name: status
         type: integer
       produces:
       - application/json
@@ -1359,7 +2223,21 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/admin.AdminItem'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
       summary: 管理员列表
       tags:
       - 管理端｜管理员管理
@@ -1380,7 +2258,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.AdminItem'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 新建管理员
       tags:
       - 管理端｜管理员管理
@@ -1400,6 +2285,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
       summary: 删除管理员
       tags:
       - 管理端｜管理员管理
@@ -1425,7 +2312,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.AdminItem'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 更新管理员
       tags:
       - 管理端｜管理员管理
@@ -1453,6 +2347,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
       summary: 重置管理员密码
       tags:
       - 管理端｜管理员管理
@@ -1462,12 +2358,19 @@ paths:
       - application/json
       description: 分页获取广告列表
       parameters:
-      - description: 页码
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - in: query
+        maximum: 1000000
+        minimum: 1
         name: page
         type: integer
-      - description: 每页数量
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
         name: page_size
         type: integer
       produces:
@@ -1476,7 +2379,21 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/admin.AdItem'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
       summary: 广告列表
       tags:
       - 管理端｜广告管理
@@ -1497,7 +2414,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.AdItem'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 新建广告
       tags:
       - 管理端｜广告管理
@@ -1517,6 +2441,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
       summary: 删除广告
       tags:
       - 管理端｜广告管理
@@ -1542,7 +2468,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.AdItem'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 更新广告
       tags:
       - 管理端｜广告管理
@@ -1551,13 +2484,33 @@ paths:
       consumes:
       - application/json
       description: 获取应用运行日志
+      parameters:
+      - description: Limit is the max number of log lines to return (default 50, max
+          200).
+        in: query
+        maximum: 200
+        minimum: 1
+        name: limit
+        type: integer
+      - description: Offset is the byte offset from the end of file; 0 means start
+          from the last byte.
+        in: query
+        name: offset
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.AppLogListResponse'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 应用日志列表
       tags:
       - 管理端｜日志管理
@@ -1590,6 +2543,8 @@ paths:
       - 管理端｜管理员认证
   /api/admin/v1/auth/logout:
     post:
+      consumes:
+      - application/json
       description: 无状态登出，客户端清除 token 即可
       produces:
       - application/json
@@ -1681,12 +2636,19 @@ paths:
       - application/json
       description: 分页获取Banner列表
       parameters:
-      - description: 页码
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - in: query
+        maximum: 1000000
+        minimum: 1
         name: page
         type: integer
-      - description: 每页数量
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
         name: page_size
         type: integer
       produces:
@@ -1695,7 +2657,21 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/admin.BannerItem'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
       summary: Banner列表
       tags:
       - 管理端｜Banner管理
@@ -1716,7 +2692,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.BannerItem'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 新建Banner
       tags:
       - 管理端｜Banner管理
@@ -1736,6 +2719,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
       summary: 删除Banner
       tags:
       - 管理端｜Banner管理
@@ -1761,7 +2746,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.BannerItem'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 更新Banner
       tags:
       - 管理端｜Banner管理
@@ -1774,7 +2766,16 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/admin.CategoryResponse'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
       summary: 分类树
       tags:
       - 管理端｜分类管理
@@ -1795,7 +2796,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.CategoryResponse'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 新建分类
       tags:
       - 管理端｜分类管理
@@ -1815,6 +2823,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
       summary: 删除分类
       tags:
       - 管理端｜分类管理
@@ -1840,7 +2850,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.CategoryResponse'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 更新分类
       tags:
       - 管理端｜分类管理
@@ -1850,13 +2867,23 @@ paths:
       - application/json
       description: 获取采集源分页列表
       parameters:
-      - description: 页码
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - in: query
+        maximum: 1000000
+        minimum: 1
         name: page
         type: integer
-      - description: 每页数量
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
         name: page_size
+        type: integer
+      - in: query
+        name: status
         type: integer
       produces:
       - application/json
@@ -1864,7 +2891,21 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/admin.CollectSourceItem'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
       summary: 采集源列表
       tags:
       - 管理端｜采集管理
@@ -1885,7 +2926,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.CollectSourceItem'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 新建采集源
       tags:
       - 管理端｜采集管理
@@ -1907,6 +2955,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
       summary: 删除采集源
       tags:
       - 管理端｜采集管理
@@ -1932,7 +2982,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.CollectSourceItem'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 更新采集源
       tags:
       - 管理端｜采集管理
@@ -1953,7 +3010,16 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/admin.CollectCategoryMapItem'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
       summary: 采集源分类映射列表
       tags:
       - 管理端｜采集管理
@@ -1979,7 +3045,16 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/admin.CollectCategoryMapItem'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
       summary: 设置采集源分类映射
       tags:
       - 管理端｜采集管理
@@ -1987,7 +3062,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: 立即执行一次采集任务
+      description: 立即执行一次采集任务，返回 data.started=true
       parameters:
       - description: 采集源ID
         in: path
@@ -2006,7 +3081,16 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties:
+                    type: boolean
+                  type: object
+              type: object
+      security:
+      - BearerAuth: []
       summary: 立即采集
       tags:
       - 管理端｜采集管理
@@ -2027,7 +3111,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.RemoteCategoryResponse'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 获取远程分类
       tags:
       - 管理端｜采集管理
@@ -2035,7 +3126,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: 禁用指定采集源的定时采集
+      description: 禁用指定采集源的定时采集，返回 data.disabled=true
       parameters:
       - description: 采集源ID
         in: path
@@ -2048,7 +3139,16 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties:
+                    type: boolean
+                  type: object
+              type: object
+      security:
+      - BearerAuth: []
       summary: 禁用定时采集
       tags:
       - 管理端｜采集管理
@@ -2056,7 +3156,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: 启用指定采集源的定时采集（需已绑定分类和设置cron表达式）
+      description: 启用指定采集源的定时采集（需已绑定分类和设置cron表达式），返回 data.enabled=true
       parameters:
       - description: 采集源ID
         in: path
@@ -2069,7 +3169,16 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties:
+                    type: boolean
+                  type: object
+              type: object
+      security:
+      - BearerAuth: []
       summary: 启用定时采集
       tags:
       - 管理端｜采集管理
@@ -2079,16 +3188,22 @@ paths:
       - application/json
       description: 获取采集日志分页列表
       parameters:
-      - description: 页码
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - in: query
+        maximum: 1000000
+        minimum: 1
         name: page
         type: integer
-      - description: 每页数量
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
         name: page_size
         type: integer
-      - description: 采集源ID
-        in: query
+      - in: query
         name: source_id
         type: integer
       produces:
@@ -2097,7 +3212,21 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/admin.CollectLogItem'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
       summary: 采集日志列表
       tags:
       - 管理端｜采集管理
@@ -2107,26 +3236,32 @@ paths:
       - application/json
       description: 分页获取评论列表，支持按关键词、状态、影视ID筛选
       parameters:
-      - default: 1
-        description: 页码
-        in: query
-        name: page
-        type: integer
-      - default: 20
-        description: 每页数量
-        in: query
-        name: page_size
-        type: integer
-      - description: 关键词（评论内容）
-        in: query
+      - in: query
         name: keyword
         type: string
-      - description: 状态：0隐藏 1正常
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - in: query
+        maximum: 1000000
+        minimum: 1
+        name: page
+        type: integer
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
+      - enum:
+        - 0
+        - 1
         in: query
         name: status
         type: integer
-      - description: 影视ID
-        in: query
+      - in: query
+        minimum: 1
         name: video_id
         type: integer
       produces:
@@ -2135,7 +3270,21 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/admin.CommentListItem'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
       summary: 评论列表
       tags:
       - 管理端｜评论管理
@@ -2157,6 +3306,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
       summary: 删除评论
       tags:
       - 管理端｜评论管理
@@ -2177,7 +3328,16 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/admin.CommentParentItem'
+                  type: array
+              type: object
+      security:
+      - BearerAuth: []
       summary: 父级评论链
       tags:
       - 管理端｜评论管理
@@ -2205,6 +3365,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
       summary: 更新评论状态
       tags:
       - 管理端｜评论管理
@@ -2217,7 +3379,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.DashboardResponse'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 仪表盘
       tags:
       - 管理端｜系统管理
@@ -2225,8 +3394,7 @@ paths:
     get:
       description: 导出全量 SQL 备份文件
       parameters:
-      - description: 是否使用原生备份工具：1/true 使用，0 使用 Go 实现
-        in: query
+      - in: query
         name: native
         type: string
       produces:
@@ -2236,6 +3404,8 @@ paths:
           description: SQL 备份文件
           schema:
             type: file
+      security:
+      - BearerAuth: []
       summary: 数据库备份
       tags:
       - 管理端｜数据管理
@@ -2263,6 +3433,8 @@ paths:
                 data:
                   $ref: '#/definitions/admin.BatchUpdateExecuteResponse'
               type: object
+      security:
+      - BearerAuth: []
       summary: 批量更新执行
       tags:
       - 管理端｜数据管理
@@ -2290,6 +3462,8 @@ paths:
                 data:
                   $ref: '#/definitions/admin.BatchUpdatePreviewResponse'
               type: object
+      security:
+      - BearerAuth: []
       summary: 批量更新预览
       tags:
       - 管理端｜数据管理
@@ -2299,12 +3473,22 @@ paths:
       - application/json
       description: 分页获取导演列表
       parameters:
-      - description: 页码
-        in: query
+      - in: query
+        name: keyword
+        type: string
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - in: query
+        maximum: 1000000
+        minimum: 1
         name: page
         type: integer
-      - description: 每页数量
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
         name: page_size
         type: integer
       produces:
@@ -2313,7 +3497,21 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/admin.NamedResponse'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
       summary: 导演列表
       tags:
       - 管理端｜元数据管理
@@ -2334,7 +3532,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.NamedResponse'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 新建导演
       tags:
       - 管理端｜元数据管理
@@ -2354,6 +3559,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
       summary: 删除导演
       tags:
       - 管理端｜元数据管理
@@ -2379,7 +3586,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.NamedResponse'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 更新导演
       tags:
       - 管理端｜元数据管理
@@ -2389,12 +3603,22 @@ paths:
       - application/json
       description: 分页获取用户组列表
       parameters:
-      - description: 页码
-        in: query
+      - in: query
+        name: keyword
+        type: string
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - in: query
+        maximum: 1000000
+        minimum: 1
         name: page
         type: integer
-      - description: 每页数量
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
         name: page_size
         type: integer
       produces:
@@ -2403,7 +3627,21 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/admin.UserGroupItem'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
       summary: 用户组列表
       tags:
       - 管理端｜用户组管理
@@ -2424,7 +3662,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.UserGroupItem'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 新建用户组
       tags:
       - 管理端｜用户组管理
@@ -2444,6 +3689,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
       summary: 删除用户组
       tags:
       - 管理端｜用户组管理
@@ -2469,7 +3716,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.UserGroupItem'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 更新用户组
       tags:
       - 管理端｜用户组管理
@@ -2479,13 +3733,29 @@ paths:
       - application/json
       description: 分页获取直播频道列表
       parameters:
-      - description: 页码
-        in: query
+      - in: query
+        name: category
+        type: string
+      - in: query
+        name: keyword
+        type: string
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - in: query
+        maximum: 1000000
+        minimum: 1
         name: page
         type: integer
-      - description: 每页数量
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
         name: page_size
+        type: integer
+      - in: query
+        name: status
         type: integer
       produces:
       - application/json
@@ -2493,7 +3763,21 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/admin.LiveChannelItem'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
       summary: 直播频道列表
       tags:
       - 管理端｜直播管理
@@ -2514,7 +3798,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.LiveChannelItem'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 新建直播频道
       tags:
       - 管理端｜直播管理
@@ -2534,6 +3825,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
       summary: 删除直播频道
       tags:
       - 管理端｜直播管理
@@ -2559,7 +3852,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.LiveChannelItem'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 更新直播频道
       tags:
       - 管理端｜直播管理
@@ -2581,7 +3881,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.LiveSyncResult'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 同步直播源
       tags:
       - 管理端｜直播管理
@@ -2594,7 +3901,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.LiveSyncSourceResponse'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 获取上次同步的直播源地址
       tags:
       - 管理端｜直播管理
@@ -2604,13 +3918,30 @@ paths:
       - application/json
       description: 分页获取剧集列表
       parameters:
-      - description: 页码
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - in: query
+        maximum: 1000000
+        minimum: 1
         name: page
         type: integer
-      - description: 每页数量
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
         name: page_size
+        type: integer
+      - in: query
+        minimum: 1
+        name: source_id
+        required: true
+        type: integer
+      - in: query
+        minimum: 1
+        name: video_id
+        required: true
         type: integer
       produces:
       - application/json
@@ -2618,7 +3949,21 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/admin.PlayEpisodeResponse'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
       summary: 剧集列表
       tags:
       - 管理端｜播放源管理
@@ -2639,7 +3984,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.PlayEpisodeResponse'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 新建剧集
       tags:
       - 管理端｜播放源管理
@@ -2659,6 +4011,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
       summary: 删除剧集
       tags:
       - 管理端｜播放源管理
@@ -2684,7 +4038,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.PlayEpisodeResponse'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 更新剧集
       tags:
       - 管理端｜播放源管理
@@ -2711,6 +4072,8 @@ paths:
                 data:
                   $ref: '#/definitions/admin.BatchUpdateEpisodeStatusResponse'
               type: object
+      security:
+      - BearerAuth: []
       summary: 批量更新剧集上下架状态
       tags:
       - 管理端｜播放源管理
@@ -2723,7 +4086,21 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/admin.PlaySourceResponse'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
       summary: 播放源列表
       tags:
       - 管理端｜播放源管理
@@ -2744,7 +4121,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.PlaySourceResponse'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 新建播放源
       tags:
       - 管理端｜播放源管理
@@ -2764,6 +4148,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
       summary: 删除播放源
       tags:
       - 管理端｜播放源管理
@@ -2789,7 +4175,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.PlaySourceResponse'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 更新播放源
       tags:
       - 管理端｜播放源管理
@@ -2797,10 +4190,9 @@ paths:
     get:
       consumes:
       - application/json
-      description: 按分组获取系统设置（site/api/feature）
+      description: 按分组获取系统设置。data 结构随 group 变化：site=SiteSettings，api=APISettings，feature=FeatureSettings
       parameters:
-      - description: 设置分组 (site/api/feature)
-        enum:
+      - enum:
         - site
         - api
         - feature
@@ -2814,14 +4206,22 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+      security:
+      - BearerAuth: []
       summary: 获取系统设置
       tags:
       - 管理端｜系统设置
     put:
       consumes:
       - application/json
-      description: 按分组更新系统设置，data 为对应分组的 key-value JSON（site/api/feature）
+      description: 按分组更新系统设置，data 为对应分组的 key-value JSON（site/api/feature），返回更新后的设置结构
       parameters:
       - description: 更新设置请求
         in: body
@@ -2835,7 +4235,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+      security:
+      - BearerAuth: []
       summary: 更新系统设置
       tags:
       - 管理端｜系统设置
@@ -2845,21 +4253,64 @@ paths:
       - application/json
       description: 分页获取系统操作日志
       parameters:
-      - description: 页码
+      - in: query
+        minimum: 1
+        name: admin_id
+        type: integer
+      - in: query
+        name: end
+        type: string
+      - enum:
+        - 1
+        - 2
+        - 3
+        - 4
         in: query
+        name: level
+        type: integer
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - in: query
+        name: module
+        type: string
+      - in: query
+        maximum: 1000000
+        minimum: 1
         name: page
         type: integer
-      - description: 每页数量
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
         name: page_size
         type: integer
+      - description: Start / End are RFC3339 or date strings; optional.
+        in: query
+        name: start
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/admin.SystemLogItem'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
       summary: 系统日志列表
       tags:
       - 管理端｜日志管理
@@ -2869,12 +4320,22 @@ paths:
       - application/json
       description: 分页获取标签列表
       parameters:
-      - description: 页码
-        in: query
+      - in: query
+        name: keyword
+        type: string
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - in: query
+        maximum: 1000000
+        minimum: 1
         name: page
         type: integer
-      - description: 每页数量
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
         name: page_size
         type: integer
       produces:
@@ -2883,7 +4344,21 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/admin.NamedResponse'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
       summary: 标签列表
       tags:
       - 管理端｜元数据管理
@@ -2904,7 +4379,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.NamedResponse'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 新建标签
       tags:
       - 管理端｜元数据管理
@@ -2924,6 +4406,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
       summary: 删除标签
       tags:
       - 管理端｜元数据管理
@@ -2949,7 +4433,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.NamedResponse'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 更新标签
       tags:
       - 管理端｜元数据管理
@@ -2959,21 +4450,61 @@ paths:
       - application/json
       description: 分页获取普通用户登录日志
       parameters:
-      - description: 页码
-        in: query
+      - in: query
+        name: end
+        type: string
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - in: query
+        maximum: 1000000
+        minimum: 1
         name: page
         type: integer
-      - description: 每页数量
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
         name: page_size
         type: integer
+      - in: query
+        name: start
+        type: string
+      - enum:
+        - 1
+        - 2
+        in: query
+        name: status
+        type: integer
+      - in: query
+        minimum: 1
+        name: user_id
+        type: integer
+      - in: query
+        name: username
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/admin.UserLoginLogItem'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
       summary: 用户登录日志列表
       tags:
       - 管理端｜日志管理
@@ -2983,13 +4514,26 @@ paths:
       - application/json
       description: 分页获取普通用户列表
       parameters:
-      - description: 页码
-        in: query
+      - in: query
+        name: keyword
+        type: string
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - in: query
+        maximum: 1000000
+        minimum: 1
         name: page
         type: integer
-      - description: 每页数量
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
         name: page_size
+        type: integer
+      - in: query
+        name: status
         type: integer
       produces:
       - application/json
@@ -2997,7 +4541,21 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/admin.UserItem'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
       summary: 用户列表
       tags:
       - 管理端｜用户管理
@@ -3018,7 +4576,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.UserItem'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 新建用户
       tags:
       - 管理端｜用户管理
@@ -3038,6 +4603,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
       summary: 删除用户
       tags:
       - 管理端｜用户管理
@@ -3063,7 +4630,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.UserItem'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 更新用户
       tags:
       - 管理端｜用户管理
@@ -3091,6 +4665,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
       summary: 重置用户密码
       tags:
       - 管理端｜用户管理
@@ -3100,13 +4676,47 @@ paths:
       - application/json
       description: 分页获取影视列表
       parameters:
-      - description: 页码
-        in: query
+      - in: query
+        name: actor_id
+        type: integer
+      - in: query
+        name: category_id
+        type: integer
+      - in: query
+        name: director_id
+        type: integer
+      - in: query
+        name: keyword
+        type: string
+      - in: query
+        name: language
+        type: string
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - in: query
+        maximum: 1000000
+        minimum: 1
         name: page
         type: integer
-      - description: 每页数量
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
         name: page_size
+        type: integer
+      - in: query
+        name: publish_status
+        type: integer
+      - in: query
+        name: region
+        type: string
+      - in: query
+        name: tag_id
+        type: integer
+      - in: query
+        name: year
         type: integer
       produces:
       - application/json
@@ -3114,7 +4724,21 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/admin.VideoListItem'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
       summary: 影视列表
       tags:
       - 管理端｜视频管理
@@ -3135,7 +4759,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.VideoDetailResponse'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 新建影视
       tags:
       - 管理端｜视频管理
@@ -3155,6 +4786,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
       summary: 删除影视
       tags:
       - 管理端｜视频管理
@@ -3172,7 +4805,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.VideoDetailResponse'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 影视详情
       tags:
       - 管理端｜视频管理
@@ -3198,7 +4838,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.VideoDetailResponse'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 更新影视
       tags:
       - 管理端｜视频管理
@@ -3220,7 +4867,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.BatchVideoResponse'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 批量删除影视
       tags:
       - 管理端｜视频管理
@@ -3242,7 +4896,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.BatchVideoResponse'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 批量更新发布状态
       tags:
       - 管理端｜视频管理
@@ -3279,14 +4940,19 @@ paths:
       - application/json
       description: 分页获取当前用户最近 3 个月的登录历史
       parameters:
-      - default: 1
-        description: 页码
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - in: query
+        maximum: 1000000
+        minimum: 1
         name: page
         type: integer
-      - default: 10
-        description: 每页数量
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
         name: page_size
         type: integer
       produces:
@@ -3308,6 +4974,8 @@ paths:
                         type: array
                     type: object
               type: object
+      security:
+      - BearerAuth: []
       summary: 获取登录历史
       tags:
       - 用户端｜用户中心
@@ -3326,6 +4994,8 @@ paths:
                 data:
                   $ref: '#/definitions/client.Profile'
               type: object
+      security:
+      - BearerAuth: []
       summary: 获取用户资料
       tags:
       - 用户端｜用户中心
@@ -3352,6 +5022,8 @@ paths:
                 data:
                   $ref: '#/definitions/client.Profile'
               type: object
+      security:
+      - BearerAuth: []
       summary: 更新用户资料
       tags:
       - 用户端｜用户中心
@@ -3374,7 +5046,36 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
       summary: 修改密码
+      tags:
+      - 用户端｜用户中心
+  /api/client/v1/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: 用户注册账号，返回个人资料
+      parameters:
+      - description: 注册请求
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/client.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/client.Profile'
+              type: object
+      summary: 用户注册
       tags:
       - 用户端｜用户中心
   /api/client/v1/banners:
@@ -3386,7 +5087,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/client.BannerItem'
+                  type: array
+              type: object
       summary: Banner列表
       tags:
       - 用户端｜Banner
@@ -3399,7 +5107,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/client.CategoryResponse'
+                  type: array
+              type: object
       summary: 分类树
       tags:
       - 用户端｜分类浏览
@@ -3421,7 +5136,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/client.CommentItem'
+              type: object
+      security:
+      - BearerAuth: []
       summary: 发表评论/回复
       tags:
       - 用户端｜用户中心
@@ -3436,14 +5158,19 @@ paths:
         name: id
         required: true
         type: integer
-      - default: 1
-        description: 页码
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - in: query
+        maximum: 1000000
+        minimum: 1
         name: page
         type: integer
-      - default: 20
-        description: 每页数量
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
         name: page_size
         type: integer
       produces:
@@ -3452,7 +5179,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/client.CommentItem'
+                        type: array
+                    type: object
+              type: object
       summary: 评论回复列表
       tags:
       - 用户端｜用户中心
@@ -3485,6 +5224,8 @@ paths:
                 data:
                   $ref: '#/definitions/client.VoteCommentResult'
               type: object
+      security:
+      - BearerAuth: []
       summary: 评论顶/踩
       tags:
       - 用户端｜用户中心
@@ -3494,14 +5235,19 @@ paths:
       - application/json
       description: 分页获取当前用户的收藏列表
       parameters:
-      - default: 1
-        description: 页码
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - in: query
+        maximum: 1000000
+        minimum: 1
         name: page
         type: integer
-      - default: 20
-        description: 每页数量
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
         name: page_size
         type: integer
       produces:
@@ -3523,6 +5269,8 @@ paths:
                         type: array
                     type: object
               type: object
+      security:
+      - BearerAuth: []
       summary: 获取收藏列表
       tags:
       - 用户端｜用户中心
@@ -3544,6 +5292,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
       summary: 取消收藏
       tags:
       - 用户端｜用户中心
@@ -3569,6 +5319,8 @@ paths:
                 data:
                   $ref: '#/definitions/client.FavoriteCheckResult'
               type: object
+      security:
+      - BearerAuth: []
       summary: 检查收藏状态
       tags:
       - 用户端｜用户中心
@@ -3589,6 +5341,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
       summary: 添加收藏
       tags:
       - 用户端｜用户中心
@@ -3602,6 +5356,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
       summary: 清空播放历史
       tags:
       - 用户端｜用户中心
@@ -3610,14 +5366,19 @@ paths:
       - application/json
       description: 分页获取当前用户的播放历史
       parameters:
-      - default: 1
-        description: 页码
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - in: query
+        maximum: 1000000
+        minimum: 1
         name: page
         type: integer
-      - default: 20
-        description: 每页数量
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
         name: page_size
         type: integer
       produces:
@@ -3639,6 +5400,8 @@ paths:
                         type: array
                     type: object
               type: object
+      security:
+      - BearerAuth: []
       summary: 播放历史列表
       tags:
       - 用户端｜用户中心
@@ -3660,6 +5423,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
       summary: 上报播放进度
       tags:
       - 用户端｜用户中心
@@ -3679,6 +5444,8 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
       summary: 删除单条播放历史
       tags:
       - 用户端｜用户中心
@@ -3704,6 +5471,8 @@ paths:
                 data:
                   $ref: '#/definitions/client.HistoryItem'
               type: object
+      security:
+      - BearerAuth: []
       summary: 获取单条播放历史
       tags:
       - 用户端｜用户中心
@@ -3713,14 +5482,22 @@ paths:
       - application/json
       description: 分页获取直播频道列表
       parameters:
-      - default: 1
-        description: 页码
-        in: query
+      - in: query
+        name: category
+        type: string
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - in: query
+        maximum: 1000000
+        minimum: 1
         name: page
         type: integer
-      - default: 20
-        description: 每页数量
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
         name: page_size
         type: integer
       produces:
@@ -3729,7 +5506,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/client.LiveChannelItem'
+                        type: array
+                    type: object
+              type: object
       summary: 直播频道列表
       tags:
       - 用户端｜直播观看
@@ -3760,8 +5549,7 @@ paths:
     get:
       description: 按场景获取启用的广告列表
       parameters:
-      - description: 广告场景：video_loading 播放前广告 / general 一般广告
-        enum:
+      - enum:
         - video_loading
         - general
         in: query
@@ -3774,7 +5562,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/client.AdItem'
+                  type: array
+              type: object
       summary: 广告列表
       tags:
       - 用户端｜广告
@@ -3832,6 +5627,8 @@ paths:
                 data:
                   $ref: '#/definitions/client.RatingResult'
               type: object
+      security:
+      - BearerAuth: []
       summary: 评分影视
       tags:
       - 用户端｜用户中心
@@ -3841,20 +5638,44 @@ paths:
       - application/json
       description: 根据关键词分页搜索影视
       parameters:
-      - description: 搜索关键词
-        in: query
+      - in: query
+        name: category_id
+        type: integer
+      - in: query
+        maxLength: 10
+        minLength: 1
         name: keyword
         required: true
         type: string
-      - default: 1
-        description: 页码
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - in: query
+        maximum: 1000000
+        minimum: 1
         name: page
         type: integer
-      - default: 20
-        description: 每页数量
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
         name: page_size
+        type: integer
+      - in: query
+        name: parent_category_id
+        type: integer
+      - in: query
+        name: region
+        type: string
+      - in: query
+        name: sort
+        type: string
+      - in: query
+        name: year_end
+        type: integer
+      - in: query
+        name: year_start
         type: integer
       produces:
       - application/json
@@ -3862,7 +5683,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/client.VideoListItem'
+                        type: array
+                    type: object
+              type: object
       summary: 搜索影视
       tags:
       - 用户端｜影视浏览
@@ -3870,13 +5703,14 @@ paths:
     get:
       consumes:
       - application/json
-      description: 按分组获取客户端设置（支持多分组：site/feature）
+      description: 按分组获取客户端设置（支持多分组：site/feature）。单分组时 data 为对应结构，多分组时 data 为 "分组名→结构"
+        的 map
       parameters:
-      - collectionFormat: multi
-        description: 设置分组 (site/feature)
+      - collectionFormat: csv
         in: query
         items:
           type: string
+        minItems: 1
         name: groups
         required: true
         type: array
@@ -3886,7 +5720,13 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
       summary: 获取客户端设置
       tags:
       - 用户端｜站点设置
@@ -3896,15 +5736,38 @@ paths:
       - application/json
       description: 分页获取影视列表
       parameters:
-      - default: 1
-        description: 页码
-        in: query
+      - in: query
+        name: category_id
+        type: integer
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - in: query
+        maximum: 1000000
+        minimum: 1
         name: page
         type: integer
-      - default: 20
-        description: 每页数量
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
         name: page_size
+        type: integer
+      - in: query
+        name: parent_category_id
+        type: integer
+      - in: query
+        name: region
+        type: string
+      - in: query
+        name: sort
+        type: string
+      - in: query
+        name: year_end
+        type: integer
+      - in: query
+        name: year_start
         type: integer
       produces:
       - application/json
@@ -3912,7 +5775,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/client.VideoListItem'
+                        type: array
+                    type: object
+              type: object
       summary: 影视列表
       tags:
       - 用户端｜影视浏览
@@ -3931,7 +5806,12 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/client.VideoDetailResponse'
+              type: object
       summary: 影视详情
       tags:
       - 用户端｜影视浏览
@@ -3946,14 +5826,19 @@ paths:
         name: id
         required: true
         type: integer
-      - default: 1
-        description: 页码
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - in: query
+        maximum: 1000000
+        minimum: 1
         name: page
         type: integer
-      - default: 20
-        description: 每页数量
-        in: query
+      - in: query
+        maximum: 100
+        minimum: 1
         name: page_size
         type: integer
       produces:
@@ -3962,7 +5847,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/client.CommentItem'
+                        type: array
+                    type: object
+              type: object
       summary: 视频评论列表
       tags:
       - 用户端｜用户中心
@@ -4013,8 +5910,9 @@ paths:
         name: id
         required: true
         type: integer
-      - description: 返回数量
-        in: query
+      - in: query
+        maximum: 50
+        minimum: 1
         name: limit
         type: integer
       produces:
@@ -4023,13 +5921,24 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/client.VideoListItem'
+                  type: array
+              type: object
       summary: 相关影视
       tags:
       - 用户端｜影视浏览
   /api/open/v1/categories:
     get:
+      consumes:
+      - application/json
       description: 返回启用中的分类扁平列表
+      produces:
+      - application/json
       responses:
         "200":
           description: OK
@@ -4047,32 +5956,45 @@ paths:
       - 开放端｜开放资源
   /api/open/v1/videos:
     get:
+      consumes:
+      - application/json
       description: 返回启用的影视列表，每项只包含 id、title、category_id、created_at
       parameters:
-      - default: 1
-        description: 页码
-        in: query
-        name: page
-        type: integer
-      - default: 20
-        description: 每页数量
-        in: query
-        name: page_size
-        type: integer
-      - default: 20
-        description: 每页数量（兼容）
-        in: query
-        name: limit
-        type: integer
-      - default: all
-        description: 数据范围（today/last1d/last3d/last1w/last1m/all）
+      - description: DataRange filters by created_at (today/last1d/last3d/last1w/last1m/all).
+          Empty = all.
+        enum:
+        - today
+        - last1d
+        - last3d
+        - last1w
+        - last1m
+        - all
         in: query
         name: data_range
         type: string
-      - description: 播放源名称（精确匹配）
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - in: query
+        maximum: 1000000
+        minimum: 1
+        name: page
+        type: integer
+      - in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
+      - description: Source filters videos by play source name (exact match). Empty
+          = no filter.
         in: query
+        maxLength: 10
         name: source
         type: string
+      produces:
+      - application/json
       responses:
         "200":
           description: OK
@@ -4081,23 +6003,34 @@ paths:
             - $ref: '#/definitions/response.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/response.PageData'
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/open.VideoListItem'
+                        type: array
+                    type: object
               type: object
       summary: 开放影视列表
       tags:
       - 开放端｜开放资源
   /api/open/v1/videos/detail:
     get:
+      consumes:
+      - application/json
       description: 支持多个视频 id，返回视频详情数组
       parameters:
-      - collectionFormat: multi
-        description: 视频 id，可重复
+      - collectionFormat: csv
         in: query
         items:
           type: integer
+        maxItems: 50
         name: id
         required: true
         type: array
+      produces:
+      - application/json
       responses:
         "200":
           description: OK
@@ -4124,7 +6057,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties:
+                    type: string
+                  type: object
+              type: object
       summary: 健康检查
       tags:
       - 健康检查
@@ -4139,7 +6079,14 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties:
+                    type: string
+                  type: object
+              type: object
       summary: 存活检查
       tags:
       - 健康检查
@@ -4154,11 +6101,23 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
         "503":
           description: Service Unavailable
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
       summary: 就绪检查
       tags:
       - 健康检查
@@ -4173,8 +6132,20 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.Response'
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  additionalProperties:
+                    type: string
+                  type: object
+              type: object
       summary: 获取版本信息
       tags:
       - 健康检查
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

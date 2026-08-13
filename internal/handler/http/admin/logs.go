@@ -19,15 +19,15 @@ func NewLogHandler(svc adminsvc.LogService) *LogHandler {
 	return &LogHandler{svc: svc}
 }
 
-// ListSystemLogs godoc
+// ListSystemLogs
 // @Summary 系统日志列表
 // @Description 分页获取系统操作日志
 // @Tags 管理端｜日志管理
 // @Accept json
 // @Produce json
-// @Param page query int false "页码"
-// @Param page_size query int false "每页数量"
-// @Success 200 {object} response.Response
+// @Security BearerAuth
+// @Param req query admindto.SystemLogListRequest true "筛选参数"
+// @Success 200 {object} response.Response{data=response.PageData{list=[]admindto.SystemLogItem}}
 // @Router /api/admin/v1/system-logs [get]
 func (h *LogHandler) ListSystemLogs(c *gin.Context) {
 	var req admindto.SystemLogListRequest
@@ -43,15 +43,15 @@ func (h *LogHandler) ListSystemLogs(c *gin.Context) {
 	response.SuccessPage(c, items, int64(total), page, size, req.GetTotalPages(total))
 }
 
-// ListAdminLoginLogs godoc
+// ListAdminLoginLogs
 // @Summary 管理员登录日志列表
 // @Description 分页获取管理员登录日志
 // @Tags 管理端｜日志管理
 // @Accept json
 // @Produce json
-// @Param page query int false "页码"
-// @Param page_size query int false "每页数量"
-// @Success 200 {object} response.Response
+// @Security BearerAuth
+// @Param req query admindto.AdminLoginLogListRequest true "筛选参数"
+// @Success 200 {object} response.Response{data=response.PageData{list=[]admindto.AdminLoginLogItem}}
 // @Router /api/admin/v1/admin-login-logs [get]
 func (h *LogHandler) ListAdminLoginLogs(c *gin.Context) {
 	var req admindto.AdminLoginLogListRequest
@@ -67,13 +67,15 @@ func (h *LogHandler) ListAdminLoginLogs(c *gin.Context) {
 	response.SuccessPage(c, items, int64(total), page, size, req.GetTotalPages(total))
 }
 
-// ListAppLogs godoc
+// ListAppLogs
 // @Summary 应用日志列表
 // @Description 获取应用运行日志
 // @Tags 管理端｜日志管理
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.Response
+// @Security BearerAuth
+// @Param req query admindto.AppLogListRequest true "筛选参数"
+// @Success 200 {object} response.Response{data=admindto.AppLogListResponse}
 // @Router /api/admin/v1/app-logs [get]
 func (h *LogHandler) ListAppLogs(c *gin.Context) {
 	var req admindto.AppLogListRequest

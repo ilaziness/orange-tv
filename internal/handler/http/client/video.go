@@ -19,15 +19,14 @@ func NewVideoHandler(svc clientsvc.VideoService) *VideoHandler {
 	return &VideoHandler{svc: svc}
 }
 
-// List godoc
+// List
 // @Summary 影视列表
 // @Description 分页获取影视列表
 // @Tags 用户端｜影视浏览
 // @Accept json
 // @Produce json
-// @Param page query int false "页码" default(1)
-// @Param page_size query int false "每页数量" default(20)
-// @Success 200 {object} response.Response
+// @Param req query clientdto.VideoListRequest true "筛选参数"
+// @Success 200 {object} response.Response{data=response.PageData{list=[]clientdto.VideoListItem}}
 // @Router /api/client/v1/videos [get]
 func (h *VideoHandler) List(c *gin.Context) {
 	var req clientdto.VideoListRequest
@@ -42,16 +41,14 @@ func (h *VideoHandler) List(c *gin.Context) {
 	response.SuccessPage(c, list, int64(total), req.GetPage(), req.GetPageSize(), req.GetTotalPages(total))
 }
 
-// Search godoc
+// Search
 // @Summary 搜索影视
 // @Description 根据关键词分页搜索影视
 // @Tags 用户端｜影视浏览
 // @Accept json
 // @Produce json
-// @Param keyword query string true "搜索关键词"
-// @Param page query int false "页码" default(1)
-// @Param page_size query int false "每页数量" default(20)
-// @Success 200 {object} response.Response
+// @Param req query clientdto.SearchRequest true "筛选参数"
+// @Success 200 {object} response.Response{data=response.PageData{list=[]clientdto.VideoListItem}}
 // @Router /api/client/v1/search [get]
 func (h *VideoHandler) Search(c *gin.Context) {
 	var req clientdto.SearchRequest
@@ -66,13 +63,13 @@ func (h *VideoHandler) Search(c *gin.Context) {
 	response.SuccessPage(c, list, int64(total), req.GetPage(), req.GetPageSize(), req.GetTotalPages(total))
 }
 
-// Get godoc
+// Get
 // @Summary 影视详情
 // @Description 获取指定影视详情
 // @Tags 用户端｜影视浏览
 // @Produce json
 // @Param id path int true "影视ID"
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.Response{data=clientdto.VideoDetailResponse}
 // @Router /api/client/v1/videos/{id} [get]
 func (h *VideoHandler) Get(c *gin.Context) {
 	var uri shareddto.IDURI
@@ -87,15 +84,15 @@ func (h *VideoHandler) Get(c *gin.Context) {
 	response.Success(c, item)
 }
 
-// Related godoc
+// Related
 // @Summary 相关影视
 // @Description 获取指定影视的相关推荐列表
 // @Tags 用户端｜影视浏览
 // @Accept json
 // @Produce json
 // @Param id path int true "影视ID"
-// @Param limit query int false "返回数量"
-// @Success 200 {object} response.Response
+// @Param req query clientdto.RelatedRequest true "查询参数"
+// @Success 200 {object} response.Response{data=[]clientdto.VideoListItem}
 // @Router /api/client/v1/videos/{id}/related [get]
 func (h *VideoHandler) Related(c *gin.Context) {
 	var uri shareddto.IDURI

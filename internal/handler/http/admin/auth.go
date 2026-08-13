@@ -50,6 +50,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 // @Summary 管理员登出
 // @Description 无状态登出，客户端清除 token 即可
 // @Tags 管理端｜管理员认证
+// @Accept json
 // @Produce json
 // @Security BearerAuth
 // @Success 200 {object} response.Response

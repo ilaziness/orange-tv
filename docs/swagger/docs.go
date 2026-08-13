@@ -26,6 +26,11 @@ const docTemplate = `{
     "paths": {
         "/api/admin/v1/actors": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "分页获取演员列表",
                 "consumes": [
                     "application/json"
@@ -39,14 +44,28 @@ const docTemplate = `{
                 "summary": "演员列表",
                 "parameters": [
                     {
+                        "type": "string",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "页码",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
                         "name": "page",
                         "in": "query"
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "每页数量",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -55,12 +74,44 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PageData"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/admin.NamedResponse"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "创建一个新的演员",
                 "consumes": [
                     "application/json"
@@ -87,7 +138,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.NamedResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -95,6 +158,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/actors/{id}": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "更新指定演员信息",
                 "consumes": [
                     "application/json"
@@ -128,12 +196,29 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.NamedResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "删除指定演员",
                 "produces": [
                     "application/json"
@@ -163,6 +248,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/admin-login-logs": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "分页获取管理员登录日志",
                 "consumes": [
                     "application/json"
@@ -176,15 +266,48 @@ const docTemplate = `{
                 "summary": "管理员登录日志列表",
                 "parameters": [
                     {
+                        "type": "string",
+                        "name": "end",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "页码",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
                         "name": "page",
                         "in": "query"
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "每页数量",
                         "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            1,
+                            2
+                        ],
+                        "type": "integer",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "username",
                         "in": "query"
                     }
                 ],
@@ -192,7 +315,34 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PageData"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/admin.AdminLoginLogItem"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -200,6 +350,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/admins": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "分页获取管理员列表",
                 "consumes": [
                     "application/json"
@@ -214,14 +369,38 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "页码",
+                        "name": "group_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
                         "name": "page",
                         "in": "query"
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "每页数量",
                         "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "status",
                         "in": "query"
                     }
                 ],
@@ -229,12 +408,44 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PageData"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/admin.AdminItem"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "创建一个新的管理员",
                 "consumes": [
                     "application/json"
@@ -261,7 +472,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.AdminItem"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -269,6 +492,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/admins/{id}": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "更新指定管理员信息",
                 "consumes": [
                     "application/json"
@@ -302,12 +530,29 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.AdminItem"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "删除指定管理员",
                 "produces": [
                     "application/json"
@@ -337,6 +582,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/admins/{id}/password": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "重置指定管理员的密码",
                 "consumes": [
                     "application/json"
@@ -378,6 +628,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/ads": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "分页获取广告列表",
                 "consumes": [
                     "application/json"
@@ -391,14 +646,23 @@ const docTemplate = `{
                 "summary": "广告列表",
                 "parameters": [
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "页码",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
                         "name": "page",
                         "in": "query"
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "每页数量",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -407,12 +671,44 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PageData"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/admin.AdItem"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "创建一个新的广告",
                 "consumes": [
                     "application/json"
@@ -439,7 +735,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.AdItem"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -447,6 +755,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/ads/{id}": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "更新指定广告信息",
                 "consumes": [
                     "application/json"
@@ -480,12 +793,29 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.AdItem"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "删除指定广告",
                 "produces": [
                     "application/json"
@@ -515,6 +845,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/app-logs": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "获取应用运行日志",
                 "consumes": [
                     "application/json"
@@ -526,11 +861,39 @@ const docTemplate = `{
                     "管理端｜日志管理"
                 ],
                 "summary": "应用日志列表",
+                "parameters": [
+                    {
+                        "maximum": 200,
+                        "minimum": 1,
+                        "type": "integer",
+                        "description": "Limit is the max number of log lines to return (default 50, max 200).",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset is the byte offset from the end of file; 0 means start from the last byte.",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.AppLogListResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -590,6 +953,9 @@ const docTemplate = `{
                     }
                 ],
                 "description": "无状态登出，客户端清除 token 即可",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -734,6 +1100,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/banners": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "分页获取Banner列表",
                 "consumes": [
                     "application/json"
@@ -747,14 +1118,23 @@ const docTemplate = `{
                 "summary": "Banner列表",
                 "parameters": [
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "页码",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
                         "name": "page",
                         "in": "query"
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "每页数量",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -763,12 +1143,44 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PageData"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/admin.BannerItem"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "创建一个新的Banner",
                 "consumes": [
                     "application/json"
@@ -795,7 +1207,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.BannerItem"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -803,6 +1227,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/banners/{id}": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "更新指定Banner信息",
                 "consumes": [
                     "application/json"
@@ -836,12 +1265,29 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.BannerItem"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "删除指定Banner",
                 "produces": [
                     "application/json"
@@ -871,6 +1317,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/categories": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "获取分类树形列表",
                 "produces": [
                     "application/json"
@@ -883,12 +1334,32 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/admin.CategoryResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "创建一个新的分类",
                 "consumes": [
                     "application/json"
@@ -915,7 +1386,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.CategoryResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -923,6 +1406,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/categories/{id}": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "更新指定分类信息",
                 "consumes": [
                     "application/json"
@@ -956,12 +1444,29 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.CategoryResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "删除指定分类",
                 "produces": [
                     "application/json"
@@ -991,6 +1496,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/collect-sources": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "获取采集源分页列表",
                 "consumes": [
                     "application/json"
@@ -1004,15 +1514,29 @@ const docTemplate = `{
                 "summary": "采集源列表",
                 "parameters": [
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "页码",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
                         "name": "page",
                         "in": "query"
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "每页数量",
                         "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "status",
                         "in": "query"
                     }
                 ],
@@ -1020,12 +1544,44 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PageData"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/admin.CollectSourceItem"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "创建一个新的采集源",
                 "consumes": [
                     "application/json"
@@ -1052,7 +1608,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.CollectSourceItem"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -1060,6 +1628,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/collect-sources/{id}": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "更新指定采集源信息",
                 "consumes": [
                     "application/json"
@@ -1093,12 +1666,29 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.CollectSourceItem"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "删除指定采集源",
                 "consumes": [
                     "application/json"
@@ -1131,6 +1721,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/collect-sources/{id}/categories": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "获取指定采集源的分类映射列表",
                 "consumes": [
                     "application/json"
@@ -1155,12 +1750,32 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/admin.CollectCategoryMapItem"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "替换指定采集源的分类映射",
                 "consumes": [
                     "application/json"
@@ -1194,7 +1809,22 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/admin.CollectCategoryMapItem"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -1202,7 +1832,12 @@ const docTemplate = `{
         },
         "/api/admin/v1/collect-sources/{id}/collect": {
             "post": {
-                "description": "立即执行一次采集任务",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "立即执行一次采集任务，返回 data.started=true",
                 "consumes": [
                     "application/json"
                 ],
@@ -1235,7 +1870,22 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "boolean"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -1243,6 +1893,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/collect-sources/{id}/remote-categories": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "从远程采集源拉取分类列表（仅苹果CMS）",
                 "consumes": [
                     "application/json"
@@ -1267,7 +1922,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.RemoteCategoryResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -1275,7 +1942,12 @@ const docTemplate = `{
         },
         "/api/admin/v1/collect-sources/{id}/schedule/disable": {
             "post": {
-                "description": "禁用指定采集源的定时采集",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "禁用指定采集源的定时采集，返回 data.disabled=true",
                 "consumes": [
                     "application/json"
                 ],
@@ -1299,7 +1971,22 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "boolean"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -1307,7 +1994,12 @@ const docTemplate = `{
         },
         "/api/admin/v1/collect-sources/{id}/schedule/enable": {
             "post": {
-                "description": "启用指定采集源的定时采集（需已绑定分类和设置cron表达式）",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "启用指定采集源的定时采集（需已绑定分类和设置cron表达式），返回 data.enabled=true",
                 "consumes": [
                     "application/json"
                 ],
@@ -1331,7 +2023,22 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "boolean"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -1339,6 +2046,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/collect/logs": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "获取采集日志分页列表",
                 "consumes": [
                     "application/json"
@@ -1352,20 +2064,28 @@ const docTemplate = `{
                 "summary": "采集日志列表",
                 "parameters": [
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "页码",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
                         "name": "page",
                         "in": "query"
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "每页数量",
                         "name": "page_size",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "采集源ID",
                         "name": "source_id",
                         "in": "query"
                     }
@@ -1374,7 +2094,34 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PageData"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/admin.CollectLogItem"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -1382,6 +2129,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/comments": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "分页获取评论列表，支持按关键词、状态、影视ID筛选",
                 "consumes": [
                     "application/json"
@@ -1395,34 +2147,43 @@ const docTemplate = `{
                 "summary": "评论列表",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "页码",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 20,
-                        "description": "每页数量",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
                         "type": "string",
-                        "description": "关键词（评论内容）",
                         "name": "keyword",
                         "in": "query"
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "状态：0隐藏 1正常",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            0,
+                            1
+                        ],
+                        "type": "integer",
                         "name": "status",
                         "in": "query"
                     },
                     {
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "影视ID",
                         "name": "video_id",
                         "in": "query"
                     }
@@ -1431,7 +2192,34 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PageData"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/admin.CommentListItem"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -1439,6 +2227,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/comments/{id}": {
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "删除指定评论",
                 "consumes": [
                     "application/json"
@@ -1471,6 +2264,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/comments/{id}/parents": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "获取指定评论的所有父级评论（从根评论到直接父评论）",
                 "consumes": [
                     "application/json"
@@ -1495,7 +2293,22 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/admin.CommentParentItem"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -1503,6 +2316,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/comments/{id}/status": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "审核/隐藏评论，status=1 为正常，status=0 为隐藏",
                 "consumes": [
                     "application/json"
@@ -1544,6 +2362,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/dashboard": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "获取管理后台仪表盘统计数据",
                 "produces": [
                     "application/json"
@@ -1556,7 +2379,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.DashboardResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -1564,6 +2399,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/data/backup": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "导出全量 SQL 备份文件",
                 "produces": [
                     "application/octet-stream"
@@ -1575,7 +2415,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "是否使用原生备份工具：1/true 使用，0 使用 Go 实现",
                         "name": "native",
                         "in": "query"
                     }
@@ -1592,6 +2431,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/data/batch-update/execute": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "执行批量替换操作并返回影响行数",
                 "consumes": [
                     "application/json"
@@ -1638,6 +2482,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/data/batch-update/preview": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "预览批量替换操作的影响行数",
                 "consumes": [
                     "application/json"
@@ -1684,6 +2533,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/directors": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "分页获取导演列表",
                 "consumes": [
                     "application/json"
@@ -1697,14 +2551,28 @@ const docTemplate = `{
                 "summary": "导演列表",
                 "parameters": [
                     {
+                        "type": "string",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "页码",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
                         "name": "page",
                         "in": "query"
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "每页数量",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -1713,12 +2581,44 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PageData"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/admin.NamedResponse"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "创建一个新的导演",
                 "consumes": [
                     "application/json"
@@ -1745,7 +2645,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.NamedResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -1753,6 +2665,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/directors/{id}": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "更新指定导演信息",
                 "consumes": [
                     "application/json"
@@ -1786,12 +2703,29 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.NamedResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "删除指定导演",
                 "produces": [
                     "application/json"
@@ -1821,6 +2755,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/groups": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "分页获取用户组列表",
                 "consumes": [
                     "application/json"
@@ -1834,14 +2773,28 @@ const docTemplate = `{
                 "summary": "用户组列表",
                 "parameters": [
                     {
+                        "type": "string",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "页码",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
                         "name": "page",
                         "in": "query"
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "每页数量",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -1850,12 +2803,44 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PageData"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/admin.UserGroupItem"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "创建一个新的用户组",
                 "consumes": [
                     "application/json"
@@ -1882,7 +2867,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.UserGroupItem"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -1890,6 +2887,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/groups/{id}": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "更新指定用户组信息",
                 "consumes": [
                     "application/json"
@@ -1923,12 +2925,29 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.UserGroupItem"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "删除指定用户组",
                 "produces": [
                     "application/json"
@@ -1958,6 +2977,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/live": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "分页获取直播频道列表",
                 "consumes": [
                     "application/json"
@@ -1971,15 +2995,39 @@ const docTemplate = `{
                 "summary": "直播频道列表",
                 "parameters": [
                     {
+                        "type": "string",
+                        "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "页码",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
                         "name": "page",
                         "in": "query"
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "每页数量",
                         "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "status",
                         "in": "query"
                     }
                 ],
@@ -1987,12 +3035,44 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PageData"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/admin.LiveChannelItem"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "创建一个新的直播频道",
                 "consumes": [
                     "application/json"
@@ -2019,7 +3099,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.LiveChannelItem"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -2027,6 +3119,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/live/sync": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "从外部直播源同步频道列表，支持 txt 和 m3u 格式",
                 "consumes": [
                     "application/json"
@@ -2053,7 +3150,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.LiveSyncResult"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -2061,6 +3170,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/live/sync-source": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "返回 system_settings 中保存的最近一次直播源同步地址",
                 "produces": [
                     "application/json"
@@ -2073,7 +3187,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.LiveSyncSourceResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -2081,6 +3207,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/live/{id}": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "更新指定直播频道信息",
                 "consumes": [
                     "application/json"
@@ -2114,12 +3245,29 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.LiveChannelItem"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "删除指定直播频道",
                 "produces": [
                     "application/json"
@@ -2149,6 +3297,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/play-episodes": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "分页获取剧集列表",
                 "consumes": [
                     "application/json"
@@ -2162,28 +3315,83 @@ const docTemplate = `{
                 "summary": "剧集列表",
                 "parameters": [
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "页码",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
                         "name": "page",
                         "in": "query"
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "每页数量",
                         "name": "page_size",
                         "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "name": "source_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "name": "video_id",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PageData"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/admin.PlayEpisodeResponse"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "创建一条新的剧集",
                 "consumes": [
                     "application/json"
@@ -2210,7 +3418,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.PlayEpisodeResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -2218,6 +3438,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/play-episodes/batch-status": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -2263,6 +3488,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/play-episodes/{id}": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "更新指定剧集信息",
                 "consumes": [
                     "application/json"
@@ -2296,12 +3526,29 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.PlayEpisodeResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "删除指定剧集",
                 "produces": [
                     "application/json"
@@ -2331,6 +3578,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/play-sources": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "获取全部播放源列表",
                 "produces": [
                     "application/json"
@@ -2343,12 +3595,44 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PageData"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/admin.PlaySourceResponse"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "创建一个新的播放源",
                 "consumes": [
                     "application/json"
@@ -2375,7 +3659,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.PlaySourceResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -2383,6 +3679,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/play-sources/{id}": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "更新指定播放源信息",
                 "consumes": [
                     "application/json"
@@ -2416,12 +3717,29 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.PlaySourceResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "删除指定播放源",
                 "produces": [
                     "application/json"
@@ -2451,7 +3769,12 @@ const docTemplate = `{
         },
         "/api/admin/v1/settings": {
             "get": {
-                "description": "按分组获取系统设置（site/api/feature）",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按分组获取系统设置。data 结构随 group 变化：site=SiteSettings，api=APISettings，feature=FeatureSettings",
                 "consumes": [
                     "application/json"
                 ],
@@ -2470,7 +3793,6 @@ const docTemplate = `{
                             "feature"
                         ],
                         "type": "string",
-                        "description": "设置分组 (site/api/feature)",
                         "name": "group",
                         "in": "query",
                         "required": true
@@ -2480,13 +3802,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "put": {
-                "description": "按分组更新系统设置，data 为对应分组的 key-value JSON（site/api/feature）",
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "按分组更新系统设置，data 为对应分组的 key-value JSON（site/api/feature），返回更新后的设置结构",
                 "consumes": [
                     "application/json"
                 ],
@@ -2512,7 +3852,20 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -2520,6 +3873,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/system-logs": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "分页获取系统操作日志",
                 "consumes": [
                     "application/json"
@@ -2533,15 +3891,57 @@ const docTemplate = `{
                 "summary": "系统日志列表",
                 "parameters": [
                     {
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "页码",
+                        "name": "admin_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "end",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            1,
+                            2,
+                            3,
+                            4
+                        ],
+                        "type": "integer",
+                        "name": "level",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "module",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
                         "name": "page",
                         "in": "query"
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "每页数量",
                         "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Start / End are RFC3339 or date strings; optional.",
+                        "name": "start",
                         "in": "query"
                     }
                 ],
@@ -2549,7 +3949,34 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PageData"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/admin.SystemLogItem"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -2557,6 +3984,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/tags": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "分页获取标签列表",
                 "consumes": [
                     "application/json"
@@ -2570,14 +4002,28 @@ const docTemplate = `{
                 "summary": "标签列表",
                 "parameters": [
                     {
+                        "type": "string",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "页码",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
                         "name": "page",
                         "in": "query"
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "每页数量",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -2586,12 +4032,44 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PageData"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/admin.NamedResponse"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "创建一个新的标签",
                 "consumes": [
                     "application/json"
@@ -2618,7 +4096,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.NamedResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -2626,6 +4116,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/tags/{id}": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "更新指定标签信息",
                 "consumes": [
                     "application/json"
@@ -2659,12 +4154,29 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.NamedResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "删除指定标签",
                 "produces": [
                     "application/json"
@@ -2694,6 +4206,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/user-login-logs": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "分页获取普通用户登录日志",
                 "consumes": [
                     "application/json"
@@ -2707,15 +4224,54 @@ const docTemplate = `{
                 "summary": "用户登录日志列表",
                 "parameters": [
                     {
+                        "type": "string",
+                        "name": "end",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "页码",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
                         "name": "page",
                         "in": "query"
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "每页数量",
                         "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "start",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            1,
+                            2
+                        ],
+                        "type": "integer",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 1,
+                        "type": "integer",
+                        "name": "user_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "username",
                         "in": "query"
                     }
                 ],
@@ -2723,7 +4279,34 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PageData"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/admin.UserLoginLogItem"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -2731,6 +4314,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/users": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "分页获取普通用户列表",
                 "consumes": [
                     "application/json"
@@ -2744,15 +4332,34 @@ const docTemplate = `{
                 "summary": "用户列表",
                 "parameters": [
                     {
+                        "type": "string",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "页码",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
                         "name": "page",
                         "in": "query"
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "每页数量",
                         "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "status",
                         "in": "query"
                     }
                 ],
@@ -2760,12 +4367,44 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PageData"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/admin.UserItem"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "创建一个新的普通用户",
                 "consumes": [
                     "application/json"
@@ -2792,7 +4431,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.UserItem"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -2800,6 +4451,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/users/{id}": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "更新指定普通用户信息",
                 "consumes": [
                     "application/json"
@@ -2833,12 +4489,29 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.UserItem"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "删除指定普通用户",
                 "produces": [
                     "application/json"
@@ -2868,6 +4541,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/users/{id}/password": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "重置指定普通用户的密码",
                 "consumes": [
                     "application/json"
@@ -2909,6 +4587,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/videos": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "分页获取影视列表",
                 "consumes": [
                     "application/json"
@@ -2923,14 +4606,68 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "页码",
-                        "name": "page",
+                        "name": "actor_id",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "每页数量",
+                        "name": "category_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "director_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "keyword",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "language",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
                         "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "publish_status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "region",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "tag_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "year",
                         "in": "query"
                     }
                 ],
@@ -2938,12 +4675,44 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PageData"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/admin.VideoListItem"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "创建一个新的影视",
                 "consumes": [
                     "application/json"
@@ -2970,7 +4739,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.VideoDetailResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -2978,6 +4759,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/videos/batch/delete": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "批量删除指定影视",
                 "consumes": [
                     "application/json"
@@ -3004,7 +4790,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.BatchVideoResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -3012,6 +4810,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/videos/batch/publish-status": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "批量更新影视的发布状态",
                 "consumes": [
                     "application/json"
@@ -3038,7 +4841,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.BatchVideoResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -3046,6 +4861,11 @@ const docTemplate = `{
         },
         "/api/admin/v1/videos/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "获取指定影视详情",
                 "produces": [
                     "application/json"
@@ -3067,12 +4887,29 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.VideoDetailResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "更新指定影视信息",
                 "consumes": [
                     "application/json"
@@ -3106,12 +4943,29 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/admin.VideoDetailResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "删除指定影视",
                 "produces": [
                     "application/json"
@@ -3187,6 +5041,11 @@ const docTemplate = `{
         },
         "/api/client/v1/auth/login-history": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "分页获取当前用户最近 3 个月的登录历史",
                 "consumes": [
                     "application/json"
@@ -3200,16 +5059,23 @@ const docTemplate = `{
                 "summary": "获取登录历史",
                 "parameters": [
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "default": 1,
-                        "description": "页码",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
                         "name": "page",
                         "in": "query"
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "default": 10,
-                        "description": "每页数量",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -3253,6 +5119,11 @@ const docTemplate = `{
         },
         "/api/client/v1/auth/profile": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "获取当前登录用户的个人资料",
                 "produces": [
                     "application/json"
@@ -3283,6 +5154,11 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "更新当前登录用户的昵称、邮箱、头像",
                 "consumes": [
                     "application/json"
@@ -3329,6 +5205,11 @@ const docTemplate = `{
         },
         "/api/client/v1/auth/profile/password": {
             "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "修改当前登录用户的密码",
                 "consumes": [
                     "application/json"
@@ -3361,6 +5242,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/client/v1/auth/register": {
+            "post": {
+                "description": "用户注册账号，返回个人资料",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户端｜用户中心"
+                ],
+                "summary": "用户注册",
+                "parameters": [
+                    {
+                        "description": "注册请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/client.RegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/client.Profile"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/api/client/v1/banners": {
             "get": {
                 "description": "获取公开启用的Banner列表",
@@ -3375,7 +5302,22 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/client.BannerItem"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -3395,7 +5337,22 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/client.CategoryResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -3403,6 +5360,11 @@ const docTemplate = `{
         },
         "/api/client/v1/comments": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "对视频发表评论或回复指定评论",
                 "consumes": [
                     "application/json"
@@ -3429,7 +5391,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/client.CommentItem"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -3457,16 +5431,23 @@ const docTemplate = `{
                         "required": true
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "default": 1,
-                        "description": "页码",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
                         "name": "page",
                         "in": "query"
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "default": 20,
-                        "description": "每页数量",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -3475,7 +5456,34 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PageData"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/client.CommentItem"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -3483,6 +5491,11 @@ const docTemplate = `{
         },
         "/api/client/v1/comments/{id}/vote": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "对评论进行顶（like）、踩（dislike）或取消（cancel）",
                 "consumes": [
                     "application/json"
@@ -3536,6 +5549,11 @@ const docTemplate = `{
         },
         "/api/client/v1/favorites": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "分页获取当前用户的收藏列表",
                 "consumes": [
                     "application/json"
@@ -3549,16 +5567,23 @@ const docTemplate = `{
                 "summary": "获取收藏列表",
                 "parameters": [
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "default": 1,
-                        "description": "页码",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
                         "name": "page",
                         "in": "query"
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "default": 20,
-                        "description": "每页数量",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -3602,6 +5627,11 @@ const docTemplate = `{
         },
         "/api/client/v1/favorites/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "检查指定影视是否已被当前用户收藏",
                 "consumes": [
                     "application/json"
@@ -3644,6 +5674,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "将指定影视添加到当前用户的收藏",
                 "consumes": [
                     "application/json"
@@ -3674,6 +5709,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "将指定影视从当前用户的收藏中移除",
                 "consumes": [
                     "application/json"
@@ -3706,6 +5746,11 @@ const docTemplate = `{
         },
         "/api/client/v1/history": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "分页获取当前用户的播放历史",
                 "consumes": [
                     "application/json"
@@ -3719,16 +5764,23 @@ const docTemplate = `{
                 "summary": "播放历史列表",
                 "parameters": [
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "default": 1,
-                        "description": "页码",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
                         "name": "page",
                         "in": "query"
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "default": 20,
-                        "description": "每页数量",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -3770,6 +5822,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "新增或更新当前用户的播放历史（用于恢复播放进度）",
                 "consumes": [
                     "application/json"
@@ -3802,6 +5859,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "清空当前用户的全部播放历史",
                 "produces": [
                     "application/json"
@@ -3822,6 +5884,11 @@ const docTemplate = `{
         },
         "/api/client/v1/history/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "根据影视ID获取当前用户的播放历史（用于恢复播放进度）",
                 "consumes": [
                     "application/json"
@@ -3864,6 +5931,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "删除当前用户指定影视的播放历史",
                 "produces": [
                     "application/json"
@@ -3906,16 +5978,28 @@ const docTemplate = `{
                 "summary": "直播频道列表",
                 "parameters": [
                     {
+                        "type": "string",
+                        "name": "category",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "default": 1,
-                        "description": "页码",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
                         "name": "page",
                         "in": "query"
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "default": 20,
-                        "description": "每页数量",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -3924,7 +6008,34 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PageData"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/client.LiveChannelItem"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -3982,7 +6093,6 @@ const docTemplate = `{
                             "general"
                         ],
                         "type": "string",
-                        "description": "广告场景：video_loading 播放前广告 / general 一般广告",
                         "name": "scene",
                         "in": "query",
                         "required": true
@@ -3992,7 +6102,22 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/client.AdItem"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -4042,6 +6167,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "当前用户对影视评分（0.5-10.0，步进 0.5），需登录",
                 "consumes": [
                     "application/json"
@@ -4108,24 +6238,62 @@ const docTemplate = `{
                 "summary": "搜索影视",
                 "parameters": [
                     {
+                        "type": "integer",
+                        "name": "category_id",
+                        "in": "query"
+                    },
+                    {
+                        "maxLength": 10,
+                        "minLength": 1,
                         "type": "string",
-                        "description": "搜索关键词",
                         "name": "keyword",
                         "in": "query",
                         "required": true
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "default": 1,
-                        "description": "页码",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
                         "name": "page",
                         "in": "query"
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "default": 20,
-                        "description": "每页数量",
                         "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "parent_category_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "region",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "year_end",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "year_start",
                         "in": "query"
                     }
                 ],
@@ -4133,7 +6301,34 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PageData"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/client.VideoListItem"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -4141,7 +6336,7 @@ const docTemplate = `{
         },
         "/api/client/v1/settings": {
             "get": {
-                "description": "按分组获取客户端设置（支持多分组：site/feature）",
+                "description": "按分组获取客户端设置（支持多分组：site/feature）。单分组时 data 为对应结构，多分组时 data 为 \"分组名→结构\" 的 map",
                 "consumes": [
                     "application/json"
                 ],
@@ -4154,12 +6349,12 @@ const docTemplate = `{
                 "summary": "获取客户端设置",
                 "parameters": [
                     {
+                        "minItems": 1,
                         "type": "array",
                         "items": {
                             "type": "string"
                         },
-                        "collectionFormat": "multi",
-                        "description": "设置分组 (site/feature)",
+                        "collectionFormat": "csv",
                         "name": "groups",
                         "in": "query",
                         "required": true
@@ -4169,7 +6364,20 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -4191,16 +6399,53 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
-                        "default": 1,
-                        "description": "页码",
+                        "name": "category_id",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
                         "name": "page",
                         "in": "query"
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "default": 20,
-                        "description": "每页数量",
                         "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "parent_category_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "region",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "year_end",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "name": "year_start",
                         "in": "query"
                     }
                 ],
@@ -4208,7 +6453,34 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PageData"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/client.VideoListItem"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -4237,7 +6509,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/client.VideoDetailResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -4265,16 +6549,23 @@ const docTemplate = `{
                         "required": true
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "default": 1,
-                        "description": "页码",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
                         "name": "page",
                         "in": "query"
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
-                        "default": 20,
-                        "description": "每页数量",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -4283,7 +6574,34 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PageData"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/client.CommentItem"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -4369,8 +6687,9 @@ const docTemplate = `{
                         "required": true
                     },
                     {
+                        "maximum": 50,
+                        "minimum": 1,
                         "type": "integer",
-                        "description": "返回数量",
                         "name": "limit",
                         "in": "query"
                     }
@@ -4379,7 +6698,22 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/client.VideoListItem"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -4388,6 +6722,12 @@ const docTemplate = `{
         "/api/open/v1/categories": {
             "get": {
                 "description": "返回启用中的分类扁平列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
                     "开放端｜开放资源"
                 ],
@@ -4420,42 +6760,56 @@ const docTemplate = `{
         "/api/open/v1/videos": {
             "get": {
                 "description": "返回启用的影视列表，每项只包含 id、title、category_id、created_at",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
                     "开放端｜开放资源"
                 ],
                 "summary": "开放影视列表",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "页码",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 20,
-                        "description": "每页数量",
-                        "name": "page_size",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 20,
-                        "description": "每页数量（兼容）",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
+                        "enum": [
+                            "today",
+                            "last1d",
+                            "last3d",
+                            "last1w",
+                            "last1m",
+                            "all"
+                        ],
                         "type": "string",
-                        "default": "all",
-                        "description": "数据范围（today/last1d/last3d/last1w/last1m/all）",
+                        "description": "DataRange filters by created_at (today/last1d/last3d/last1w/last1m/all). Empty = all.",
                         "name": "data_range",
                         "in": "query"
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 1000000,
+                        "minimum": 1,
+                        "type": "integer",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "maximum": 100,
+                        "minimum": 1,
+                        "type": "integer",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "maxLength": 10,
                         "type": "string",
-                        "description": "播放源名称（精确匹配）",
+                        "description": "Source filters videos by play source name (exact match). Empty = no filter.",
                         "name": "source",
                         "in": "query"
                     }
@@ -4472,7 +6826,22 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/response.PageData"
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/definitions/response.PageData"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "list": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "$ref": "#/definitions/open.VideoListItem"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
                                         }
                                     }
                                 }
@@ -4485,18 +6854,24 @@ const docTemplate = `{
         "/api/open/v1/videos/detail": {
             "get": {
                 "description": "支持多个视频 id，返回视频详情数组",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
                 "tags": [
                     "开放端｜开放资源"
                 ],
                 "summary": "开放影视详情",
                 "parameters": [
                     {
+                        "maxItems": 50,
                         "type": "array",
                         "items": {
                             "type": "integer"
                         },
-                        "collectionFormat": "multi",
-                        "description": "视频 id，可重复",
+                        "collectionFormat": "csv",
                         "name": "id",
                         "in": "query",
                         "required": true
@@ -4544,7 +6919,22 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -4567,7 +6957,22 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -4590,13 +6995,39 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -4619,7 +7050,22 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.Response"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -4627,6 +7073,163 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "admin.AdItem": {
+            "type": "object",
+            "properties": {
+                "ad_key": {
+                    "type": "string"
+                },
+                "content_code": {
+                    "type": "string"
+                },
+                "content_url": {
+                    "type": "string"
+                },
+                "duration": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "link_url": {
+                    "type": "string"
+                },
+                "scene": {
+                    "type": "string"
+                },
+                "sort": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "admin.AdminItem": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "group_id": {
+                    "type": "integer"
+                },
+                "group_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "last_login_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "admin.AdminLoginLogItem": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "ip": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "user_agent": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "admin.AppLogItem": {
+            "type": "object",
+            "properties": {
+                "fields": {
+                    "type": "object",
+                    "additionalProperties": {}
+                },
+                "level": {
+                    "type": "string"
+                },
+                "msg": {
+                    "type": "string"
+                },
+                "time": {
+                    "type": "string"
+                }
+            }
+        },
+        "admin.AppLogListResponse": {
+            "type": "object",
+            "properties": {
+                "has_more": {
+                    "type": "boolean"
+                },
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/admin.AppLogItem"
+                    }
+                },
+                "next_offset": {
+                    "type": "integer"
+                }
+            }
+        },
+        "admin.BannerItem": {
+            "type": "object",
+            "properties": {
+                "cover": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "link": {
+                    "type": "string"
+                },
+                "sort": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "video_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "admin.BatchUpdateEpisodeStatusRequest": {
             "type": "object",
             "required": [
@@ -4743,6 +7346,40 @@ const docTemplate = `{
                 }
             }
         },
+        "admin.BatchVideoResponse": {
+            "type": "object",
+            "properties": {
+                "affected": {
+                    "type": "integer"
+                }
+            }
+        },
+        "admin.CategoryResponse": {
+            "type": "object",
+            "properties": {
+                "children": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/admin.CategoryResponse"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "parent_id": {
+                    "type": "integer"
+                },
+                "sort_order": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
         "admin.ChangePasswordRequest": {
             "type": "object",
             "required": [
@@ -4777,6 +7414,49 @@ const docTemplate = `{
                 }
             }
         },
+        "admin.CollectCategoryMapItem": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "type": "integer"
+                },
+                "external_category_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "source_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "admin.CollectLogItem": {
+            "type": "object",
+            "properties": {
+                "collect_count": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "duration_sec": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "source_id": {
+                    "type": "integer"
+                },
+                "source_name": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
         "admin.CollectNowRequest": {
             "type": "object",
             "required": [
@@ -4793,6 +7473,105 @@ const docTemplate = `{
                         "last1m",
                         "all"
                     ]
+                }
+            }
+        },
+        "admin.CollectSourceItem": {
+            "type": "object",
+            "properties": {
+                "collect_url": {
+                    "type": "string"
+                },
+                "cron_expr": {
+                    "type": "string"
+                },
+                "data_range": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "last_collect_at": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "play_source_id": {
+                    "type": "integer"
+                },
+                "play_source_name": {
+                    "type": "string"
+                },
+                "schedule_enabled": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "integer"
+                }
+            }
+        },
+        "admin.CommentListItem": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "dislike_count": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "like_count": {
+                    "type": "integer"
+                },
+                "parent_id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "integer"
+                },
+                "username": {
+                    "type": "string"
+                },
+                "video_id": {
+                    "type": "integer"
+                },
+                "video_title": {
+                    "type": "string"
+                }
+            }
+        },
+        "admin.CommentParentItem": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "parent_id": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "integer"
+                },
+                "username": {
+                    "type": "string"
                 }
             }
         },
@@ -5292,6 +8071,73 @@ const docTemplate = `{
                 }
             }
         },
+        "admin.DashboardResponse": {
+            "type": "object",
+            "properties": {
+                "collect_running": {
+                    "type": "integer"
+                },
+                "offline_videos": {
+                    "type": "integer"
+                },
+                "online_count": {
+                    "type": "integer"
+                },
+                "online_videos": {
+                    "type": "integer"
+                },
+                "today_pv": {
+                    "type": "integer"
+                },
+                "today_uv": {
+                    "type": "integer"
+                },
+                "today_videos": {
+                    "type": "integer"
+                },
+                "total_admins": {
+                    "type": "integer"
+                },
+                "total_categories": {
+                    "type": "integer"
+                },
+                "total_users": {
+                    "type": "integer"
+                },
+                "total_videos": {
+                    "type": "integer"
+                }
+            }
+        },
+        "admin.LiveChannelItem": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "logo": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "stream_url": {
+                    "type": "string"
+                }
+            }
+        },
         "admin.LiveSyncRequest": {
             "type": "object",
             "required": [
@@ -5302,6 +8148,31 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 2000,
                     "minLength": 1
+                }
+            }
+        },
+        "admin.LiveSyncResult": {
+            "type": "object",
+            "properties": {
+                "created": {
+                    "type": "integer"
+                },
+                "deleted": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "updated": {
+                    "type": "integer"
+                }
+            }
+        },
+        "admin.LiveSyncSourceResponse": {
+            "type": "object",
+            "properties": {
+                "source_url": {
+                    "type": "string"
                 }
             }
         },
@@ -5341,6 +8212,69 @@ const docTemplate = `{
                 }
             }
         },
+        "admin.NamedResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "admin.PlayEpisodeResponse": {
+            "type": "object",
+            "properties": {
+                "episode_number": {
+                    "type": "integer"
+                },
+                "format": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "play_url": {
+                    "type": "string"
+                },
+                "quality": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "integer"
+                },
+                "source_id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "video_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "admin.PlaySourceResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "integer"
+                }
+            }
+        },
         "admin.Profile": {
             "type": "object",
             "properties": {
@@ -5364,6 +8298,31 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
+                }
+            }
+        },
+        "admin.RemoteCategoryItem": {
+            "type": "object",
+            "properties": {
+                "type_id": {
+                    "type": "integer"
+                },
+                "type_name": {
+                    "type": "string"
+                },
+                "type_pid": {
+                    "type": "integer"
+                }
+            }
+        },
+        "admin.RemoteCategoryResponse": {
+            "type": "object",
+            "properties": {
+                "list": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/admin.RemoteCategoryItem"
+                    }
                 }
             }
         },
@@ -5401,6 +8360,35 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/admin.CollectCategoryInput"
                     }
+                }
+            }
+        },
+        "admin.SystemLogItem": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "admin_id": {
+                    "type": "integer"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "ip_address": {
+                    "type": "string"
+                },
+                "level": {
+                    "type": "integer"
+                },
+                "module": {
+                    "type": "string"
                 }
             }
         },
@@ -5742,7 +8730,24 @@ const docTemplate = `{
             }
         },
         "admin.UpdateSettingsRequest": {
-            "type": "object"
+            "type": "object",
+            "required": [
+                "data",
+                "group"
+            ],
+            "properties": {
+                "data": {
+                    "description": "Data is the group-specific key-value JSON payload; its structure varies by group\n(site=UpdateSiteSettings, api=UpdateAPISettings, feature=UpdateFeatureSettings)."
+                },
+                "group": {
+                    "type": "string",
+                    "enum": [
+                        "site",
+                        "api",
+                        "feature"
+                    ]
+                }
+            }
         },
         "admin.UpdateUserGroupRequest": {
             "type": "object",
@@ -5876,6 +8881,84 @@ const docTemplate = `{
                 }
             }
         },
+        "admin.UserGroupItem": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "permissions": {
+                    "type": "string"
+                }
+            }
+        },
+        "admin.UserItem": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "last_login_at": {
+                    "type": "string"
+                },
+                "nickname": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "str_id": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "admin.UserLoginLogItem": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "ip": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "user_agent": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "admin.VideoActorInput": {
             "type": "object",
             "required": [
@@ -5885,6 +8968,257 @@ const docTemplate = `{
                 "actor_id": {
                     "type": "integer",
                     "minimum": 1
+                }
+            }
+        },
+        "admin.VideoDetailResponse": {
+            "type": "object",
+            "properties": {
+                "actors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.NamedItem"
+                    }
+                },
+                "category_id": {
+                    "type": "integer"
+                },
+                "cover": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "directors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.NamedItem"
+                    }
+                },
+                "duration": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "poster": {
+                    "type": "string"
+                },
+                "publish_status": {
+                    "type": "integer"
+                },
+                "rating": {
+                    "type": "number"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "release_date": {
+                    "type": "string"
+                },
+                "serial_status": {
+                    "type": "integer"
+                },
+                "sources": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/admin.VideoSourceGroup"
+                    }
+                },
+                "subtitle": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.NamedItem"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "view_count": {
+                    "type": "integer"
+                },
+                "year": {
+                    "type": "integer"
+                }
+            }
+        },
+        "admin.VideoListItem": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "type": "integer"
+                },
+                "category_name": {
+                    "type": "string"
+                },
+                "cover": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "duration": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "poster": {
+                    "type": "string"
+                },
+                "publish_status": {
+                    "type": "integer"
+                },
+                "rating": {
+                    "type": "number"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "serial_status": {
+                    "type": "integer"
+                },
+                "subtitle": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.NamedItem"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "view_count": {
+                    "type": "integer"
+                },
+                "year": {
+                    "type": "integer"
+                }
+            }
+        },
+        "admin.VideoSourceEpisode": {
+            "type": "object",
+            "properties": {
+                "episode": {
+                    "type": "integer"
+                },
+                "format": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "quality": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "admin.VideoSourceGroup": {
+            "type": "object",
+            "properties": {
+                "episodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/admin.VideoSourceEpisode"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "client.AdItem": {
+            "type": "object",
+            "properties": {
+                "ad_key": {
+                    "type": "string"
+                },
+                "content_code": {
+                    "type": "string"
+                },
+                "content_url": {
+                    "type": "string"
+                },
+                "duration": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "link_url": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "client.BannerItem": {
+            "type": "object",
+            "properties": {
+                "cover": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "link": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "video_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "client.CategoryResponse": {
+            "type": "object",
+            "properties": {
+                "children": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/client.CategoryResponse"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "parent_id": {
+                    "type": "integer"
+                },
+                "sort_order": {
+                    "type": "integer"
                 }
             }
         },
@@ -5904,6 +9238,54 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 30,
                     "minLength": 5
+                }
+            }
+        },
+        "client.CommentItem": {
+            "type": "object",
+            "properties": {
+                "avatar": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "dislike_count": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "like_count": {
+                    "type": "integer"
+                },
+                "my_vote": {
+                    "description": "1=顶 -1=踩 0=未投票",
+                    "type": "integer"
+                },
+                "parent_id": {
+                    "type": "integer"
+                },
+                "replies": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/client.CommentItem"
+                    }
+                },
+                "reply_count": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "integer"
+                },
+                "username": {
+                    "type": "string"
+                },
+                "video_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -5995,6 +9377,32 @@ const docTemplate = `{
                 },
                 "year": {
                     "type": "string"
+                }
+            }
+        },
+        "client.LiveChannelItem": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "format": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "logo": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "integer"
                 }
             }
         },
@@ -6122,6 +9530,29 @@ const docTemplate = `{
                 }
             }
         },
+        "client.RegisterRequest": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "maxLength": 128
+                },
+                "password": {
+                    "type": "string",
+                    "maxLength": 30,
+                    "minLength": 5
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 15,
+                    "minLength": 2
+                }
+            }
+        },
         "client.UpdateProfileRequest": {
             "type": "object",
             "properties": {
@@ -6168,6 +9599,164 @@ const docTemplate = `{
                 }
             }
         },
+        "client.VideoDetailEpisode": {
+            "type": "object",
+            "properties": {
+                "episode": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "client.VideoDetailResponse": {
+            "type": "object",
+            "properties": {
+                "actors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.NamedItem"
+                    }
+                },
+                "category_id": {
+                    "type": "integer"
+                },
+                "cover": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "directors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.NamedItem"
+                    }
+                },
+                "duration": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "poster": {
+                    "type": "string"
+                },
+                "rating": {
+                    "type": "number"
+                },
+                "rating_count": {
+                    "type": "integer"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "release_date": {
+                    "type": "string"
+                },
+                "serial_status": {
+                    "type": "integer"
+                },
+                "sources": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/client.VideoDetailSourceGroup"
+                    }
+                },
+                "subtitle": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.NamedItem"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "view_count": {
+                    "type": "integer"
+                },
+                "year": {
+                    "type": "integer"
+                }
+            }
+        },
+        "client.VideoDetailSourceGroup": {
+            "type": "object",
+            "properties": {
+                "episodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/client.VideoDetailEpisode"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "client.VideoListItem": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "type": "integer"
+                },
+                "cover": {
+                    "type": "string"
+                },
+                "duration": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "language": {
+                    "type": "string"
+                },
+                "poster": {
+                    "type": "string"
+                },
+                "rating": {
+                    "type": "number"
+                },
+                "region": {
+                    "type": "string"
+                },
+                "serial_status": {
+                    "type": "integer"
+                },
+                "subtitle": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.NamedItem"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "view_count": {
+                    "type": "integer"
+                },
+                "year": {
+                    "type": "integer"
+                }
+            }
+        },
         "client.VoteCommentRequest": {
             "type": "object",
             "required": [
@@ -6195,6 +9784,17 @@ const docTemplate = `{
                 },
                 "my_vote": {
                     "type": "integer"
+                }
+            }
+        },
+        "dto.NamedItem": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
@@ -6271,6 +9871,23 @@ const docTemplate = `{
                 }
             }
         },
+        "open.VideoListItem": {
+            "type": "object",
+            "properties": {
+                "category_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
         "open.VideoSource": {
             "type": "object",
             "properties": {
@@ -6334,6 +9951,13 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
         }
     }
 }`

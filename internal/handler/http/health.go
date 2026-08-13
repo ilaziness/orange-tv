@@ -37,7 +37,7 @@ func (h *HealthHandler) AddChecker(checker health.Checker) {
 // @Tags 健康检查
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.Response{data=map[string]string}
 // @Router /health [get]
 func (h *HealthHandler) Health(c *gin.Context) {
 	h.Liveness(c)
@@ -49,8 +49,8 @@ func (h *HealthHandler) Health(c *gin.Context) {
 // @Tags 健康检查
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.Response
-// @Failure 503 {object} response.Response
+// @Success 200 {object} response.Response{data=map[string]any}
+// @Failure 503 {object} response.Response{data=map[string]any}
 // @Router /readiness [get]
 func (h *HealthHandler) Readiness(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), readinessCheckTimeout)
@@ -88,7 +88,7 @@ func (h *HealthHandler) Readiness(c *gin.Context) {
 // @Tags 健康检查
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.Response{data=map[string]string}
 // @Router /liveness [get]
 func (h *HealthHandler) Liveness(c *gin.Context) {
 	response.Success(c, gin.H{
@@ -102,7 +102,7 @@ func (h *HealthHandler) Liveness(c *gin.Context) {
 // @Tags 健康检查
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.Response{data=map[string]string}
 // @Router /version [get]
 func (h *HealthHandler) Version(c *gin.Context) {
 	response.Success(c, gin.H{

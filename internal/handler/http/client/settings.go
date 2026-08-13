@@ -18,14 +18,14 @@ func NewSettingsHandler(settings clientsvc.ClientSettingsService) *SettingsHandl
 	return &SettingsHandler{settings: settings}
 }
 
-// GetSettings godoc
+// GetSettings
 // @Summary 获取客户端设置
-// @Description 按分组获取客户端设置（支持多分组：site/feature）
+// @Description 按分组获取客户端设置（支持多分组：site/feature）。单分组时 data 为对应结构，多分组时 data 为 "分组名→结构" 的 map
 // @Tags 用户端｜站点设置
 // @Accept json
 // @Produce json
-// @Param groups query []string true "设置分组 (site/feature)" collectionFormat(multi)
-// @Success 200 {object} response.Response
+// @Param q query clientdto.GetSettingsQuery true "查询参数"
+// @Success 200 {object} response.Response{data=map[string]any}
 // @Router /api/client/v1/settings [get]
 func (h *SettingsHandler) GetSettings(c *gin.Context) {
 	var q clientdto.GetSettingsQuery

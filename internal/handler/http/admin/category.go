@@ -19,12 +19,13 @@ func NewCategoryHandler(svc adminsvc.CategoryService) *CategoryHandler {
 	return &CategoryHandler{svc: svc}
 }
 
-// List godoc
+// List
 // @Summary 分类树
 // @Description 获取分类树形列表
 // @Tags 管理端｜分类管理
 // @Produce json
-// @Success 200 {object} response.Response
+// @Security BearerAuth
+// @Success 200 {object} response.Response{data=[]admindto.CategoryResponse}
 // @Router /api/admin/v1/categories [get]
 func (h *CategoryHandler) List(c *gin.Context) {
 	items, err := h.svc.ListTree(c.Request.Context(), false)
@@ -35,14 +36,15 @@ func (h *CategoryHandler) List(c *gin.Context) {
 	response.Success(c, items)
 }
 
-// Create godoc
+// Create
 // @Summary 新建分类
 // @Description 创建一个新的分类
 // @Tags 管理端｜分类管理
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param body body admindto.CreateCategoryRequest true "分类参数"
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.Response{data=admindto.CategoryResponse}
 // @Router /api/admin/v1/categories [post]
 func (h *CategoryHandler) Create(c *gin.Context) {
 	var req admindto.CreateCategoryRequest
@@ -57,15 +59,16 @@ func (h *CategoryHandler) Create(c *gin.Context) {
 	response.Success(c, item)
 }
 
-// Update godoc
+// Update
 // @Summary 更新分类
 // @Description 更新指定分类信息
 // @Tags 管理端｜分类管理
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "分类ID"
 // @Param body body admindto.UpdateCategoryRequest true "分类参数"
-// @Success 200 {object} response.Response
+// @Success 200 {object} response.Response{data=admindto.CategoryResponse}
 // @Router /api/admin/v1/categories/{id} [put]
 func (h *CategoryHandler) Update(c *gin.Context) {
 	var uri shareddto.IDURI
@@ -84,11 +87,12 @@ func (h *CategoryHandler) Update(c *gin.Context) {
 	response.Success(c, item)
 }
 
-// Delete godoc
+// Delete
 // @Summary 删除分类
 // @Description 删除指定分类
 // @Tags 管理端｜分类管理
 // @Produce json
+// @Security BearerAuth
 // @Param id path int true "分类ID"
 // @Success 200 {object} response.Response
 // @Router /api/admin/v1/categories/{id} [delete]

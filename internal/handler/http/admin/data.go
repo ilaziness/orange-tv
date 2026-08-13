@@ -26,7 +26,8 @@ func NewDataHandler(svc adminsvc.DataService) *DataHandler {
 // @Description 导出全量 SQL 备份文件
 // @Tags 管理端｜数据管理
 // @Produce octet-stream
-// @Param native query string false "是否使用原生备份工具：1/true 使用，0 使用 Go 实现"
+// @Security BearerAuth
+// @Param req query admindto.BackupQuery true "查询参数"
 // @Success 200 {file} file "SQL 备份文件"
 // @Router /api/admin/v1/data/backup [get]
 func (h *DataHandler) Backup(c *gin.Context) {
@@ -53,6 +54,7 @@ func (h *DataHandler) Backup(c *gin.Context) {
 // @Tags 管理端｜数据管理
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param body body admindto.BatchUpdatePreviewRequest true "批量更新预览请求"
 // @Success 200 {object} response.Response{data=admindto.BatchUpdatePreviewResponse}
 // @Router /api/admin/v1/data/batch-update/preview [post]
@@ -75,6 +77,7 @@ func (h *DataHandler) BatchUpdatePreview(c *gin.Context) {
 // @Tags 管理端｜数据管理
 // @Accept json
 // @Produce json
+// @Security BearerAuth
 // @Param body body admindto.BatchUpdateExecuteRequest true "批量更新执行请求"
 // @Success 200 {object} response.Response{data=admindto.BatchUpdateExecuteResponse}
 // @Router /api/admin/v1/data/batch-update/execute [post]
