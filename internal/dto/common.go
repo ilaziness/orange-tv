@@ -7,9 +7,12 @@ package dto
 
 // PaginationRequest 分页请求参数（兼容 page_size / limit）。
 type PaginationRequest struct {
-	Page     int `form:"page" json:"page" binding:"omitempty,min=1,max=1000000"`
+	// 页码，从 1 开始
+	Page int `form:"page" json:"page" binding:"omitempty,min=1,max=1000000"`
+	// 每页数量（优先于 limit），范围 1-100
 	PageSize int `form:"page_size" json:"page_size" binding:"omitempty,min=1,max=100"`
-	Limit    int `form:"limit" json:"limit" binding:"omitempty,min=1,max=100"`
+	// 每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100
+	Limit int `form:"limit" json:"limit" binding:"omitempty,min=1,max=100"`
 }
 
 // GetPage 获取页码，如果未设置则返回默认值1
@@ -56,11 +59,14 @@ func (p *PaginationRequest) GetTotalPages(total int) int {
 
 // IDURI is a common URI path parameter.
 type IDURI struct {
+	// 资源ID
 	ID uint32 `uri:"id" binding:"required,gt=0"`
 }
 
 // NamedItem is a simple id/name pair shared by content APIs.
 type NamedItem struct {
-	ID   uint32 `json:"id"`
+	// 条目ID
+	ID uint32 `json:"id"`
+	// 条目名称
 	Name string `json:"name"`
 }

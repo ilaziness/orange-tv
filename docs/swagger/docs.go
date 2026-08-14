@@ -45,6 +45,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "关键词搜索（名称）",
                         "name": "keyword",
                         "in": "query"
                     },
@@ -52,6 +53,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100",
                         "name": "limit",
                         "in": "query"
                     },
@@ -59,6 +61,7 @@ const docTemplate = `{
                         "maximum": 1000000,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "页码，从 1 开始",
                         "name": "page",
                         "in": "query"
                     },
@@ -66,6 +69,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（优先于 limit），范围 1-100",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -267,6 +271,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "结束时间（RFC3339 或日期字符串）",
                         "name": "end",
                         "in": "query"
                     },
@@ -274,6 +279,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100",
                         "name": "limit",
                         "in": "query"
                     },
@@ -281,6 +287,7 @@ const docTemplate = `{
                         "maximum": 1000000,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "页码，从 1 开始",
                         "name": "page",
                         "in": "query"
                     },
@@ -288,11 +295,13 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（优先于 limit），范围 1-100",
                         "name": "page_size",
                         "in": "query"
                     },
                     {
                         "type": "string",
+                        "description": "开始时间（RFC3339 或日期字符串）",
                         "name": "start",
                         "in": "query"
                     },
@@ -302,11 +311,13 @@ const docTemplate = `{
                             2
                         ],
                         "type": "integer",
+                        "description": "登录结果筛选（1=成功，2=失败）",
                         "name": "status",
                         "in": "query"
                     },
                     {
                         "type": "string",
+                        "description": "管理员用户名筛选",
                         "name": "username",
                         "in": "query"
                     }
@@ -369,11 +380,13 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "description": "用户组ID筛选",
                         "name": "group_id",
                         "in": "query"
                     },
                     {
                         "type": "string",
+                        "description": "关键词搜索（用户名/昵称）",
                         "name": "keyword",
                         "in": "query"
                     },
@@ -381,6 +394,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100",
                         "name": "limit",
                         "in": "query"
                     },
@@ -388,6 +402,7 @@ const docTemplate = `{
                         "maximum": 1000000,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "页码，从 1 开始",
                         "name": "page",
                         "in": "query"
                     },
@@ -395,11 +410,13 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（优先于 limit），范围 1-100",
                         "name": "page_size",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "状态筛选（0=禁用，1=启用）",
                         "name": "status",
                         "in": "query"
                     }
@@ -649,6 +666,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100",
                         "name": "limit",
                         "in": "query"
                     },
@@ -656,6 +674,7 @@ const docTemplate = `{
                         "maximum": 1000000,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "页码，从 1 开始",
                         "name": "page",
                         "in": "query"
                     },
@@ -663,6 +682,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（优先于 limit），范围 1-100",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -866,13 +886,13 @@ const docTemplate = `{
                         "maximum": 200,
                         "minimum": 1,
                         "type": "integer",
-                        "description": "Limit is the max number of log lines to return (default 50, max 200).",
+                        "description": "返回的最大日志行数（默认 50，最大 200）",
                         "name": "limit",
                         "in": "query"
                     },
                     {
                         "type": "integer",
-                        "description": "Offset is the byte offset from the end of file; 0 means start from the last byte.",
+                        "description": "距文件末尾的字节偏移量，0 表示从末尾开始",
                         "name": "offset",
                         "in": "query"
                     }
@@ -1121,6 +1141,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100",
                         "name": "limit",
                         "in": "query"
                     },
@@ -1128,6 +1149,7 @@ const docTemplate = `{
                         "maximum": 1000000,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "页码，从 1 开始",
                         "name": "page",
                         "in": "query"
                     },
@@ -1135,6 +1157,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（优先于 limit），范围 1-100",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -1517,6 +1540,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100",
                         "name": "limit",
                         "in": "query"
                     },
@@ -1524,6 +1548,7 @@ const docTemplate = `{
                         "maximum": 1000000,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "页码，从 1 开始",
                         "name": "page",
                         "in": "query"
                     },
@@ -1531,11 +1556,13 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（优先于 limit），范围 1-100",
                         "name": "page_size",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "状态筛选（0=禁用，1=启用）",
                         "name": "status",
                         "in": "query"
                     }
@@ -2067,6 +2094,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100",
                         "name": "limit",
                         "in": "query"
                     },
@@ -2074,6 +2102,7 @@ const docTemplate = `{
                         "maximum": 1000000,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "页码，从 1 开始",
                         "name": "page",
                         "in": "query"
                     },
@@ -2081,11 +2110,13 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（优先于 limit），范围 1-100",
                         "name": "page_size",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "采集源ID筛选",
                         "name": "source_id",
                         "in": "query"
                     }
@@ -2148,6 +2179,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "关键词搜索（评论内容/用户名）",
                         "name": "keyword",
                         "in": "query"
                     },
@@ -2155,6 +2187,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100",
                         "name": "limit",
                         "in": "query"
                     },
@@ -2162,6 +2195,7 @@ const docTemplate = `{
                         "maximum": 1000000,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "页码，从 1 开始",
                         "name": "page",
                         "in": "query"
                     },
@@ -2169,6 +2203,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（优先于 limit），范围 1-100",
                         "name": "page_size",
                         "in": "query"
                     },
@@ -2178,12 +2213,14 @@ const docTemplate = `{
                             1
                         ],
                         "type": "integer",
+                        "description": "审核状态筛选（0=待审核/未通过，1=已通过）",
                         "name": "status",
                         "in": "query"
                     },
                     {
                         "minimum": 1,
                         "type": "integer",
+                        "description": "视频ID筛选",
                         "name": "video_id",
                         "in": "query"
                     }
@@ -2415,6 +2452,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "是否使用原生 SQL 备份（true/false）",
                         "name": "native",
                         "in": "query"
                     }
@@ -2552,6 +2590,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "关键词搜索（名称）",
                         "name": "keyword",
                         "in": "query"
                     },
@@ -2559,6 +2598,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100",
                         "name": "limit",
                         "in": "query"
                     },
@@ -2566,6 +2606,7 @@ const docTemplate = `{
                         "maximum": 1000000,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "页码，从 1 开始",
                         "name": "page",
                         "in": "query"
                     },
@@ -2573,6 +2614,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（优先于 limit），范围 1-100",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -2774,6 +2816,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "关键词搜索（名称）",
                         "name": "keyword",
                         "in": "query"
                     },
@@ -2781,6 +2824,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100",
                         "name": "limit",
                         "in": "query"
                     },
@@ -2788,6 +2832,7 @@ const docTemplate = `{
                         "maximum": 1000000,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "页码，从 1 开始",
                         "name": "page",
                         "in": "query"
                     },
@@ -2795,6 +2840,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（优先于 limit），范围 1-100",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -2996,11 +3042,13 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "频道分类筛选",
                         "name": "category",
                         "in": "query"
                     },
                     {
                         "type": "string",
+                        "description": "关键词搜索（频道名称）",
                         "name": "keyword",
                         "in": "query"
                     },
@@ -3008,6 +3056,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100",
                         "name": "limit",
                         "in": "query"
                     },
@@ -3015,6 +3064,7 @@ const docTemplate = `{
                         "maximum": 1000000,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "页码，从 1 开始",
                         "name": "page",
                         "in": "query"
                     },
@@ -3022,11 +3072,13 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（优先于 limit），范围 1-100",
                         "name": "page_size",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "状态筛选（0=禁用，1=启用）",
                         "name": "status",
                         "in": "query"
                     }
@@ -3318,6 +3370,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100",
                         "name": "limit",
                         "in": "query"
                     },
@@ -3325,6 +3378,7 @@ const docTemplate = `{
                         "maximum": 1000000,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "页码，从 1 开始",
                         "name": "page",
                         "in": "query"
                     },
@@ -3332,12 +3386,14 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（优先于 limit），范围 1-100",
                         "name": "page_size",
                         "in": "query"
                     },
                     {
                         "minimum": 1,
                         "type": "integer",
+                        "description": "播放源ID（必填）",
                         "name": "source_id",
                         "in": "query",
                         "required": true
@@ -3345,6 +3401,7 @@ const docTemplate = `{
                     {
                         "minimum": 1,
                         "type": "integer",
+                        "description": "视频ID（必填）",
                         "name": "video_id",
                         "in": "query",
                         "required": true
@@ -3793,6 +3850,7 @@ const docTemplate = `{
                             "feature"
                         ],
                         "type": "string",
+                        "description": "配置分组（site=站点信息，api=API/资源站，feature=功能开关）",
                         "name": "group",
                         "in": "query",
                         "required": true
@@ -3893,11 +3951,13 @@ const docTemplate = `{
                     {
                         "minimum": 1,
                         "type": "integer",
+                        "description": "管理员ID筛选",
                         "name": "admin_id",
                         "in": "query"
                     },
                     {
                         "type": "string",
+                        "description": "结束时间（RFC3339 或日期字符串）",
                         "name": "end",
                         "in": "query"
                     },
@@ -3909,6 +3969,7 @@ const docTemplate = `{
                             4
                         ],
                         "type": "integer",
+                        "description": "日志级别筛选（1=Debug，2=Info，3=Warn，4=Error）",
                         "name": "level",
                         "in": "query"
                     },
@@ -3916,11 +3977,13 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100",
                         "name": "limit",
                         "in": "query"
                     },
                     {
                         "type": "string",
+                        "description": "模块筛选",
                         "name": "module",
                         "in": "query"
                     },
@@ -3928,6 +3991,7 @@ const docTemplate = `{
                         "maximum": 1000000,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "页码，从 1 开始",
                         "name": "page",
                         "in": "query"
                     },
@@ -3935,12 +3999,13 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（优先于 limit），范围 1-100",
                         "name": "page_size",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "Start / End are RFC3339 or date strings; optional.",
+                        "description": "开始时间（RFC3339 或日期字符串）",
                         "name": "start",
                         "in": "query"
                     }
@@ -4003,6 +4068,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "关键词搜索（名称）",
                         "name": "keyword",
                         "in": "query"
                     },
@@ -4010,6 +4076,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100",
                         "name": "limit",
                         "in": "query"
                     },
@@ -4017,6 +4084,7 @@ const docTemplate = `{
                         "maximum": 1000000,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "页码，从 1 开始",
                         "name": "page",
                         "in": "query"
                     },
@@ -4024,6 +4092,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（优先于 limit），范围 1-100",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -4225,6 +4294,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "结束时间（RFC3339 或日期字符串）",
                         "name": "end",
                         "in": "query"
                     },
@@ -4232,6 +4302,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100",
                         "name": "limit",
                         "in": "query"
                     },
@@ -4239,6 +4310,7 @@ const docTemplate = `{
                         "maximum": 1000000,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "页码，从 1 开始",
                         "name": "page",
                         "in": "query"
                     },
@@ -4246,11 +4318,13 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（优先于 limit），范围 1-100",
                         "name": "page_size",
                         "in": "query"
                     },
                     {
                         "type": "string",
+                        "description": "开始时间（RFC3339 或日期字符串）",
                         "name": "start",
                         "in": "query"
                     },
@@ -4260,17 +4334,20 @@ const docTemplate = `{
                             2
                         ],
                         "type": "integer",
+                        "description": "登录结果筛选（1=成功，2=失败）",
                         "name": "status",
                         "in": "query"
                     },
                     {
                         "minimum": 1,
                         "type": "integer",
+                        "description": "用户ID筛选",
                         "name": "user_id",
                         "in": "query"
                     },
                     {
                         "type": "string",
+                        "description": "用户名筛选",
                         "name": "username",
                         "in": "query"
                     }
@@ -4333,6 +4410,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "关键词搜索（用户名/昵称）",
                         "name": "keyword",
                         "in": "query"
                     },
@@ -4340,6 +4418,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100",
                         "name": "limit",
                         "in": "query"
                     },
@@ -4347,6 +4426,7 @@ const docTemplate = `{
                         "maximum": 1000000,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "页码，从 1 开始",
                         "name": "page",
                         "in": "query"
                     },
@@ -4354,11 +4434,13 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（优先于 limit），范围 1-100",
                         "name": "page_size",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "状态筛选（0=禁用，1=启用）",
                         "name": "status",
                         "in": "query"
                     }
@@ -4606,26 +4688,31 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "description": "演员ID筛选",
                         "name": "actor_id",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "分类ID筛选",
                         "name": "category_id",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "导演ID筛选",
                         "name": "director_id",
                         "in": "query"
                     },
                     {
                         "type": "string",
+                        "description": "关键词搜索（标题）",
                         "name": "keyword",
                         "in": "query"
                     },
                     {
                         "type": "string",
+                        "description": "语言筛选",
                         "name": "language",
                         "in": "query"
                     },
@@ -4633,6 +4720,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100",
                         "name": "limit",
                         "in": "query"
                     },
@@ -4640,6 +4728,7 @@ const docTemplate = `{
                         "maximum": 1000000,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "页码，从 1 开始",
                         "name": "page",
                         "in": "query"
                     },
@@ -4647,26 +4736,31 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（优先于 limit），范围 1-100",
                         "name": "page_size",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "上架状态筛选（0=未上架，1=已上架）",
                         "name": "publish_status",
                         "in": "query"
                     },
                     {
                         "type": "string",
+                        "description": "地区筛选",
                         "name": "region",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "标签ID筛选",
                         "name": "tag_id",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "年份筛选",
                         "name": "year",
                         "in": "query"
                     }
@@ -5062,6 +5156,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100",
                         "name": "limit",
                         "in": "query"
                     },
@@ -5069,6 +5164,7 @@ const docTemplate = `{
                         "maximum": 1000000,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "页码，从 1 开始",
                         "name": "page",
                         "in": "query"
                     },
@@ -5076,6 +5172,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（优先于 limit），范围 1-100",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -5434,6 +5531,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100",
                         "name": "limit",
                         "in": "query"
                     },
@@ -5441,6 +5539,7 @@ const docTemplate = `{
                         "maximum": 1000000,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "页码，从 1 开始",
                         "name": "page",
                         "in": "query"
                     },
@@ -5448,6 +5547,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（优先于 limit），范围 1-100",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -5570,6 +5670,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100",
                         "name": "limit",
                         "in": "query"
                     },
@@ -5577,6 +5678,7 @@ const docTemplate = `{
                         "maximum": 1000000,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "页码，从 1 开始",
                         "name": "page",
                         "in": "query"
                     },
@@ -5584,6 +5686,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（优先于 limit），范围 1-100",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -5767,6 +5870,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100",
                         "name": "limit",
                         "in": "query"
                     },
@@ -5774,6 +5878,7 @@ const docTemplate = `{
                         "maximum": 1000000,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "页码，从 1 开始",
                         "name": "page",
                         "in": "query"
                     },
@@ -5781,6 +5886,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（优先于 limit），范围 1-100",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -5979,6 +6085,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "分类筛选（可选）",
                         "name": "category",
                         "in": "query"
                     },
@@ -5986,6 +6093,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100",
                         "name": "limit",
                         "in": "query"
                     },
@@ -5993,6 +6101,7 @@ const docTemplate = `{
                         "maximum": 1000000,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "页码，从 1 开始",
                         "name": "page",
                         "in": "query"
                     },
@@ -6000,6 +6109,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（优先于 limit），范围 1-100",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -6093,6 +6203,7 @@ const docTemplate = `{
                             "general"
                         ],
                         "type": "string",
+                        "description": "广告场景（video_loading=片头加载广告，general=通用广告）",
                         "name": "scene",
                         "in": "query",
                         "required": true
@@ -6239,6 +6350,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "description": "分类ID筛选",
                         "name": "category_id",
                         "in": "query"
                     },
@@ -6246,6 +6358,7 @@ const docTemplate = `{
                         "maxLength": 10,
                         "minLength": 1,
                         "type": "string",
+                        "description": "搜索关键词（1-10 字，必填）",
                         "name": "keyword",
                         "in": "query",
                         "required": true
@@ -6254,6 +6367,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100",
                         "name": "limit",
                         "in": "query"
                     },
@@ -6261,6 +6375,7 @@ const docTemplate = `{
                         "maximum": 1000000,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "页码，从 1 开始",
                         "name": "page",
                         "in": "query"
                     },
@@ -6268,31 +6383,37 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（优先于 limit），范围 1-100",
                         "name": "page_size",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "父分类ID筛选",
                         "name": "parent_category_id",
                         "in": "query"
                     },
                     {
                         "type": "string",
+                        "description": "地区筛选",
                         "name": "region",
                         "in": "query"
                     },
                     {
                         "type": "string",
+                        "description": "排序方式（如 latest=最新，rating=评分）",
                         "name": "sort",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "结束年份筛选",
                         "name": "year_end",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "起始年份筛选",
                         "name": "year_start",
                         "in": "query"
                     }
@@ -6355,6 +6476,7 @@ const docTemplate = `{
                             "type": "string"
                         },
                         "collectionFormat": "csv",
+                        "description": "配置分组（site=站点信息，feature=功能开关），可传多个",
                         "name": "groups",
                         "in": "query",
                         "required": true
@@ -6399,6 +6521,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "description": "分类ID筛选",
                         "name": "category_id",
                         "in": "query"
                     },
@@ -6406,6 +6529,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100",
                         "name": "limit",
                         "in": "query"
                     },
@@ -6413,6 +6537,7 @@ const docTemplate = `{
                         "maximum": 1000000,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "页码，从 1 开始",
                         "name": "page",
                         "in": "query"
                     },
@@ -6420,31 +6545,37 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（优先于 limit），范围 1-100",
                         "name": "page_size",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "父分类ID筛选",
                         "name": "parent_category_id",
                         "in": "query"
                     },
                     {
                         "type": "string",
+                        "description": "地区筛选",
                         "name": "region",
                         "in": "query"
                     },
                     {
                         "type": "string",
+                        "description": "排序方式（如 latest=最新，rating=评分）",
                         "name": "sort",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "结束年份筛选",
                         "name": "year_end",
                         "in": "query"
                     },
                     {
                         "type": "integer",
+                        "description": "起始年份筛选",
                         "name": "year_start",
                         "in": "query"
                     }
@@ -6552,6 +6683,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100",
                         "name": "limit",
                         "in": "query"
                     },
@@ -6559,6 +6691,7 @@ const docTemplate = `{
                         "maximum": 1000000,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "页码，从 1 开始",
                         "name": "page",
                         "in": "query"
                     },
@@ -6566,6 +6699,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（优先于 limit），范围 1-100",
                         "name": "page_size",
                         "in": "query"
                     }
@@ -6690,6 +6824,7 @@ const docTemplate = `{
                         "maximum": 50,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "返回数量（1-50，默认由服务端控制）",
                         "name": "limit",
                         "in": "query"
                     }
@@ -6781,7 +6916,7 @@ const docTemplate = `{
                             "all"
                         ],
                         "type": "string",
-                        "description": "DataRange filters by created_at (today/last1d/last3d/last1w/last1m/all). Empty = all.",
+                        "description": "按创建时间筛选（today/last1d/last3d/last1w/last1m/all），为空表示全部",
                         "name": "data_range",
                         "in": "query"
                     },
@@ -6789,6 +6924,7 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100",
                         "name": "limit",
                         "in": "query"
                     },
@@ -6796,6 +6932,7 @@ const docTemplate = `{
                         "maximum": 1000000,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "页码，从 1 开始",
                         "name": "page",
                         "in": "query"
                     },
@@ -6803,13 +6940,14 @@ const docTemplate = `{
                         "maximum": 100,
                         "minimum": 1,
                         "type": "integer",
+                        "description": "每页数量（优先于 limit），范围 1-100",
                         "name": "page_size",
                         "in": "query"
                     },
                     {
                         "maxLength": 10,
                         "type": "string",
-                        "description": "Source filters videos by play source name (exact match). Empty = no filter.",
+                        "description": "按播放源名称筛选（精确匹配），为空表示不筛选",
                         "name": "source",
                         "in": "query"
                     }
@@ -6872,6 +7010,7 @@ const docTemplate = `{
                             "type": "integer"
                         },
                         "collectionFormat": "csv",
+                        "description": "视频ID列表（最多 50 个，可传多个 id 参数）",
                         "name": "id",
                         "in": "query",
                         "required": true
@@ -7077,36 +7216,47 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "ad_key": {
+                    "description": "广告标识 key",
                     "type": "string"
                 },
                 "content_code": {
+                    "description": "自定义代码内容（type=code 时使用）",
                     "type": "string"
                 },
                 "content_url": {
+                    "description": "内容资源地址",
                     "type": "string"
                 },
                 "duration": {
+                    "description": "广告时长（秒）",
                     "type": "integer"
                 },
                 "id": {
+                    "description": "广告ID",
                     "type": "integer"
                 },
                 "link_url": {
+                    "description": "点击跳转链接",
                     "type": "string"
                 },
                 "scene": {
+                    "description": "广告场景（video_loading=片头加载广告，general=通用广告）",
                     "type": "string"
                 },
                 "sort": {
+                    "description": "排序权重，值越小越靠前",
                     "type": "integer"
                 },
                 "status": {
+                    "description": "状态（0=禁用，1=启用）",
                     "type": "integer"
                 },
                 "title": {
+                    "description": "广告标题",
                     "type": "string"
                 },
                 "type": {
+                    "description": "广告类型（image=图片，video=视频，html=HTML，code=自定义代码）",
                     "type": "string"
                 }
             }
@@ -7115,30 +7265,39 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "avatar": {
+                    "description": "头像地址",
                     "type": "string"
                 },
                 "created_at": {
+                    "description": "创建时间",
                     "type": "string"
                 },
                 "email": {
+                    "description": "邮箱",
                     "type": "string"
                 },
                 "group_id": {
+                    "description": "用户组ID",
                     "type": "integer"
                 },
                 "group_name": {
+                    "description": "用户组名称",
                     "type": "string"
                 },
                 "id": {
+                    "description": "管理员ID",
                     "type": "integer"
                 },
                 "last_login_at": {
+                    "description": "最近登录时间",
                     "type": "string"
                 },
                 "status": {
+                    "description": "状态（0=禁用，1=启用）",
                     "type": "integer"
                 },
                 "username": {
+                    "description": "用户名",
                     "type": "string"
                 }
             }
@@ -7147,24 +7306,31 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "created_at": {
+                    "description": "登录时间",
                     "type": "string"
                 },
                 "id": {
+                    "description": "日志ID",
                     "type": "integer"
                 },
                 "ip": {
+                    "description": "登录 IP 地址",
                     "type": "string"
                 },
                 "status": {
+                    "description": "登录结果（1=成功，2=失败）",
                     "type": "integer"
                 },
                 "user_agent": {
+                    "description": "User-Agent 信息",
                     "type": "string"
                 },
                 "user_id": {
+                    "description": "管理员用户ID",
                     "type": "integer"
                 },
                 "username": {
+                    "description": "管理员用户名",
                     "type": "string"
                 }
             }
@@ -7173,16 +7339,20 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "fields": {
+                    "description": "附加字段",
                     "type": "object",
                     "additionalProperties": {}
                 },
                 "level": {
+                    "description": "日志级别（如 info、error）",
                     "type": "string"
                 },
                 "msg": {
+                    "description": "日志消息",
                     "type": "string"
                 },
                 "time": {
+                    "description": "日志时间",
                     "type": "string"
                 }
             }
@@ -7191,15 +7361,18 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "has_more": {
+                    "description": "是否还有更多",
                     "type": "boolean"
                 },
                 "list": {
+                    "description": "日志列表",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/admin.AppLogItem"
                     }
                 },
                 "next_offset": {
+                    "description": "下一次读取的偏移量",
                     "type": "integer"
                 }
             }
@@ -7208,24 +7381,31 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "cover": {
+                    "description": "封面地址",
                     "type": "string"
                 },
                 "id": {
+                    "description": "横幅ID",
                     "type": "integer"
                 },
                 "link": {
+                    "description": "跳转链接",
                     "type": "string"
                 },
                 "sort": {
+                    "description": "排序权重，值越小越靠前",
                     "type": "integer"
                 },
                 "status": {
+                    "description": "状态（0=禁用，1=启用）",
                     "type": "integer"
                 },
                 "title": {
+                    "description": "横幅标题",
                     "type": "string"
                 },
                 "video_id": {
+                    "description": "关联视频ID",
                     "type": "integer"
                 }
             }
@@ -7238,10 +7418,12 @@ const docTemplate = `{
             ],
             "properties": {
                 "source_id": {
+                    "description": "播放源ID（必填）",
                     "type": "integer",
                     "minimum": 1
                 },
                 "status": {
+                    "description": "目标状态（0=禁用，1=启用）",
                     "type": "integer",
                     "enum": [
                         0,
@@ -7249,6 +7431,7 @@ const docTemplate = `{
                     ]
                 },
                 "video_id": {
+                    "description": "视频ID（必填）",
                     "type": "integer",
                     "minimum": 1
                 }
@@ -7258,6 +7441,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "affected": {
+                    "description": "受影响的行数",
                     "type": "integer"
                 }
             }
@@ -7271,14 +7455,17 @@ const docTemplate = `{
             ],
             "properties": {
                 "new_value": {
+                    "description": "新值（必填）",
                     "type": "string",
                     "maxLength": 2000
                 },
                 "old_value": {
+                    "description": "旧值（必填）",
                     "type": "string",
                     "maxLength": 2000
                 },
                 "target": {
+                    "description": "目标字段（video_cover=视频封面，episode_url=剧集地址，必填）",
                     "type": "string",
                     "enum": [
                         "video_cover",
@@ -7291,6 +7478,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "updated_rows": {
+                    "description": "更新成功的数据行数",
                     "type": "integer"
                 }
             }
@@ -7303,10 +7491,12 @@ const docTemplate = `{
             ],
             "properties": {
                 "old_value": {
+                    "description": "旧值（必填）",
                     "type": "string",
                     "maxLength": 2000
                 },
                 "target": {
+                    "description": "目标字段（video_cover=视频封面，episode_url=剧集地址，必填）",
                     "type": "string",
                     "enum": [
                         "video_cover",
@@ -7319,6 +7509,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "matched_rows": {
+                    "description": "匹配到的数据行数",
                     "type": "integer"
                 }
             }
@@ -7330,6 +7521,7 @@ const docTemplate = `{
             ],
             "properties": {
                 "ids": {
+                    "description": "视频ID列表（1-500 个，必填）",
                     "type": "array",
                     "maxItems": 500,
                     "minItems": 1,
@@ -7338,6 +7530,7 @@ const docTemplate = `{
                     }
                 },
                 "status": {
+                    "description": "操作后的状态（0=下架，1=上架）",
                     "type": "integer",
                     "enum": [
                         0,
@@ -7350,6 +7543,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "affected": {
+                    "description": "受影响的行数",
                     "type": "integer"
                 }
             }
@@ -7358,24 +7552,30 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "children": {
+                    "description": "子分类列表",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/admin.CategoryResponse"
                     }
                 },
                 "id": {
+                    "description": "分类ID",
                     "type": "integer"
                 },
                 "name": {
+                    "description": "分类名称",
                     "type": "string"
                 },
                 "parent_id": {
+                    "description": "父分类ID，0 表示顶级分类",
                     "type": "integer"
                 },
                 "sort_order": {
+                    "description": "排序权重，值越小越靠前",
                     "type": "integer"
                 },
                 "status": {
+                    "description": "状态（0=禁用，1=启用）",
                     "type": "integer"
                 }
             }
@@ -7388,11 +7588,13 @@ const docTemplate = `{
             ],
             "properties": {
                 "new_password": {
+                    "description": "新密码（必填，6-72 位）",
                     "type": "string",
                     "maxLength": 72,
                     "minLength": 6
                 },
                 "old_password": {
+                    "description": "旧密码（必填）",
                     "type": "string",
                     "maxLength": 72,
                     "minLength": 6
@@ -7407,9 +7609,11 @@ const docTemplate = `{
             ],
             "properties": {
                 "category_id": {
+                    "description": "系统分类ID（必填）",
                     "type": "integer"
                 },
                 "external_category_id": {
+                    "description": "外部分类ID（必填）",
                     "type": "integer"
                 }
             }
@@ -7418,15 +7622,19 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "category_id": {
+                    "description": "系统分类ID",
                     "type": "integer"
                 },
                 "external_category_id": {
+                    "description": "外部分类ID",
                     "type": "integer"
                 },
                 "id": {
+                    "description": "映射ID",
                     "type": "integer"
                 },
                 "source_id": {
+                    "description": "采集源ID",
                     "type": "integer"
                 }
             }
@@ -7435,24 +7643,31 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "collect_count": {
+                    "description": "采集数量",
                     "type": "integer"
                 },
                 "created_at": {
+                    "description": "执行时间",
                     "type": "string"
                 },
                 "duration_sec": {
+                    "description": "执行耗时（秒）",
                     "type": "integer"
                 },
                 "id": {
+                    "description": "日志ID",
                     "type": "integer"
                 },
                 "source_id": {
+                    "description": "采集源ID",
                     "type": "integer"
                 },
                 "source_name": {
+                    "description": "采集源名称",
                     "type": "string"
                 },
                 "status": {
+                    "description": "执行状态（0=失败，1=成功）",
                     "type": "integer"
                 }
             }
@@ -7464,6 +7679,7 @@ const docTemplate = `{
             ],
             "properties": {
                 "data_range": {
+                    "description": "采集数据范围（必填：today=今日，last1d/last3d/last1w/last1m=近N天，all=全部）",
                     "type": "string",
                     "enum": [
                         "today",
@@ -7480,36 +7696,47 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "collect_url": {
+                    "description": "采集接口地址",
                     "type": "string"
                 },
                 "cron_expr": {
+                    "description": "定时采集 cron 表达式",
                     "type": "string"
                 },
                 "data_range": {
+                    "description": "采集数据范围",
                     "type": "string"
                 },
                 "id": {
+                    "description": "采集源ID",
                     "type": "integer"
                 },
                 "last_collect_at": {
+                    "description": "最近采集时间",
                     "type": "string"
                 },
                 "name": {
+                    "description": "采集源名称",
                     "type": "string"
                 },
                 "play_source_id": {
+                    "description": "关联播放源ID",
                     "type": "integer"
                 },
                 "play_source_name": {
+                    "description": "关联播放源名称",
                     "type": "string"
                 },
                 "schedule_enabled": {
+                    "description": "是否启用定时采集（0=否，1=是）",
                     "type": "integer"
                 },
                 "status": {
+                    "description": "状态（0=禁用，1=启用）",
                     "type": "integer"
                 },
                 "type": {
+                    "description": "采集源类型（1=API，2=其他）",
                     "type": "integer"
                 }
             }
@@ -7518,36 +7745,47 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "content": {
+                    "description": "评论内容",
                     "type": "string"
                 },
                 "created_at": {
+                    "description": "评论时间",
                     "type": "string"
                 },
                 "dislike_count": {
+                    "description": "踩数",
                     "type": "integer"
                 },
                 "id": {
+                    "description": "评论ID",
                     "type": "integer"
                 },
                 "like_count": {
+                    "description": "点赞数",
                     "type": "integer"
                 },
                 "parent_id": {
+                    "description": "父评论ID，0 表示顶级评论",
                     "type": "integer"
                 },
                 "status": {
+                    "description": "审核状态（0=未通过，1=通过）",
                     "type": "integer"
                 },
                 "user_id": {
+                    "description": "用户ID",
                     "type": "integer"
                 },
                 "username": {
+                    "description": "用户名",
                     "type": "string"
                 },
                 "video_id": {
+                    "description": "视频ID",
                     "type": "integer"
                 },
                 "video_title": {
+                    "description": "视频标题",
                     "type": "string"
                 }
             }
@@ -7556,21 +7794,27 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "content": {
+                    "description": "评论内容",
                     "type": "string"
                 },
                 "created_at": {
+                    "description": "评论时间",
                     "type": "string"
                 },
                 "id": {
+                    "description": "评论ID",
                     "type": "integer"
                 },
                 "parent_id": {
+                    "description": "父评论ID",
                     "type": "integer"
                 },
                 "user_id": {
+                    "description": "用户ID",
                     "type": "integer"
                 },
                 "username": {
+                    "description": "用户名",
                     "type": "string"
                 }
             }
@@ -7585,28 +7829,34 @@ const docTemplate = `{
             ],
             "properties": {
                 "ad_key": {
+                    "description": "广告标识 key（必填）",
                     "type": "string",
                     "maxLength": 50,
                     "minLength": 1
                 },
                 "content_code": {
+                    "description": "自定义代码内容（type=code 时使用）",
                     "type": "string",
                     "maxLength": 10000
                 },
                 "content_url": {
+                    "description": "内容资源地址",
                     "type": "string",
                     "maxLength": 500
                 },
                 "duration": {
+                    "description": "广告时长（秒，1-300）",
                     "type": "integer",
                     "maximum": 300,
                     "minimum": 1
                 },
                 "link_url": {
+                    "description": "点击跳转链接",
                     "type": "string",
                     "maxLength": 500
                 },
                 "scene": {
+                    "description": "广告场景（必填：video_loading=片头加载广告，general=通用广告）",
                     "type": "string",
                     "enum": [
                         "video_loading",
@@ -7614,10 +7864,12 @@ const docTemplate = `{
                     ]
                 },
                 "sort": {
+                    "description": "排序权重，值越小越靠前",
                     "type": "integer",
                     "minimum": 0
                 },
                 "status": {
+                    "description": "状态（0=禁用，1=启用）",
                     "type": "integer",
                     "enum": [
                         0,
@@ -7625,11 +7877,13 @@ const docTemplate = `{
                     ]
                 },
                 "title": {
+                    "description": "广告标题（必填）",
                     "type": "string",
                     "maxLength": 128,
                     "minLength": 1
                 },
                 "type": {
+                    "description": "广告类型（必填：image=图片，video=视频，html=HTML，code=自定义代码）",
                     "type": "string",
                     "enum": [
                         "image",
@@ -7649,23 +7903,28 @@ const docTemplate = `{
             ],
             "properties": {
                 "avatar": {
+                    "description": "头像地址（可选）",
                     "type": "string",
                     "maxLength": 500
                 },
                 "email": {
+                    "description": "邮箱（可选）",
                     "type": "string",
                     "maxLength": 128
                 },
                 "group_id": {
+                    "description": "用户组ID（必填）",
                     "type": "integer",
                     "minimum": 1
                 },
                 "password": {
+                    "description": "密码（必填，6-72 位）",
                     "type": "string",
                     "maxLength": 72,
                     "minLength": 6
                 },
                 "status": {
+                    "description": "状态（0=禁用，1=启用）",
                     "type": "integer",
                     "enum": [
                         0,
@@ -7673,6 +7932,7 @@ const docTemplate = `{
                     ]
                 },
                 "username": {
+                    "description": "用户名（必填，3-50 位）",
                     "type": "string",
                     "maxLength": 50,
                     "minLength": 3
@@ -7687,18 +7947,22 @@ const docTemplate = `{
             ],
             "properties": {
                 "cover": {
+                    "description": "封面地址（必填）",
                     "type": "string",
                     "maxLength": 500
                 },
                 "link": {
+                    "description": "跳转链接",
                     "type": "string",
                     "maxLength": 500
                 },
                 "sort": {
+                    "description": "排序权重，值越小越靠前",
                     "type": "integer",
                     "minimum": 0
                 },
                 "status": {
+                    "description": "状态（0=禁用，1=启用）",
                     "type": "integer",
                     "enum": [
                         0,
@@ -7706,11 +7970,13 @@ const docTemplate = `{
                     ]
                 },
                 "title": {
+                    "description": "横幅标题（必填）",
                     "type": "string",
                     "maxLength": 128,
                     "minLength": 1
                 },
                 "video_id": {
+                    "description": "关联视频ID",
                     "type": "integer",
                     "minimum": 1
                 }
@@ -7723,19 +7989,23 @@ const docTemplate = `{
             ],
             "properties": {
                 "name": {
+                    "description": "分类名称（必填，1-100 字）",
                     "type": "string",
                     "maxLength": 100,
                     "minLength": 1
                 },
                 "parent_id": {
+                    "description": "父分类ID，0 表示顶级分类",
                     "type": "integer",
                     "minimum": 0
                 },
                 "sort_order": {
+                    "description": "排序权重，值越小越靠前",
                     "type": "integer",
                     "minimum": 0
                 },
                 "status": {
+                    "description": "状态（0=禁用，1=启用）",
                     "type": "integer",
                     "enum": [
                         0,
@@ -7754,31 +8024,38 @@ const docTemplate = `{
             ],
             "properties": {
                 "api_key": {
+                    "description": "API 密钥",
                     "type": "string",
                     "maxLength": 255
                 },
                 "collect_url": {
+                    "description": "采集接口地址（必填）",
                     "type": "string",
                     "maxLength": 500,
                     "minLength": 1
                 },
                 "cron_expr": {
+                    "description": "定时采集 cron 表达式",
                     "type": "string",
                     "maxLength": 100
                 },
                 "data_range": {
+                    "description": "采集数据范围（如 today、last1d 等）",
                     "type": "string",
                     "maxLength": 20
                 },
                 "name": {
+                    "description": "采集源名称（必填）",
                     "type": "string",
                     "maxLength": 100,
                     "minLength": 1
                 },
                 "play_source_id": {
+                    "description": "关联播放源ID（必填）",
                     "type": "integer"
                 },
                 "type": {
+                    "description": "采集源类型（1=API，2=其他）",
                     "type": "integer",
                     "enum": [
                         1,
@@ -7795,27 +8072,33 @@ const docTemplate = `{
             ],
             "properties": {
                 "category": {
+                    "description": "频道分类",
                     "type": "string",
                     "maxLength": 50
                 },
                 "description": {
+                    "description": "频道描述",
                     "type": "string",
                     "maxLength": 2000
                 },
                 "logo": {
+                    "description": "频道 Logo 地址",
                     "type": "string",
                     "maxLength": 500
                 },
                 "name": {
+                    "description": "频道名称（必填）",
                     "type": "string",
                     "maxLength": 100,
                     "minLength": 1
                 },
                 "sort_order": {
+                    "description": "排序权重，值越小越靠前",
                     "type": "integer",
                     "minimum": 0
                 },
                 "status": {
+                    "description": "状态（0=禁用，1=启用）",
                     "type": "integer",
                     "enum": [
                         0,
@@ -7823,6 +8106,7 @@ const docTemplate = `{
                     ]
                 },
                 "stream_url": {
+                    "description": "播放流地址（必填）",
                     "type": "string",
                     "maxLength": 1000,
                     "minLength": 1
@@ -7836,6 +8120,7 @@ const docTemplate = `{
             ],
             "properties": {
                 "name": {
+                    "description": "名称（必填，1-100 字）",
                     "type": "string",
                     "maxLength": 100,
                     "minLength": 1
@@ -7853,10 +8138,12 @@ const docTemplate = `{
             ],
             "properties": {
                 "episode_number": {
+                    "description": "集数（必填）",
                     "type": "integer",
                     "minimum": 1
                 },
                 "format": {
+                    "description": "播放格式（必填：hls=HLS，mp4=MP4，dash=DASH，flv=FLV）",
                     "type": "string",
                     "enum": [
                         "hls",
@@ -7866,23 +8153,28 @@ const docTemplate = `{
                     ]
                 },
                 "play_url": {
+                    "description": "播放地址（必填）",
                     "type": "string",
                     "maxLength": 1000,
                     "minLength": 1
                 },
                 "quality": {
+                    "description": "清晰度（如 高清、超清）",
                     "type": "string",
                     "maxLength": 50
                 },
                 "sort_order": {
+                    "description": "排序权重，值越小越靠前",
                     "type": "integer",
                     "minimum": 0
                 },
                 "source_id": {
+                    "description": "播放源ID（必填）",
                     "type": "integer",
                     "minimum": 1
                 },
                 "status": {
+                    "description": "状态（0=禁用，1=启用）",
                     "type": "integer",
                     "enum": [
                         0,
@@ -7890,10 +8182,12 @@ const docTemplate = `{
                     ]
                 },
                 "title": {
+                    "description": "剧集标题",
                     "type": "string",
                     "maxLength": 255
                 },
                 "video_id": {
+                    "description": "视频ID（必填）",
                     "type": "integer",
                     "minimum": 1
                 }
@@ -7906,15 +8200,18 @@ const docTemplate = `{
             ],
             "properties": {
                 "name": {
+                    "description": "播放源名称（必填）",
                     "type": "string",
                     "maxLength": 100,
                     "minLength": 1
                 },
                 "sort_order": {
+                    "description": "排序权重，值越小越靠前",
                     "type": "integer",
                     "minimum": 0
                 },
                 "status": {
+                    "description": "状态（0=禁用，1=启用）",
                     "type": "integer",
                     "enum": [
                         0,
@@ -7930,15 +8227,18 @@ const docTemplate = `{
             ],
             "properties": {
                 "description": {
+                    "description": "描述",
                     "type": "string",
                     "maxLength": 255
                 },
                 "name": {
+                    "description": "用户组名称（必填，1-64 字）",
                     "type": "string",
                     "maxLength": 64,
                     "minLength": 1
                 },
                 "permissions": {
+                    "description": "权限配置（JSON 字符串）",
                     "type": "string",
                     "maxLength": 2000
                 }
@@ -7952,24 +8252,29 @@ const docTemplate = `{
             ],
             "properties": {
                 "avatar": {
+                    "description": "头像地址（可选）",
                     "type": "string",
                     "maxLength": 500
                 },
                 "email": {
+                    "description": "邮箱（可选）",
                     "type": "string",
                     "maxLength": 128
                 },
                 "nickname": {
+                    "description": "昵称（可选）",
                     "type": "string",
                     "maxLength": 15,
                     "minLength": 3
                 },
                 "password": {
+                    "description": "密码（必填，6-72 位）",
                     "type": "string",
                     "maxLength": 72,
                     "minLength": 6
                 },
                 "status": {
+                    "description": "状态（0=禁用，1=启用）",
                     "type": "integer",
                     "enum": [
                         0,
@@ -7977,6 +8282,7 @@ const docTemplate = `{
                     ]
                 },
                 "username": {
+                    "description": "用户名（必填，3-50 位）",
                     "type": "string",
                     "maxLength": 50,
                     "minLength": 3
@@ -7991,42 +8297,51 @@ const docTemplate = `{
             ],
             "properties": {
                 "actors": {
+                    "description": "演员列表",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/admin.VideoActorInput"
                     }
                 },
                 "category_id": {
+                    "description": "分类ID（必填）",
                     "type": "integer",
                     "minimum": 1
                 },
                 "cover_image": {
+                    "description": "封面地址",
                     "type": "string",
                     "maxLength": 500
                 },
                 "description": {
+                    "description": "剧情简介",
                     "type": "string",
                     "maxLength": 10000
                 },
                 "director_ids": {
+                    "description": "导演ID列表",
                     "type": "array",
                     "items": {
                         "type": "integer"
                     }
                 },
                 "duration": {
+                    "description": "总时长（分钟）",
                     "type": "integer",
                     "minimum": 0
                 },
                 "language": {
+                    "description": "语言",
                     "type": "string",
                     "maxLength": 50
                 },
                 "poster_image": {
+                    "description": "海报地址",
                     "type": "string",
                     "maxLength": 500
                 },
                 "publish_status": {
+                    "description": "上架状态（0=未上架，1=已上架）",
                     "type": "integer",
                     "enum": [
                         0,
@@ -8034,14 +8349,17 @@ const docTemplate = `{
                     ]
                 },
                 "region": {
+                    "description": "地区",
                     "type": "string",
                     "maxLength": 50
                 },
                 "release_date": {
+                    "description": "上映日期",
                     "type": "string",
                     "maxLength": 64
                 },
                 "serial_status": {
+                    "description": "连载状态（1=连载中，2=已完结，3=未知）",
                     "type": "integer",
                     "enum": [
                         1,
@@ -8050,21 +8368,25 @@ const docTemplate = `{
                     ]
                 },
                 "subtitle": {
+                    "description": "副标题",
                     "type": "string",
                     "maxLength": 255
                 },
                 "tag_ids": {
+                    "description": "标签ID列表",
                     "type": "array",
                     "items": {
                         "type": "integer"
                     }
                 },
                 "title": {
+                    "description": "视频标题（必填）",
                     "type": "string",
                     "maxLength": 255,
                     "minLength": 1
                 },
                 "year": {
+                    "description": "上映年份",
                     "type": "integer",
                     "maximum": 9999,
                     "minimum": 0
@@ -8075,36 +8397,47 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "collect_running": {
+                    "description": "正在执行的采集任务数",
                     "type": "integer"
                 },
                 "offline_videos": {
+                    "description": "未上架视频数",
                     "type": "integer"
                 },
                 "online_count": {
+                    "description": "当前在线用户数",
                     "type": "integer"
                 },
                 "online_videos": {
+                    "description": "已上架视频数",
                     "type": "integer"
                 },
                 "today_pv": {
+                    "description": "今日浏览量（PV）",
                     "type": "integer"
                 },
                 "today_uv": {
+                    "description": "今日访客数（UV）",
                     "type": "integer"
                 },
                 "today_videos": {
+                    "description": "今日新增视频数",
                     "type": "integer"
                 },
                 "total_admins": {
+                    "description": "管理员总数",
                     "type": "integer"
                 },
                 "total_categories": {
+                    "description": "分类总数",
                     "type": "integer"
                 },
                 "total_users": {
+                    "description": "用户总数",
                     "type": "integer"
                 },
                 "total_videos": {
+                    "description": "视频总数",
                     "type": "integer"
                 }
             }
@@ -8113,27 +8446,35 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "category": {
+                    "description": "频道分类",
                     "type": "string"
                 },
                 "description": {
+                    "description": "频道描述",
                     "type": "string"
                 },
                 "id": {
+                    "description": "频道ID",
                     "type": "integer"
                 },
                 "logo": {
+                    "description": "频道 Logo 地址",
                     "type": "string"
                 },
                 "name": {
+                    "description": "频道名称",
                     "type": "string"
                 },
                 "sort_order": {
+                    "description": "排序权重，值越小越靠前",
                     "type": "integer"
                 },
                 "status": {
+                    "description": "状态（0=禁用，1=启用）",
                     "type": "integer"
                 },
                 "stream_url": {
+                    "description": "播放流地址",
                     "type": "string"
                 }
             }
@@ -8145,6 +8486,7 @@ const docTemplate = `{
             ],
             "properties": {
                 "source_url": {
+                    "description": "直播源地址（必填，合法 URL）",
                     "type": "string",
                     "maxLength": 2000,
                     "minLength": 1
@@ -8155,15 +8497,19 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "created": {
+                    "description": "新增频道数",
                     "type": "integer"
                 },
                 "deleted": {
+                    "description": "删除频道数",
                     "type": "integer"
                 },
                 "total": {
+                    "description": "总计频道数",
                     "type": "integer"
                 },
                 "updated": {
+                    "description": "更新频道数",
                     "type": "integer"
                 }
             }
@@ -8172,6 +8518,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "source_url": {
+                    "description": "直播源地址",
                     "type": "string"
                 }
             }
@@ -8184,11 +8531,13 @@ const docTemplate = `{
             ],
             "properties": {
                 "password": {
+                    "description": "密码（必填，6-72 位）",
                     "type": "string",
                     "maxLength": 72,
                     "minLength": 6
                 },
                 "username": {
+                    "description": "管理员用户名（必填，3-50 位）",
                     "type": "string",
                     "maxLength": 50,
                     "minLength": 3
@@ -8199,15 +8548,23 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "access_token": {
+                    "description": "访问令牌",
                     "type": "string"
                 },
                 "admin": {
-                    "$ref": "#/definitions/admin.Profile"
+                    "description": "管理员公开资料",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/admin.Profile"
+                        }
+                    ]
                 },
                 "expires_in": {
+                    "description": "令牌有效期（秒）",
                     "type": "integer"
                 },
                 "token_type": {
+                    "description": "令牌类型（如 Bearer）",
                     "type": "string"
                 }
             }
@@ -8216,9 +8573,11 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
+                    "description": "条目ID",
                     "type": "integer"
                 },
                 "name": {
+                    "description": "条目名称",
                     "type": "string"
                 }
             }
@@ -8227,33 +8586,43 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "episode_number": {
+                    "description": "集数",
                     "type": "integer"
                 },
                 "format": {
+                    "description": "播放格式",
                     "type": "string"
                 },
                 "id": {
+                    "description": "剧集记录ID",
                     "type": "integer"
                 },
                 "play_url": {
+                    "description": "播放地址",
                     "type": "string"
                 },
                 "quality": {
+                    "description": "清晰度",
                     "type": "string"
                 },
                 "sort_order": {
+                    "description": "排序权重，值越小越靠前",
                     "type": "integer"
                 },
                 "source_id": {
+                    "description": "播放源ID",
                     "type": "integer"
                 },
                 "status": {
+                    "description": "状态（0=禁用，1=启用）",
                     "type": "integer"
                 },
                 "title": {
+                    "description": "剧集标题",
                     "type": "string"
                 },
                 "video_id": {
+                    "description": "视频ID",
                     "type": "integer"
                 }
             }
@@ -8262,15 +8631,19 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
+                    "description": "播放源ID",
                     "type": "integer"
                 },
                 "name": {
+                    "description": "播放源名称",
                     "type": "string"
                 },
                 "sort_order": {
+                    "description": "排序权重，值越小越靠前",
                     "type": "integer"
                 },
                 "status": {
+                    "description": "状态（0=禁用，1=启用）",
                     "type": "integer"
                 }
             }
@@ -8279,24 +8652,31 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "avatar": {
+                    "description": "头像地址",
                     "type": "string"
                 },
                 "email": {
+                    "description": "邮箱",
                     "type": "string"
                 },
                 "id": {
+                    "description": "管理员ID",
                     "type": "integer"
                 },
                 "nickname": {
+                    "description": "昵称",
                     "type": "string"
                 },
                 "role": {
+                    "description": "角色",
                     "type": "string"
                 },
                 "status": {
+                    "description": "账号状态（0=禁用，1=正常）",
                     "type": "integer"
                 },
                 "username": {
+                    "description": "用户名",
                     "type": "string"
                 }
             }
@@ -8305,12 +8685,15 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "type_id": {
+                    "description": "外部类型ID",
                     "type": "integer"
                 },
                 "type_name": {
+                    "description": "外部类型名称",
                     "type": "string"
                 },
                 "type_pid": {
+                    "description": "外部父类型ID",
                     "type": "integer"
                 }
             }
@@ -8319,6 +8702,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "list": {
+                    "description": "外部分类列表",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/admin.RemoteCategoryItem"
@@ -8333,6 +8717,7 @@ const docTemplate = `{
             ],
             "properties": {
                 "password": {
+                    "description": "新密码（必填，6-72 位）",
                     "type": "string",
                     "maxLength": 72,
                     "minLength": 6
@@ -8346,6 +8731,7 @@ const docTemplate = `{
             ],
             "properties": {
                 "password": {
+                    "description": "新密码（必填，6-72 位）",
                     "type": "string",
                     "maxLength": 72,
                     "minLength": 6
@@ -8356,6 +8742,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "items": {
+                    "description": "分类映射列表（空数组则清空全部映射）",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/admin.CollectCategoryInput"
@@ -8367,27 +8754,35 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "action": {
+                    "description": "操作动作",
                     "type": "string"
                 },
                 "admin_id": {
+                    "description": "操作管理员ID",
                     "type": "integer"
                 },
                 "content": {
+                    "description": "日志内容",
                     "type": "string"
                 },
                 "created_at": {
+                    "description": "记录时间",
                     "type": "string"
                 },
                 "id": {
+                    "description": "日志ID",
                     "type": "integer"
                 },
                 "ip_address": {
+                    "description": "操作 IP 地址",
                     "type": "string"
                 },
                 "level": {
+                    "description": "日志级别（1=Debug，2=Info，3=Warn，4=Error）",
                     "type": "integer"
                 },
                 "module": {
+                    "description": "模块",
                     "type": "string"
                 }
             }
@@ -8396,28 +8791,34 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "ad_key": {
+                    "description": "广告标识 key",
                     "type": "string",
                     "maxLength": 50,
                     "minLength": 1
                 },
                 "content_code": {
+                    "description": "自定义代码内容（type=code 时使用）",
                     "type": "string",
                     "maxLength": 10000
                 },
                 "content_url": {
+                    "description": "内容资源地址",
                     "type": "string",
                     "maxLength": 500
                 },
                 "duration": {
+                    "description": "广告时长（秒，1-300）",
                     "type": "integer",
                     "maximum": 300,
                     "minimum": 1
                 },
                 "link_url": {
+                    "description": "点击跳转链接",
                     "type": "string",
                     "maxLength": 500
                 },
                 "scene": {
+                    "description": "广告场景（video_loading=片头加载广告，general=通用广告）",
                     "type": "string",
                     "enum": [
                         "video_loading",
@@ -8425,10 +8826,12 @@ const docTemplate = `{
                     ]
                 },
                 "sort": {
+                    "description": "排序权重，值越小越靠前",
                     "type": "integer",
                     "minimum": 0
                 },
                 "status": {
+                    "description": "状态（0=禁用，1=启用）",
                     "type": "integer",
                     "enum": [
                         0,
@@ -8436,11 +8839,13 @@ const docTemplate = `{
                     ]
                 },
                 "title": {
+                    "description": "广告标题",
                     "type": "string",
                     "maxLength": 128,
                     "minLength": 1
                 },
                 "type": {
+                    "description": "广告类型（image=图片，video=视频，html=HTML，code=自定义代码）",
                     "type": "string",
                     "enum": [
                         "image",
@@ -8455,18 +8860,22 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "avatar": {
+                    "description": "头像地址",
                     "type": "string",
                     "maxLength": 500
                 },
                 "email": {
+                    "description": "邮箱",
                     "type": "string",
                     "maxLength": 128
                 },
                 "group_id": {
+                    "description": "用户组ID",
                     "type": "integer",
                     "minimum": 1
                 },
                 "status": {
+                    "description": "状态（0=禁用，1=启用）",
                     "type": "integer",
                     "enum": [
                         0,
@@ -8474,6 +8883,7 @@ const docTemplate = `{
                     ]
                 },
                 "username": {
+                    "description": "用户名（3-50 位）",
                     "type": "string",
                     "maxLength": 50,
                     "minLength": 3
@@ -8484,18 +8894,22 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "cover": {
+                    "description": "封面地址",
                     "type": "string",
                     "maxLength": 500
                 },
                 "link": {
+                    "description": "跳转链接",
                     "type": "string",
                     "maxLength": 500
                 },
                 "sort": {
+                    "description": "排序权重，值越小越靠前",
                     "type": "integer",
                     "minimum": 0
                 },
                 "status": {
+                    "description": "状态（0=禁用，1=启用）",
                     "type": "integer",
                     "enum": [
                         0,
@@ -8503,11 +8917,13 @@ const docTemplate = `{
                     ]
                 },
                 "title": {
+                    "description": "横幅标题",
                     "type": "string",
                     "maxLength": 128,
                     "minLength": 1
                 },
                 "video_id": {
+                    "description": "关联视频ID",
                     "type": "integer",
                     "minimum": 1
                 }
@@ -8517,19 +8933,23 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "name": {
+                    "description": "分类名称",
                     "type": "string",
                     "maxLength": 100,
                     "minLength": 1
                 },
                 "parent_id": {
+                    "description": "父分类ID，0 表示顶级分类",
                     "type": "integer",
                     "minimum": 0
                 },
                 "sort_order": {
+                    "description": "排序权重，值越小越靠前",
                     "type": "integer",
                     "minimum": 0
                 },
                 "status": {
+                    "description": "状态（0=禁用，1=启用）",
                     "type": "integer",
                     "enum": [
                         0,
@@ -8542,31 +8962,38 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "api_key": {
+                    "description": "API 密钥",
                     "type": "string",
                     "maxLength": 255
                 },
                 "collect_url": {
+                    "description": "采集接口地址",
                     "type": "string",
                     "maxLength": 500,
                     "minLength": 1
                 },
                 "cron_expr": {
+                    "description": "定时采集 cron 表达式",
                     "type": "string",
                     "maxLength": 100
                 },
                 "data_range": {
+                    "description": "采集数据范围（如 today、last1d 等）",
                     "type": "string",
                     "maxLength": 20
                 },
                 "name": {
+                    "description": "采集源名称",
                     "type": "string",
                     "maxLength": 100,
                     "minLength": 1
                 },
                 "play_source_id": {
+                    "description": "关联播放源ID",
                     "type": "integer"
                 },
                 "type": {
+                    "description": "采集源类型（1=API，2=其他）",
                     "type": "integer",
                     "enum": [
                         1,
@@ -8582,6 +9009,7 @@ const docTemplate = `{
             ],
             "properties": {
                 "status": {
+                    "description": "审核状态（必填：0=未通过，1=通过）",
                     "type": "integer",
                     "enum": [
                         0,
@@ -8594,27 +9022,33 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "category": {
+                    "description": "频道分类",
                     "type": "string",
                     "maxLength": 50
                 },
                 "description": {
+                    "description": "频道描述",
                     "type": "string",
                     "maxLength": 2000
                 },
                 "logo": {
+                    "description": "频道 Logo 地址",
                     "type": "string",
                     "maxLength": 500
                 },
                 "name": {
+                    "description": "频道名称",
                     "type": "string",
                     "maxLength": 100,
                     "minLength": 1
                 },
                 "sort_order": {
+                    "description": "排序权重，值越小越靠前",
                     "type": "integer",
                     "minimum": 0
                 },
                 "status": {
+                    "description": "状态（0=禁用，1=启用）",
                     "type": "integer",
                     "enum": [
                         0,
@@ -8622,6 +9056,7 @@ const docTemplate = `{
                     ]
                 },
                 "stream_url": {
+                    "description": "播放流地址",
                     "type": "string",
                     "maxLength": 1000,
                     "minLength": 1
@@ -8635,6 +9070,7 @@ const docTemplate = `{
             ],
             "properties": {
                 "name": {
+                    "description": "名称（必填，1-100 字）",
                     "type": "string",
                     "maxLength": 100,
                     "minLength": 1
@@ -8645,10 +9081,12 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "episode_number": {
+                    "description": "集数",
                     "type": "integer",
                     "minimum": 1
                 },
                 "format": {
+                    "description": "播放格式（hls=HLS，mp4=MP4，dash=DASH，flv=FLV）",
                     "type": "string",
                     "enum": [
                         "hls",
@@ -8658,23 +9096,28 @@ const docTemplate = `{
                     ]
                 },
                 "play_url": {
+                    "description": "播放地址",
                     "type": "string",
                     "maxLength": 1000,
                     "minLength": 1
                 },
                 "quality": {
+                    "description": "清晰度（如 高清、超清）",
                     "type": "string",
                     "maxLength": 50
                 },
                 "sort_order": {
+                    "description": "排序权重，值越小越靠前",
                     "type": "integer",
                     "minimum": 0
                 },
                 "source_id": {
+                    "description": "播放源ID",
                     "type": "integer",
                     "minimum": 1
                 },
                 "status": {
+                    "description": "状态（0=禁用，1=启用）",
                     "type": "integer",
                     "enum": [
                         0,
@@ -8682,10 +9125,12 @@ const docTemplate = `{
                     ]
                 },
                 "title": {
+                    "description": "剧集标题",
                     "type": "string",
                     "maxLength": 255
                 },
                 "video_id": {
+                    "description": "视频ID",
                     "type": "integer",
                     "minimum": 1
                 }
@@ -8695,15 +9140,18 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "name": {
+                    "description": "播放源名称",
                     "type": "string",
                     "maxLength": 100,
                     "minLength": 1
                 },
                 "sort_order": {
+                    "description": "排序权重，值越小越靠前",
                     "type": "integer",
                     "minimum": 0
                 },
                 "status": {
+                    "description": "状态（0=禁用，1=启用）",
                     "type": "integer",
                     "enum": [
                         0,
@@ -8716,14 +9164,17 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "avatar": {
+                    "description": "头像地址（可选）",
                     "type": "string",
                     "maxLength": 500
                 },
                 "email": {
+                    "description": "邮箱（可选）",
                     "type": "string",
                     "maxLength": 100
                 },
                 "nickname": {
+                    "description": "昵称（可选）",
                     "type": "string",
                     "maxLength": 50
                 }
@@ -8737,9 +9188,10 @@ const docTemplate = `{
             ],
             "properties": {
                 "data": {
-                    "description": "Data is the group-specific key-value JSON payload; its structure varies by group\n(site=UpdateSiteSettings, api=UpdateAPISettings, feature=UpdateFeatureSettings)."
+                    "description": "分组配置键值 JSON 数据（结构随分组变化：site=UpdateSiteSettings，api=UpdateAPISettings，feature=UpdateFeatureSettings）"
                 },
                 "group": {
+                    "description": "配置分组（必填：site=站点信息，api=API/资源站，feature=功能开关）",
                     "type": "string",
                     "enum": [
                         "site",
@@ -8753,15 +9205,18 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "description": {
+                    "description": "描述",
                     "type": "string",
                     "maxLength": 255
                 },
                 "name": {
+                    "description": "用户组名称",
                     "type": "string",
                     "maxLength": 64,
                     "minLength": 1
                 },
                 "permissions": {
+                    "description": "权限配置（JSON 字符串）",
                     "type": "string",
                     "maxLength": 2000
                 }
@@ -8771,19 +9226,23 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "avatar": {
+                    "description": "头像地址",
                     "type": "string",
                     "maxLength": 500
                 },
                 "email": {
+                    "description": "邮箱",
                     "type": "string",
                     "maxLength": 128
                 },
                 "nickname": {
+                    "description": "昵称（3-15 位）",
                     "type": "string",
                     "maxLength": 15,
                     "minLength": 3
                 },
                 "status": {
+                    "description": "状态（0=禁用，1=启用）",
                     "type": "integer",
                     "enum": [
                         0,
@@ -8791,6 +9250,7 @@ const docTemplate = `{
                     ]
                 },
                 "username": {
+                    "description": "用户名（3-50 位）",
                     "type": "string",
                     "maxLength": 50,
                     "minLength": 3
@@ -8801,42 +9261,51 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "actors": {
+                    "description": "演员列表",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/admin.VideoActorInput"
                     }
                 },
                 "category_id": {
+                    "description": "分类ID",
                     "type": "integer",
                     "minimum": 1
                 },
                 "cover_image": {
+                    "description": "封面地址",
                     "type": "string",
                     "maxLength": 500
                 },
                 "description": {
+                    "description": "剧情简介",
                     "type": "string",
                     "maxLength": 10000
                 },
                 "director_ids": {
+                    "description": "导演ID列表",
                     "type": "array",
                     "items": {
                         "type": "integer"
                     }
                 },
                 "duration": {
+                    "description": "总时长（分钟）",
                     "type": "integer",
                     "minimum": 0
                 },
                 "language": {
+                    "description": "语言",
                     "type": "string",
                     "maxLength": 50
                 },
                 "poster_image": {
+                    "description": "海报地址",
                     "type": "string",
                     "maxLength": 500
                 },
                 "publish_status": {
+                    "description": "上架状态（0=未上架，1=已上架）",
                     "type": "integer",
                     "enum": [
                         0,
@@ -8844,14 +9313,17 @@ const docTemplate = `{
                     ]
                 },
                 "region": {
+                    "description": "地区",
                     "type": "string",
                     "maxLength": 50
                 },
                 "release_date": {
+                    "description": "上映日期",
                     "type": "string",
                     "maxLength": 64
                 },
                 "serial_status": {
+                    "description": "连载状态（1=连载中，2=已完结，3=未知）",
                     "type": "integer",
                     "enum": [
                         1,
@@ -8860,21 +9332,25 @@ const docTemplate = `{
                     ]
                 },
                 "subtitle": {
+                    "description": "副标题",
                     "type": "string",
                     "maxLength": 255
                 },
                 "tag_ids": {
+                    "description": "标签ID列表",
                     "type": "array",
                     "items": {
                         "type": "integer"
                     }
                 },
                 "title": {
+                    "description": "视频标题",
                     "type": "string",
                     "maxLength": 255,
                     "minLength": 1
                 },
                 "year": {
+                    "description": "上映年份",
                     "type": "integer",
                     "maximum": 9999,
                     "minimum": 0
@@ -8885,18 +9361,23 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "created_at": {
+                    "description": "创建时间",
                     "type": "string"
                 },
                 "description": {
+                    "description": "描述",
                     "type": "string"
                 },
                 "id": {
+                    "description": "用户组ID",
                     "type": "integer"
                 },
                 "name": {
+                    "description": "用户组名称",
                     "type": "string"
                 },
                 "permissions": {
+                    "description": "权限配置（JSON 字符串）",
                     "type": "string"
                 }
             }
@@ -8905,30 +9386,39 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "avatar": {
+                    "description": "头像地址",
                     "type": "string"
                 },
                 "created_at": {
+                    "description": "创建时间",
                     "type": "string"
                 },
                 "email": {
+                    "description": "邮箱",
                     "type": "string"
                 },
                 "id": {
+                    "description": "用户ID",
                     "type": "integer"
                 },
                 "last_login_at": {
+                    "description": "最近登录时间",
                     "type": "string"
                 },
                 "nickname": {
+                    "description": "昵称",
                     "type": "string"
                 },
                 "status": {
+                    "description": "状态（0=禁用，1=启用）",
                     "type": "integer"
                 },
                 "str_id": {
+                    "description": "字符串形式用户ID",
                     "type": "string"
                 },
                 "username": {
+                    "description": "用户名",
                     "type": "string"
                 }
             }
@@ -8937,24 +9427,31 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "created_at": {
+                    "description": "登录时间",
                     "type": "string"
                 },
                 "id": {
+                    "description": "日志ID",
                     "type": "integer"
                 },
                 "ip": {
+                    "description": "登录 IP 地址",
                     "type": "string"
                 },
                 "status": {
+                    "description": "登录结果（1=成功，2=失败）",
                     "type": "integer"
                 },
                 "user_agent": {
+                    "description": "User-Agent 信息",
                     "type": "string"
                 },
                 "user_id": {
+                    "description": "用户ID",
                     "type": "integer"
                 },
                 "username": {
+                    "description": "用户名",
                     "type": "string"
                 }
             }
@@ -8966,6 +9463,7 @@ const docTemplate = `{
             ],
             "properties": {
                 "actor_id": {
+                    "description": "演员ID（必填）",
                     "type": "integer",
                     "minimum": 1
                 }
@@ -8975,75 +9473,95 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "actors": {
+                    "description": "演员列表",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.NamedItem"
                     }
                 },
                 "category_id": {
+                    "description": "分类ID",
                     "type": "integer"
                 },
                 "cover": {
+                    "description": "封面地址",
                     "type": "string"
                 },
                 "description": {
+                    "description": "剧情简介",
                     "type": "string"
                 },
                 "directors": {
+                    "description": "导演列表",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.NamedItem"
                     }
                 },
                 "duration": {
+                    "description": "总时长（分钟）",
                     "type": "integer"
                 },
                 "id": {
+                    "description": "视频ID",
                     "type": "integer"
                 },
                 "language": {
+                    "description": "语言",
                     "type": "string"
                 },
                 "poster": {
+                    "description": "海报地址",
                     "type": "string"
                 },
                 "publish_status": {
+                    "description": "上架状态（0=未上架，1=已上架）",
                     "type": "integer"
                 },
                 "rating": {
+                    "description": "评分",
                     "type": "number"
                 },
                 "region": {
+                    "description": "地区",
                     "type": "string"
                 },
                 "release_date": {
+                    "description": "上映日期",
                     "type": "string"
                 },
                 "serial_status": {
+                    "description": "连载状态（1=连载中，2=已完结，3=未知）",
                     "type": "integer"
                 },
                 "sources": {
+                    "description": "播放源分组列表（含播放地址）",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/admin.VideoSourceGroup"
                     }
                 },
                 "subtitle": {
+                    "description": "副标题",
                     "type": "string"
                 },
                 "tags": {
+                    "description": "标签列表",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.NamedItem"
                     }
                 },
                 "title": {
+                    "description": "视频标题",
                     "type": "string"
                 },
                 "view_count": {
+                    "description": "播放量",
                     "type": "integer"
                 },
                 "year": {
+                    "description": "上映年份",
                     "type": "integer"
                 }
             }
@@ -9052,60 +9570,78 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "category_id": {
+                    "description": "分类ID",
                     "type": "integer"
                 },
                 "category_name": {
+                    "description": "分类名称",
                     "type": "string"
                 },
                 "cover": {
+                    "description": "封面地址",
                     "type": "string"
                 },
                 "created_at": {
+                    "description": "创建时间",
                     "type": "string"
                 },
                 "duration": {
+                    "description": "总时长（分钟）",
                     "type": "integer"
                 },
                 "id": {
+                    "description": "视频ID",
                     "type": "integer"
                 },
                 "language": {
+                    "description": "语言",
                     "type": "string"
                 },
                 "poster": {
+                    "description": "海报地址",
                     "type": "string"
                 },
                 "publish_status": {
+                    "description": "上架状态（0=未上架，1=已上架）",
                     "type": "integer"
                 },
                 "rating": {
+                    "description": "评分",
                     "type": "number"
                 },
                 "region": {
+                    "description": "地区",
                     "type": "string"
                 },
                 "serial_status": {
+                    "description": "连载状态（1=连载中，2=已完结，3=未知）",
                     "type": "integer"
                 },
                 "subtitle": {
+                    "description": "副标题",
                     "type": "string"
                 },
                 "tags": {
+                    "description": "标签列表",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.NamedItem"
                     }
                 },
                 "title": {
+                    "description": "视频标题",
                     "type": "string"
                 },
                 "updated_at": {
+                    "description": "更新时间",
                     "type": "string"
                 },
                 "view_count": {
+                    "description": "播放量",
                     "type": "integer"
                 },
                 "year": {
+                    "description": "上映年份",
                     "type": "integer"
                 }
             }
@@ -9114,24 +9650,31 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "episode": {
+                    "description": "集数",
                     "type": "integer"
                 },
                 "format": {
+                    "description": "播放格式",
                     "type": "string"
                 },
                 "id": {
+                    "description": "剧集记录ID",
                     "type": "integer"
                 },
                 "quality": {
+                    "description": "清晰度",
                     "type": "string"
                 },
                 "status": {
+                    "description": "状态（0=禁用，1=启用）",
                     "type": "integer"
                 },
                 "title": {
+                    "description": "剧集标题",
                     "type": "string"
                 },
                 "url": {
+                    "description": "播放地址",
                     "type": "string"
                 }
             }
@@ -9140,15 +9683,18 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "episodes": {
+                    "description": "剧集列表（含播放地址）",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/admin.VideoSourceEpisode"
                     }
                 },
                 "id": {
+                    "description": "播放源ID",
                     "type": "integer"
                 },
                 "name": {
+                    "description": "播放源名称",
                     "type": "string"
                 }
             }
@@ -9157,24 +9703,31 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "ad_key": {
+                    "description": "广告标识 key",
                     "type": "string"
                 },
                 "content_code": {
+                    "description": "自定义代码内容（type=code 时返回）",
                     "type": "string"
                 },
                 "content_url": {
+                    "description": "内容资源地址",
                     "type": "string"
                 },
                 "duration": {
+                    "description": "广告时长（秒）",
                     "type": "integer"
                 },
                 "id": {
+                    "description": "广告ID",
                     "type": "integer"
                 },
                 "link_url": {
+                    "description": "点击跳转链接",
                     "type": "string"
                 },
                 "type": {
+                    "description": "广告类型（image=图片，video=视频，html=HTML，code=自定义代码）",
                     "type": "string"
                 }
             }
@@ -9183,18 +9736,23 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "cover": {
+                    "description": "封面地址",
                     "type": "string"
                 },
                 "id": {
+                    "description": "横幅ID",
                     "type": "integer"
                 },
                 "link": {
+                    "description": "跳转链接",
                     "type": "string"
                 },
                 "title": {
+                    "description": "横幅标题",
                     "type": "string"
                 },
                 "video_id": {
+                    "description": "关联视频ID",
                     "type": "integer"
                 }
             }
@@ -9203,21 +9761,26 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "children": {
+                    "description": "子分类列表",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/client.CategoryResponse"
                     }
                 },
                 "id": {
+                    "description": "分类ID",
                     "type": "integer"
                 },
                 "name": {
+                    "description": "分类名称",
                     "type": "string"
                 },
                 "parent_id": {
+                    "description": "父分类ID，0 表示顶级分类",
                     "type": "integer"
                 },
                 "sort_order": {
+                    "description": "排序权重，值越小越靠前",
                     "type": "integer"
                 }
             }
@@ -9230,11 +9793,13 @@ const docTemplate = `{
             ],
             "properties": {
                 "current_password": {
+                    "description": "当前密码",
                     "type": "string",
                     "maxLength": 30,
                     "minLength": 5
                 },
                 "new_password": {
+                    "description": "新密码（5-30 位）",
                     "type": "string",
                     "maxLength": 30,
                     "minLength": 5
@@ -9245,46 +9810,58 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "avatar": {
+                    "description": "用户头像",
                     "type": "string"
                 },
                 "content": {
+                    "description": "评论内容",
                     "type": "string"
                 },
                 "created_at": {
+                    "description": "评论时间",
                     "type": "string"
                 },
                 "dislike_count": {
+                    "description": "踩数",
                     "type": "integer"
                 },
                 "id": {
+                    "description": "评论ID",
                     "type": "integer"
                 },
                 "like_count": {
+                    "description": "点赞数",
                     "type": "integer"
                 },
                 "my_vote": {
-                    "description": "1=顶 -1=踩 0=未投票",
+                    "description": "我的投票（1=顶，-1=踩，0=未投票）",
                     "type": "integer"
                 },
                 "parent_id": {
+                    "description": "父评论ID，0 表示顶级评论",
                     "type": "integer"
                 },
                 "replies": {
+                    "description": "子回复列表",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/client.CommentItem"
                     }
                 },
                 "reply_count": {
+                    "description": "回复数",
                     "type": "integer"
                 },
                 "user_id": {
+                    "description": "用户ID",
                     "type": "integer"
                 },
                 "username": {
+                    "description": "用户名",
                     "type": "string"
                 },
                 "video_id": {
+                    "description": "视频ID",
                     "type": "integer"
                 }
             }
@@ -9297,15 +9874,18 @@ const docTemplate = `{
             ],
             "properties": {
                 "content": {
+                    "description": "评论内容（1-200 字）",
                     "type": "string",
                     "maxLength": 200,
                     "minLength": 1
                 },
                 "parent_id": {
+                    "description": "父评论ID，回复时必填",
                     "type": "integer",
                     "minimum": 1
                 },
                 "video_id": {
+                    "description": "视频ID（必填）",
                     "type": "integer",
                     "minimum": 1
                 }
@@ -9315,6 +9895,7 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "favorited": {
+                    "description": "是否已收藏",
                     "type": "boolean"
                 }
             }
@@ -9323,24 +9904,31 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "category_name": {
+                    "description": "分类名称",
                     "type": "string"
                 },
                 "cover": {
+                    "description": "封面地址",
                     "type": "string"
                 },
                 "created_at": {
+                    "description": "收藏时间",
                     "type": "string"
                 },
                 "rating": {
+                    "description": "评分",
                     "type": "number"
                 },
                 "title": {
+                    "description": "视频标题",
                     "type": "string"
                 },
                 "video_id": {
+                    "description": "视频ID",
                     "type": "integer"
                 },
                 "year": {
+                    "description": "上映年份",
                     "type": "integer"
                 }
             }
@@ -9349,33 +9937,43 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "category_name": {
+                    "description": "分类名称",
                     "type": "string"
                 },
                 "cover": {
+                    "description": "封面地址",
                     "type": "string"
                 },
                 "duration": {
+                    "description": "视频总时长（秒）",
                     "type": "integer"
                 },
                 "episode_id": {
+                    "description": "剧集ID",
                     "type": "integer"
                 },
                 "last_played_at": {
+                    "description": "最近播放时间",
                     "type": "string"
                 },
                 "play_source_id": {
+                    "description": "播放源ID",
                     "type": "integer"
                 },
                 "progress": {
+                    "description": "播放进度（秒）",
                     "type": "integer"
                 },
                 "title": {
+                    "description": "视频标题",
                     "type": "string"
                 },
                 "video_id": {
+                    "description": "视频ID",
                     "type": "integer"
                 },
                 "year": {
+                    "description": "上映年份",
                     "type": "string"
                 }
             }
@@ -9384,27 +9982,35 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "category": {
+                    "description": "频道分类",
                     "type": "string"
                 },
                 "description": {
+                    "description": "频道描述",
                     "type": "string"
                 },
                 "format": {
+                    "description": "播放流格式（如 hls、flv 等）",
                     "type": "string"
                 },
                 "id": {
+                    "description": "频道ID",
                     "type": "integer"
                 },
                 "logo": {
+                    "description": "频道 Logo 地址",
                     "type": "string"
                 },
                 "name": {
+                    "description": "频道名称",
                     "type": "string"
                 },
                 "sort_order": {
+                    "description": "排序权重，值越小越靠前",
                     "type": "integer"
                 },
                 "stream_url": {
+                    "description": "播放流地址，仅 app/tv/desktop 端返回，web 端为空并省略",
                     "type": "string"
                 }
             }
@@ -9413,18 +10019,23 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "created_at": {
+                    "description": "登录时间",
                     "type": "string"
                 },
                 "id": {
+                    "description": "日志ID",
                     "type": "integer"
                 },
                 "ip": {
+                    "description": "登录 IP 地址",
                     "type": "string"
                 },
                 "status": {
+                    "description": "登录结果（1=成功，2=失败）",
                     "type": "integer"
                 },
                 "user_agent": {
+                    "description": "User-Agent 信息",
                     "type": "string"
                 }
             }
@@ -9437,11 +10048,13 @@ const docTemplate = `{
             ],
             "properties": {
                 "password": {
+                    "description": "密码（5-30 位）",
                     "type": "string",
                     "maxLength": 30,
                     "minLength": 5
                 },
                 "username": {
+                    "description": "用户名（字母数字，2-15 位）",
                     "type": "string",
                     "maxLength": 15,
                     "minLength": 2
@@ -9452,16 +10065,24 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "access_token": {
+                    "description": "访问令牌",
                     "type": "string"
                 },
                 "expires_in": {
+                    "description": "令牌有效期（秒）",
                     "type": "integer"
                 },
                 "token_type": {
+                    "description": "令牌类型（如 Bearer）",
                     "type": "string"
                 },
                 "user": {
-                    "$ref": "#/definitions/client.Profile"
+                    "description": "用户公开资料",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/client.Profile"
+                        }
+                    ]
                 }
             }
         },
@@ -9469,12 +10090,15 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "format": {
+                    "description": "播放格式（如 hls、mp4）",
                     "type": "string"
                 },
                 "quality": {
+                    "description": "清晰度（如 高清、超清）",
                     "type": "string"
                 },
                 "url": {
+                    "description": "播放地址",
                     "type": "string"
                 }
             }
@@ -9483,24 +10107,31 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "avatar": {
+                    "description": "头像地址",
                     "type": "string"
                 },
                 "email": {
+                    "description": "邮箱",
                     "type": "string"
                 },
                 "id": {
+                    "description": "用户ID",
                     "type": "integer"
                 },
                 "nickname": {
+                    "description": "昵称",
                     "type": "string"
                 },
                 "status": {
+                    "description": "账号状态（0=禁用，1=正常）",
                     "type": "integer"
                 },
                 "str_id": {
+                    "description": "字符串形式用户ID",
                     "type": "string"
                 },
                 "username": {
+                    "description": "用户名",
                     "type": "string"
                 }
             }
@@ -9512,6 +10143,7 @@ const docTemplate = `{
             ],
             "properties": {
                 "score": {
+                    "description": "评分（1-10 分，必填）",
                     "type": "number"
                 }
             }
@@ -9541,15 +10173,18 @@ const docTemplate = `{
             ],
             "properties": {
                 "email": {
+                    "description": "邮箱（可选）",
                     "type": "string",
                     "maxLength": 128
                 },
                 "password": {
+                    "description": "密码（5-30 位）",
                     "type": "string",
                     "maxLength": 30,
                     "minLength": 5
                 },
                 "username": {
+                    "description": "用户名（字母数字，2-15 位）",
                     "type": "string",
                     "maxLength": 15,
                     "minLength": 2
@@ -9560,14 +10195,17 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "avatar": {
+                    "description": "头像地址（可选）",
                     "type": "string",
                     "maxLength": 120
                 },
                 "email": {
+                    "description": "邮箱（可选）",
                     "type": "string",
                     "maxLength": 20
                 },
                 "nickname": {
+                    "description": "昵称（3-15 位，可选）",
                     "type": "string",
                     "maxLength": 15,
                     "minLength": 3
@@ -9581,22 +10219,27 @@ const docTemplate = `{
             ],
             "properties": {
                 "duration": {
+                    "description": "视频总时长（秒）",
                     "type": "integer",
                     "minimum": 0
                 },
                 "episode_id": {
+                    "description": "剧集ID",
                     "type": "integer",
                     "minimum": 1
                 },
                 "play_source_id": {
+                    "description": "播放源ID",
                     "type": "integer",
                     "minimum": 1
                 },
                 "progress": {
+                    "description": "播放进度（秒）",
                     "type": "integer",
                     "minimum": 0
                 },
                 "video_id": {
+                    "description": "视频ID（必填）",
                     "type": "integer",
                     "minimum": 1
                 }
@@ -9606,12 +10249,15 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "episode": {
+                    "description": "集数",
                     "type": "integer"
                 },
                 "id": {
+                    "description": "剧集记录ID",
                     "type": "integer"
                 },
                 "title": {
+                    "description": "剧集标题",
                     "type": "string"
                 }
             }
@@ -9620,75 +10266,95 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "actors": {
+                    "description": "演员列表",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.NamedItem"
                     }
                 },
                 "category_id": {
+                    "description": "分类ID",
                     "type": "integer"
                 },
                 "cover": {
+                    "description": "封面地址",
                     "type": "string"
                 },
                 "description": {
+                    "description": "剧情简介",
                     "type": "string"
                 },
                 "directors": {
+                    "description": "导演列表",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.NamedItem"
                     }
                 },
                 "duration": {
+                    "description": "总时长（分钟）",
                     "type": "integer"
                 },
                 "id": {
+                    "description": "视频ID",
                     "type": "integer"
                 },
                 "language": {
+                    "description": "语言",
                     "type": "string"
                 },
                 "poster": {
+                    "description": "海报地址",
                     "type": "string"
                 },
                 "rating": {
+                    "description": "评分",
                     "type": "number"
                 },
                 "rating_count": {
+                    "description": "评分人数",
                     "type": "integer"
                 },
                 "region": {
+                    "description": "地区",
                     "type": "string"
                 },
                 "release_date": {
+                    "description": "上映日期",
                     "type": "string"
                 },
                 "serial_status": {
+                    "description": "连载状态（1=连载中，2=已完结，3=未知）",
                     "type": "integer"
                 },
                 "sources": {
+                    "description": "播放源分组列表（不含播放地址）",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/client.VideoDetailSourceGroup"
                     }
                 },
                 "subtitle": {
+                    "description": "副标题",
                     "type": "string"
                 },
                 "tags": {
+                    "description": "标签列表",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.NamedItem"
                     }
                 },
                 "title": {
+                    "description": "视频标题",
                     "type": "string"
                 },
                 "view_count": {
+                    "description": "播放量",
                     "type": "integer"
                 },
                 "year": {
+                    "description": "上映年份",
                     "type": "integer"
                 }
             }
@@ -9697,15 +10363,18 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "episodes": {
+                    "description": "剧集列表（不含播放地址）",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/client.VideoDetailEpisode"
                     }
                 },
                 "id": {
+                    "description": "播放源ID",
                     "type": "integer"
                 },
                 "name": {
+                    "description": "播放源名称",
                     "type": "string"
                 }
             }
@@ -9714,48 +10383,62 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "category_id": {
+                    "description": "分类ID",
                     "type": "integer"
                 },
                 "cover": {
+                    "description": "封面地址",
                     "type": "string"
                 },
                 "duration": {
+                    "description": "总时长（分钟）",
                     "type": "integer"
                 },
                 "id": {
+                    "description": "视频ID",
                     "type": "integer"
                 },
                 "language": {
+                    "description": "语言",
                     "type": "string"
                 },
                 "poster": {
+                    "description": "海报地址",
                     "type": "string"
                 },
                 "rating": {
+                    "description": "评分",
                     "type": "number"
                 },
                 "region": {
+                    "description": "地区",
                     "type": "string"
                 },
                 "serial_status": {
+                    "description": "连载状态（1=连载中，2=已完结，3=未知）",
                     "type": "integer"
                 },
                 "subtitle": {
+                    "description": "副标题",
                     "type": "string"
                 },
                 "tags": {
+                    "description": "标签列表",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/dto.NamedItem"
                     }
                 },
                 "title": {
+                    "description": "视频标题",
                     "type": "string"
                 },
                 "view_count": {
+                    "description": "播放量",
                     "type": "integer"
                 },
                 "year": {
+                    "description": "上映年份",
                     "type": "integer"
                 }
             }
@@ -9767,6 +10450,7 @@ const docTemplate = `{
             ],
             "properties": {
                 "action": {
+                    "description": "投票动作（like=顶，dislike=踩，cancel=取消）",
                     "type": "string",
                     "enum": [
                         "like",
@@ -9780,12 +10464,15 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "dislike_count": {
+                    "description": "踩数",
                     "type": "integer"
                 },
                 "like_count": {
+                    "description": "点赞数",
                     "type": "integer"
                 },
                 "my_vote": {
+                    "description": "我的投票（1=顶，-1=踩，0=未投票）",
                     "type": "integer"
                 }
             }
@@ -9794,9 +10481,11 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
+                    "description": "条目ID",
                     "type": "integer"
                 },
                 "name": {
+                    "description": "条目名称",
                     "type": "string"
                 }
             }
@@ -9805,12 +10494,15 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "id": {
+                    "description": "分类ID",
                     "type": "integer"
                 },
                 "name": {
+                    "description": "分类名称",
                     "type": "string"
                 },
                 "parent_id": {
+                    "description": "父分类ID，0 表示顶级分类",
                     "type": "integer"
                 }
             }
@@ -9819,57 +10511,72 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "actors": {
+                    "description": "演员列表",
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
                 "category_id": {
+                    "description": "分类ID",
                     "type": "integer"
                 },
                 "cover": {
+                    "description": "封面地址",
                     "type": "string"
                 },
                 "created_at": {
+                    "description": "创建时间",
                     "type": "string"
                 },
                 "description": {
+                    "description": "剧情简介",
                     "type": "string"
                 },
                 "directors": {
+                    "description": "导演列表",
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
                 "id": {
+                    "description": "视频ID",
                     "type": "integer"
                 },
                 "language": {
+                    "description": "语言",
                     "type": "string"
                 },
                 "rating": {
+                    "description": "评分",
                     "type": "number"
                 },
                 "region": {
+                    "description": "地区",
                     "type": "string"
                 },
                 "release_date": {
+                    "description": "上映日期",
                     "type": "string"
                 },
                 "sources": {
+                    "description": "播放源分组列表（含播放地址）",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/open.VideoSource"
                     }
                 },
                 "subtitle": {
+                    "description": "副标题",
                     "type": "string"
                 },
                 "title": {
+                    "description": "视频标题",
                     "type": "string"
                 },
                 "year": {
+                    "description": "上映年份",
                     "type": "integer"
                 }
             }
@@ -9878,15 +10585,19 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "category_id": {
+                    "description": "分类ID",
                     "type": "integer"
                 },
                 "created_at": {
+                    "description": "创建时间",
                     "type": "string"
                 },
                 "id": {
+                    "description": "视频ID",
                     "type": "integer"
                 },
                 "title": {
+                    "description": "视频标题",
                     "type": "string"
                 }
             }
@@ -9895,15 +10606,18 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "episodes": {
+                    "description": "剧集列表（含播放地址）",
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/open.VideoSourceEpisode"
                     }
                 },
                 "id": {
+                    "description": "播放源ID",
                     "type": "integer"
                 },
                 "name": {
+                    "description": "播放源名称",
                     "type": "string"
                 }
             }
@@ -9912,12 +10626,15 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "episode": {
+                    "description": "集数",
                     "type": "integer"
                 },
                 "title": {
+                    "description": "剧集标题",
                     "type": "string"
                 },
                 "url": {
+                    "description": "播放地址",
                     "type": "string"
                 }
             }
