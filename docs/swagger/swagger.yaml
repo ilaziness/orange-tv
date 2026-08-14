@@ -1617,6 +1617,8 @@ definitions:
         type: string
       sort_order:
         type: integer
+      stream_url:
+        type: string
     type: object
   client.LoginHistoryItem:
     properties:
@@ -5480,7 +5482,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: 分页获取直播频道列表
+      description: '分页获取直播频道列表。web 端不返回 stream_url（走 /live/play/:id 代理播放）；app/tv/desktop
+        端（X-Client-Type: app|tv|desktop 或对应 UA）额外返回 stream_url 字段。'
       parameters:
       - in: query
         name: category
@@ -5542,7 +5545,7 @@ paths:
           description: 直播流
           schema:
             type: file
-      summary: 直播播放代理
+      summary: 直播播放代理，浏览器端有CORS限制，需通过本接口代理播放流
       tags:
       - 用户端｜直播观看
   /api/client/v1/promotions:

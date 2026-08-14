@@ -23,7 +23,7 @@ func NewLiveHandler(svc clientsvc.LiveService, proxySvc clientsvc.LiveProxyServi
 
 // List
 // @Summary 直播频道列表
-// @Description 分页获取直播频道列表
+// @Description 分页获取直播频道列表。web 端不返回 stream_url（走 /live/play/:id 代理播放）；app/tv/desktop 端（X-Client-Type: app|tv|desktop 或对应 UA）额外返回 stream_url 字段。
 // @Tags 用户端｜直播观看
 // @Accept json
 // @Produce json
@@ -44,7 +44,7 @@ func (h *LiveHandler) List(c *gin.Context) {
 }
 
 // Play proxies a live stream by delegating to LiveProxyService.
-// @Summary 直播播放代理
+// @Summary 直播播放代理，浏览器端有CORS限制，需通过本接口代理播放流
 // @Description 代理指定直播频道的播放流
 // @Tags 用户端｜直播观看
 // @Produce octet-stream

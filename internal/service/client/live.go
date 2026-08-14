@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/ilaziness/orange-tv/internal/cache"
+	"github.com/ilaziness/orange-tv/internal/clienttype"
 	clientdto "github.com/ilaziness/orange-tv/internal/dto/client"
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
@@ -34,9 +35,11 @@ func NewLiveService(repo repository.LiveRepository, c *cache.Manager, log *zap.L
 }
 
 // List 返回所有在线直播频道，前端按 category 自行分组展示。
-// stream_url 不返回给前端，前端通过 /live/play/:id 代理播放。
+// web 端不返回 stream_url（走 /live/play/:id 代理播放）；
+// app/tv/desktop 端直接返回 stream_url，由客户端直连或自行封装播放。
 func (s *liveService) List(ctx context.Context, req *clientdto.LiveListRequest) ([]clientdto.LiveChannelItem, int, error) {
-	if items, err := s.cache.GetLiveListClient(ctx); err == nil && items != nil {
+	withStream := clienttype.IsStreamEnabled(ctx)
+	if items, err := s.cache.GetLiveListClient(ctx, withStream); err == nil && items != nil {
 		return filterByCategory(items, strings.TrimSpace(req.Category)), len(items), nil
 	}
 	items, err := s.repo.ListAll(ctx)
@@ -50,9 +53,9 @@ func (s *liveService) List(ctx context.Context, req *clientdto.LiveListRequest) 
 		if m.Status != 1 {
 			continue
 		}
-		out = append(out, toPublicLiveItem(m))
+		out = append(out, toPublicLiveItem(m, withStream))
 	}
-	_ = s.cache.SetLiveListClient(ctx, out)
+	_ = s.cache.SetLiveListClient(ctx, out, withStream)
 	return filterByCategory(out, strings.TrimSpace(req.Category)), len(out), nil
 }
 
@@ -82,9 +85,10 @@ func filterByCategory(items []clientdto.LiveChannelItem, category string) []clie
 	return filtered
 }
 
-// toPublicLiveItem 将模型转为对外 DTO，stream_url 不返回给前端。
-func toPublicLiveItem(m *model.LiveChannels) clientdto.LiveChannelItem {
-	return clientdto.LiveChannelItem{
+// toPublicLiveItem 将模型转为对外 DTO。
+// includeStream=false（web）时 StreamURL 留空，json omitempty 隐藏该字段。
+func toPublicLiveItem(m *model.LiveChannels, includeStream bool) clientdto.LiveChannelItem {
+	item := clientdto.LiveChannelItem{
 		ID:          m.ID,
 		Name:        m.Name,
 		Category:    m.Category,
@@ -93,6 +97,10 @@ func toPublicLiveItem(m *model.LiveChannels) clientdto.LiveChannelItem {
 		SortOrder:   m.SortOrder,
 		Format:      inferStreamFormat(m.StreamURL),
 	}
+	if includeStream {
+		item.StreamURL = strings.TrimSpace(m.StreamURL)
+	}
+	return item
 }
 
 // inferStreamFormat 根据 stream_url 后缀推断播放格式。

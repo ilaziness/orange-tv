@@ -66,8 +66,9 @@ func (m *Manager) InvalidateCategory(ctx context.Context) {
 // --- Live ---
 
 // GetLiveListClient 获取客户端直播列表缓存。
-func (m *Manager) GetLiveListClient(ctx context.Context) ([]clientdto.LiveChannelItem, error) {
-	v, err := m.cache.Get(ctx, KeyLiveListClient)
+// withStream=true 获取含流地址的缓存（app/tv/desktop），false 获取不含流地址的缓存（web）。
+func (m *Manager) GetLiveListClient(ctx context.Context, withStream bool) ([]clientdto.LiveChannelItem, error) {
+	v, err := m.cache.Get(ctx, LiveListKey(withStream))
 	if err != nil {
 		return nil, err
 	}
@@ -79,13 +80,15 @@ func (m *Manager) GetLiveListClient(ctx context.Context) ([]clientdto.LiveChanne
 }
 
 // SetLiveListClient 设置客户端直播列表缓存。
-func (m *Manager) SetLiveListClient(ctx context.Context, items []clientdto.LiveChannelItem) error {
-	return m.cache.Set(ctx, KeyLiveListClient, items, TTLLiveList)
+// withStream=true 缓存含流地址条目（app/tv/desktop），false 缓存不含流地址条目（web）。
+func (m *Manager) SetLiveListClient(ctx context.Context, items []clientdto.LiveChannelItem, withStream bool) error {
+	return m.cache.Set(ctx, LiveListKey(withStream), items, TTLLiveList)
 }
 
-// InvalidateLive 失效直播列表缓存。
+// InvalidateLive 失效直播列表缓存（含流与不含流两个 key）。
 func (m *Manager) InvalidateLive(ctx context.Context) {
-	_ = m.cache.Delete(ctx, KeyLiveListClient)
+	_ = m.cache.Delete(ctx, LiveListKey(true))
+	_ = m.cache.Delete(ctx, LiveListKey(false))
 }
 
 // --- Video (client) ---

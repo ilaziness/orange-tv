@@ -47,6 +47,7 @@ func NewHTTPServer(cfg *config.Config, logger *zap.Logger, accessLogger *zap.Log
 
 	// Apply core middlewares
 	ginRouter.Use(httpmiddleware.RequestID())
+	ginRouter.Use(httpmiddleware.ClientTypeMiddleware(router.SystemPaths...))
 	ginRouter.Use(httpmiddleware.SecurityHeaders())
 	// Access logs go to stdout only (accessLogger) to avoid cluttering log files.
 	ginRouter.Use(httpmiddleware.Logger(accessLogger, router.SystemPaths...))

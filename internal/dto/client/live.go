@@ -15,7 +15,8 @@ type LivePlayRequest struct {
 	U  string `form:"u"`
 }
 
-// LiveChannelItem is a live channel payload for client (no status, no stream_url).
+// LiveChannelItem is a live channel payload for client (no status).
+// StreamURL 仅 app/tv/desktop 端返回，web 端为空且 omitempty 隐藏。
 type LiveChannelItem struct {
 	ID          uint32 `json:"id"`
 	Name        string `json:"name"`
@@ -24,4 +25,5 @@ type LiveChannelItem struct {
 	Description string `json:"description"`
 	SortOrder   uint32 `json:"sort_order"`
 	Format      string `json:"format"`
+	StreamURL   string `json:"stream_url,omitempty"`
 }
