@@ -2,7 +2,7 @@
 
 > 中文版主文档：[README.md](README.md) · Technical docs: [docs/README.md](docs/README.md)
 
-An out-of-the-box video streaming site system for building an online video website for viewers. It supports video collection, content management, playback and backend operations, with a responsive front-end for phones, tablets and desktops.
+An out-of-the-box video management system for building an online video website for viewers. It supports content management, playback and backend operations, with a responsive front-end for phones, tablets and desktops.
 
 ## What can this system do?
 
@@ -21,10 +21,10 @@ A viewing website for regular audiences. Visitors can:
 
 The system is split into two independent parts for different people:
 
-| Part | Users | Purpose |
-| ------ | ------ | ------ |
-| **Client** (front-end site) | Regular viewers | Browse, search, watch videos |
-| **Admin backend** | Site owners / operators / editors | Manage content, configure collection, manage users, configure site |
+| Part                        | Users                             | Purpose                                                            |
+| --------------------------- | --------------------------------- | ------------------------------------------------------------------ |
+| **Client** (front-end site) | Regular viewers                   | Browse, search, watch videos                                       |
+| **Admin backend**           | Site owners / operators / editors | Manage content, configure collection, manage users, configure site |
 
 ## What the admin backend can do
 
@@ -170,18 +170,20 @@ On success it prints something like `Created super_admin: id=1 username=admin`. 
 
 ## Screenshots
 
+> The screenshots below are for functional demonstration only. The displayed content is test data and does not represent any real copyrighted video content. If there is any infringement, please contact us for removal.
+
 ### Client
 
-| | |
-| --- | --- |
+|                                |                                |
+| ------------------------------ | ------------------------------ |
 | ![Client 1](screenshot/01.png) | ![Client 2](screenshot/02.png) |
 | ![Client 3](screenshot/03.png) | ![Client 4](screenshot/04.png) |
-| ![Client 5](screenshot/05.png) | |
+| ![Client 5](screenshot/05.png) |                                |
 
 ### Admin backend
 
-| |
-| --- |
+|                                              |
+| -------------------------------------------- |
 | ![Admin dashboard](screenshot/dashboard.png) |
 
 ## How do I get started? (build from source)
@@ -197,17 +199,18 @@ For detailed installation, configuration, commands and technical notes, see the 
 
 ## Documentation index
 
-| Document | Content |
-| ------ | ------ |
-| [Technical docs](docs/README.md) | Project structure, configuration, commands, database, observability |
-| [Deployment guide](docs/deployment.md) | Single-instance, multi-instance and Docker deployment |
-| [Module usage](docs/module-usage.md) | How to select and remove unneeded service modules |
-| [Observability guide](docs/observability.md) | Logging, tracing and metrics configuration |
+| Document                                     | Content                                                             |
+| -------------------------------------------- | ------------------------------------------------------------------- |
+| [Technical docs](docs/README.md)             | Project structure, configuration, commands, database, observability |
+| [Deployment guide](docs/deployment.md)       | Single-instance, multi-instance and Docker deployment               |
+| [Module usage](docs/module-usage.md)         | How to select and remove unneeded service modules                   |
+| [Observability guide](docs/observability.md) | Logging, tracing and metrics configuration                          |
 
 ## Disclaimer
 
-This project is for learning and technical research purposes only. It does not provide, host or distribute any video content.
+This project is for learning and technical research purposes only. It does not provide, host, distribute or bundle any video content.
 
+- The system source code and release package do not bundle any video content or playback data. All playback content is entered by the user.
 - The collection feature is for technical demonstration only. Users must ensure their collection activities comply with applicable laws and the source site's terms of use.
 - Users are solely responsible for the copyright legality of collected content and the operation of their deployed sites.
 - The project author is not liable for any legal disputes arising from the use or misuse of this system.
