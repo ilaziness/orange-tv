@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect } from 'react'
 import type { ClientAdItem } from '@orange-tv/shared'
-import { clientApi } from '@/lib/api'
+import { useAdsStore } from '@/store/ads'
 import { AdCodeRenderer } from './AdCodeRenderer'
 
 interface AdSlotProps {
@@ -8,51 +8,23 @@ interface AdSlotProps {
   className?: string
 }
 
-// Module-level cache: ad_key → ad item, shared across all AdSlot instances.
-let generalAdsCache: ClientAdItem[] | null = null
-let generalAdsLoading: Promise<ClientAdItem[]> | null = null
-
-async function loadGeneralAds(): Promise<ClientAdItem[]> {
-  if (generalAdsCache) return generalAdsCache
-  if (generalAdsLoading) return generalAdsLoading
-  generalAdsLoading = clientApi
-    .ads('general')
-    .then((res) => {
-      generalAdsCache = res.data || []
-      return generalAdsCache
-    })
-    .catch(() => {
-      generalAdsCache = []
-      return []
-    })
-    .finally(() => {
-      generalAdsLoading = null
-    })
-  return generalAdsLoading
-}
-
 /**
  * AdSlot is a universal ad rendering component.
  * Usage: <AdSlot adKey="home_sidebar" />
- * It fetches general-scene ads, finds the one matching adKey, and renders by type.
+ * Consumes the global ads store (general scene), finds the one matching adKey, and renders by type.
+ * Ads are preloaded during app bootstrap; the local effect is a fallback for the edge case where
+ * the store has not finished loading yet.
  */
 export function AdSlot({ adKey, className }: AdSlotProps) {
-  const [ad, setAd] = useState<ClientAdItem | null>(null)
-  const [loaded, setLoaded] = useState(false)
-  const mountedRef = useRef(true)
+  const ads = useAdsStore((s) => s.ads)
+  const loaded = useAdsStore((s) => s.loaded)
+  const loadAds = useAdsStore((s) => s.loadAds)
 
   useEffect(() => {
-    mountedRef.current = true
-    loadGeneralAds().then((ads) => {
-      if (!mountedRef.current) return
-      const found = ads.find((a) => a.ad_key === adKey)
-      setAd(found || null)
-      setLoaded(true)
-    })
-    return () => {
-      mountedRef.current = false
-    }
-  }, [adKey])
+    if (!loaded) void loadAds()
+  }, [loaded, loadAds])
+
+  const ad: ClientAdItem | undefined = ads.find((a) => a.ad_key === adKey)
 
   if (!loaded || !ad) return null
 

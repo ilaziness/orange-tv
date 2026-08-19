@@ -1,14 +1,10 @@
-import { useEffect } from 'react'
 import { RouterProvider } from 'react-router'
 import { router } from '@/router'
-import { useSettingsStore } from '@/store/settings'
+import { useBootstrap } from '@/hooks/useBootstrap'
+import { AppLoading } from '@/components/AppLoading'
 
 export default function App() {
-  const loadSettings = useSettingsStore((s) => s.loadSettings)
-
-  useEffect(() => {
-    void loadSettings()
-  }, [loadSettings])
-
+  const ready = useBootstrap()
+  if (!ready) return <AppLoading />
   return <RouterProvider router={router} />
 }
