@@ -64,3 +64,4 @@ configs/.env.local
 
 node_modules
 skills-lock.json
+.trae/

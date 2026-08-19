@@ -22,6 +22,7 @@ const siteSettingsSchema = z.object({
   icp: z.string(),
   seo_keywords: z.string(),
   description: z.string(),
+  analytics_code: z.string().max(2048, '统计代码长度不能超过 2048 个字符'),
 })
 
 function FeatureSettingsTab() {
@@ -174,6 +175,7 @@ export default function SiteSettingsPage() {
     icp: '',
     seo_keywords: '',
     description: '',
+    analytics_code: '',
   })
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -190,6 +192,7 @@ export default function SiteSettingsPage() {
         icp: site.icp || '',
         seo_keywords: site.seo_keywords || '',
         description: site.description || '',
+        analytics_code: site.analytics_code || '',
       })
     } catch (err) {
       toast.error(errorMessage(err))
@@ -237,7 +240,7 @@ export default function SiteSettingsPage() {
             <CardContent>
               {loading ? (
                 <div className="flex flex-col gap-4">
-                  {Array.from({ length: 6 }).map((_, i) => (
+                  {Array.from({ length: 7 }).map((_, i) => (
                     <Skeleton key={i} className="h-10 w-full" />
                   ))}
                 </div>
@@ -294,6 +297,19 @@ export default function SiteSettingsPage() {
                         value={form.seo_keywords}
                         onChange={(e) =>
                           setForm((prev) => ({ ...prev, seo_keywords: e.target.value }))
+                        }
+                        disabled={submitting}
+                      />
+                    </Field>
+                    <Field data-disabled={submitting ? true : undefined}>
+                      <FieldLabel htmlFor="analytics_code">统计代码</FieldLabel>
+                      <Textarea
+                        id="analytics_code"
+                        rows={5}
+                        placeholder="请输入百度统计、Google Analytics 等网页统计代码（可选）"
+                        value={form.analytics_code}
+                        onChange={(e) =>
+                          setForm((prev) => ({ ...prev, analytics_code: e.target.value }))
                         }
                         disabled={submitting}
                       />

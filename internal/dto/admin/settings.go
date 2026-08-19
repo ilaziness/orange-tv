@@ -49,6 +49,8 @@ type UpdateSiteSettings struct {
 	SEOKeywords *string `json:"seo_keywords" binding:"omitempty,max=255"`
 	// 站点描述
 	Description *string `json:"description" binding:"omitempty,max=500"`
+	// 站点统计代码（百度统计、Google Analytics 等）
+	AnalyticsCode *string `json:"analytics_code" binding:"omitempty,max=2048"`
 }
 
 // UpdateAPISettings updates API / resource station fields (all optional).

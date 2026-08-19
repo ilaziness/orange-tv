@@ -16,6 +16,7 @@ interface SettingsState {
   icp: string
   seo_keywords: string
   description: string
+  analytics_code: string
   feature: FeatureSettings
   loaded: boolean
   loadSettings: () => Promise<void>
@@ -28,6 +29,7 @@ const DEFAULT_SETTINGS: Omit<SettingsState, 'loadSettings'> = {
   icp: '',
   seo_keywords: '',
   description: '',
+  analytics_code: '',
   feature: DEFAULT_FEATURE,
   loaded: false,
 }
@@ -48,6 +50,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         icp: site?.icp || '',
         seo_keywords: site?.seo_keywords || '',
         description: site?.description || '',
+        analytics_code: site?.analytics_code || '',
         feature: feature || DEFAULT_FEATURE,
         loaded: true,
       })

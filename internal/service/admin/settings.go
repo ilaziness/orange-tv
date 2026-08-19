@@ -138,6 +138,12 @@ func (s *settingsService) buildSiteUpserts(site *admindto.UpdateSiteSettings) []
 			SettingType: constant.SettingTypeString, Description: "站点描述",
 		})
 	}
+	if site.AnalyticsCode != nil {
+		upserts = append(upserts, repository.SettingUpsert{
+			Key: constant.SettingSiteAnalyticsCode, Group: constant.SettingGroupSite, Value: strings.TrimSpace(*site.AnalyticsCode),
+			SettingType: constant.SettingTypeString, Description: "站点统计代码",
+		})
+	}
 	return upserts
 }
 

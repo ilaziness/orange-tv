@@ -401,6 +401,7 @@ export type SiteSettings = {
   icp: string
   seo_keywords: string
   description: string
+  analytics_code: string
 }
 
 export type APISettings = {

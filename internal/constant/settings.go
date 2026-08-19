@@ -22,6 +22,7 @@ const (
 	SettingSiteICP                 = "site_icp"
 	SettingSiteSEOKeywords         = "site_seo_keywords"
 	SettingSiteDescription         = "site_description"
+	SettingSiteAnalyticsCode       = "site_analytics_code"
 
 	// Feature settings keys.
 	SettingFeatureLiveEnabled    = "live_enabled"    // 电视直播开关
@@ -42,6 +43,7 @@ var GroupKeys = map[string][]string{
 		SettingSiteICP,
 		SettingSiteSEOKeywords,
 		SettingSiteDescription,
+		SettingSiteAnalyticsCode,
 	},
 	SettingGroupAPI: {
 		SettingEnableThirdPartyCollect,
@@ -65,6 +67,7 @@ var KeyToGroup = map[string]string{
 	SettingSiteICP:                 SettingGroupSite,
 	SettingSiteSEOKeywords:         SettingGroupSite,
 	SettingSiteDescription:         SettingGroupSite,
+	SettingSiteAnalyticsCode:       SettingGroupSite,
 	SettingEnableThirdPartyCollect: SettingGroupAPI,
 	SettingFeatureLiveEnabled:      SettingGroupFeature,
 	SettingFeatureCommentEnabled:   SettingGroupFeature,

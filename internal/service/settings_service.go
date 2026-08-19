@@ -108,12 +108,13 @@ func (s *settingsService) UpsertMany(ctx context.Context, group string, upserts 
 
 func mapToSiteSettings(m map[string]model.SystemSettings) dto.SiteSettings {
 	return dto.SiteSettings{
-		Name:        utils.DefaultStr(StrVal(m, constant.SettingSiteName), "小橘TV"),
-		Logo:        StrVal(m, constant.SettingSiteLogo),
-		Copyright:   StrVal(m, constant.SettingSiteCopyright),
-		ICP:         StrVal(m, constant.SettingSiteICP),
-		SEOKeywords: StrVal(m, constant.SettingSiteSEOKeywords),
-		Description: StrVal(m, constant.SettingSiteDescription),
+		Name:          utils.DefaultStr(StrVal(m, constant.SettingSiteName), "小橘TV"),
+		Logo:          StrVal(m, constant.SettingSiteLogo),
+		Copyright:     StrVal(m, constant.SettingSiteCopyright),
+		ICP:           StrVal(m, constant.SettingSiteICP),
+		SEOKeywords:   StrVal(m, constant.SettingSiteSEOKeywords),
+		Description:   StrVal(m, constant.SettingSiteDescription),
+		AnalyticsCode: StrVal(m, constant.SettingSiteAnalyticsCode),
 	}
 }
 

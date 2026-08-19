@@ -14,6 +14,8 @@ type SiteSettings struct {
 	SEOKeywords string `json:"seo_keywords"`
 	// 站点描述
 	Description string `json:"description"`
+	// 站点统计代码（百度统计、Google Analytics 等）
+	AnalyticsCode string `json:"analytics_code"`
 }
 
 // FeatureSettings holds client feature toggle settings.
