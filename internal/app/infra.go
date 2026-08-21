@@ -15,6 +15,7 @@ import (
 	"github.com/ilaziness/orange-tv/internal/utils"
 	pkgcache "github.com/ilaziness/orange-tv/pkg/cache"
 	pkgevent "github.com/ilaziness/orange-tv/pkg/event"
+	pkglock "github.com/ilaziness/orange-tv/pkg/lock"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )
@@ -93,6 +94,13 @@ func (a *App) wireInfra() error {
 			OnStop: func(ctx context.Context) error { return a.redisClient.Close() },
 		})
 	}
+
+	// 通用分布式锁容器：Redis 启用时使用 Redis 实现，未启用时降级为进程内内存锁。
+	// 业务方通过 internal/lock 包生成 key 后调用此 locker 做并发去重（如注册接口的邮箱锁）。
+	lockerFactory := pkglock.NewLockerFactory(pkglock.LockerFactoryOptions{
+		RedisClient: a.redisClient,
+	})
+	a.locker = lockerFactory.Create()
 
 	bus := pkgevent.NewEventBusWithLogger(a.log)
 	pkgevent.SetDefault(bus)

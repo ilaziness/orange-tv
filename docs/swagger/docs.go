@@ -4294,6 +4294,12 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "登录邮箱筛选",
+                        "name": "email",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
                         "description": "结束时间（RFC3339 或日期字符串）",
                         "name": "end",
                         "in": "query"
@@ -4343,12 +4349,6 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "用户ID筛选",
                         "name": "user_id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "用户名筛选",
-                        "name": "username",
                         "in": "query"
                     }
                 ],
@@ -4410,7 +4410,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "关键词搜索（用户名/昵称）",
+                        "description": "关键词搜索（邮箱/昵称）",
                         "name": "keyword",
                         "in": "query"
                     },
@@ -5341,7 +5341,7 @@ const docTemplate = `{
         },
         "/api/client/v1/auth/register": {
             "post": {
-                "description": "用户注册账号，返回个人资料",
+                "description": "邮箱+密码注册，注册成功仅返回状态，不返回用户信息",
                 "consumes": [
                     "application/json"
                 ],
@@ -5367,19 +5367,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/client.Profile"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/response.Response"
                         }
                     }
                 }
@@ -7764,6 +7752,10 @@ const docTemplate = `{
                     "description": "点赞数",
                     "type": "integer"
                 },
+                "nickname": {
+                    "description": "昵称",
+                    "type": "string"
+                },
                 "parent_id": {
                     "description": "父评论ID，0 表示顶级评论",
                     "type": "integer"
@@ -7775,10 +7767,6 @@ const docTemplate = `{
                 "user_id": {
                     "description": "用户ID",
                     "type": "integer"
-                },
-                "username": {
-                    "description": "用户名",
-                    "type": "string"
                 },
                 "video_id": {
                     "description": "视频ID",
@@ -7805,6 +7793,10 @@ const docTemplate = `{
                     "description": "评论ID",
                     "type": "integer"
                 },
+                "nickname": {
+                    "description": "昵称",
+                    "type": "string"
+                },
                 "parent_id": {
                     "description": "父评论ID",
                     "type": "integer"
@@ -7812,10 +7804,6 @@ const docTemplate = `{
                 "user_id": {
                     "description": "用户ID",
                     "type": "integer"
-                },
-                "username": {
-                    "description": "用户名",
-                    "type": "string"
                 }
             }
         },
@@ -8247,8 +8235,8 @@ const docTemplate = `{
         "admin.CreateUserRequest": {
             "type": "object",
             "required": [
-                "password",
-                "username"
+                "email",
+                "password"
             ],
             "properties": {
                 "avatar": {
@@ -8257,7 +8245,7 @@ const docTemplate = `{
                     "maxLength": 500
                 },
                 "email": {
-                    "description": "邮箱（可选）",
+                    "description": "邮箱（必填）",
                     "type": "string",
                     "maxLength": 128
                 },
@@ -8280,12 +8268,6 @@ const docTemplate = `{
                         0,
                         1
                     ]
-                },
-                "username": {
-                    "description": "用户名（必填，3-50 位）",
-                    "type": "string",
-                    "maxLength": 50,
-                    "minLength": 3
                 }
             }
         },
@@ -9171,7 +9153,7 @@ const docTemplate = `{
                 "email": {
                     "description": "邮箱（可选）",
                     "type": "string",
-                    "maxLength": 100
+                    "maxLength": 128
                 },
                 "nickname": {
                     "description": "昵称（可选）",
@@ -9248,12 +9230,6 @@ const docTemplate = `{
                         0,
                         1
                     ]
-                },
-                "username": {
-                    "description": "用户名（3-50 位）",
-                    "type": "string",
-                    "maxLength": 50,
-                    "minLength": 3
                 }
             }
         },
@@ -9416,10 +9392,6 @@ const docTemplate = `{
                 "str_id": {
                     "description": "字符串形式用户ID",
                     "type": "string"
-                },
-                "username": {
-                    "description": "用户名",
-                    "type": "string"
                 }
             }
         },
@@ -9428,6 +9400,10 @@ const docTemplate = `{
             "properties": {
                 "created_at": {
                     "description": "登录时间",
+                    "type": "string"
+                },
+                "email": {
+                    "description": "登录邮箱",
                     "type": "string"
                 },
                 "id": {
@@ -9449,10 +9425,6 @@ const docTemplate = `{
                 "user_id": {
                     "description": "用户ID",
                     "type": "integer"
-                },
-                "username": {
-                    "description": "用户名",
-                    "type": "string"
                 }
             }
         },
@@ -9837,6 +9809,10 @@ const docTemplate = `{
                     "description": "我的投票（1=顶，-1=踩，0=未投票）",
                     "type": "integer"
                 },
+                "nickname": {
+                    "description": "昵称",
+                    "type": "string"
+                },
                 "parent_id": {
                     "description": "父评论ID，0 表示顶级评论",
                     "type": "integer"
@@ -9855,10 +9831,6 @@ const docTemplate = `{
                 "user_id": {
                     "description": "用户ID",
                     "type": "integer"
-                },
-                "username": {
-                    "description": "用户名",
-                    "type": "string"
                 },
                 "video_id": {
                     "description": "视频ID",
@@ -10043,21 +10015,20 @@ const docTemplate = `{
         "client.LoginRequest": {
             "type": "object",
             "required": [
-                "password",
-                "username"
+                "email",
+                "password"
             ],
             "properties": {
+                "email": {
+                    "description": "邮箱",
+                    "type": "string",
+                    "maxLength": 128
+                },
                 "password": {
                     "description": "密码（5-30 位）",
                     "type": "string",
                     "maxLength": 30,
                     "minLength": 5
-                },
-                "username": {
-                    "description": "用户名（字母数字，2-15 位）",
-                    "type": "string",
-                    "maxLength": 15,
-                    "minLength": 2
                 }
             }
         },
@@ -10129,10 +10100,6 @@ const docTemplate = `{
                 "str_id": {
                     "description": "字符串形式用户ID",
                     "type": "string"
-                },
-                "username": {
-                    "description": "用户名",
-                    "type": "string"
                 }
             }
         },
@@ -10168,26 +10135,26 @@ const docTemplate = `{
         "client.RegisterRequest": {
             "type": "object",
             "required": [
-                "password",
-                "username"
+                "email",
+                "password"
             ],
             "properties": {
                 "email": {
-                    "description": "邮箱（可选）",
+                    "description": "邮箱（必填）",
                     "type": "string",
                     "maxLength": 128
+                },
+                "nickname": {
+                    "description": "昵称（可选，3-15 位；为空时默认取邮箱 @ 前部分）",
+                    "type": "string",
+                    "maxLength": 15,
+                    "minLength": 3
                 },
                 "password": {
                     "description": "密码（5-30 位）",
                     "type": "string",
                     "maxLength": 30,
                     "minLength": 5
-                },
-                "username": {
-                    "description": "用户名（字母数字，2-15 位）",
-                    "type": "string",
-                    "maxLength": 15,
-                    "minLength": 2
                 }
             }
         },
@@ -10202,7 +10169,7 @@ const docTemplate = `{
                 "email": {
                     "description": "邮箱（可选）",
                     "type": "string",
-                    "maxLength": 20
+                    "maxLength": 128
                 },
                 "nickname": {
                     "description": "昵称（3-15 位，可选）",

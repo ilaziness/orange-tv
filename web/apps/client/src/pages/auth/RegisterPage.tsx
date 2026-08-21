@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, Link } from 'react-router'
-import { isValidUsername, sanitizeUsernameInput } from '@orange-tv/shared'
+import { isValidEmail, sanitizeEmailInput } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
 import { useAuthStore } from '@/store/auth'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -13,9 +13,10 @@ import { AlertCircleIcon } from 'lucide-react'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
 export function Component() {
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [nickname, setNickname] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const navigate = useNavigate()
@@ -35,11 +36,12 @@ export function Component() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    const u = username.trim()
+    const em = email.trim()
     const p = password.trim()
     const cp = confirmPassword.trim()
-    if (!isValidUsername(u)) {
-      setError('用户名只能由 2-15 位字母或数字组成')
+    const nick = nickname.trim()
+    if (!isValidEmail(em)) {
+      setError('邮箱格式不正确')
       return
     }
     if (p.length < 5 || p.length > 30) {
@@ -50,9 +52,13 @@ export function Component() {
       setError('两次密码不一致')
       return
     }
+    if (nick && (nick.length < 3 || nick.length > 15)) {
+      setError('昵称长度应为3-15位')
+      return
+    }
     setSubmitting(true)
     try {
-      await clientApi.register(u, p)
+      await clientApi.register(em, p, nick || undefined)
       navigate('/login')
     } catch (err) {
       setError(errorMessage(err))
@@ -66,7 +72,7 @@ export function Component() {
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle>注册</CardTitle>
-          <CardDescription>创建账号以使用完整功能</CardDescription>
+          <CardDescription>使用邮箱注册账号</CardDescription>
         </CardHeader>
         <CardContent>
           {error ? (
@@ -78,14 +84,14 @@ export function Component() {
           <form onSubmit={handleSubmit}>
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="username">用户名</FieldLabel>
+                <FieldLabel htmlFor="email">邮箱</FieldLabel>
                 <Input
-                  id="username"
-                  placeholder="请输入用户名"
-                  maxLength={15}
-                  pattern="[a-zA-Z0-9]{2,15}"
-                  value={username}
-                  onChange={(e) => setUsername(sanitizeUsernameInput(e.target.value))}
+                  id="email"
+                  type="email"
+                  placeholder="请输入邮箱"
+                  maxLength={128}
+                  value={email}
+                  onChange={(e) => setEmail(sanitizeEmailInput(e.target.value))}
                   required
                 />
               </Field>
@@ -117,6 +123,17 @@ export function Component() {
                 {password !== confirmPassword && confirmPassword ? (
                   <FieldError>两次密码不一致</FieldError>
                 ) : null}
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="nickname">昵称（可选）</FieldLabel>
+                <Input
+                  id="nickname"
+                  placeholder="3-15 位，不填则使用邮箱前缀"
+                  minLength={3}
+                  maxLength={15}
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                />
               </Field>
               <Button type="submit" disabled={submitting} className="w-full">
                 {submitting ? <Spinner data-icon="inline-start" /> : null}

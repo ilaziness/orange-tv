@@ -26,24 +26,23 @@ func NewUserHandler(svc clientsvc.UserService) *UserHandler {
 
 // Register
 // @Summary 用户注册
-// @Description 用户注册账号，返回个人资料
+// @Description 邮箱+密码注册，注册成功仅返回状态，不返回用户信息
 // @Tags 用户端｜用户中心
 // @Accept json
 // @Produce json
 // @Param body body clientdto.RegisterRequest true "注册请求"
-// @Success 200 {object} response.Response{data=clientdto.Profile}
+// @Success 200 {object} response.Response
 // @Router /api/client/v1/auth/register [post]
 func (h *UserHandler) Register(c *gin.Context) {
 	var req clientdto.RegisterRequest
 	if !httphandler.BindAndValidate(c, &req) {
 		return
 	}
-	profile, err := h.svc.Register(c.Request.Context(), &req)
-	if err != nil {
+	if err := h.svc.Register(c.Request.Context(), &req); err != nil {
 		response.Error(c, err)
 		return
 	}
-	response.Success(c, profile)
+	response.Success(c, nil)
 }
 
 // Login

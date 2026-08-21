@@ -24,6 +24,11 @@ import { DEFAULT_PAGE_SIZE } from '@/lib/constants'
 
 type LoginLogRow = AdminLoginLogItem | UserLoginLogItem
 
+type SearchField = {
+  name: 'username' | 'email'
+  label: string
+}
+
 export default function LoginLogsPage() {
   return (
     <PageContainer>
@@ -36,6 +41,7 @@ export default function LoginLogsPage() {
           <LoginLogTabContent
             title="管理员登录日志"
             emptyDescription="暂无管理员登录日志记录"
+            searchField={{ name: 'username', label: '用户名' }}
             fetchFn={(query) => adminApi.listAdminLoginLogs(query)}
           />
         </TabsContent>
@@ -43,6 +49,7 @@ export default function LoginLogsPage() {
           <LoginLogTabContent
             title="用户登录日志"
             emptyDescription="暂无用户登录日志记录"
+            searchField={{ name: 'email', label: '邮箱' }}
             fetchFn={(query) => adminApi.listUserLoginLogs(query)}
           />
         </TabsContent>
@@ -54,37 +61,39 @@ export default function LoginLogsPage() {
 function LoginLogTabContent({
   title,
   emptyDescription,
+  searchField,
   fetchFn,
 }: {
   title: string
   emptyDescription: string
+  searchField: SearchField
   fetchFn: (
     query: Record<string, string | number | undefined>,
   ) => Promise<ApiResponse<PageData<LoginLogRow>>>
 }) {
   const [list, setList] = useState<LoginLogRow[]>([])
-  const [username, setUsername] = useState('')
+  const [keyword, setKeyword] = useState('')
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
-  const usernameRef = useRef(username)
+  const keywordRef = useRef(keyword)
   const pageRef = useRef(page)
 
   useEffect(() => {
-    usernameRef.current = username
-  }, [username])
+    keywordRef.current = keyword
+  }, [keyword])
   useEffect(() => {
     pageRef.current = page
   }, [page])
 
   const load = useCallback(
-    async (p = pageRef.current, u = usernameRef.current) => {
+    async (p = pageRef.current, k = keywordRef.current) => {
       setLoading(true)
       try {
         const res = await fetchFn({
           page: p,
           page_size: DEFAULT_PAGE_SIZE,
-          username: u || undefined,
+          [searchField.name]: k || undefined,
         })
         setList(res.data.list || [])
         setTotal(res.data.total || 0)
@@ -95,7 +104,7 @@ function LoginLogTabContent({
         setLoading(false)
       }
     },
-    [fetchFn],
+    [fetchFn, searchField.name],
   )
 
   useEffect(() => {
@@ -122,9 +131,9 @@ function LoginLogTabContent({
       <CardContent>
         <div className="mb-4 flex gap-2">
           <Input
-            placeholder="用户名"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            placeholder={searchField.label}
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
             className="max-w-xs"
             onKeyDown={(e) => {
               if (e.key === 'Enter') void load(1)
@@ -153,7 +162,7 @@ function LoginLogTabContent({
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-16">ID</TableHead>
-                    <TableHead>用户名</TableHead>
+                    <TableHead>{searchField.label}</TableHead>
                     <TableHead className="w-20">状态</TableHead>
                     <TableHead className="w-32">IP</TableHead>
                     <TableHead className="w-40">时间</TableHead>
@@ -164,7 +173,9 @@ function LoginLogTabContent({
                   {list.map((l) => (
                     <TableRow key={l.id}>
                       <TableCell>{l.id}</TableCell>
-                      <TableCell className="font-medium">{l.username}</TableCell>
+                      <TableCell className="font-medium">
+                        {'email' in l ? l.email : l.username}
+                      </TableCell>
                       <TableCell>
                         <Badge variant={l.status === 1 ? 'default' : 'destructive'}>
                           {l.status === 1 ? '成功' : '失败'}

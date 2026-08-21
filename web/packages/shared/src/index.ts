@@ -471,7 +471,7 @@ export type AdminLoginLogItem = {
 export type UserLoginLogItem = {
   id: number
   user_id: number
-  username: string
+  email: string
   ip: string
   user_agent: string
   status: number
@@ -529,8 +529,8 @@ export type UserGroupItem = {
 
 export type UserItem = {
   id: number
-  username: string
   email: string
+  nickname: string
   avatar: string
   status: number
   last_login_at: string | null
@@ -558,7 +558,6 @@ export type ClientBanner = {
 export type UserProfile = {
   id: number
   str_id: string
-  username: string
   nickname: string
   email: string
   avatar: string
@@ -617,7 +616,7 @@ export type CommentItem = {
   id: number
   video_id: number
   user_id: number
-  username: string
+  nickname: string
   avatar: string
   parent_id: number
   content: string
@@ -635,7 +634,7 @@ export type AdminCommentItem = {
   video_title: string
   content: string
   user_id: number
-  username: string
+  nickname: string
   status: number
   like_count: number
   dislike_count: number
@@ -646,7 +645,7 @@ export type AdminCommentItem = {
 export type AdminCommentParentItem = {
   id: number
   user_id: number
-  username: string
+  nickname: string
   parent_id: number
   content: string
   created_at: string

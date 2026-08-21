@@ -66,7 +66,7 @@ export function CommentTable({
                   </div>
                 </TableCell>
                 <TableCell>{item.user_id}</TableCell>
-                <TableCell>{item.username || '-'}</TableCell>
+                <TableCell>{item.nickname || '-'}</TableCell>
                 <TableCell>
                   <StatusBadge status={item.status} activeText="正常" inactiveText="隐藏" />
                 </TableCell>

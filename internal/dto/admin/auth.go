@@ -43,7 +43,7 @@ type UpdateProfileRequest struct {
 	// 昵称（可选）
 	Nickname string `json:"nickname" binding:"max=50"`
 	// 邮箱（可选）
-	Email string `json:"email" binding:"omitempty,max=100,email"`
+	Email string `json:"email" binding:"omitempty,max=128,email"`
 	// 头像地址（可选）
 	Avatar string `json:"avatar" binding:"max=500"`
 }

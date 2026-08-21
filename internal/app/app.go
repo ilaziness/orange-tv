@@ -21,6 +21,7 @@ import (
 	"github.com/ilaziness/orange-tv/internal/metrics"
 	"github.com/ilaziness/orange-tv/internal/server"
 	"github.com/ilaziness/orange-tv/internal/tracing"
+	pkglock "github.com/ilaziness/orange-tv/pkg/lock"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )
@@ -40,6 +41,11 @@ type App struct {
 	// redisClient 独立的 Redis 客户端，用于调度器分布式锁等非缓存用途。
 	// 仅在 cfg.Redis.Enabled 时创建，与 cache 内部 client 分离，职责清晰。
 	redisClient *redis.Client
+
+	// locker 通用分布式锁容器。
+	// Redis 启用时使用 Redis 实现，未启用时降级为进程内内存锁。
+	// 业务方通过 internal/lock 包生成 key 后调用此 locker 做并发去重。
+	locker pkglock.Locker
 
 	httpServer *server.HTTPServer
 

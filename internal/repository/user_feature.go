@@ -17,7 +17,7 @@ import (
 // UserLoginLogFilter filters user_login_logs queries.
 type UserLoginLogFilter struct {
 	UserID    *uint32
-	Username  string
+	Email     string
 	Status    *uint8
 	StartTime *time.Time
 	EndTime   *time.Time
@@ -417,8 +417,8 @@ func (r *userFeatureRepo) ListUserLoginLogs(ctx context.Context, f UserLoginLogF
 	if f.UserID != nil && *f.UserID > 0 {
 		q = q.Where("user_id = ?", *f.UserID)
 	}
-	if kw := strings.TrimSpace(f.Username); kw != "" {
-		q = q.Where("username LIKE ?", "%"+kw+"%")
+	if kw := strings.TrimSpace(f.Email); kw != "" {
+		q = q.Where("email LIKE ?", "%"+kw+"%")
 	}
 	if f.Status != nil {
 		q = q.Where("status = ?", *f.Status)

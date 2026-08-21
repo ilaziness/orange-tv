@@ -11,20 +11,26 @@ const optionalEmail = z
   .refine((v) => !v || z.email().safeParse(v).success, '邮箱格式不正确')
 
 const createSchema = z.object({
-  username: z.string().min(3, '用户名至少 3 个字符'),
+  email: z.string().email('邮箱格式不正确'),
   password: z.string().min(6, '密码至少 6 位'),
-  email: optionalEmail,
+  nickname: z
+    .string()
+    .refine((v) => !v || (v.length >= 3 && v.length <= 15), '昵称长度为 3-15 位')
+    .optional(),
   status: z.union([z.string(), z.number()]).transform((v) => Number(v)),
 })
 
 const editSchema = z.object({
-  username: z.string().min(3, '用户名至少 3 个字符'),
   email: optionalEmail,
+  nickname: z
+    .string()
+    .refine((v) => !v || (v.length >= 3 && v.length <= 15), '昵称长度为 3-15 位')
+    .optional(),
   status: z.union([z.string(), z.number()]).transform((v) => Number(v)),
 })
 
-const emptyCreateForm = { username: '', password: '', email: '', status: '1' }
-const emptyEditForm = { username: '', email: '', status: '1' }
+const emptyCreateForm = { email: '', password: '', nickname: '', status: '1' }
+const emptyEditForm = { email: '', nickname: '', status: '1' }
 
 export type UserCreateForm = typeof emptyCreateForm
 export type UserEditForm = typeof emptyEditForm
@@ -85,8 +91,8 @@ export function useUsers() {
   function openEdit(item: UserItem) {
     setEditId(item.id)
     setEditForm({
-      username: item.username || '',
       email: item.email || '',
+      nickname: item.nickname || '',
       status: String(item.status),
     })
     setDialogOpen(true)

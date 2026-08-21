@@ -35,8 +35,8 @@ type UserLoginLogListRequest struct {
 	shareddto.PaginationRequest
 	// 用户ID筛选
 	UserID *uint32 `form:"user_id" binding:"omitempty,min=1"`
-	// 用户名筛选
-	Username string `form:"username"`
+	// 登录邮箱筛选
+	Email string `form:"email"`
 	// 登录结果筛选（1=成功，2=失败）
 	Status *uint8 `form:"status" binding:"omitempty,oneof=1 2"`
 	// 开始时间（RFC3339 或日期字符串）
@@ -89,8 +89,8 @@ type UserLoginLogItem struct {
 	ID uint32 `json:"id"`
 	// 用户ID
 	UserID uint32 `json:"user_id"`
-	// 用户名
-	Username string `json:"username"`
+	// 登录邮箱
+	Email string `json:"email"`
 	// 登录 IP 地址
 	IP string `json:"ip"`
 	// User-Agent 信息

@@ -15,8 +15,6 @@ type Users struct {
 	bun.BaseModel `bun:"table:users,alias:us"`
 
 	ID uint32 `bun:"id,pk,autoincrement" json:"id"`
-	// 用户名
-	Username string `bun:"username,notnull,unique" json:"username"`
 	// 密码（加密存储）
 	Password string `bun:"password,notnull" json:"-"`
 	// 10位数字唯一展示ID
@@ -24,7 +22,7 @@ type Users struct {
 	// 昵称
 	Nickname string `bun:"nickname,notnull" json:"nickname"`
 	// 邮箱
-	Email string `bun:"email,notnull" json:"email"`
+	Email string `bun:"email,notnull,unique" json:"email"`
 	// 头像
 	Avatar string `bun:"avatar,notnull" json:"avatar"`
 	// 状态：1启用 0禁用

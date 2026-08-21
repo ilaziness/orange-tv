@@ -204,7 +204,7 @@ CREATE TABLE IF NOT EXISTS `system_settings` (
     `id` INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     `setting_key` VARCHAR(100) NOT NULL DEFAULT '' COMMENT '设置键',
     `setting_group` VARCHAR(50) NOT NULL DEFAULT '' COMMENT '设置分组',
-    `setting_value` VARCHAR(512) NOT NULL DEFAULT '' COMMENT '设置值',
+    `setting_value` VARCHAR(2048) NOT NULL DEFAULT '' COMMENT '设置值',
     `setting_type` TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '设置类型：1string 2number 3boolean 4json',
     `description` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '描述',
     `created_at` DATETIME NOT NULL,
@@ -258,7 +258,7 @@ CREATE TABLE IF NOT EXISTS `admins` (
     `username` VARCHAR(50) NOT NULL DEFAULT '' COMMENT '用户名',
     `nickname` VARCHAR(50) NOT NULL DEFAULT '' COMMENT '昵称',
     `password` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '密码（加密存储）',
-    `email` VARCHAR(100) NOT NULL DEFAULT '' COMMENT '邮箱',
+    `email` VARCHAR(128) NOT NULL DEFAULT '' COMMENT '邮箱',
     `avatar` VARCHAR(500) NOT NULL DEFAULT '' COMMENT '头像',
     `group_id` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '用户组ID',
     `status` TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '状态：1启用 0禁用',
@@ -274,11 +274,10 @@ CREATE TABLE IF NOT EXISTS `admins` (
 
 CREATE TABLE IF NOT EXISTS `users` (
     `id` INT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    `username` VARCHAR(50) NOT NULL DEFAULT '' COMMENT '用户名',
     `password` VARCHAR(255) NOT NULL DEFAULT '' COMMENT '密码（加密存储）',
     `str_id` VARCHAR(10) NOT NULL DEFAULT '' COMMENT '10位数字唯一展示ID',
     `nickname` VARCHAR(15) NOT NULL DEFAULT '' COMMENT '昵称',
-    `email` VARCHAR(100) NOT NULL DEFAULT '' COMMENT '邮箱',
+    `email` VARCHAR(128) NOT NULL DEFAULT '' COMMENT '邮箱',
     `avatar` VARCHAR(500) NOT NULL DEFAULT '' COMMENT '头像',
     `status` TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '状态：1启用 0禁用',
     `last_login_at` DATETIME NULL COMMENT '最后登录时间',
@@ -286,7 +285,7 @@ CREATE TABLE IF NOT EXISTS `users` (
     `updated_at` DATETIME NOT NULL,
     `deleted_at` DATETIME NULL DEFAULT NULL COMMENT '软删除时间',
     UNIQUE INDEX `idx_users_str_id` (`str_id`),
-    UNIQUE `uk_username` (`username`)
+    UNIQUE INDEX `uk_users_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
 
 --bun:split
@@ -322,7 +321,7 @@ CREATE TABLE IF NOT EXISTS `system_logs` (
 CREATE TABLE IF NOT EXISTS `user_login_logs` (
     `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
     `user_id` INT UNSIGNED NOT NULL DEFAULT 0,
-    `username` VARCHAR(50) NOT NULL DEFAULT '',
+    `email` VARCHAR(128) NOT NULL DEFAULT '' COMMENT '登录邮箱',
     `ip` VARCHAR(45) NOT NULL DEFAULT '',
     `user_agent` VARCHAR(500) NOT NULL DEFAULT '',
     `status` TINYINT UNSIGNED NOT NULL DEFAULT 2 COMMENT '1成功 2失败',

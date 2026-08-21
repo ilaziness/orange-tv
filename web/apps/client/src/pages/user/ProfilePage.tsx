@@ -158,9 +158,9 @@ function BasicInfo({
     }
   }
 
-  const displayName = profile?.nickname || profile?.username || ''
+  const displayName = profile?.nickname || profile?.email || ''
   const fallback = (
-    (profile?.nickname?.[0] || profile?.username?.[0] || 'U') as string
+    (profile?.nickname?.[0] || profile?.email?.[0] || 'U') as string
   ).toUpperCase()
 
   return (
@@ -173,8 +173,8 @@ function BasicInfo({
               <AvatarFallback>{fallback}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col gap-1">
-              <p className="text-lg font-semibold">{displayName || profile.email}</p>
-              <p className="text-sm text-muted-foreground">用户名：{profile.username}</p>
+              <p className="text-lg font-semibold">{displayName}</p>
+              <p className="text-sm text-muted-foreground">邮箱：{profile.email}</p>
               <p className="text-sm text-muted-foreground">用户ID：{profile.str_id}</p>
               <Badge variant={profile.status === 1 ? 'default' : 'secondary'}>
                 {statusMap[profile.status] || '未知'}

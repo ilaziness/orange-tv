@@ -122,16 +122,16 @@ func (f *fakeAdminRepo) ListUsers(ctx context.Context, fl repository.UserListFil
 func (f *fakeAdminRepo) GetUserByID(ctx context.Context, id uint32) (*model.Users, error) {
 	return nil, nil
 }
-func (f *fakeAdminRepo) GetUserByUsername(ctx context.Context, username string) (*model.Users, error) {
+func (f *fakeAdminRepo) GetUserByEmail(ctx context.Context, email string) (*model.Users, error) {
 	return nil, nil
 }
 func (f *fakeAdminRepo) CreateUser(ctx context.Context, u *model.Users) error { return nil }
 func (f *fakeAdminRepo) UpdateUser(ctx context.Context, u *model.Users) error { return nil }
 func (f *fakeAdminRepo) SoftDeleteUser(ctx context.Context, id uint32) error  { return nil }
-func (f *fakeAdminRepo) ExistsUserUsername(ctx context.Context, username string) (bool, error) {
+func (f *fakeAdminRepo) ExistsUserEmail(ctx context.Context, email string) (bool, error) {
 	return false, nil
 }
-func (f *fakeAdminRepo) ExistsUserUsernameExcludeID(ctx context.Context, username string, excludeID uint32) (bool, error) {
+func (f *fakeAdminRepo) ExistsUserEmailExcludeID(ctx context.Context, email string, excludeID uint32) (bool, error) {
 	return false, nil
 }
 func (f *fakeAdminRepo) GetUserByStrID(ctx context.Context, strID string) (*model.Users, error) {

@@ -33,7 +33,7 @@ export function UserTable({ list, loading, onEdit, onToggle, onReset, onDelete }
         <TableHeader>
           <TableRow>
             <TableHead className="w-16">ID</TableHead>
-            <TableHead>用户名</TableHead>
+            <TableHead>昵称</TableHead>
             <TableHead>邮箱</TableHead>
             <TableHead className="w-20">状态</TableHead>
             <TableHead className="w-40">最后登录</TableHead>
@@ -45,7 +45,7 @@ export function UserTable({ list, loading, onEdit, onToggle, onReset, onDelete }
           {list.map((u) => (
             <TableRow key={u.id}>
               <TableCell>{u.id}</TableCell>
-              <TableCell className="font-medium">{u.username}</TableCell>
+              <TableCell className="font-medium">{u.nickname || u.email || '-'}</TableCell>
               <TableCell>{u.email || '-'}</TableCell>
               <TableCell>
                 <StatusBadge status={u.status} />

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
-import { isValidUsername, sanitizeUsernameInput } from '@orange-tv/shared'
+import { isValidEmail, sanitizeEmailInput } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
 import { useAuthStore } from '@/store/auth'
 import { useLoginDialogStore } from '@/store/loginDialog'
@@ -19,7 +19,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { AlertCircleIcon } from 'lucide-react'
 
 export function LoginDialog() {
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -31,15 +31,15 @@ export function LoginDialog() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    const u = username.trim()
+    const em = email.trim()
     const p = password.trim()
-    if (!isValidUsername(u) || p.length < 6) {
-      setError('用户名或密码格式不正确')
+    if (!isValidEmail(em) || p.length < 5 || p.length > 30) {
+      setError('邮箱或密码格式不正确')
       return
     }
     setSubmitting(true)
     try {
-      const res = await clientApi.login(u, p)
+      const res = await clientApi.login(em, p)
       setToken(res.data.access_token)
       await loadProfile()
       close()
@@ -71,14 +71,14 @@ export function LoginDialog() {
         <form onSubmit={handleSubmit}>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="login-dialog-username">用户名</FieldLabel>
+              <FieldLabel htmlFor="login-dialog-email">邮箱</FieldLabel>
               <Input
-                id="login-dialog-username"
-                placeholder="请输入用户名"
-                maxLength={15}
-                pattern="[a-zA-Z0-9]{2,15}"
-                value={username}
-                onChange={(e) => setUsername(sanitizeUsernameInput(e.target.value))}
+                id="login-dialog-email"
+                type="email"
+                placeholder="请输入邮箱"
+                maxLength={128}
+                value={email}
+                onChange={(e) => setEmail(sanitizeEmailInput(e.target.value))}
                 required
               />
             </Field>
@@ -88,6 +88,8 @@ export function LoginDialog() {
                 id="login-dialog-password"
                 type="password"
                 placeholder="请输入密码"
+                minLength={5}
+                maxLength={30}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required

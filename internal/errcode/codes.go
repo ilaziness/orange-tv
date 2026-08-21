@@ -17,7 +17,7 @@ var (
 
 	// 用户模块 (200xxxx)
 	UserNotFound       = &Code{2000001, "用户不存在", 404, nil}
-	UserAlreadyExists  = &Code{2000002, "用户已存在", 409, nil}
+	UserAlreadyExists  = &Code{2000002, "邮箱已被注册", 409, nil}
 	UserDisabled       = &Code{2000003, "用户账号已禁用", 403, nil}
 	InvalidUserStatus  = &Code{2000004, "用户状态无效", 400, nil}
 	AdminNotFound      = &Code{2000010, "管理员不存在", 404, nil}
@@ -40,7 +40,7 @@ var (
 	InsufficientPermission = &Code{3000003, "权限不足", 403, nil}
 	InvalidToken           = &Code{3000004, "无效的Token", 401, nil}
 	TokenRevoked           = &Code{3000005, "Token已吊销", 401, nil}
-	InvalidCredentials     = &Code{3000006, "用户名或密码错误", 401, nil}
+	InvalidCredentials     = &Code{3000006, "邮箱或密码错误", 401, nil}
 	AdminDisabled          = &Code{3000007, "管理员账号已禁用", 403, nil}
 
 	// 内容模块 (400xxxx)

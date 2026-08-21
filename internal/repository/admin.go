@@ -42,13 +42,13 @@ type AdminRepository interface {
 	// Regular users (A5)
 	ListUsers(ctx context.Context, f UserListFilter) ([]model.Users, int, error)
 	GetUserByID(ctx context.Context, id uint32) (*model.Users, error)
-	GetUserByUsername(ctx context.Context, username string) (*model.Users, error)
+	GetUserByEmail(ctx context.Context, email string) (*model.Users, error)
 	GetUserByStrID(ctx context.Context, strID string) (*model.Users, error)
 	CreateUser(ctx context.Context, u *model.Users) error
 	UpdateUser(ctx context.Context, u *model.Users) error
 	SoftDeleteUser(ctx context.Context, id uint32) error
-	ExistsUserUsername(ctx context.Context, username string) (bool, error)
-	ExistsUserUsernameExcludeID(ctx context.Context, username string, excludeID uint32) (bool, error)
+	ExistsUserEmail(ctx context.Context, email string) (bool, error)
+	ExistsUserEmailExcludeID(ctx context.Context, email string, excludeID uint32) (bool, error)
 	ExistsUserStrID(ctx context.Context, strID string) (bool, error)
 }
 
@@ -340,7 +340,7 @@ func (r *adminRepo) ListUsers(ctx context.Context, f UserListFilter) ([]model.Us
 	items := make([]model.Users, 0, f.Limit)
 	q := r.db.NewSelect().Model(&items).Where("deleted_at IS NULL")
 	if f.Keyword != "" {
-		q = q.Where("username LIKE ? OR email LIKE ?", "%"+f.Keyword+"%", "%"+f.Keyword+"%")
+		q = q.Where("email LIKE ? OR nickname LIKE ?", "%"+f.Keyword+"%", "%"+f.Keyword+"%")
 	}
 	if f.Status != nil {
 		q = q.Where("status = ?", *f.Status)
@@ -370,17 +370,17 @@ func (r *adminRepo) GetUserByID(ctx context.Context, id uint32) (*model.Users, e
 	return u, nil
 }
 
-func (r *adminRepo) GetUserByUsername(ctx context.Context, username string) (*model.Users, error) {
+func (r *adminRepo) GetUserByEmail(ctx context.Context, email string) (*model.Users, error) {
 	u := new(model.Users)
 	err := r.db.NewSelect().Model(u).
-		Where("username = ?", username).
+		Where("email = ?", email).
 		Where("deleted_at IS NULL").
 		Scan(ctx)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
 	if err != nil {
-		return nil, fmt.Errorf("get user by username: %w", err)
+		return nil, fmt.Errorf("get user by email: %w", err)
 	}
 	return u, nil
 }
@@ -418,25 +418,25 @@ func (r *adminRepo) SoftDeleteUser(ctx context.Context, id uint32) error {
 	return nil
 }
 
-func (r *adminRepo) ExistsUserUsername(ctx context.Context, username string) (bool, error) {
+func (r *adminRepo) ExistsUserEmail(ctx context.Context, email string) (bool, error) {
 	exists, err := r.db.NewSelect().Model((*model.Users)(nil)).
-		Where("username = ?", username).
+		Where("email = ?", email).
 		Where("deleted_at IS NULL").
 		Exists(ctx)
 	if err != nil {
-		return false, fmt.Errorf("check user username: %w", err)
+		return false, fmt.Errorf("check user email: %w", err)
 	}
 	return exists, nil
 }
 
-func (r *adminRepo) ExistsUserUsernameExcludeID(ctx context.Context, username string, excludeID uint32) (bool, error) {
+func (r *adminRepo) ExistsUserEmailExcludeID(ctx context.Context, email string, excludeID uint32) (bool, error) {
 	exists, err := r.db.NewSelect().Model((*model.Users)(nil)).
-		Where("username = ?", username).
+		Where("email = ?", email).
 		Where("id != ?", excludeID).
 		Where("deleted_at IS NULL").
 		Exists(ctx)
 	if err != nil {
-		return false, fmt.Errorf("check user username: %w", err)
+		return false, fmt.Errorf("check user email: %w", err)
 	}
 	return exists, nil
 }

@@ -94,9 +94,9 @@ func (s *commentService) GetParents(ctx context.Context, id uint32) ([]dto.Comme
 func mapCommentList(items []model.VideoComments) []dto.CommentListItem {
 	out := make([]dto.CommentListItem, 0, len(items))
 	for _, c := range items {
-		username := "-"
+		nickname := "-"
 		if c.User != nil {
-			username = c.User.Username
+			nickname = c.User.Nickname
 		}
 		videoTitle := "-"
 		if c.Video != nil {
@@ -108,7 +108,7 @@ func mapCommentList(items []model.VideoComments) []dto.CommentListItem {
 			VideoTitle:   videoTitle,
 			Content:      c.Content,
 			UserID:       c.UserID,
-			Username:     username,
+			Nickname:     nickname,
 			Status:       c.Status,
 			LikeCount:    c.LikeCount,
 			DislikeCount: c.DislikeCount,
@@ -122,14 +122,14 @@ func mapCommentList(items []model.VideoComments) []dto.CommentListItem {
 func mapCommentParents(chain []model.VideoComments) []dto.CommentParentItem {
 	out := make([]dto.CommentParentItem, 0, len(chain))
 	for _, c := range chain {
-		username := "-"
+		nickname := "-"
 		if c.User != nil {
-			username = c.User.Username
+			nickname = c.User.Nickname
 		}
 		out = append(out, dto.CommentParentItem{
 			ID:        c.ID,
 			UserID:    c.UserID,
-			Username:  username,
+			Nickname:  nickname,
 			ParentID:  c.ParentID,
 			Content:   c.Content,
 			CreatedAt: utils.FormatTimeStr(c.CreatedAt),

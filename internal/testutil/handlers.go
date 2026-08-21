@@ -373,8 +373,8 @@ func (s adminMgmtSvc) DeleteBanner(ctx context.Context, id uint32) error { retur
 
 type clientUserSvc struct{}
 
-func (s clientUserSvc) Register(ctx context.Context, req *clientdto.RegisterRequest) (*clientdto.Profile, error) {
-	return &clientdto.Profile{}, nil
+func (s clientUserSvc) Register(ctx context.Context, req *clientdto.RegisterRequest) error {
+	return nil
 }
 func (s clientUserSvc) Login(ctx context.Context, req *clientdto.LoginRequest, ip, ua string) (*clientdto.LoginResponse, error) {
 	return &clientdto.LoginResponse{}, nil

@@ -16,8 +16,9 @@ type UserLoginLogs struct {
 
 	ID uint32 `bun:"id,pk,autoincrement" json:"id"`
 	// Relation: user_id -> Users(ID)
-	UserID    uint32 `bun:"user_id,notnull" json:"user_id"`
-	Username  string `bun:"username,notnull" json:"username"`
+	UserID uint32 `bun:"user_id,notnull" json:"user_id"`
+	// 登录邮箱
+	Email     string `bun:"email,notnull" json:"email"`
 	IP        string `bun:"ip,notnull" json:"ip"`
 	UserAgent string `bun:"user_agent,notnull" json:"user_agent"`
 	// 1成功 2失败

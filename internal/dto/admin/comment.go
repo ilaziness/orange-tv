@@ -31,8 +31,8 @@ type CommentListItem struct {
 	Content string `json:"content"`
 	// 用户ID
 	UserID uint32 `json:"user_id"`
-	// 用户名
-	Username string `json:"username"`
+	// 昵称
+	Nickname string `json:"nickname"`
 	// 审核状态（0=未通过，1=通过）
 	Status uint8 `json:"status"`
 	// 点赞数
@@ -51,8 +51,8 @@ type CommentParentItem struct {
 	ID uint32 `json:"id"`
 	// 用户ID
 	UserID uint32 `json:"user_id"`
-	// 用户名
-	Username string `json:"username"`
+	// 昵称
+	Nickname string `json:"nickname"`
 	// 父评论ID
 	ParentID uint32 `json:"parent_id"`
 	// 评论内容

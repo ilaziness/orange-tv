@@ -43,6 +43,7 @@ API 路径：用户端 `/api/client/v1`、`/api/client/v2`，管理端 `/api/adm
 16. **HTTP 参数接收与校验**：Handler 接收 HTTP 参数必须通过 gin binding（`ShouldBindQuery` / `ShouldBindJSON` / `ShouldBindUri`）绑定到结构体，用 `binding` tag 声明校验规则（`required`、`oneof`、`min`、`max` 等），禁止用 `c.Query` / `c.Param` / `c.PostForm` 手动取参后再手动校验；统一使用 `httphandler.BindQuery` / `httphandler.BindAndValidate` / `httphandler.BindURI` helper 处理绑定与校验；binding tag 已校验的规则（如枚举值）不在 service 层重复校验
 17. **constant 包职责**：`internal/constant` 包只负责定义常量（含常量映射表如 `map[string]string`），禁止放置验证方法（如 `IsValid*`）；枚举校验由 DTO 的 `binding`/`validate` tag 在 handler 层完成
 18. **禁止使用 PowerShell 脚本修改项目文件**：PowerShell 读写文件存在编码问题（可能改变文件编码、破坏 UTF-8 内容、引入 BOM 或乱码），禁止通过 PowerShell 脚本（`.ps1`）修改项目文件
+19. **禁止非必要的防御性判断**：构造函数注入的依赖（`logger`、`locker`、`repo`、`settingsSvc` 等）由 `internal/app` 组装时保证非 nil，禁止在 service/handler 中写 `if x == nil { x = fallback() }` 之类的兜底；工厂方法（如 `pkg/lock.LockerFactory.Create()`）内部已做降级的，调用方不再重复判断。配置项默认值兜底（如 `if accessTTL <= 0 { accessTTL = 7200 }`）属于配置语义，不属于 nil 防御，允许保留
 
 ## 前端项目指南
 

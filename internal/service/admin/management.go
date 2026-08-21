@@ -505,7 +505,6 @@ func (s *managementService) ListUsers(ctx context.Context, req *dto.UserListRequ
 		out = append(out, dto.UserItem{
 			ID:          u.ID,
 			StrID:       u.StrID,
-			Username:    u.Username,
 			Nickname:    u.Nickname,
 			Email:       u.Email,
 			Avatar:      u.Avatar,
@@ -518,10 +517,10 @@ func (s *managementService) ListUsers(ctx context.Context, req *dto.UserListRequ
 }
 
 func (s *managementService) CreateUser(ctx context.Context, req *dto.CreateUserRequest) (*dto.UserItem, error) {
-	username := strings.TrimSpace(req.Username)
-	exists, err := s.adminRepo.ExistsUserUsername(ctx, username)
+	email := strings.TrimSpace(req.Email)
+	exists, err := s.adminRepo.ExistsUserEmail(ctx, email)
 	if err != nil {
-		s.log.Error("management: check user username exists failed", zap.String("username", username), zap.Error(err))
+		s.log.Error("management: check user email exists failed", zap.String("email", email), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if exists {
@@ -529,7 +528,7 @@ func (s *managementService) CreateUser(ctx context.Context, req *dto.CreateUserR
 	}
 	hash, err := crypto.HashPassword(req.Password)
 	if err != nil {
-		s.log.Error("management: hash password for create user failed", zap.String("username", username), zap.Error(err))
+		s.log.Error("management: hash password for create user failed", zap.String("email", email), zap.Error(err))
 		return nil, errcode.Wrap(errcode.InternalError, err)
 	}
 	status := constant.StatusEnabled
@@ -538,26 +537,24 @@ func (s *managementService) CreateUser(ctx context.Context, req *dto.CreateUserR
 	}
 	strID, err := utils.GenerateUniqueNumericID(ctx, 10, s.adminRepo.ExistsUserStrID)
 	if err != nil {
-		s.log.Error("management: generate str_id for create user failed", zap.String("username", username), zap.Error(err))
+		s.log.Error("management: generate str_id for create user failed", zap.String("email", email), zap.Error(err))
 		return nil, errcode.Wrap(errcode.InternalError, err)
 	}
 	u := &model.Users{
-		Username: username,
 		Password: hash,
 		Nickname: strings.TrimSpace(req.Nickname),
-		Email:    strings.TrimSpace(req.Email),
+		Email:    email,
 		Avatar:   strings.TrimSpace(req.Avatar),
 		Status:   status,
 		StrID:    strID,
 	}
 	if err := s.adminRepo.CreateUser(ctx, u); err != nil {
-		s.log.Error("management: create user failed", zap.String("username", username), zap.Error(err))
+		s.log.Error("management: create user failed", zap.String("email", email), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	return &dto.UserItem{
 		ID:          u.ID,
 		StrID:       u.StrID,
-		Username:    u.Username,
 		Nickname:    u.Nickname,
 		Email:       u.Email,
 		Avatar:      u.Avatar,
@@ -576,25 +573,22 @@ func (s *managementService) UpdateUser(ctx context.Context, id uint32, req *dto.
 	if u == nil {
 		return nil, errcode.UserNotFound
 	}
-	if username := strings.TrimSpace(req.Username); username != "" && username != u.Username {
-		exists, err := s.adminRepo.ExistsUserUsernameExcludeID(ctx, username, id)
-		if err != nil {
-			s.log.Error("management: check user username exists for update failed", zap.String("username", username), zap.Uint32("user_id", id), zap.Error(err))
-			return nil, errcode.Wrap(errcode.DatabaseError, err)
-		}
-		if exists {
-			return nil, errcode.UserAlreadyExists
-		}
-		u.Username = username
-	}
 	if req.Email != nil {
 		email := strings.TrimSpace(*req.Email)
-		if email != "" {
+		if email != "" && email != u.Email {
 			if _, err := mail.ParseAddress(email); err != nil {
 				return nil, errcode.WithMessage(errcode.ParamError, "邮箱格式不正确")
 			}
+			exists, err := s.adminRepo.ExistsUserEmailExcludeID(ctx, email, id)
+			if err != nil {
+				s.log.Error("management: check user email exists for update failed", zap.String("email", email), zap.Uint32("user_id", id), zap.Error(err))
+				return nil, errcode.Wrap(errcode.DatabaseError, err)
+			}
+			if exists {
+				return nil, errcode.UserAlreadyExists
+			}
+			u.Email = email
 		}
-		u.Email = email
 	}
 	if req.Avatar != "" {
 		u.Avatar = strings.TrimSpace(req.Avatar)
@@ -612,7 +606,6 @@ func (s *managementService) UpdateUser(ctx context.Context, id uint32, req *dto.
 	return &dto.UserItem{
 		ID:          u.ID,
 		StrID:       u.StrID,
-		Username:    u.Username,
 		Nickname:    u.Nickname,
 		Email:       u.Email,
 		Avatar:      u.Avatar,
@@ -670,7 +663,7 @@ func (s *managementService) ListUserLoginLogs(ctx context.Context, req *dto.User
 	}
 	items, total, err := s.userRepo.ListUserLoginLogs(ctx, repository.UserLoginLogFilter{
 		UserID:    req.UserID,
-		Username:  req.Username,
+		Email:     req.Email,
 		Status:    req.Status,
 		StartTime: start,
 		EndTime:   end,
@@ -692,7 +685,7 @@ func toUserLoginLogItem(m *model.UserLoginLogs) dto.UserLoginLogItem {
 	return dto.UserLoginLogItem{
 		ID:        m.ID,
 		UserID:    m.UserID,
-		Username:  m.Username,
+		Email:     m.Email,
 		IP:        m.IP,
 		UserAgent: m.UserAgent,
 		Status:    m.Status,

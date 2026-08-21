@@ -112,11 +112,11 @@ function CommentNode({ comment, videoId, depth = 0 }: CommentNodeProps) {
     <div className={cn('flex gap-3', depth > 0 && 'mt-3 border-l-2 border-muted pl-4')}>
       <Avatar size="sm">
         {data.avatar ? <AvatarImage src={data.avatar} /> : null}
-        <AvatarFallback>{data.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
+        <AvatarFallback>{data.nickname?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
       </Avatar>
       <div className="flex flex-1 flex-col gap-1">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">{data.username}</span>
+          <span className="text-sm font-medium">{data.nickname || '匿名用户'}</span>
           <span className="text-xs text-muted-foreground">{data.created_at}</span>
         </div>
         <p className="text-sm">{data.content}</p>

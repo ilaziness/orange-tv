@@ -41,7 +41,7 @@ export function CommentParentDialog({
               <div key={p.id} className="rounded-lg border p-3">
                 <div className="mb-1 flex items-center justify-between text-sm text-muted-foreground">
                   <span>
-                    #{idx + 1} 用户: {p.username || '-'} (ID:{p.user_id})
+                    #{idx + 1} 用户: {p.nickname || '-'} (ID:{p.user_id})
                   </span>
                   <span>
                     ID: {p.id} {p.parent_id ? `→ 父ID: ${p.parent_id}` : ''}

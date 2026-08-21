@@ -1,7 +1,5 @@
 // Shared input validation helpers used by client and admin frontends.
 
-const USERNAME_PATTERN = /^[a-zA-Z0-9]{2,15}$/
-
 // Characters allowed in the client search bar (Chinese/English, numbers, spaces, common punctuation).
 const SEARCH_ALLOWED_CHARS =
   '\\p{Script=Han}\\p{Script=Latin}\\p{Number}\\s.,!?;:\'"()[\\]{}@#&*_\\-~。，、；：？！…—·（）【】《》“”‘’'
@@ -11,12 +9,16 @@ export function sanitizeSearchInput(value: string): string {
   return value.replace(new RegExp(`[^${SEARCH_ALLOWED_CHARS}]`, 'gu'), '').slice(0, 10)
 }
 
-/** Returns true if the username (after trim) is exactly 2-15 letters/digits. */
-export function isValidUsername(username: string): boolean {
-  return USERNAME_PATTERN.test(username.trim())
+// Simple RFC 5322 compatible email regex; sufficient for client-side sanity check.
+// Backend enforces strict format via gin validator `email` tag.
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+/** Returns true if the email (after trim) matches a basic email shape. */
+export function isValidEmail(email: string): boolean {
+  return EMAIL_PATTERN.test(email.trim())
 }
 
-/** Sanitizes a live username input by keeping only letters/digits and capping to 15 chars. */
-export function sanitizeUsernameInput(value: string): string {
-  return value.replace(/[^a-zA-Z0-9]/g, '').slice(0, 15)
+/** Normalizes email input: trim + lowercase + cap to 128 chars (matches backend max). */
+export function sanitizeEmailInput(value: string): string {
+  return value.trim().toLowerCase().slice(0, 128)
 }

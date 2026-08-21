@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"errors"
 	"html"
 	"math"
 	"regexp"
@@ -15,10 +16,12 @@ import (
 	"github.com/ilaziness/orange-tv/internal/crypto"
 	clientdto "github.com/ilaziness/orange-tv/internal/dto/client"
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
+	internallock "github.com/ilaziness/orange-tv/internal/lock"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
 	"github.com/ilaziness/orange-tv/internal/service"
 	"github.com/ilaziness/orange-tv/internal/utils"
+	pkglock "github.com/ilaziness/orange-tv/pkg/lock"
 	"github.com/uptrace/bun"
 	"go.uber.org/zap"
 )
@@ -26,10 +29,15 @@ import (
 // htmlTagRegex matches both opening and closing HTML tags.
 var htmlTagRegex = regexp.MustCompile(`<(/)?[a-zA-Z][^>]*>`)
 
+// registerLockTTL 注册接口邮箱锁的过期时间。
+// 注册流程通常在秒级完成，10s 足以覆盖正常处理；
+// 锁失效后 DB 唯一索引仍可兜底，避免重复插入。
+const registerLockTTL = 10 * time.Second
+
 // UserService handles client user auth, favorites, history, comments.
 type UserService interface {
 	// C5: Auth
-	Register(ctx context.Context, req *clientdto.RegisterRequest) (*clientdto.Profile, error)
+	Register(ctx context.Context, req *clientdto.RegisterRequest) error
 	Login(ctx context.Context, req *clientdto.LoginRequest, ip, ua string) (*clientdto.LoginResponse, error)
 	Profile(ctx context.Context, userID uint32) (*clientdto.Profile, error)
 	UpdateProfile(ctx context.Context, userID uint32, req *clientdto.UpdateProfileRequest) (*clientdto.Profile, error)
@@ -68,6 +76,7 @@ type userService struct {
 	jwtMgr       *auth.JWTManager
 	accessTTL    int
 	settingsSvc  service.SettingsService
+	locker       pkglock.Locker
 	log          *zap.Logger
 }
 
@@ -80,13 +89,11 @@ func NewUserService(
 	jwtMgr *auth.JWTManager,
 	accessTTL int,
 	settingsSvc service.SettingsService,
+	locker pkglock.Locker,
 	log *zap.Logger,
 ) UserService {
 	if accessTTL <= 0 {
 		accessTTL = 7200
-	}
-	if log == nil {
-		log = zap.NewNop()
 	}
 	return &userService{
 		adminRepo:    adminRepo,
@@ -96,56 +103,96 @@ func NewUserService(
 		jwtMgr:       jwtMgr,
 		accessTTL:    accessTTL,
 		settingsSvc:  settingsSvc,
+		locker:       locker,
 		log:          log,
 	}
 }
 
 // ===== C5: Auth =====
 
-func (s *userService) Register(ctx context.Context, req *clientdto.RegisterRequest) (*clientdto.Profile, error) {
-	username := strings.TrimSpace(req.Username)
+func (s *userService) Register(ctx context.Context, req *clientdto.RegisterRequest) error {
+	email := strings.TrimSpace(strings.ToLower(req.Email))
 	password := strings.TrimSpace(req.Password)
-	exists, err := s.adminRepo.ExistsUserUsername(ctx, username)
+
+	// 邮箱维度加分布式锁，防并发同邮箱注册产生两次 ExistsUserEmail 都通过的竞态。
+	// 锁被其他请求持有（ErrLockNotHeld）视为并发同邮箱注册，返回 UserAlreadyExists。
+	// 其它锁故障（网络/Redis 异常等）按操作频繁处理，避免暴露底层细节。
+	lockKey := internallock.UserRegisterKey(email)
+	lock, err := s.locker.Lock(ctx, lockKey, pkglock.WithTTL(registerLockTTL))
+	if errors.Is(err, pkglock.ErrLockNotHeld) {
+		return errcode.UserAlreadyExists
+	}
 	if err != nil {
-		s.log.Error("client user: check username exists failed", zap.String("username", username), zap.Error(err))
-		return nil, errcode.Wrap(errcode.DatabaseError, err)
+		s.log.Error("client user: acquire register lock failed", zap.String("email", email), zap.Error(err))
+		return errcode.Wrap(errcode.TooManyRequests, err)
+	}
+	defer func() { _ = lock.Release(ctx) }()
+
+	exists, err := s.adminRepo.ExistsUserEmail(ctx, email)
+	if err != nil {
+		s.log.Error("client user: check email exists failed", zap.String("email", email), zap.Error(err))
+		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if exists {
-		return nil, errcode.UserAlreadyExists
+		return errcode.UserAlreadyExists
 	}
+
 	hash, err := crypto.HashPassword(password)
 	if err != nil {
-		s.log.Error("client user: hash password for register failed", zap.String("username", username), zap.Error(err))
-		return nil, errcode.Wrap(errcode.InternalError, err)
+		s.log.Error("client user: hash password for register failed", zap.String("email", email), zap.Error(err))
+		return errcode.Wrap(errcode.InternalError, err)
 	}
 	strID, err := utils.GenerateUniqueNumericID(ctx, 10, s.adminRepo.ExistsUserStrID)
 	if err != nil {
-		s.log.Error("client user: generate str_id for register failed", zap.String("username", username), zap.Error(err))
-		return nil, errcode.Wrap(errcode.InternalError, err)
+		s.log.Error("client user: generate str_id for register failed", zap.String("email", email), zap.Error(err))
+		return errcode.Wrap(errcode.InternalError, err)
 	}
+
+	nickname := strings.TrimSpace(req.Nickname)
+	if nickname == "" {
+		nickname = deriveNicknameFromEmail(email)
+	}
+
 	u := &model.Users{
-		Username: username,
 		Password: hash,
-		Email:    strings.TrimSpace(req.Email),
+		Email:    email,
+		Nickname: nickname,
 		Status:   constant.StatusEnabled,
 		StrID:    strID,
 	}
 	if err := s.adminRepo.CreateUser(ctx, u); err != nil {
-		s.log.Error("client user: create user failed", zap.String("username", username), zap.Error(err))
-		return nil, errcode.Wrap(errcode.DatabaseError, err)
+		s.log.Error("client user: create user failed", zap.String("email", email), zap.Error(err))
+		return errcode.Wrap(errcode.DatabaseError, err)
 	}
-	return toUserProfile(u), nil
+	return nil
+}
+
+// deriveNicknameFromEmail 从邮箱推导默认昵称：取 @ 前部分，按 rune 截断到 15 字符。
+// 无 @ 或空前缀时回退用完整 email 截断 15 字符，匹配 DB nickname VARCHAR(15)。
+func deriveNicknameFromEmail(email string) string {
+	prefix := email
+	if idx := strings.Index(email, "@"); idx > 0 {
+		prefix = email[:idx]
+	}
+	if prefix == "" {
+		prefix = email
+	}
+	r := []rune(prefix)
+	if len(r) > 15 {
+		r = r[:15]
+	}
+	return string(r)
 }
 
 func (s *userService) Login(ctx context.Context, req *clientdto.LoginRequest, ip, ua string) (*clientdto.LoginResponse, error) {
 	if s.jwtMgr == nil {
 		return nil, errcode.WithMessage(errcode.ServiceUnavailable, "JWT 未配置")
 	}
-	username := strings.TrimSpace(req.Username)
+	email := strings.TrimSpace(strings.ToLower(req.Email))
 	password := strings.TrimSpace(req.Password)
-	u, err := s.adminRepo.GetUserByUsername(ctx, username)
+	u, err := s.adminRepo.GetUserByEmail(ctx, email)
 	if err != nil {
-		s.log.Error("client user: get user by username for login failed", zap.String("username", username), zap.Error(err))
+		s.log.Error("client user: get user by email for login failed", zap.String("email", email), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	userID := uint32(0)
@@ -155,7 +202,7 @@ func (s *userService) Login(ctx context.Context, req *clientdto.LoginRequest, ip
 	recordLog := func(success bool) {
 		_ = s.userRepo.CreateUserLoginLog(ctx, &model.UserLoginLogs{
 			UserID:    userID,
-			Username:  username,
+			Email:     email,
 			IP:        ip,
 			UserAgent: ua,
 			Status:    boolToStatus(success),
@@ -488,7 +535,7 @@ func (s *userService) mapComments(ctx context.Context, comments []model.VideoCom
 			CreatedAt:    utils.FormatTimeStr(c.CreatedAt),
 		}
 		if c.User != nil {
-			item.Username = c.User.Username
+			item.Nickname = c.User.Nickname
 			item.Avatar = c.User.Avatar
 		}
 		out = append(out, item)
@@ -596,7 +643,7 @@ func (s *userService) CreateComment(ctx context.Context, userID uint32, req *cli
 		CreatedAt:    utils.FormatTimeStr(c.CreatedAt),
 	}
 	if u, _ := s.adminRepo.GetUserByID(ctx, userID); u != nil {
-		item.Username = u.Username
+		item.Nickname = u.Nickname
 		item.Avatar = u.Avatar
 	}
 	return item, nil
@@ -806,7 +853,6 @@ func toUserProfile(u *model.Users) *clientdto.Profile {
 	return &clientdto.Profile{
 		ID:       u.ID,
 		StrID:    u.StrID,
-		Username: u.Username,
 		Nickname: u.Nickname,
 		Email:    u.Email,
 		Avatar:   u.Avatar,

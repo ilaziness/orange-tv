@@ -74,7 +74,7 @@ export default function UsersPage() {
         <CardContent>
           <div className="mb-4 flex gap-2">
             <Input
-              placeholder="用户名/邮箱"
+              placeholder="邮箱/昵称"
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               className="max-w-xs"

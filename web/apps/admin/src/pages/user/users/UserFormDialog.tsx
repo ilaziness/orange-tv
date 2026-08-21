@@ -62,16 +62,15 @@ export function UserFormDialog({
             {editId === 0 && (
               <>
                 <Field data-disabled={submitting ? true : undefined}>
-                  <FieldLabel htmlFor="username">用户名</FieldLabel>
+                  <FieldLabel htmlFor="email">邮箱</FieldLabel>
                   <Input
-                    id="username"
-                    placeholder="请输入用户名（3-50个字符）"
-                    value={createForm.username}
-                    onChange={(e) =>
-                      setCreateForm((prev) => ({ ...prev, username: e.target.value }))
-                    }
+                    id="email"
+                    type="email"
+                    placeholder="请输入邮箱"
+                    value={createForm.email}
+                    onChange={(e) => setCreateForm((prev) => ({ ...prev, email: e.target.value }))}
                     required
-                    minLength={3}
+                    maxLength={128}
                     disabled={submitting}
                     autoFocus
                   />
@@ -92,13 +91,16 @@ export function UserFormDialog({
                   />
                 </Field>
                 <Field data-disabled={submitting ? true : undefined}>
-                  <FieldLabel htmlFor="email">邮箱</FieldLabel>
+                  <FieldLabel htmlFor="nickname">昵称（可选）</FieldLabel>
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="请输入邮箱（可选）"
-                    value={createForm.email}
-                    onChange={(e) => setCreateForm((prev) => ({ ...prev, email: e.target.value }))}
+                    id="nickname"
+                    placeholder="3-15 位，不填则使用邮箱前缀"
+                    value={createForm.nickname}
+                    onChange={(e) =>
+                      setCreateForm((prev) => ({ ...prev, nickname: e.target.value }))
+                    }
+                    minLength={3}
+                    maxLength={15}
                     disabled={submitting}
                   />
                 </Field>
@@ -126,19 +128,6 @@ export function UserFormDialog({
             {editId > 0 && (
               <>
                 <Field data-disabled={submitting ? true : undefined}>
-                  <FieldLabel htmlFor="edit-username">用户名</FieldLabel>
-                  <Input
-                    id="edit-username"
-                    placeholder="请输入用户名（3-50个字符）"
-                    value={editForm.username}
-                    onChange={(e) => setEditForm((prev) => ({ ...prev, username: e.target.value }))}
-                    required
-                    minLength={3}
-                    disabled={submitting}
-                    autoFocus
-                  />
-                </Field>
-                <Field data-disabled={submitting ? true : undefined}>
                   <FieldLabel htmlFor="edit-email">邮箱</FieldLabel>
                   <Input
                     id="edit-email"
@@ -146,6 +135,20 @@ export function UserFormDialog({
                     placeholder="请输入邮箱（可选）"
                     value={editForm.email}
                     onChange={(e) => setEditForm((prev) => ({ ...prev, email: e.target.value }))}
+                    maxLength={128}
+                    disabled={submitting}
+                    autoFocus
+                  />
+                </Field>
+                <Field data-disabled={submitting ? true : undefined}>
+                  <FieldLabel htmlFor="edit-nickname">昵称（可选）</FieldLabel>
+                  <Input
+                    id="edit-nickname"
+                    placeholder="3-15 位"
+                    value={editForm.nickname}
+                    onChange={(e) => setEditForm((prev) => ({ ...prev, nickname: e.target.value }))}
+                    minLength={3}
+                    maxLength={15}
                     disabled={submitting}
                   />
                 </Field>

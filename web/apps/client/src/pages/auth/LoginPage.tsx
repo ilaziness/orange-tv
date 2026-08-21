@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, Link } from 'react-router'
-import { isValidUsername, sanitizeUsernameInput } from '@orange-tv/shared'
+import { isValidEmail, sanitizeEmailInput } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
 import { useAuthStore } from '@/store/auth'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -13,7 +13,7 @@ import { AlertCircleIcon } from 'lucide-react'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
 export function Component() {
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -36,15 +36,15 @@ export function Component() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    const u = username.trim()
+    const em = email.trim()
     const p = password.trim()
-    if (!isValidUsername(u) || p.length < 5 || p.length > 30) {
-      setError('用户名或密码格式不正确')
+    if (!isValidEmail(em) || p.length < 5 || p.length > 30) {
+      setError('邮箱或密码格式不正确')
       return
     }
     setSubmitting(true)
     try {
-      const res = await clientApi.login(u, p)
+      const res = await clientApi.login(em, p)
       setToken(res.data.access_token)
       await loadProfile()
       navigate('/', { replace: true })
@@ -72,14 +72,14 @@ export function Component() {
           <form onSubmit={handleSubmit}>
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="username">用户名</FieldLabel>
+                <FieldLabel htmlFor="email">邮箱</FieldLabel>
                 <Input
-                  id="username"
-                  placeholder="请输入用户名"
-                  maxLength={15}
-                  pattern="[a-zA-Z0-9]{2,15}"
-                  value={username}
-                  onChange={(e) => setUsername(sanitizeUsernameInput(e.target.value))}
+                  id="email"
+                  type="email"
+                  placeholder="请输入邮箱"
+                  maxLength={128}
+                  value={email}
+                  onChange={(e) => setEmail(sanitizeEmailInput(e.target.value))}
                   required
                 />
               </Field>

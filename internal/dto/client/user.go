@@ -6,18 +6,18 @@ import "github.com/ilaziness/orange-tv/internal/dto"
 
 // RegisterRequest is the user registration payload.
 type RegisterRequest struct {
-	// 用户名（字母数字，2-15 位）
-	Username string `json:"username" binding:"required,min=2,max=15,alphanum"`
+	// 邮箱（必填）
+	Email string `json:"email" binding:"required,email,max=128"`
 	// 密码（5-30 位）
 	Password string `json:"password" binding:"required,min=5,max=30"`
-	// 邮箱（可选）
-	Email string `json:"email" binding:"omitempty,email,max=128"`
+	// 昵称（可选，3-15 位；为空时默认取邮箱 @ 前部分）
+	Nickname string `json:"nickname" binding:"omitempty,min=3,max=15"`
 }
 
 // LoginRequest is the user login payload.
 type LoginRequest struct {
-	// 用户名（字母数字，2-15 位）
-	Username string `json:"username" binding:"required,min=2,max=15,alphanum"`
+	// 邮箱
+	Email string `json:"email" binding:"required,email,max=128"`
 	// 密码（5-30 位）
 	Password string `json:"password" binding:"required,min=5,max=30"`
 }
@@ -40,8 +40,6 @@ type Profile struct {
 	ID uint32 `json:"id"`
 	// 字符串形式用户ID
 	StrID string `json:"str_id"`
-	// 用户名
-	Username string `json:"username"`
 	// 昵称
 	Nickname string `json:"nickname"`
 	// 邮箱
@@ -57,7 +55,7 @@ type UpdateProfileRequest struct {
 	// 昵称（3-15 位，可选）
 	Nickname string `json:"nickname" binding:"omitempty,min=3,max=15"`
 	// 邮箱（可选）
-	Email string `json:"email" binding:"omitempty,email,max=20"`
+	Email string `json:"email" binding:"omitempty,email,max=128"`
 	// 头像地址（可选）
 	Avatar string `json:"avatar" binding:"omitempty,url,max=120"`
 }
@@ -180,8 +178,8 @@ type CommentItem struct {
 	VideoID uint32 `json:"video_id"`
 	// 用户ID
 	UserID uint32 `json:"user_id"`
-	// 用户名
-	Username string `json:"username"`
+	// 昵称
+	Nickname string `json:"nickname"`
 	// 用户头像
 	Avatar string `json:"avatar"`
 	// 父评论ID，0 表示顶级评论

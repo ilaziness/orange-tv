@@ -300,7 +300,7 @@ export function ClientLayout() {
                 <Avatar size="sm">
                   {profile.avatar ? <AvatarImage src={profile.avatar} /> : null}
                   <AvatarFallback>
-                    {(profile.nickname?.[0] || profile.username?.[0] || 'U').toUpperCase()}
+                    {(profile.nickname?.[0] || profile.email?.[0] || 'U').toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -309,7 +309,7 @@ export function ClientLayout() {
           <DropdownMenuContent align="end">
             <DropdownMenuGroup>
               <DropdownMenuLabel>
-                {profile.nickname || profile.username || profile.email}
+                {profile.nickname || profile.email}
               </DropdownMenuLabel>
               <DropdownMenuItem render={<Link to="/profile" />}>
                 <UserIcon data-icon="inline-start" />
@@ -471,13 +471,13 @@ export function ClientLayout() {
                             <AvatarFallback>
                               {(
                                 profile.nickname?.[0] ||
-                                profile.username?.[0] ||
+                                profile.email?.[0] ||
                                 'U'
                               ).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           <span className="text-sm font-medium">
-                            {profile.nickname || profile.username || profile.email}
+                            {profile.nickname || profile.email}
                           </span>
                         </div>
                         <Button

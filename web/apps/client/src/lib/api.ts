@@ -79,15 +79,15 @@ export const clientApi = {
     }),
 
   // User auth (C5)
-  register: (username: string, password: string, email?: string) =>
-    apiPost<UserProfile>(CLIENT_API_BASE, '/auth/register', {
-      username,
-      password,
+  register: (email: string, password: string, nickname?: string) =>
+    apiPost<void>(CLIENT_API_BASE, '/auth/register', {
       email,
+      password,
+      nickname,
     }),
-  login: (username: string, password: string) =>
+  login: (email: string, password: string) =>
     apiPost<UserLoginResult>(CLIENT_API_BASE, '/auth/login', {
-      username,
+      email,
       password,
     }),
   profile: () =>

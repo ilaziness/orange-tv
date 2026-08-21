@@ -165,7 +165,7 @@ type UpdateUserGroupRequest struct {
 // UserListRequest filters regular user list.
 type UserListRequest struct {
 	dto.PaginationRequest
-	// 关键词搜索（用户名/昵称）
+	// 关键词搜索（邮箱/昵称）
 	Keyword string `form:"keyword"`
 	// 状态筛选（0=禁用，1=启用）
 	Status *uint8 `form:"status"`
@@ -177,8 +177,6 @@ type UserItem struct {
 	ID uint32 `json:"id"`
 	// 字符串形式用户ID
 	StrID string `json:"str_id"`
-	// 用户名
-	Username string `json:"username"`
 	// 昵称
 	Nickname string `json:"nickname"`
 	// 邮箱
@@ -195,14 +193,12 @@ type UserItem struct {
 
 // CreateUserRequest creates a new regular user.
 type CreateUserRequest struct {
-	// 用户名（必填，3-50 位）
-	Username string `json:"username" binding:"required,min=3,max=50"`
 	// 密码（必填，6-72 位）
 	Password string `json:"password" binding:"required,min=6,max=72"`
 	// 昵称（可选）
 	Nickname string `json:"nickname" binding:"omitempty,min=3,max=15"`
-	// 邮箱（可选）
-	Email string `json:"email" binding:"omitempty,email,max=128"`
+	// 邮箱（必填）
+	Email string `json:"email" binding:"required,email,max=128"`
 	// 头像地址（可选）
 	Avatar string `json:"avatar" binding:"omitempty,max=500"`
 	// 状态（0=禁用，1=启用）
@@ -211,12 +207,10 @@ type CreateUserRequest struct {
 
 // UpdateUserRequest updates a regular user.
 type UpdateUserRequest struct {
-	// 用户名（3-50 位）
-	Username string `json:"username" binding:"omitempty,min=3,max=50"`
 	// 昵称（3-15 位）
 	Nickname string `json:"nickname" binding:"omitempty,min=3,max=15"`
 	// 邮箱
-	Email *string `json:"email" binding:"omitempty,max=128"`
+	Email *string `json:"email" binding:"omitempty,email,max=128"`
 	// 头像地址
 	Avatar string `json:"avatar" binding:"omitempty,max=500"`
 	// 状态（0=禁用，1=启用）
