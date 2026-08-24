@@ -30,6 +30,7 @@ func registerClientContentRoutes(v1 *gin.RouterGroup, h *Handlers) {
 	v1.GET("/promotions", h.ClientAd.List)
 
 	// User auth (C5) — public
+	v1.GET("/auth/captcha", h.ClientUser.Captcha)
 	v1.POST("/auth/register", h.ClientUser.Register)
 	v1.POST("/auth/login", h.ClientUser.Login)
 

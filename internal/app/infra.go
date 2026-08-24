@@ -76,6 +76,7 @@ func (a *App) wireInfra() error {
 		return err
 	}
 	a.cache = internalcache.NewManager(c)
+	a.pkgCache = c
 	a.addHook(Hook{
 		Name:   "cache",
 		OnStop: func(ctx context.Context) error { return a.cache.Close() },

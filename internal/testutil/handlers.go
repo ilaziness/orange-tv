@@ -373,6 +373,10 @@ func (s adminMgmtSvc) DeleteBanner(ctx context.Context, id uint32) error { retur
 
 type clientUserSvc struct{}
 
+func (s clientUserSvc) GenerateCaptcha(ctx context.Context, scene string) (*clientdto.CaptchaResponse, error) {
+	return &clientdto.CaptchaResponse{}, nil
+}
+
 func (s clientUserSvc) Register(ctx context.Context, req *clientdto.RegisterRequest) error {
 	return nil
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { isValidEmail, sanitizeEmailInput } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
@@ -17,16 +17,20 @@ import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Spinner } from '@/components/ui/spinner'
 import { AlertCircleIcon } from 'lucide-react'
+import { CaptchaInput } from '@/components/auth/CaptchaInput'
 
 export function LoginDialog() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [captchaId, setCaptchaId] = useState('')
+  const [captcha, setCaptcha] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const isOpen = useLoginDialogStore((s) => s.isOpen)
   const close = useLoginDialogStore((s) => s.close)
   const setToken = useAuthStore((s) => s.setToken)
   const loadProfile = useAuthStore((s) => s.loadProfile)
+  const captchaRefreshRef = useRef<() => void>(() => {})
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -37,14 +41,19 @@ export function LoginDialog() {
       setError('邮箱或密码格式不正确')
       return
     }
+    if (!captchaId || !captcha) {
+      setError('请输入验证码')
+      return
+    }
     setSubmitting(true)
     try {
-      const res = await clientApi.login(em, p)
+      const res = await clientApi.login(em, p, captchaId, captcha)
       setToken(res.data.access_token)
       await loadProfile()
       close()
     } catch (err) {
       setError(errorMessage(err))
+      captchaRefreshRef.current()
     } finally {
       setSubmitting(false)
     }
@@ -95,6 +104,16 @@ export function LoginDialog() {
                 required
               />
             </Field>
+            <CaptchaInput
+              scene="login"
+              idPrefix="login-dialog-captcha"
+              onCaptchaChange={(id, ans) => {
+                setCaptchaId(id)
+                setCaptcha(ans)
+              }}
+              refreshRef={captchaRefreshRef}
+              disabled={submitting}
+            />
             <Button type="submit" disabled={submitting} className="w-full">
               {submitting ? <Spinner data-icon="inline-start" /> : null}
               登录

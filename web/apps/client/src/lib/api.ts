@@ -22,6 +22,7 @@ import {
   type ClientAdItem,
   type UserLoginResult,
   type UserProfile,
+  type CaptchaResult,
 } from '@orange-tv/shared'
 
 const TOKEN_KEY = 'orange_tv_user_token'
@@ -79,16 +80,22 @@ export const clientApi = {
     }),
 
   // User auth (C5)
-  register: (email: string, password: string, nickname?: string) =>
+  captcha: (scene: 'login' | 'register') =>
+    apiGet<CaptchaResult>(CLIENT_API_BASE, '/auth/captcha', { query: { scene } }),
+  register: (email: string, password: string, captchaId: string, captcha: string, nickname?: string) =>
     apiPost<void>(CLIENT_API_BASE, '/auth/register', {
       email,
       password,
       nickname,
+      captcha_id: captchaId,
+      captcha,
     }),
-  login: (email: string, password: string) =>
+  login: (email: string, password: string, captchaId: string, captcha: string) =>
     apiPost<UserLoginResult>(CLIENT_API_BASE, '/auth/login', {
       email,
       password,
+      captcha_id: captchaId,
+      captcha,
     }),
   profile: () =>
     withAuth((token) => apiGet<UserProfile>(CLIENT_API_BASE, '/auth/profile', { token })),

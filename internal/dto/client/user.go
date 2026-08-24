@@ -12,6 +12,10 @@ type RegisterRequest struct {
 	Password string `json:"password" binding:"required,min=5,max=30"`
 	// 昵称（可选，3-15 位；为空时默认取邮箱 @ 前部分）
 	Nickname string `json:"nickname" binding:"omitempty,min=3,max=15"`
+	// 验证码 ID（必填，由 /auth/captcha 接口返回）
+	CaptchaID string `json:"captcha_id" binding:"required"`
+	// 验证码答案（必填）
+	Captcha string `json:"captcha" binding:"required,min=4,max=6"`
 }
 
 // LoginRequest is the user login payload.
@@ -20,6 +24,26 @@ type LoginRequest struct {
 	Email string `json:"email" binding:"required,email,max=128"`
 	// 密码（5-30 位）
 	Password string `json:"password" binding:"required,min=5,max=30"`
+	// 验证码 ID（必填，由 /auth/captcha 接口返回）
+	CaptchaID string `json:"captcha_id" binding:"required"`
+	// 验证码答案（必填）
+	Captcha string `json:"captcha" binding:"required,min=4,max=6"`
+}
+
+// CaptchaRequest is the query payload for fetching a captcha image.
+type CaptchaRequest struct {
+	// 业务场景（login/register），用于隔离不同场景的验证码
+	Scene string `form:"scene" binding:"required,oneof=login register"`
+}
+
+// CaptchaResponse is the captcha image response.
+type CaptchaResponse struct {
+	// 验证码 ID，提交登录/注册时需原样带回
+	ID string `json:"id"`
+	// 验证码图片，data URI 形式（data:image/png;base64,...），可直接作为 <img src>
+	Image string `json:"image"`
+	// 有效期（秒）
+	ExpiresIn int `json:"expires_in"`
 }
 
 // LoginResponse is returned after successful user login.

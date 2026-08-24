@@ -21,6 +21,7 @@ import (
 	"github.com/ilaziness/orange-tv/internal/repository"
 	"github.com/ilaziness/orange-tv/internal/service"
 	"github.com/ilaziness/orange-tv/internal/utils"
+	"github.com/ilaziness/orange-tv/pkg/captcha"
 	pkglock "github.com/ilaziness/orange-tv/pkg/lock"
 	"github.com/uptrace/bun"
 	"go.uber.org/zap"
@@ -37,6 +38,7 @@ const registerLockTTL = 10 * time.Second
 // UserService handles client user auth, favorites, history, comments.
 type UserService interface {
 	// C5: Auth
+	GenerateCaptcha(ctx context.Context, scene string) (*clientdto.CaptchaResponse, error)
 	Register(ctx context.Context, req *clientdto.RegisterRequest) error
 	Login(ctx context.Context, req *clientdto.LoginRequest, ip, ua string) (*clientdto.LoginResponse, error)
 	Profile(ctx context.Context, userID uint32) (*clientdto.Profile, error)
@@ -77,6 +79,7 @@ type userService struct {
 	accessTTL    int
 	settingsSvc  service.SettingsService
 	locker       pkglock.Locker
+	captcha      captcha.Captcha
 	log          *zap.Logger
 }
 
@@ -90,6 +93,7 @@ func NewUserService(
 	accessTTL int,
 	settingsSvc service.SettingsService,
 	locker pkglock.Locker,
+	captchaSvc captcha.Captcha,
 	log *zap.Logger,
 ) UserService {
 	if accessTTL <= 0 {
@@ -104,13 +108,42 @@ func NewUserService(
 		accessTTL:    accessTTL,
 		settingsSvc:  settingsSvc,
 		locker:       locker,
+		captcha:      captchaSvc,
 		log:          log,
 	}
 }
 
 // ===== C5: Auth =====
 
+// GenerateCaptcha 生成图像验证码，返回展示图片与标识。
+// scene 为业务场景（login/register），用于隔离不同场景的验证码。
+func (s *userService) GenerateCaptcha(ctx context.Context, scene string) (*clientdto.CaptchaResponse, error) {
+	img, err := s.captcha.Generate(ctx, scene)
+	if err != nil {
+		s.log.Error("client user: generate captcha failed", zap.String("scene", scene), zap.Error(err))
+		return nil, errcode.Wrap(errcode.InternalError, err)
+	}
+	return &clientdto.CaptchaResponse{
+		ID:        img.ID,
+		Image:     img.Content,
+		ExpiresIn: img.ExpiresIn,
+	}, nil
+}
+
+// verifyCaptcha 校验验证码，失败返回 CaptchaInvalid。
+// 验证码一次性，校验后作废，无论成败。
+func (s *userService) verifyCaptcha(ctx context.Context, id, answer string) error {
+	if err := s.captcha.Verify(ctx, id, answer); err != nil {
+		return errcode.CaptchaInvalid
+	}
+	return nil
+}
+
 func (s *userService) Register(ctx context.Context, req *clientdto.RegisterRequest) error {
+	// 校验验证码（一次性），防接口被自动化脚本滥用。
+	if err := s.verifyCaptcha(ctx, req.CaptchaID, req.Captcha); err != nil {
+		return err
+	}
 	email := strings.TrimSpace(strings.ToLower(req.Email))
 	password := strings.TrimSpace(req.Password)
 
@@ -185,6 +218,10 @@ func deriveNicknameFromEmail(email string) string {
 }
 
 func (s *userService) Login(ctx context.Context, req *clientdto.LoginRequest, ip, ua string) (*clientdto.LoginResponse, error) {
+	// 校验验证码（一次性），防接口被自动化脚本暴力破解。
+	if err := s.verifyCaptcha(ctx, req.CaptchaID, req.Captcha); err != nil {
+		return nil, err
+	}
 	if s.jwtMgr == nil {
 		return nil, errcode.WithMessage(errcode.ServiceUnavailable, "JWT 未配置")
 	}

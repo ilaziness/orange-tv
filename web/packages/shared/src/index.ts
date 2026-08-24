@@ -579,6 +579,12 @@ export type UserLoginResult = {
   user: UserProfile
 }
 
+export type CaptchaResult = {
+  id: string
+  image: string
+  expires_in: number
+}
+
 export type FavoriteItem = {
   video_id: number
   title: string

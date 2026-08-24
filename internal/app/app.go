@@ -21,6 +21,7 @@ import (
 	"github.com/ilaziness/orange-tv/internal/metrics"
 	"github.com/ilaziness/orange-tv/internal/server"
 	"github.com/ilaziness/orange-tv/internal/tracing"
+	pkgcache "github.com/ilaziness/orange-tv/pkg/cache"
 	pkglock "github.com/ilaziness/orange-tv/pkg/lock"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
@@ -32,11 +33,12 @@ type App struct {
 	log    *zap.Logger
 	logger *logger.Logger
 
-	db      *database.DB
-	cache   *internalcache.Manager
-	tracer  *tracing.Tracer
-	metrics *metrics.Metrics
-	jwtMgr  *auth.JWTManager
+	db       *database.DB
+	cache    *internalcache.Manager
+	pkgCache pkgcache.Cache // 原始 cache 实例，供验证码等需要直接访问 cache 的组件使用
+	tracer   *tracing.Tracer
+	metrics  *metrics.Metrics
+	jwtMgr   *auth.JWTManager
 
 	// redisClient 独立的 Redis 客户端，用于调度器分布式锁等非缓存用途。
 	// 仅在 cfg.Redis.Enabled 时创建，与 cache 内部 client 分离，职责清晰。
@@ -125,6 +127,7 @@ func (a *App) logStartup() error {
 }
 
 func (a *App) startServers(ctx context.Context, stop context.CancelFunc) error {
+	_ = ctx
 	if a.httpServer != nil && a.httpServer.Enabled() {
 		a.log.Info("Starting HTTP server", zap.String("addr", a.httpServer.Addr()))
 		go func() {

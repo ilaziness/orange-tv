@@ -67,6 +67,27 @@ func (h *UserHandler) Login(c *gin.Context) {
 	response.Success(c, resp)
 }
 
+// Captcha
+// @Summary 获取图像验证码
+// @Description 生成图像验证码，返回 base64 图片与验证码 ID；登录/注册时需将 ID 与答案一并提交
+// @Tags 用户端｜用户中心
+// @Produce json
+// @Param scene query string true "业务场景" Enums(login,register)
+// @Success 200 {object} response.Response{data=clientdto.CaptchaResponse}
+// @Router /api/client/v1/auth/captcha [get]
+func (h *UserHandler) Captcha(c *gin.Context) {
+	var req clientdto.CaptchaRequest
+	if !httphandler.BindQuery(c, &req) {
+		return
+	}
+	resp, err := h.svc.GenerateCaptcha(c.Request.Context(), req.Scene)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	response.Success(c, resp)
+}
+
 // Profile
 // @Summary 获取用户资料
 // @Description 获取当前登录用户的个人资料

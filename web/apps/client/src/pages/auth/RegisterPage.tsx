@@ -11,16 +11,20 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Spinner } from '@/components/ui/spinner'
 import { AlertCircleIcon } from 'lucide-react'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { CaptchaInput } from '@/components/auth/CaptchaInput'
 
 export function Component() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [nickname, setNickname] = useState('')
+  const [captchaId, setCaptchaId] = useState('')
+  const [captcha, setCaptcha] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const navigate = useNavigate()
   const token = useAuthStore((s) => s.token)
+  const captchaRefreshRef = useRef<() => void>(() => {})
 
   usePageTitle('注册')
 
@@ -56,12 +60,17 @@ export function Component() {
       setError('昵称长度应为3-15位')
       return
     }
+    if (!captchaId || !captcha) {
+      setError('请输入验证码')
+      return
+    }
     setSubmitting(true)
     try {
-      await clientApi.register(em, p, nick || undefined)
+      await clientApi.register(em, p, captchaId, captcha, nick || undefined)
       navigate('/login')
     } catch (err) {
       setError(errorMessage(err))
+      captchaRefreshRef.current()
     } finally {
       setSubmitting(false)
     }
@@ -135,6 +144,16 @@ export function Component() {
                   onChange={(e) => setNickname(e.target.value)}
                 />
               </Field>
+              <CaptchaInput
+                scene="register"
+                idPrefix="register-captcha"
+                onCaptchaChange={(id, ans) => {
+                  setCaptchaId(id)
+                  setCaptcha(ans)
+                }}
+                refreshRef={captchaRefreshRef}
+                disabled={submitting}
+              />
               <Button type="submit" disabled={submitting} className="w-full">
                 {submitting ? <Spinner data-icon="inline-start" /> : null}
                 注册

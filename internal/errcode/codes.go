@@ -42,6 +42,7 @@ var (
 	TokenRevoked           = &Code{3000005, "Token已吊销", 401, nil}
 	InvalidCredentials     = &Code{3000006, "邮箱或密码错误", 401, nil}
 	AdminDisabled          = &Code{3000007, "管理员账号已禁用", 403, nil}
+	CaptchaInvalid         = &Code{3000010, "验证码错误或已过期", 400, nil}
 
 	// 内容模块 (400xxxx)
 	CategoryNotFound     = &Code{4000001, "分类不存在", 404, nil}

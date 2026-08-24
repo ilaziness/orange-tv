@@ -20,6 +20,7 @@ import (
 	adminsvc "github.com/ilaziness/orange-tv/internal/service/admin"
 	clientsvc "github.com/ilaziness/orange-tv/internal/service/client"
 	opensvc "github.com/ilaziness/orange-tv/internal/service/open"
+	"github.com/ilaziness/orange-tv/pkg/captcha"
 )
 
 func (a *App) wireHTTP() error {
@@ -77,7 +78,17 @@ func (a *App) wireHTTP() error {
 	clientVideoSvc := clientsvc.NewVideoService(videoRepo, metaRepo, playRepo, a.cache, a.log)
 	clientLiveSvc := clientsvc.NewLiveService(liveRepo, a.cache, a.log)
 	clientLiveProxySvc := clientsvc.NewLiveProxyService(clientLiveSvc, a.log)
-	clientUserSvc := clientsvc.NewUserService(adminRepo, userFeatureRepo, videoRepo, categoryRepo, a.jwtMgr, a.cfg.JWT.AccessTokenTTL, sharedSettingsSvc, a.locker, a.log)
+
+	// 验证码服务：配置了 Cache 时使用外部共享存储（Redis/内存），
+	// 未配置时 New 内部自动降级为 base64Captcha 内置内存 store，
+	// 保证应用未配置 Cache 时验证码仍可用。TTL 走 pkg/captcha 默认值。
+	var captchaOpts []captcha.Option
+	if a.cfg.Cache.Enabled {
+		captchaOpts = append(captchaOpts, captcha.WithCacheStore(a.pkgCache, 0))
+	}
+	captchaSvc := captcha.New(captchaOpts...)
+
+	clientUserSvc := clientsvc.NewUserService(adminRepo, userFeatureRepo, videoRepo, categoryRepo, a.jwtMgr, a.cfg.JWT.AccessTokenTTL, sharedSettingsSvc, a.locker, captchaSvc, a.log)
 	clientBannerSvc := clientsvc.NewBannerService(userFeatureRepo, a.log)
 	adminAdSvc := adminsvc.NewAdService(adRepo, a.log)
 	clientAdSvc := clientsvc.NewAdService(adRepo, a.log)
