@@ -1880,6 +1880,18 @@ definitions:
         description: 关联视频ID
         type: integer
     type: object
+  client.CaptchaResponse:
+    properties:
+      expires_in:
+        description: 有效期（秒）
+        type: integer
+      id:
+        description: 验证码 ID，提交登录/注册时需原样带回
+        type: string
+      image:
+        description: 验证码图片，data URI 形式（data:image/png;base64,...），可直接作为 <img src>
+        type: string
+    type: object
   client.CategoryResponse:
     properties:
       children:
@@ -2089,6 +2101,14 @@ definitions:
     type: object
   client.LoginRequest:
     properties:
+      captcha:
+        description: 验证码答案（必填）
+        maxLength: 6
+        minLength: 4
+        type: string
+      captcha_id:
+        description: 验证码 ID（必填，由 /auth/captcha 接口返回）
+        type: string
       email:
         description: 邮箱
         maxLength: 128
@@ -2099,6 +2119,8 @@ definitions:
         minLength: 5
         type: string
     required:
+    - captcha
+    - captcha_id
     - email
     - password
     type: object
@@ -2173,6 +2195,14 @@ definitions:
     type: object
   client.RegisterRequest:
     properties:
+      captcha:
+        description: 验证码答案（必填）
+        maxLength: 6
+        minLength: 4
+        type: string
+      captcha_id:
+        description: 验证码 ID（必填，由 /auth/captcha 接口返回）
+        type: string
       email:
         description: 邮箱（必填）
         maxLength: 128
@@ -2188,6 +2218,8 @@ definitions:
         minLength: 5
         type: string
     required:
+    - captcha
+    - captcha_id
     - email
     - password
     type: object
@@ -5554,6 +5586,33 @@ paths:
       summary: 批量更新发布状态
       tags:
       - 管理端｜视频管理
+  /api/client/v1/auth/captcha:
+    get:
+      description: 生成图像验证码，返回 base64 图片与验证码 ID；登录/注册时需将 ID 与答案一并提交
+      parameters:
+      - description: 业务场景
+        enum:
+        - login
+        - register
+        in: query
+        name: scene
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/client.CaptchaResponse'
+              type: object
+      summary: 获取图像验证码
+      tags:
+      - 用户端｜用户中心
   /api/client/v1/auth/login:
     post:
       consumes:

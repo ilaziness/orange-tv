@@ -5081,6 +5081,51 @@
                 }
             }
         },
+        "/api/client/v1/auth/captcha": {
+            "get": {
+                "description": "生成图像验证码，返回 base64 图片与验证码 ID；登录/注册时需将 ID 与答案一并提交",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户端｜用户中心"
+                ],
+                "summary": "获取图像验证码",
+                "parameters": [
+                    {
+                        "enum": [
+                            "login",
+                            "register"
+                        ],
+                        "type": "string",
+                        "description": "业务场景",
+                        "name": "scene",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/client.CaptchaResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/api/client/v1/auth/login": {
             "post": {
                 "description": "用户账号密码登录，返回 JWT",
@@ -9723,6 +9768,23 @@
                 }
             }
         },
+        "client.CaptchaResponse": {
+            "type": "object",
+            "properties": {
+                "expires_in": {
+                    "description": "有效期（秒）",
+                    "type": "integer"
+                },
+                "id": {
+                    "description": "验证码 ID，提交登录/注册时需原样带回",
+                    "type": "string"
+                },
+                "image": {
+                    "description": "验证码图片，data URI 形式（data:image/png;base64,...），可直接作为 \u003cimg src\u003e",
+                    "type": "string"
+                }
+            }
+        },
         "client.CategoryResponse": {
             "type": "object",
             "properties": {
@@ -10009,10 +10071,22 @@
         "client.LoginRequest": {
             "type": "object",
             "required": [
+                "captcha",
+                "captcha_id",
                 "email",
                 "password"
             ],
             "properties": {
+                "captcha": {
+                    "description": "验证码答案（必填）",
+                    "type": "string",
+                    "maxLength": 6,
+                    "minLength": 4
+                },
+                "captcha_id": {
+                    "description": "验证码 ID（必填，由 /auth/captcha 接口返回）",
+                    "type": "string"
+                },
                 "email": {
                     "description": "邮箱",
                     "type": "string",
@@ -10129,10 +10203,22 @@
         "client.RegisterRequest": {
             "type": "object",
             "required": [
+                "captcha",
+                "captcha_id",
                 "email",
                 "password"
             ],
             "properties": {
+                "captcha": {
+                    "description": "验证码答案（必填）",
+                    "type": "string",
+                    "maxLength": 6,
+                    "minLength": 4
+                },
+                "captcha_id": {
+                    "description": "验证码 ID（必填，由 /auth/captcha 接口返回）",
+                    "type": "string"
+                },
                 "email": {
                     "description": "邮箱（必填）",
                     "type": "string",
