@@ -105,14 +105,14 @@ export function CaptchaInput({
           type="button"
           variant="outline"
           size="lg"
-          className="h-9 w-28 shrink-0 overflow-hidden p-0"
+          className="h-10 w-40 shrink-0 overflow-hidden bg-white p-0"
           title="点击刷新验证码"
           aria-label="刷新验证码"
           disabled={disabled || loading}
           onClick={() => void refresh()}
         >
           {image ? (
-            <img src={image} alt="验证码" className="h-full w-full object-cover" />
+            <img src={image} alt="验证码" className="h-full w-full object-contain" />
           ) : (
             <span className="text-xs text-muted-foreground">
               {loading ? '加载中' : '点击获取'}

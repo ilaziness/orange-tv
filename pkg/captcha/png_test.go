@@ -29,9 +29,22 @@ func TestGenerateAndVerify(t *testing.T) {
 	}
 }
 
+func TestGenerateFourChars(t *testing.T) {
+	c := newTestCaptcha()
+	img, err := c.Generate(context.Background(), "login")
+	if err != nil {
+		t.Fatalf("Generate failed: %v", err)
+	}
+	pc := c.(*pngCaptcha)
+	answer := pc.captcha.Store.Get(img.ID, false)
+	if len(answer) != 4 {
+		t.Fatalf("expected 4 chars, got %q", answer)
+	}
+}
+
 func TestVerifySuccess(t *testing.T) {
 	c := newTestCaptcha()
-	// base64Captcha DriverString 的 answer == content（生成的随机字符），
+	// base64Captcha 的 answer == content（生成的随机字符），
 	// 测试中无法直接拿到明文答案，故通过 store 探测获取答案。
 	img, err := c.Generate(context.Background(), "login")
 	if err != nil {

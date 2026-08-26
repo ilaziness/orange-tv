@@ -10,12 +10,14 @@ import (
 	"github.com/mojocn/base64Captcha"
 )
 
-// 默认参数。
+// 默认参数按 DriverString 的绘制规则选取：
+// 字号约为 height*(7~13)/16，末字从 width/length 处起笔。
+// 高度过大时字会画出右边界；故用较扁画布，保证 4 字完整落入图内。
 const (
 	defaultLength = 4   // 验证码字符数
-	defaultWidth  = 120 // 图片宽度（像素）
-	defaultHeight = 40  // 图片高度（像素）
-	defaultNoise  = 15  // 噪点字符数（增强抗 OCR，仍可读）
+	defaultWidth  = 150 // 图片宽度（像素）
+	defaultHeight = 50  // 图片高度（像素）；字号随高度增大，过高会裁掉末字
+	defaultNoise  = 5   // 噪点字符；库内噪点为浅色，过多会糊成一片
 	// defaultExpireTTL 验证码默认有效期，同时用于内置内存 store 的过期回收
 	// 与外部 cache store 的 TTL。调用方可通过 WithExpireTTL / WithCacheStore 覆盖。
 	defaultExpireTTL = 5 * time.Minute
@@ -23,19 +25,17 @@ const (
 	defaultCollectNum = 1024
 )
 
-// defaultBgColor 默认背景色：浅灰。
-//
-// base64Captcha.DriverString 的字符颜色调用 RandDeepColor，该函数对
-// 随机色减去增量后取 math.Abs，可能产生浅色字符。纯白背景下浅色字符
-// 几乎不可见，需多次刷新；改用浅灰背景可让浅色字符仍保持一定对比度，
-// 同时深色字符仍清晰可辨，减少刷新次数。
-var defaultBgColor = color.RGBA{R: 230, G: 230, B: 230, A: 255}
+// defaultBgColor 中灰底。DriverString 字符色走 RandDeepColor，可能偏浅；
+// 中灰底让浅色字仍能看出轮廓，深色字对比也足够。
+var defaultBgColor = color.RGBA{R: 200, G: 200, B: 200, A: 255}
 
-// defaultShowLineOptions 默认干扰线组合：HollowLine + SlimeLine + SineLine
-// 三种干扰线全部开启，最大化抗 OCR 能力。
-const defaultShowLineOptions = base64Captcha.OptionShowHollowLine |
-	base64Captcha.OptionShowSlimeLine |
-	base64Captcha.OptionShowSineLine
+// defaultShowLineOptions 只用 HollowLine（浅色空心曲线）。
+// SlimeLine / SineLine 与正文一样走 RandDeepColor，线、字会糊在一起。
+const defaultShowLineOptions = base64Captcha.OptionShowHollowLine
+
+// defaultFonts 库内嵌 chromohv，字形相对规整、宽度可控。
+// Fonts 留空会混入 3Dumb 等过宽装饰体，4 字更容易画出画布。
+var defaultFonts = []string{"chromohv.ttf"}
 
 // Options 默认实现的配置项。
 type Options struct {
@@ -49,10 +49,10 @@ type Options struct {
 	// Width 图片宽度（像素），默认 120。
 	Width int
 
-	// Height 图片高度（像素），默认 40。
+	// Height 图片高度（像素），默认 60。
 	Height int
 
-	// NoiseCount 噪点字符数，默认 15。
+	// NoiseCount 噪点字符数，默认 0。
 	NoiseCount int
 
 	// ExpireTTL 验证码有效期，默认 5 分钟。
@@ -119,8 +119,7 @@ func applyOptions(opts []Option) *Options {
 
 // pngCaptcha 基于 base64Captcha 的默认图像验证码实现。
 //
-// 底层渲染委托给成熟的 github.com/mojocn/base64Captcha（内嵌字体、干扰线、
-// 噪点、随机旋转等抗识别效果），本结构仅做接口适配与错误归一化。
+// 底层渲染委托给 base64Captcha.DriverString，本结构仅做接口适配与错误归一化。
 type pngCaptcha struct {
 	captcha   *base64Captcha.Captcha
 	expireTTL time.Duration
@@ -138,26 +137,17 @@ func New(opts ...Option) Captcha {
 		// 内置内存 store：collectNum 触发过期回收阈值，expiration 为有效期。
 		store = base64Captcha.NewMemoryStore(defaultCollectNum, o.ExpireTTL)
 	}
-	// 字符驱动：去除易混淆字符的字符集 + 三种干扰线 + 多噪点 + 浅灰底
-	// + Go Regular 无衬线字体。
-	//
-	// 可读性优化：
-	//   - 字体：使用 Go Regular 无衬线字体（newGoFontStorage），替换
-	//     base64Captcha 默认的装饰性艺术字体集合（3Dumb/Flim-Flam/
-	//     RitaSmith 等），字形规整清晰。
-	//   - 背景：浅灰（defaultBgColor），相比纯白底让 RandDeepColor 偶尔
-	//     产生的浅色字符仍保持可辨对比度，减少刷新次数。
-	// 防御性优化：
-	//   - 干扰线：HollowLine + SlimeLine + SineLine 全开（defaultShowLineOptions）。
-	//   - 噪点：默认 15 个，平衡抗 OCR 与可读性。
-	driver := base64Captcha.NewDriverString(
-		o.Height, o.Width, o.NoiseCount,
-		defaultShowLineOptions,
-		o.Length,
-		base64Captcha.TxtSimpleCharaters,
-		&defaultBgColor,
-		newGoFontStorage(), nil,
-	).ConvertFonts()
+	// DriverString 内置字段：扁平画布 + chromohv + 浅色空心线 + 中灰底。
+	driver := (&base64Captcha.DriverString{
+		Height:          o.Height,
+		Width:           o.Width,
+		NoiseCount:      o.NoiseCount,
+		ShowLineOptions: defaultShowLineOptions,
+		Length:          o.Length,
+		Source:          base64Captcha.TxtSimpleCharaters,
+		BgColor:         &defaultBgColor,
+		Fonts:           defaultFonts,
+	}).ConvertFonts()
 	return &pngCaptcha{
 		captcha:   base64Captcha.NewCaptcha(driver, store),
 		expireTTL: o.ExpireTTL,
