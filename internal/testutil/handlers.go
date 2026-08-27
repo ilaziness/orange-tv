@@ -457,7 +457,7 @@ func (s adminAdSvc) Delete(ctx context.Context, id uint32) error { return nil }
 
 type clientAdSvc struct{}
 
-func (s clientAdSvc) ListByScene(ctx context.Context, scene string) ([]clientdto.AdItem, error) {
+func (s clientAdSvc) List(ctx context.Context, scene string) ([]clientdto.AdItem, error) {
 	return nil, nil
 }
 

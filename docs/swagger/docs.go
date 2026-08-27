@@ -6267,7 +6267,7 @@ const docTemplate = `{
         },
         "/api/client/v1/promotions": {
             "get": {
-                "description": "按场景获取启用的广告列表",
+                "description": "获取启用的广告列表；scene 可选，不传则返回全部启用广告，传则按场景筛选",
                 "produces": [
                     "application/json"
                 ],
@@ -6277,15 +6277,10 @@ const docTemplate = `{
                 "summary": "广告列表",
                 "parameters": [
                     {
-                        "enum": [
-                            "video_loading",
-                            "general"
-                        ],
                         "type": "string",
                         "description": "广告场景（video_loading=片头加载广告，general=通用广告）",
                         "name": "scene",
-                        "in": "query",
-                        "required": true
+                        "in": "query"
                     }
                 ],
                 "responses": {

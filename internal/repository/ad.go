@@ -12,6 +12,7 @@ import (
 // AdRepository manages advertisements.
 type AdRepository interface {
 	ListAll(ctx context.Context, offset, limit int) ([]model.Advertisements, int, error)
+	ListByStatus(ctx context.Context, status *uint8) ([]model.Advertisements, error)
 	ListByScene(ctx context.Context, scene string, status *uint8) ([]model.Advertisements, error)
 	Get(ctx context.Context, id uint32) (*model.Advertisements, error)
 	GetByKey(ctx context.Context, adKey string) (*model.Advertisements, error)
@@ -42,14 +43,27 @@ func (r *adRepo) ListAll(ctx context.Context, offset, limit int) ([]model.Advert
 	return items, total, nil
 }
 
+// ListByStatus returns advertisements optionally filtered by status.
+func (r *adRepo) ListByStatus(ctx context.Context, status *uint8) ([]model.Advertisements, error) {
+	return r.listAds(ctx, "", status)
+}
+
+// ListByScene returns advertisements for the given scene, optionally filtered by status.
 func (r *adRepo) ListByScene(ctx context.Context, scene string, status *uint8) ([]model.Advertisements, error) {
+	return r.listAds(ctx, scene, status)
+}
+
+func (r *adRepo) listAds(ctx context.Context, scene string, status *uint8) ([]model.Advertisements, error) {
 	items := make([]model.Advertisements, 0, 20)
-	q := r.db.NewSelect().Model(&items).Where("scene = ?", scene)
+	q := r.db.NewSelect().Model(&items)
+	if scene != "" {
+		q = q.Where("scene = ?", scene)
+	}
 	if status != nil {
 		q = q.Where("status = ?", *status)
 	}
 	if err := q.Order("sort ASC, id DESC").Scan(ctx); err != nil {
-		return nil, fmt.Errorf("list advertisements by scene: %w", err)
+		return nil, fmt.Errorf("list advertisements: %w", err)
 	}
 	return items, nil
 }

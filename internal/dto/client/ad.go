@@ -1,9 +1,9 @@
 package client
 
-// ListAdQuery binds the scene query parameter.
+// ListAdQuery binds the optional scene query parameter.
 type ListAdQuery struct {
-	// 广告场景（video_loading=片头加载广告，general=通用广告）
-	Scene string `form:"scene" binding:"required,oneof=video_loading general"`
+	// 广告场景（video_loading=片头加载广告，general=通用广告；不传则返回全部启用广告）
+	Scene string `form:"scene" binding:"omitempty,oneof=video_loading general"`
 }
 
 // AdItem is the client advertisement item.
