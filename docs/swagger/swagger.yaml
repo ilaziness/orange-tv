@@ -2130,8 +2130,14 @@ definitions:
         description: 访问令牌
         type: string
       expires_in:
-        description: 令牌有效期（秒）
+        description: 访问令牌有效期（秒）
         type: integer
+      refresh_expires_in:
+        description: 刷新令牌有效期（秒）
+        type: integer
+      refresh_token:
+        description: 刷新令牌
+        type: string
       token_type:
         description: 令牌类型（如 Bearer）
         type: string
@@ -2192,6 +2198,32 @@ definitions:
       rating_count:
         description: 评分人数
         type: integer
+    type: object
+  client.RefreshTokenRequest:
+    properties:
+      refresh_token:
+        description: 刷新令牌（必填）
+        type: string
+    required:
+    - refresh_token
+    type: object
+  client.RefreshTokenResponse:
+    properties:
+      access_token:
+        description: 访问令牌
+        type: string
+      expires_in:
+        description: 访问令牌有效期（秒）
+        type: integer
+      refresh_expires_in:
+        description: 刷新令牌有效期（秒）
+        type: integer
+      refresh_token:
+        description: 刷新令牌（轮换后新令牌）
+        type: string
+      token_type:
+        description: 令牌类型（如 Bearer）
+        type: string
     type: object
   client.RegisterRequest:
     properties:
@@ -5758,6 +5790,33 @@ paths:
       security:
       - BearerAuth: []
       summary: 修改密码
+      tags:
+      - 用户端｜用户中心
+  /api/client/v1/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: 使用 refresh_token 换取新的 access_token 与 refresh_token（轮换）
+      parameters:
+      - description: 刷新令牌请求
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/client.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/client.RefreshTokenResponse'
+              type: object
+      summary: 刷新访问令牌
       tags:
       - 用户端｜用户中心
   /api/client/v1/auth/register:

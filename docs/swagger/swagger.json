@@ -5378,6 +5378,52 @@
                 }
             }
         },
+        "/api/client/v1/auth/refresh": {
+            "post": {
+                "description": "使用 refresh_token 换取新的 access_token 与 refresh_token（轮换）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户端｜用户中心"
+                ],
+                "summary": "刷新访问令牌",
+                "parameters": [
+                    {
+                        "description": "刷新令牌请求",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/client.RefreshTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/client.RefreshTokenResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
         "/api/client/v1/auth/register": {
             "post": {
                 "description": "邮箱+密码注册，注册成功仅返回状态，不返回用户信息",
@@ -10108,8 +10154,16 @@
                     "type": "string"
                 },
                 "expires_in": {
-                    "description": "令牌有效期（秒）",
+                    "description": "访问令牌有效期（秒）",
                     "type": "integer"
+                },
+                "refresh_expires_in": {
+                    "description": "刷新令牌有效期（秒）",
+                    "type": "integer"
+                },
+                "refresh_token": {
+                    "description": "刷新令牌",
+                    "type": "string"
                 },
                 "token_type": {
                     "description": "令牌类型（如 Bearer）",
@@ -10197,6 +10251,43 @@
                 "rating_count": {
                     "description": "评分人数",
                     "type": "integer"
+                }
+            }
+        },
+        "client.RefreshTokenRequest": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "description": "刷新令牌（必填）",
+                    "type": "string"
+                }
+            }
+        },
+        "client.RefreshTokenResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "description": "访问令牌",
+                    "type": "string"
+                },
+                "expires_in": {
+                    "description": "访问令牌有效期（秒）",
+                    "type": "integer"
+                },
+                "refresh_expires_in": {
+                    "description": "刷新令牌有效期（秒）",
+                    "type": "integer"
+                },
+                "refresh_token": {
+                    "description": "刷新令牌（轮换后新令牌）",
+                    "type": "string"
+                },
+                "token_type": {
+                    "description": "令牌类型（如 Bearer）",
+                    "type": "string"
                 }
             }
         },
