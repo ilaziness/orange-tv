@@ -191,13 +191,14 @@ func (r *userFeatureRepo) GetHistory(ctx context.Context, userID, videoID uint32
 }
 
 func (r *userFeatureRepo) UpsertHistory(ctx context.Context, h *model.UserPlayHistory) error {
+	// Keep existing progress unless the submitted last_played_at is strictly newer.
 	_, err := r.db.NewInsert().Model(h).
 		On("DUPLICATE KEY UPDATE").
-		Set("play_source_id = VALUES(play_source_id)").
-		Set("episode_id = VALUES(episode_id)").
-		Set("progress = VALUES(progress)").
-		Set("duration = VALUES(duration)").
-		Set("last_played_at = VALUES(last_played_at)").
+		Set("play_source_id = IF(VALUES(last_played_at) > last_played_at, VALUES(play_source_id), play_source_id)").
+		Set("episode_id = IF(VALUES(last_played_at) > last_played_at, VALUES(episode_id), episode_id)").
+		Set("progress = IF(VALUES(last_played_at) > last_played_at, VALUES(progress), progress)").
+		Set("duration = IF(VALUES(last_played_at) > last_played_at, VALUES(duration), duration)").
+		Set("last_played_at = IF(VALUES(last_played_at) > last_played_at, VALUES(last_played_at), last_played_at)").
 		Exec(ctx)
 	if err != nil {
 		return fmt.Errorf("upsert history: %w", err)

@@ -519,7 +519,7 @@ func (s *userService) UpsertHistory(ctx context.Context, userID uint32, req *cli
 		return errcode.VideoNotFound
 	}
 	now := time.Now()
-	return s.userRepo.UpsertHistory(ctx, &model.UserPlayHistory{
+	if err := s.userRepo.UpsertHistory(ctx, &model.UserPlayHistory{
 		UserID:       userID,
 		VideoID:      req.VideoID,
 		PlaySourceID: req.PlaySourceID,
@@ -527,7 +527,10 @@ func (s *userService) UpsertHistory(ctx context.Context, userID uint32, req *cli
 		Progress:     req.Progress,
 		Duration:     req.Duration,
 		LastPlayedAt: now,
-	})
+	}); err != nil {
+		s.log.Error("client user: upsert history failed", zap.Uint32("user_id", userID), zap.Uint32("video_id", req.VideoID), zap.Error(err))
+	}
+	return nil
 }
 
 func (s *userService) DeleteHistory(ctx context.Context, userID, videoID uint32) error {
