@@ -383,6 +383,9 @@ func (s clientUserSvc) Register(ctx context.Context, req *clientdto.RegisterRequ
 func (s clientUserSvc) Login(ctx context.Context, req *clientdto.LoginRequest, ip, ua string) (*clientdto.LoginResponse, error) {
 	return &clientdto.LoginResponse{}, nil
 }
+func (s clientUserSvc) RefreshToken(ctx context.Context, req *clientdto.RefreshTokenRequest) (*clientdto.RefreshTokenResponse, error) {
+	return &clientdto.RefreshTokenResponse{}, nil
+}
 func (s clientUserSvc) Profile(ctx context.Context, userID uint32) (*clientdto.Profile, error) {
 	return &clientdto.Profile{ID: userID}, nil
 }

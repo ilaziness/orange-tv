@@ -88,7 +88,7 @@ func (a *App) wireHTTP() error {
 	}
 	captchaSvc := captcha.New(captchaOpts...)
 
-	clientUserSvc := clientsvc.NewUserService(adminRepo, userFeatureRepo, videoRepo, categoryRepo, a.jwtMgr, a.cfg.JWT.AccessTokenTTL, sharedSettingsSvc, a.locker, captchaSvc, a.log)
+	clientUserSvc := clientsvc.NewUserService(adminRepo, userFeatureRepo, videoRepo, categoryRepo, a.jwtMgr, a.cfg.JWT.AccessTokenTTL, a.cfg.JWT.RefreshTokenTTL, sharedSettingsSvc, a.locker, captchaSvc, a.log)
 	clientBannerSvc := clientsvc.NewBannerService(userFeatureRepo, a.log)
 	adminAdSvc := adminsvc.NewAdService(adRepo, a.log)
 	clientAdSvc := clientsvc.NewAdService(adRepo, a.log)

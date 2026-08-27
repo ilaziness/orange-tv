@@ -11,6 +11,7 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/ilaziness/orange-tv/internal/auth"
 	"github.com/ilaziness/orange-tv/internal/constant"
 	"github.com/ilaziness/orange-tv/internal/crypto"
@@ -41,6 +42,7 @@ type UserService interface {
 	GenerateCaptcha(ctx context.Context, scene string) (*clientdto.CaptchaResponse, error)
 	Register(ctx context.Context, req *clientdto.RegisterRequest) error
 	Login(ctx context.Context, req *clientdto.LoginRequest, ip, ua string) (*clientdto.LoginResponse, error)
+	RefreshToken(ctx context.Context, req *clientdto.RefreshTokenRequest) (*clientdto.RefreshTokenResponse, error)
 	Profile(ctx context.Context, userID uint32) (*clientdto.Profile, error)
 	UpdateProfile(ctx context.Context, userID uint32, req *clientdto.UpdateProfileRequest) (*clientdto.Profile, error)
 	ChangePassword(ctx context.Context, userID uint32, req *clientdto.ChangePasswordRequest) error
@@ -77,6 +79,7 @@ type userService struct {
 	categoryRepo repository.CategoryRepository
 	jwtMgr       *auth.JWTManager
 	accessTTL    int
+	refreshTTL   int
 	settingsSvc  service.SettingsService
 	locker       pkglock.Locker
 	captcha      captcha.Captcha
@@ -91,6 +94,7 @@ func NewUserService(
 	categoryRepo repository.CategoryRepository,
 	jwtMgr *auth.JWTManager,
 	accessTTL int,
+	refreshTTL int,
 	settingsSvc service.SettingsService,
 	locker pkglock.Locker,
 	captchaSvc captcha.Captcha,
@@ -99,6 +103,9 @@ func NewUserService(
 	if accessTTL <= 0 {
 		accessTTL = 7200
 	}
+	if refreshTTL <= 0 {
+		refreshTTL = 604800
+	}
 	return &userService{
 		adminRepo:    adminRepo,
 		userRepo:     userRepo,
@@ -106,6 +113,7 @@ func NewUserService(
 		categoryRepo: categoryRepo,
 		jwtMgr:       jwtMgr,
 		accessTTL:    accessTTL,
+		refreshTTL:   refreshTTL,
 		settingsSvc:  settingsSvc,
 		locker:       locker,
 		captcha:      captchaSvc,
@@ -260,9 +268,9 @@ func (s *userService) Login(ctx context.Context, req *clientdto.LoginRequest, ip
 		recordLog(false)
 		return nil, errcode.InvalidCredentials
 	}
-	token, err := s.jwtMgr.GenerateAccessTokenFor(u.ID, auth.SubjectUser)
+	token, refreshToken, err := s.generateUserTokenPair(u.ID)
 	if err != nil {
-		s.log.Error("client user: generate access token failed", zap.Uint32("user_id", u.ID), zap.Error(err))
+		s.log.Error("client user: generate token pair failed", zap.Uint32("user_id", u.ID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.InternalError, err)
 	}
 	now := time.Now()
@@ -270,11 +278,67 @@ func (s *userService) Login(ctx context.Context, req *clientdto.LoginRequest, ip
 	_ = s.adminRepo.UpdateUser(ctx, u)
 	recordLog(true)
 	return &clientdto.LoginResponse{
-		AccessToken: token,
-		TokenType:   "Bearer",
-		ExpiresIn:   s.accessTTL,
-		User:        toUserProfile(u),
+		AccessToken:      token,
+		RefreshToken:     refreshToken,
+		TokenType:        "Bearer",
+		ExpiresIn:        s.accessTTL,
+		RefreshExpiresIn: s.refreshTTL,
+		User:             toUserProfile(u),
 	}, nil
+}
+
+func (s *userService) RefreshToken(ctx context.Context, req *clientdto.RefreshTokenRequest) (*clientdto.RefreshTokenResponse, error) {
+	if s.jwtMgr == nil {
+		return nil, errcode.WithMessage(errcode.ServiceUnavailable, "JWT 未配置")
+	}
+	claims, err := s.jwtMgr.ParseToken(strings.TrimSpace(req.RefreshToken))
+	if err != nil {
+		if errors.Is(err, jwt.ErrTokenExpired) {
+			return nil, errcode.TokenExpired
+		}
+		return nil, errcode.InvalidToken
+	}
+	if claims.TokenType != auth.TokenTypeRefresh {
+		return nil, errcode.InvalidToken
+	}
+	if claims.Subject != auth.SubjectUser {
+		return nil, errcode.InvalidToken
+	}
+	u, err := s.adminRepo.GetUserByID(ctx, claims.UserID)
+	if err != nil {
+		s.log.Error("client user: get user for refresh token failed", zap.Uint32("user_id", claims.UserID), zap.Error(err))
+		return nil, errcode.Wrap(errcode.DatabaseError, err)
+	}
+	if u == nil {
+		return nil, errcode.UserNotFound
+	}
+	if u.Status != constant.StatusEnabled {
+		return nil, errcode.UserDisabled
+	}
+	accessToken, refreshToken, err := s.generateUserTokenPair(u.ID)
+	if err != nil {
+		s.log.Error("client user: generate token pair on refresh failed", zap.Uint32("user_id", u.ID), zap.Error(err))
+		return nil, errcode.Wrap(errcode.InternalError, err)
+	}
+	return &clientdto.RefreshTokenResponse{
+		AccessToken:      accessToken,
+		RefreshToken:     refreshToken,
+		TokenType:        "Bearer",
+		ExpiresIn:        s.accessTTL,
+		RefreshExpiresIn: s.refreshTTL,
+	}, nil
+}
+
+func (s *userService) generateUserTokenPair(userID uint32) (accessToken, refreshToken string, err error) {
+	accessToken, err = s.jwtMgr.GenerateAccessTokenFor(userID, auth.SubjectUser)
+	if err != nil {
+		return "", "", err
+	}
+	refreshToken, err = s.jwtMgr.GenerateRefreshTokenFor(userID, auth.SubjectUser)
+	if err != nil {
+		return "", "", err
+	}
+	return accessToken, refreshToken, nil
 }
 
 func (s *userService) Profile(ctx context.Context, userID uint32) (*clientdto.Profile, error) {

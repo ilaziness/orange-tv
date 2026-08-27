@@ -574,9 +574,19 @@ export type LoginHistoryItem = {
 
 export type UserLoginResult = {
   access_token: string
+  refresh_token: string
   token_type: string
   expires_in: number
+  refresh_expires_in: number
   user: UserProfile
+}
+
+export type RefreshTokenResult = {
+  access_token: string
+  refresh_token: string
+  token_type: string
+  expires_in: number
+  refresh_expires_in: number
 }
 
 export type CaptchaResult = {

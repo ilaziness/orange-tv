@@ -33,6 +33,7 @@ func registerClientContentRoutes(v1 *gin.RouterGroup, h *Handlers) {
 	v1.GET("/auth/captcha", h.ClientUser.Captcha)
 	v1.POST("/auth/register", h.ClientUser.Register)
 	v1.POST("/auth/login", h.ClientUser.Login)
+	v1.POST("/auth/refresh", h.ClientUser.Refresh)
 
 	// User profile (C5) — requires JWT
 	v1.GET("/auth/profile", h.ClientUser.Profile)

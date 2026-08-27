@@ -67,6 +67,28 @@ func (h *UserHandler) Login(c *gin.Context) {
 	response.Success(c, resp)
 }
 
+// Refresh
+// @Summary 刷新访问令牌
+// @Description 使用 refresh_token 换取新的 access_token 与 refresh_token（轮换）
+// @Tags 用户端｜用户中心
+// @Accept json
+// @Produce json
+// @Param body body clientdto.RefreshTokenRequest true "刷新令牌请求"
+// @Success 200 {object} response.Response{data=clientdto.RefreshTokenResponse}
+// @Router /api/client/v1/auth/refresh [post]
+func (h *UserHandler) Refresh(c *gin.Context) {
+	var req clientdto.RefreshTokenRequest
+	if !httphandler.BindAndValidate(c, &req) {
+		return
+	}
+	resp, err := h.svc.RefreshToken(c.Request.Context(), &req)
+	if err != nil {
+		response.Error(c, err)
+		return
+	}
+	response.Success(c, resp)
+}
+
 // Captcha
 // @Summary 获取图像验证码
 // @Description 生成图像验证码，返回 base64 图片与验证码 ID；登录/注册时需将 ID 与答案一并提交
@@ -621,10 +643,13 @@ func (h *UserHandler) ListBanners(c *gin.Context) {
 	response.Success(c, []any{})
 }
 
-// currentUserID extracts the user ID from JWT claims; returns 0 if not a user token.
+// currentUserID extracts the user ID from JWT access token claims; returns 0 if not a valid user access token.
 func currentUserID(c *gin.Context) uint32 {
 	claims := httpmiddleware.GetClaims(c)
 	if claims == nil {
+		return 0
+	}
+	if claims.TokenType != auth.TokenTypeAccess {
 		return 0
 	}
 	// Only accept user-subject tokens for client user endpoints

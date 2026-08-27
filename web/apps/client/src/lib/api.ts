@@ -18,6 +18,7 @@ import {
   type PageData,
   type PlayEpisodeResponse,
   type RatingResult,
+  type RefreshTokenResult,
   type SettingsResponse,
   type ClientAdItem,
   type UserLoginResult,
@@ -26,9 +27,23 @@ import {
 } from '@orange-tv/shared'
 
 const TOKEN_KEY = 'orange_tv_user_token'
+const REFRESH_TOKEN_KEY = 'orange_tv_user_refresh_token'
+
+type TokenPair = { accessToken: string; refreshToken: string }
+type TokenListener = (tokens: TokenPair | null) => void
+
+let tokenListener: TokenListener | null = null
+
+export function registerTokenListener(listener: TokenListener) {
+  tokenListener = listener
+}
 
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY)
+}
+
+export function getRefreshToken(): string | null {
+  return localStorage.getItem(REFRESH_TOKEN_KEY)
 }
 
 export function setToken(token: string | null) {
@@ -36,16 +51,95 @@ export function setToken(token: string | null) {
   else localStorage.setItem(TOKEN_KEY, token)
 }
 
+export function setRefreshToken(token: string | null) {
+  if (!token) localStorage.removeItem(REFRESH_TOKEN_KEY)
+  else localStorage.setItem(REFRESH_TOKEN_KEY, token)
+}
+
+export function setTokens(accessToken: string, refreshToken: string) {
+  setToken(accessToken)
+  setRefreshToken(refreshToken)
+  tokenListener?.({ accessToken, refreshToken })
+}
+
+export function clearTokens() {
+  setToken(null)
+  setRefreshToken(null)
+  tokenListener?.(null)
+}
+
 const AUTH_REDIRECT_CODES = [3000001, 3000002, 3000004, 3000005]
+
+export class AuthSessionExpiredError extends Error {
+  constructor() {
+    super('会话已失效')
+    this.name = 'AuthSessionExpiredError'
+  }
+}
+
+export function isAuthFailure(err: unknown): boolean {
+  return (
+    err instanceof ApiError &&
+    (err.httpStatus === 401 || AUTH_REDIRECT_CODES.includes(err.code))
+  )
+}
+
+export function isAuthSessionExpired(err: unknown): boolean {
+  return isAuthFailure(err) || err instanceof AuthSessionExpiredError
+}
+
+let refreshPromise: Promise<boolean> | null = null
+
+function redirectToLogin(): never {
+  clearTokens()
+  if (window.location.pathname !== '/login') {
+    window.location.href = '/login'
+  }
+  throw new AuthSessionExpiredError()
+}
+
+async function refreshAccessToken(): Promise<boolean> {
+  const refreshToken = getRefreshToken()
+  if (!refreshToken) return false
+
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      try {
+        const res = await apiPost<RefreshTokenResult>(CLIENT_API_BASE, '/auth/refresh', {
+          refresh_token: refreshToken,
+        })
+        if (!res.data?.access_token || !res.data?.refresh_token) return false
+        setTokens(res.data.access_token, res.data.refresh_token)
+        return true
+      } catch {
+        return false
+      } finally {
+        refreshPromise = null
+      }
+    })()
+  }
+  return refreshPromise
+}
 
 async function withAuth<T>(fn: (token: string | null) => Promise<T>): Promise<T> {
   try {
     return await fn(getToken())
   } catch (err) {
-    if (err instanceof ApiError && AUTH_REDIRECT_CODES.includes(err.code)) {
-      setToken(null)
-      window.location.href = '/login'
-      return new Promise(() => {})
+    if (err instanceof ApiError && isAuthFailure(err) && getRefreshToken()) {
+      const refreshed = await refreshAccessToken()
+      if (refreshed) {
+        try {
+          return await fn(getToken())
+        } catch (retryErr) {
+          if (retryErr instanceof ApiError && isAuthFailure(retryErr)) {
+            redirectToLogin()
+          }
+          throw retryErr
+        }
+      }
+    }
+    if (isAuthFailure(err)) {
+      redirectToLogin()
     }
     throw err
   }

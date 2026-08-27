@@ -21,21 +21,18 @@ export function Component() {
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const navigate = useNavigate()
-  const setToken = useAuthStore((s) => s.setToken)
-  const loadProfile = useAuthStore((s) => s.loadProfile)
+  const completeLogin = useAuthStore((s) => s.completeLogin)
   const token = useAuthStore((s) => s.token)
+  const profile = useAuthStore((s) => s.profile)
   const captchaRefreshRef = useRef<() => void>(() => {})
 
   usePageTitle('登录')
 
-  const hasRedirected = useRef(false)
   useEffect(() => {
-    if (hasRedirected.current) return
-    hasRedirected.current = true
-    if (token) {
+    if (token && profile) {
       navigate('/', { replace: true })
     }
-  }, [token, navigate])
+  }, [token, profile, navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -53,8 +50,11 @@ export function Component() {
     setSubmitting(true)
     try {
       const res = await clientApi.login(em, p, captchaId, captcha)
-      setToken(res.data.access_token)
-      await loadProfile()
+      if (!res.data?.access_token || !res.data?.refresh_token || !res.data?.user) {
+        setError('登录响应异常，请重试')
+        return
+      }
+      completeLogin(res.data.access_token, res.data.refresh_token, res.data.user)
       navigate('/', { replace: true })
     } catch (err) {
       setError(errorMessage(err))

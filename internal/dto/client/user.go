@@ -50,12 +50,36 @@ type CaptchaResponse struct {
 type LoginResponse struct {
 	// 访问令牌
 	AccessToken string `json:"access_token"`
+	// 刷新令牌
+	RefreshToken string `json:"refresh_token"`
 	// 令牌类型（如 Bearer）
 	TokenType string `json:"token_type"`
-	// 令牌有效期（秒）
+	// 访问令牌有效期（秒）
 	ExpiresIn int `json:"expires_in"`
+	// 刷新令牌有效期（秒）
+	RefreshExpiresIn int `json:"refresh_expires_in"`
 	// 用户公开资料
 	User *Profile `json:"user"`
+}
+
+// RefreshTokenRequest is the payload for refreshing access tokens.
+type RefreshTokenRequest struct {
+	// 刷新令牌（必填）
+	RefreshToken string `json:"refresh_token" binding:"required"`
+}
+
+// RefreshTokenResponse is returned after a successful token refresh.
+type RefreshTokenResponse struct {
+	// 访问令牌
+	AccessToken string `json:"access_token"`
+	// 刷新令牌（轮换后新令牌）
+	RefreshToken string `json:"refresh_token"`
+	// 令牌类型（如 Bearer）
+	TokenType string `json:"token_type"`
+	// 访问令牌有效期（秒）
+	ExpiresIn int `json:"expires_in"`
+	// 刷新令牌有效期（秒）
+	RefreshExpiresIn int `json:"refresh_expires_in"`
 }
 
 // Profile is the authenticated user public profile.

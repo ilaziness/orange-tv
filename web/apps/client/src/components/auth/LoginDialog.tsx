@@ -28,8 +28,7 @@ export function LoginDialog() {
   const [submitting, setSubmitting] = useState(false)
   const isOpen = useLoginDialogStore((s) => s.isOpen)
   const close = useLoginDialogStore((s) => s.close)
-  const setToken = useAuthStore((s) => s.setToken)
-  const loadProfile = useAuthStore((s) => s.loadProfile)
+  const completeLogin = useAuthStore((s) => s.completeLogin)
   const captchaRefreshRef = useRef<() => void>(() => {})
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -48,8 +47,11 @@ export function LoginDialog() {
     setSubmitting(true)
     try {
       const res = await clientApi.login(em, p, captchaId, captcha)
-      setToken(res.data.access_token)
-      await loadProfile()
+      if (!res.data?.access_token || !res.data?.refresh_token || !res.data?.user) {
+        setError('登录响应异常，请重试')
+        return
+      }
+      completeLogin(res.data.access_token, res.data.refresh_token, res.data.user)
       close()
     } catch (err) {
       setError(errorMessage(err))

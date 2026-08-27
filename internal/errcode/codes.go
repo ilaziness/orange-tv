@@ -40,7 +40,7 @@ var (
 	InsufficientPermission = &Code{3000003, "权限不足", 403, nil}
 	InvalidToken           = &Code{3000004, "无效的Token", 401, nil}
 	TokenRevoked           = &Code{3000005, "Token已吊销", 401, nil}
-	InvalidCredentials     = &Code{3000006, "邮箱或密码错误", 401, nil}
+	InvalidCredentials     = &Code{3000006, "邮箱或密码错误", 400, nil}
 	AdminDisabled          = &Code{3000007, "管理员账号已禁用", 403, nil}
 	CaptchaInvalid         = &Code{3000010, "验证码错误或已过期", 400, nil}
 
