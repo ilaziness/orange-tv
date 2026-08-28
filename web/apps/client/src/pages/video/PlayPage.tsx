@@ -109,6 +109,7 @@ export function Component() {
           episode_id: epIdNum,
           progress: currentTime,
           duration,
+          last_played_at: new Date().toISOString(),
         })
         .catch((err) => {
           console.warn('sync play history to remote failed:', err)

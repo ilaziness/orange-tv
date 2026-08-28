@@ -582,7 +582,15 @@ func (s *userService) UpsertHistory(ctx context.Context, userID uint32, req *cli
 	if v == nil {
 		return errcode.VideoNotFound
 	}
-	now := time.Now()
+	lastPlayedAt := time.Now()
+	if lastPlayedAtStr := strings.TrimSpace(req.LastPlayedAt); lastPlayedAtStr != "" {
+		t, err := utils.ParseFlexibleDate(lastPlayedAtStr, []string{time.RFC3339Nano, time.RFC3339, "2006-01-02 15:04:05", "2006-01-02"})
+		if err != nil {
+			s.log.Warn("client user: parse last_played_at failed", zap.String("value", lastPlayedAtStr), zap.Error(err))
+			return errcode.ParamError
+		}
+		lastPlayedAt = t
+	}
 	if err := s.userRepo.UpsertHistory(ctx, &model.UserPlayHistory{
 		UserID:       userID,
 		VideoID:      req.VideoID,
@@ -590,7 +598,7 @@ func (s *userService) UpsertHistory(ctx context.Context, userID uint32, req *cli
 		EpisodeID:    req.EpisodeID,
 		Progress:     req.Progress,
 		Duration:     req.Duration,
-		LastPlayedAt: now,
+		LastPlayedAt: lastPlayedAt,
 	}); err != nil {
 		s.log.Error("client user: upsert history failed", zap.Uint32("user_id", userID), zap.Uint32("video_id", req.VideoID), zap.Error(err))
 	}

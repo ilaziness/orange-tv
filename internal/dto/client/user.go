@@ -209,6 +209,8 @@ type UpsertHistoryRequest struct {
 	Progress uint32 `json:"progress" binding:"omitempty,min=0"`
 	// 视频总时长（秒）
 	Duration uint32 `json:"duration" binding:"omitempty,min=0"`
+	// 最近播放时间（可选，RFC3339 / DateTime / Date 任一格式；未传则使用服务器当前时间）
+	LastPlayedAt string `json:"last_played_at" binding:"omitempty"`
 }
 
 // ===== Comments (C6) =====
