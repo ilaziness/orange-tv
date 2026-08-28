@@ -10367,6 +10367,10 @@ const docTemplate = `{
                     "type": "integer",
                     "minimum": 1
                 },
+                "last_played_at": {
+                    "description": "最近播放时间（可选，RFC3339 / DateTime / Date 任一格式；未传则使用服务器当前时间）",
+                    "type": "string"
+                },
                 "play_source_id": {
                     "description": "播放源ID",
                     "type": "integer",
