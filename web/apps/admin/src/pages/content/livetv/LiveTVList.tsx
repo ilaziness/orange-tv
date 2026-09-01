@@ -1,5 +1,5 @@
 import { StatusBadge } from '@/components/shared'
-import type { LiveChannel } from '@orange-tv/shared'
+import type { LiveTVChannel } from '@orange-tv/shared'
 import {
   Table,
   TableBody,
@@ -12,12 +12,12 @@ import { Button } from '@/components/ui/button'
 import { Pencil, Trash2 } from 'lucide-react'
 
 interface LiveListProps {
-  list: LiveChannel[]
-  onEdit: (item: LiveChannel) => void
+  list: LiveTVChannel[]
+  onEdit: (item: LiveTVChannel) => void
   onDelete: (id: number) => void
 }
 
-export function LiveList({ list, onEdit, onDelete }: LiveListProps) {
+export function LiveTVList({ list, onEdit, onDelete }: LiveListProps) {
   return (
     <div className="rounded-md border">
       <Table>

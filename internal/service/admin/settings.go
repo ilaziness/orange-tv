@@ -186,13 +186,13 @@ func mapToAPISettings(m map[string]model.SystemSettings) admindto.APISettings {
 
 func (s *settingsService) buildFeatureUpserts(f *admindto.UpdateFeatureSettings) []repository.SettingUpsert {
 	var upserts []repository.SettingUpsert
-	if f.LiveEnabled != nil {
+	if f.LiveTVEnabled != nil {
 		v := "0"
-		if *f.LiveEnabled {
+		if *f.LiveTVEnabled {
 			v = "1"
 		}
 		upserts = append(upserts, repository.SettingUpsert{
-			Key: constant.SettingFeatureLiveEnabled, Group: constant.SettingGroupFeature, Value: v,
+			Key: constant.SettingFeatureLiveTVEnabled, Group: constant.SettingGroupFeature, Value: v,
 			SettingType: constant.SettingTypeBoolean, Description: "电视直播开关",
 		})
 	}

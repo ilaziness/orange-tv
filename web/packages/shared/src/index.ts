@@ -321,7 +321,7 @@ export type PlayEpisode = {
   status: number
 }
 
-export type LiveChannel = {
+export type LiveTVChannel = {
   id: number
   name: string
   category: string
@@ -332,7 +332,7 @@ export type LiveChannel = {
   status: number
 }
 
-export type ClientLiveChannel = {
+export type ClientLiveTVChannel = {
   id: number
   name: string
   category: string
@@ -342,14 +342,14 @@ export type ClientLiveChannel = {
   format?: string
 }
 
-export type LiveSyncResult = {
+export type LiveTVSyncResult = {
   total: number
   created: number
   updated: number
   deleted: number
 }
 
-export type LiveSyncSourceResponse = {
+export type LiveTVSyncSourceResponse = {
   source_url: string
 }
 
@@ -433,7 +433,7 @@ export type ClientAdItem = {
 }
 
 export type FeatureSettings = {
-  live_enabled: boolean
+  livetv_enabled: boolean
   comment_enabled: boolean
   comment_review: boolean
   rating_enabled: boolean

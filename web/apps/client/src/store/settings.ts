@@ -3,7 +3,7 @@ import type { FeatureSettings, SiteSettings } from '@orange-tv/shared'
 import { clientApi } from '@/lib/api'
 
 const DEFAULT_FEATURE: FeatureSettings = {
-  live_enabled: false,
+  livetv_enabled: false,
   comment_enabled: true,
   comment_review: true,
   rating_enabled: true,

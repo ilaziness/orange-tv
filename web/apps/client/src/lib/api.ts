@@ -7,7 +7,7 @@ import {
   apiPut,
   type ClientBanner,
   type ClientCategory,
-  type ClientLiveChannel,
+  type ClientLiveTVChannel,
   type ClientVideoDetail,
   type ClientVideoListItem,
   type CommentItem,
@@ -160,11 +160,11 @@ export const clientApi = {
     apiGet<PageData<ClientVideoListItem>>(CLIENT_API_BASE, '/search', {
       query: { keyword, page, page_size: 30, ...extra },
     }),
-  live: (query?: Record<string, string | number | undefined>) =>
-    apiGet<PageData<ClientLiveChannel>>(CLIENT_API_BASE, '/live', { query }),
-  liveChannelDetail: (id: number) => apiGet<ClientLiveChannel>(CLIENT_API_BASE, `/live/${id}`),
-  // liveStreamUrl 返回直播流的代理播放地址，前端不接触真实 stream_url。
-  liveStreamUrl: (id: number) => `${CLIENT_API_BASE}/live/play/${id}`,
+  livetv: (query?: Record<string, string | number | undefined>) =>
+    apiGet<PageData<ClientLiveTVChannel>>(CLIENT_API_BASE, '/livetv', { query }),
+  livetvChannelDetail: (id: number) => apiGet<ClientLiveTVChannel>(CLIENT_API_BASE, `/livetv/${id}`),
+  // livetvStreamUrl 返回直播流的代理播放地址，前端不接触真实 stream_url。
+  livetvStreamUrl: (id: number) => `${CLIENT_API_BASE}/livetv/play/${id}`,
   banners: () => apiGet<ClientBanner[]>(CLIENT_API_BASE, '/banners'),
   ads: (scene: string) =>
     apiGet<ClientAdItem[]>(CLIENT_API_BASE, '/promotions', { query: { scene } }),

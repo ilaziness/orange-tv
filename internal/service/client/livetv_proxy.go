@@ -27,8 +27,8 @@ import (
 // fetching upstream IPTV sources. Many sources reject non-browser UAs with 403.
 const browserUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 
-// LiveProxyService proxies IPTV live streams.
-type LiveProxyService interface {
+// LiveTVProxyService proxies IPTV live streams.
+type LiveTVProxyService interface {
 	// Proxy handles live stream proxy for the given channel.
 	// If segURL is empty, it proxies the master m3u8 playlist for channelID.
 	// If segURL is non-empty, it proxies the decoded segment/sub-playlist URL.
@@ -37,19 +37,19 @@ type LiveProxyService interface {
 	Proxy(c *gin.Context, channelID uint32, segURL string) error
 }
 
-type liveProxyService struct {
-	svc        LiveService
+type liveTVProxyService struct {
+	svc        LiveTVService
 	log        *zap.Logger
 	httpc      *http.Client
 	hmacSecret []byte
 }
 
-// NewLiveProxyService creates a client LiveProxyService.
+// NewLiveTVProxyService creates a client LiveTVProxyService.
 // httpc is configured without a global timeout so long-running stream
 // transfers are not interrupted; connect/response-header timeouts are
 // controlled by Transport. TLS certificate verification is skipped to support
 // IPTV sources on non-standard ports with self-signed certificates.
-func NewLiveProxyService(svc LiveService, log *zap.Logger) LiveProxyService {
+func NewLiveTVProxyService(svc LiveTVService, log *zap.Logger) LiveTVProxyService {
 	if log == nil {
 		log = zap.NewNop()
 	}
@@ -57,9 +57,9 @@ func NewLiveProxyService(svc LiveService, log *zap.Logger) LiveProxyService {
 	if _, err := rand.Read(secret); err != nil {
 		// crypto/rand should never fail on supported platforms; fall back to a
 		// fixed but unpredictable-enough value to keep the service running.
-		secret = []byte("orange-tv-live-proxy-fallback-key")
+		secret = []byte("orange-tv-livetv-proxy-fallback-key")
 	}
-	return &liveProxyService{
+	return &liveTVProxyService{
 		svc:        svc,
 		log:        log,
 		hmacSecret: secret,
@@ -98,7 +98,7 @@ func NewLiveProxyService(svc LiveService, log *zap.Logger) LiveProxyService {
 }
 
 // Proxy handles live stream proxy.
-func (s *liveProxyService) Proxy(c *gin.Context, channelID uint32, segURL string) error {
+func (s *liveTVProxyService) Proxy(c *gin.Context, channelID uint32, segURL string) error {
 	var realURL string
 	if segURL != "" {
 		decoded, err := s.decodeSegmentURL(segURL)
@@ -130,10 +130,10 @@ func (s *liveProxyService) Proxy(c *gin.Context, channelID uint32, segURL string
 
 // probeURL sends a HEAD request upstream and returns only the content type/status.
 // It is used by the player to decide the correct customType for extensionless URLs.
-func (s *liveProxyService) probeURL(c *gin.Context, realURL string) error {
+func (s *liveTVProxyService) probeURL(c *gin.Context, realURL string) error {
 	req, err := http.NewRequestWithContext(c.Request.Context(), http.MethodHead, realURL, nil)
 	if err != nil {
-		return errcode.WithMessage(errcode.LiveSyncFailed, "探测直播源失败")
+		return errcode.WithMessage(errcode.LiveTVSyncFailed, "探测直播源失败")
 	}
 	req.Header.Set("User-Agent", browserUserAgent)
 	req.Header.Set("Accept", "*/*")
@@ -146,7 +146,7 @@ func (s *liveProxyService) probeURL(c *gin.Context, realURL string) error {
 			return nil
 		}
 		s.log.Error("[LIVE-PROXY] probe failed", zap.String("url", realURL), zap.Error(err))
-		return errcode.WithMessage(errcode.LiveSyncFailed, "探测直播源失败")
+		return errcode.WithMessage(errcode.LiveTVSyncFailed, "探测直播源失败")
 	}
 	defer func() { _ = resp.Body.Close() }()
 
@@ -170,14 +170,14 @@ func (s *liveProxyService) probeURL(c *gin.Context, realURL string) error {
 // proxyURL fetches a URL and either rewrites an m3u8 playlist or streams a media segment.
 // Detection is based on Content-Type, URL extension, and a small body peek, so it works
 // for segment URLs without a .ts extension and for playlist URLs without a .m3u8 extension.
-func (s *liveProxyService) proxyURL(c *gin.Context, channelID uint32, realURL string) error {
+func (s *liveTVProxyService) proxyURL(c *gin.Context, channelID uint32, realURL string) error {
 	resp, err := s.fetchResp(c.Request.Context(), realURL, c.GetHeader("Range"))
 	if err != nil {
 		if errors.Is(err, context.Canceled) {
 			return nil
 		}
 		s.log.Error("[LIVE-PROXY] fetch failed", zap.String("url", realURL), zap.Error(err))
-		return errcode.WithMessage(errcode.LiveSyncFailed, "拉取直播流失败")
+		return errcode.WithMessage(errcode.LiveTVSyncFailed, "拉取直播流失败")
 	}
 	defer func() { _ = resp.Body.Close() }()
 
@@ -187,7 +187,7 @@ func (s *liveProxyService) proxyURL(c *gin.Context, channelID uint32, realURL st
 			zap.Int("status", resp.StatusCode),
 			zap.String("content_type", resp.Header.Get("Content-Type")),
 		)
-		return errcode.WithMessage(errcode.LiveSyncFailed, fmt.Sprintf("直播源返回错误状态码: %d", resp.StatusCode))
+		return errcode.WithMessage(errcode.LiveTVSyncFailed, fmt.Sprintf("直播源返回错误状态码: %d", resp.StatusCode))
 	}
 
 	contentType := resp.Header.Get("Content-Type")
@@ -200,11 +200,11 @@ func (s *liveProxyService) proxyURL(c *gin.Context, channelID uint32, realURL st
 			return nil
 		}
 		s.log.Error("[LIVE-PROXY] read upstream body failed", zap.String("url", realURL), zap.Error(readErr))
-		return errcode.WithMessage(errcode.LiveSyncFailed, "读取直播流失败")
+		return errcode.WithMessage(errcode.LiveTVSyncFailed, "读取直播流失败")
 	}
 	if n == 0 {
 		s.log.Error("[LIVE-PROXY] empty upstream response", zap.String("url", realURL))
-		return errcode.WithMessage(errcode.LiveSyncFailed, "读取直播流失败")
+		return errcode.WithMessage(errcode.LiveTVSyncFailed, "读取直播流失败")
 	}
 	peek = peek[:n]
 
@@ -216,7 +216,7 @@ func (s *liveProxyService) proxyURL(c *gin.Context, channelID uint32, realURL st
 				return nil
 			}
 			s.log.Error("[LIVE-PROXY] read playlist failed", zap.String("url", realURL), zap.Error(readErr))
-			return errcode.WithMessage(errcode.LiveSyncFailed, "读取播放列表失败")
+			return errcode.WithMessage(errcode.LiveTVSyncFailed, "读取播放列表失败")
 		}
 		body := append(peek, rest...)
 
@@ -260,7 +260,7 @@ func (s *liveProxyService) proxyURL(c *gin.Context, channelID uint32, realURL st
 // It sets a browser User-Agent and a Referer matching the upstream origin
 // to bypass common hotlink protection on IPTV sources.
 // The Range header is forwarded so that MP4/VOD players can seek.
-func (s *liveProxyService) fetchResp(ctx context.Context, rawURL, rangeHeader string) (*http.Response, error) {
+func (s *liveTVProxyService) fetchResp(ctx context.Context, rawURL, rangeHeader string) (*http.Response, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, rawURL, nil)
 	if err != nil {
 		return nil, err
@@ -281,7 +281,7 @@ func (s *liveProxyService) fetchResp(ctx context.Context, rawURL, rangeHeader st
 }
 
 // rewriteM3U8 rewrites m3u8 content URLs so they go through the proxy endpoint.
-func (s *liveProxyService) rewriteM3U8(body []byte, baseURL string, channelID uint32) string {
+func (s *liveTVProxyService) rewriteM3U8(body []byte, baseURL string, channelID uint32) string {
 	text := string(body)
 	base, _ := url.Parse(baseURL)
 	baseQuery := ""
@@ -289,7 +289,7 @@ func (s *liveProxyService) rewriteM3U8(body []byte, baseURL string, channelID ui
 		baseQuery = base.RawQuery
 	}
 	lines := strings.Split(text, "\n")
-	prefix := fmt.Sprintf("/api/client/v1/live/play/%d?u=", channelID)
+	prefix := fmt.Sprintf("/api/client/v1/livetv/play/%d?u=", channelID)
 	for i, line := range lines {
 		trimmed := strings.TrimSpace(line)
 		if trimmed == "" {
@@ -312,7 +312,7 @@ func (s *liveProxyService) rewriteM3U8(body []byte, baseURL string, channelID ui
 }
 
 // rewriteTagURI rewrites URI="..." portions of m3u8 tags.
-func (s *liveProxyService) rewriteTagURI(line string, base *url.URL, prefix, baseQuery string) string {
+func (s *liveTVProxyService) rewriteTagURI(line string, base *url.URL, prefix, baseQuery string) string {
 	idx := strings.Index(line, "URI=\"")
 	if idx < 0 {
 		return line
@@ -355,7 +355,7 @@ func resolveURL(base *url.URL, ref, baseQuery string) string {
 // encodeSegmentURL encodes a real URL with URL-safe base64 (no padding) and
 // appends an HMAC-SHA256 signature so that only URLs generated by this proxy
 // instance are accepted on decode.
-func (s *liveProxyService) encodeSegmentURL(rawURL string) string {
+func (s *liveTVProxyService) encodeSegmentURL(rawURL string) string {
 	mac := hmac.New(sha256.New, s.hmacSecret)
 	_, _ = mac.Write([]byte(rawURL))
 	sig := mac.Sum(nil)[:8]
@@ -363,7 +363,7 @@ func (s *liveProxyService) encodeSegmentURL(rawURL string) string {
 }
 
 // decodeSegmentURL decodes a base64 segment URL and verifies its HMAC signature.
-func (s *liveProxyService) decodeSegmentURL(encoded string) (string, error) {
+func (s *liveTVProxyService) decodeSegmentURL(encoded string) (string, error) {
 	parts := strings.SplitN(encoded, ".", 2)
 	if len(parts) != 2 {
 		return "", fmt.Errorf("invalid segment url format")

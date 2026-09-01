@@ -201,7 +201,7 @@ export function VideoPlayer({
   onProgressRef.current = onProgress
 
   // Determine whether we need to probe the actual Content-Type for extensionless URLs.
-  // We probe regardless of the declared format, because LivePage defaults to 'hls'
+  // We probe regardless of the declared format, because LiveTVPage defaults to 'hls'
   // and the backend format field is often empty for extensionless URLs.
   const needsProbe = useMemo(() => {
     const u = (src || '').toLowerCase()

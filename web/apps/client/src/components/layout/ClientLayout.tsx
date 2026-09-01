@@ -227,8 +227,8 @@ export function ClientLayout() {
   const renderNavLinks = () => (
     <>
       {renderCategoryPopover()}
-      {feature.live_enabled ? (
-        <Button variant="nav" size="lg" nativeButton={false} render={<Link to="/live" />}>
+      {feature.livetv_enabled ? (
+        <Button variant="nav" size="lg" nativeButton={false} render={<Link to="/livetv" />}>
           <TvIcon data-icon="inline-start" />
           电视
         </Button>
@@ -403,12 +403,12 @@ export function ClientLayout() {
                     {renderSearch()}
                     <Separator />
                     <div className="flex flex-col gap-2">
-                      {feature.live_enabled ? (
+                      {feature.livetv_enabled ? (
                         <Button
                           variant="ghost"
                           className="justify-start"
                           nativeButton={false}
-                          render={<Link to="/live" />}
+                          render={<Link to="/livetv" />}
                           onClick={() => setMobileOpen(false)}
                         >
                           电视

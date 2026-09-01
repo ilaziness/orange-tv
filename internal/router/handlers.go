@@ -22,7 +22,7 @@ type Handlers struct {
 	AdminVideo    *adminhandler.VideoHandler
 	AdminMetadata *adminhandler.MetadataHandler
 	AdminPlay     *adminhandler.PlayHandler
-	AdminLive     *adminhandler.LiveHandler
+	AdminLiveTV   *adminhandler.LiveTVHandler
 	AdminComment  *adminhandler.CommentHandler
 	AdminCollect  *adminhandler.CollectHandler
 	AdminSettings *adminhandler.SettingsHandler
@@ -35,14 +35,14 @@ type Handlers struct {
 	// Client surface
 	ClientCategory *clienthandler.CategoryHandler
 	ClientVideo    *clienthandler.VideoHandler
-	ClientLive     *clienthandler.LiveHandler
+	ClientLiveTV   *clienthandler.LiveTVHandler
 	ClientSettings *clienthandler.SettingsHandler
 	ClientUser     *clienthandler.UserHandler
 	ClientBanner   *clienthandler.BannerHandler
 	ClientAd       *clienthandler.AdHandler
 
-	// LiveFeature guards client live endpoints based on the live_enabled setting.
-	LiveFeature gin.HandlerFunc
+	// LiveTVFeature guards client livetv endpoints based on the livetv_enabled setting.
+	LiveTVFeature gin.HandlerFunc
 
 	// Open resource station
 	OpenResource *openhandler.ResourceHandler
@@ -92,7 +92,7 @@ func (h *Handlers) validateForRoutes() error {
 		{"admin video handler", h.AdminVideo != nil},
 		{"admin metadata handler", h.AdminMetadata != nil},
 		{"admin play handler", h.AdminPlay != nil},
-		{"admin live handler", h.AdminLive != nil},
+		{"admin livetv handler", h.AdminLiveTV != nil},
 		{"admin comment handler", h.AdminComment != nil},
 		{"admin collect handler", h.AdminCollect != nil},
 		{"admin settings handler", h.AdminSettings != nil},
@@ -102,12 +102,12 @@ func (h *Handlers) validateForRoutes() error {
 		{"admin ad handler", h.AdminAd != nil},
 		{"client category handler", h.ClientCategory != nil},
 		{"client video handler", h.ClientVideo != nil},
-		{"client live handler", h.ClientLive != nil},
+		{"client livetv handler", h.ClientLiveTV != nil},
 		{"client settings handler", h.ClientSettings != nil},
 		{"client user handler", h.ClientUser != nil},
 		{"client banner handler", h.ClientBanner != nil},
 		{"client ad handler", h.ClientAd != nil},
-		{"client live feature middleware", h.LiveFeature != nil},
+		{"client livetv feature middleware", h.LiveTVFeature != nil},
 		{"open resource handler", h.OpenResource != nil},
 	}
 	for _, item := range required {

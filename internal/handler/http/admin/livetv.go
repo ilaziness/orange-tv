@@ -9,14 +9,14 @@ import (
 	adminsvc "github.com/ilaziness/orange-tv/internal/service/admin"
 )
 
-// LiveHandler handles admin live channel endpoints.
-type LiveHandler struct {
-	svc adminsvc.LiveService
+// LiveTVHandler handles admin livetv channel endpoints.
+type LiveTVHandler struct {
+	svc adminsvc.LiveTVService
 }
 
-// NewLiveHandler creates a LiveHandler.
-func NewLiveHandler(svc adminsvc.LiveService) *LiveHandler {
-	return &LiveHandler{svc: svc}
+// NewLiveTVHandler creates a LiveTVHandler.
+func NewLiveTVHandler(svc adminsvc.LiveTVService) *LiveTVHandler {
+	return &LiveTVHandler{svc: svc}
 }
 
 // List
@@ -26,11 +26,11 @@ func NewLiveHandler(svc adminsvc.LiveService) *LiveHandler {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param req query admindto.LiveListRequest true "筛选参数"
-// @Success 200 {object} response.Response{data=response.PageData{list=[]admindto.LiveChannelItem}}
-// @Router /api/admin/v1/live [get]
-func (h *LiveHandler) List(c *gin.Context) {
-	var req admindto.LiveListRequest
+// @Param req query admindto.LiveTVListRequest true "筛选参数"
+// @Success 200 {object} response.Response{data=response.PageData{list=[]admindto.LiveTVChannelItem}}
+// @Router /api/admin/v1/livetv [get]
+func (h *LiveTVHandler) List(c *gin.Context) {
+	var req admindto.LiveTVListRequest
 	if !httphandler.BindAndValidate(c, &req) {
 		return
 	}
@@ -49,11 +49,11 @@ func (h *LiveHandler) List(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param body body admindto.CreateLiveRequest true "频道参数"
-// @Success 200 {object} response.Response{data=admindto.LiveChannelItem}
-// @Router /api/admin/v1/live [post]
-func (h *LiveHandler) Create(c *gin.Context) {
-	var req admindto.CreateLiveRequest
+// @Param body body admindto.CreateLiveTVRequest true "频道参数"
+// @Success 200 {object} response.Response{data=admindto.LiveTVChannelItem}
+// @Router /api/admin/v1/livetv [post]
+func (h *LiveTVHandler) Create(c *gin.Context) {
+	var req admindto.CreateLiveTVRequest
 	if !httphandler.BindAndValidate(c, &req) {
 		return
 	}
@@ -73,15 +73,15 @@ func (h *LiveHandler) Create(c *gin.Context) {
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "频道ID"
-// @Param body body admindto.UpdateLiveRequest true "频道参数"
-// @Success 200 {object} response.Response{data=admindto.LiveChannelItem}
-// @Router /api/admin/v1/live/{id} [put]
-func (h *LiveHandler) Update(c *gin.Context) {
+// @Param body body admindto.UpdateLiveTVRequest true "频道参数"
+// @Success 200 {object} response.Response{data=admindto.LiveTVChannelItem}
+// @Router /api/admin/v1/livetv/{id} [put]
+func (h *LiveTVHandler) Update(c *gin.Context) {
 	var uri shareddto.IDURI
 	if !httphandler.BindURI(c, &uri) {
 		return
 	}
-	var req admindto.UpdateLiveRequest
+	var req admindto.UpdateLiveTVRequest
 	if !httphandler.BindAndValidate(c, &req) {
 		return
 	}
@@ -101,8 +101,8 @@ func (h *LiveHandler) Update(c *gin.Context) {
 // @Security BearerAuth
 // @Param id path int true "频道ID"
 // @Success 200 {object} response.Response
-// @Router /api/admin/v1/live/{id} [delete]
-func (h *LiveHandler) Delete(c *gin.Context) {
+// @Router /api/admin/v1/livetv/{id} [delete]
+func (h *LiveTVHandler) Delete(c *gin.Context) {
 	var uri shareddto.IDURI
 	if !httphandler.BindURI(c, &uri) {
 		return
@@ -120,15 +120,15 @@ func (h *LiveHandler) Delete(c *gin.Context) {
 // @Tags 管理端｜直播管理
 // @Produce json
 // @Security BearerAuth
-// @Success 200 {object} response.Response{data=admindto.LiveSyncSourceResponse}
-// @Router /api/admin/v1/live/sync-source [get]
-func (h *LiveHandler) GetSyncSource(c *gin.Context) {
+// @Success 200 {object} response.Response{data=admindto.LiveTVSyncSourceResponse}
+// @Router /api/admin/v1/livetv/sync-source [get]
+func (h *LiveTVHandler) GetSyncSource(c *gin.Context) {
 	sourceURL, err := h.svc.GetSyncSourceURL(c.Request.Context())
 	if err != nil {
 		response.Error(c, err)
 		return
 	}
-	response.Success(c, admindto.LiveSyncSourceResponse{SourceURL: sourceURL})
+	response.Success(c, admindto.LiveTVSyncSourceResponse{SourceURL: sourceURL})
 }
 
 // Sync
@@ -138,11 +138,11 @@ func (h *LiveHandler) GetSyncSource(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param body body admindto.LiveSyncRequest true "直播源地址"
-// @Success 200 {object} response.Response{data=admindto.LiveSyncResult}
-// @Router /api/admin/v1/live/sync [post]
-func (h *LiveHandler) Sync(c *gin.Context) {
-	var req admindto.LiveSyncRequest
+// @Param body body admindto.LiveTVSyncRequest true "直播源地址"
+// @Success 200 {object} response.Response{data=admindto.LiveTVSyncResult}
+// @Router /api/admin/v1/livetv/sync [post]
+func (h *LiveTVHandler) Sync(c *gin.Context) {
+	var req admindto.LiveTVSyncRequest
 	if !httphandler.BindAndValidate(c, &req) {
 		return
 	}

@@ -3015,7 +3015,7 @@
                 }
             }
         },
-        "/api/admin/v1/live": {
+        "/api/admin/v1/livetv": {
             "get": {
                 "security": [
                     {
@@ -3099,7 +3099,7 @@
                                                         "list": {
                                                             "type": "array",
                                                             "items": {
-                                                                "$ref": "#/definitions/admin.LiveChannelItem"
+                                                                "$ref": "#/definitions/admin.LiveTVChannelItem"
                                                             }
                                                         }
                                                     }
@@ -3137,7 +3137,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/admin.CreateLiveRequest"
+                            "$ref": "#/definitions/admin.CreateLiveTVRequest"
                         }
                     }
                 ],
@@ -3153,7 +3153,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/admin.LiveChannelItem"
+                                            "$ref": "#/definitions/admin.LiveTVChannelItem"
                                         }
                                     }
                                 }
@@ -3163,7 +3163,7 @@
                 }
             }
         },
-        "/api/admin/v1/live/sync": {
+        "/api/admin/v1/livetv/sync": {
             "post": {
                 "security": [
                     {
@@ -3188,7 +3188,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/admin.LiveSyncRequest"
+                            "$ref": "#/definitions/admin.LiveTVSyncRequest"
                         }
                     }
                 ],
@@ -3204,7 +3204,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/admin.LiveSyncResult"
+                                            "$ref": "#/definitions/admin.LiveTVSyncResult"
                                         }
                                     }
                                 }
@@ -3214,7 +3214,7 @@
                 }
             }
         },
-        "/api/admin/v1/live/sync-source": {
+        "/api/admin/v1/livetv/sync-source": {
             "get": {
                 "security": [
                     {
@@ -3241,7 +3241,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/admin.LiveSyncSourceResponse"
+                                            "$ref": "#/definitions/admin.LiveTVSyncSourceResponse"
                                         }
                                     }
                                 }
@@ -3251,7 +3251,7 @@
                 }
             }
         },
-        "/api/admin/v1/live/{id}": {
+        "/api/admin/v1/livetv/{id}": {
             "put": {
                 "security": [
                     {
@@ -3283,7 +3283,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/admin.UpdateLiveRequest"
+                            "$ref": "#/definitions/admin.UpdateLiveTVRequest"
                         }
                     }
                 ],
@@ -3299,7 +3299,7 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/admin.LiveChannelItem"
+                                            "$ref": "#/definitions/admin.LiveTVChannelItem"
                                         }
                                     }
                                 }
@@ -6142,9 +6142,9 @@
                 }
             }
         },
-        "/api/client/v1/live": {
+        "/api/client/v1/livetv": {
             "get": {
-                "description": "分页获取直播频道列表。web 端不返回 stream_url（走 /live/play/:id 代理播放）；app/tv/desktop 端（X-Client-Type: app|tv|desktop 或对应 UA）额外返回 stream_url 字段。",
+                "description": "分页获取直播频道列表。web 端不返回 stream_url（走 /livetv/play/:id 代理播放）；app/tv/desktop 端（X-Client-Type: app|tv|desktop 或对应 UA）额外返回 stream_url 字段。",
                 "consumes": [
                     "application/json"
                 ],
@@ -6209,7 +6209,7 @@
                                                         "list": {
                                                             "type": "array",
                                                             "items": {
-                                                                "$ref": "#/definitions/client.LiveChannelItem"
+                                                                "$ref": "#/definitions/client.LiveTVChannelItem"
                                                             }
                                                         }
                                                     }
@@ -6224,7 +6224,7 @@
                 }
             }
         },
-        "/api/client/v1/live/play/{id}": {
+        "/api/client/v1/livetv/play/{id}": {
             "get": {
                 "description": "代理指定直播频道的播放流",
                 "produces": [
@@ -8132,7 +8132,7 @@
                 }
             }
         },
-        "admin.CreateLiveRequest": {
+        "admin.CreateLiveTVRequest": {
             "type": "object",
             "required": [
                 "name",
@@ -8504,7 +8504,7 @@
                 }
             }
         },
-        "admin.LiveChannelItem": {
+        "admin.LiveTVChannelItem": {
             "type": "object",
             "properties": {
                 "category": {
@@ -8541,7 +8541,7 @@
                 }
             }
         },
-        "admin.LiveSyncRequest": {
+        "admin.LiveTVSyncRequest": {
             "type": "object",
             "required": [
                 "source_url"
@@ -8555,7 +8555,7 @@
                 }
             }
         },
-        "admin.LiveSyncResult": {
+        "admin.LiveTVSyncResult": {
             "type": "object",
             "properties": {
                 "created": {
@@ -8576,7 +8576,7 @@
                 }
             }
         },
-        "admin.LiveSyncSourceResponse": {
+        "admin.LiveTVSyncSourceResponse": {
             "type": "object",
             "properties": {
                 "source_url": {
@@ -9080,7 +9080,7 @@
                 }
             }
         },
-        "admin.UpdateLiveRequest": {
+        "admin.UpdateLiveTVRequest": {
             "type": "object",
             "properties": {
                 "category": {
@@ -10047,7 +10047,7 @@
                 }
             }
         },
-        "client.LiveChannelItem": {
+        "client.LiveTVChannelItem": {
             "type": "object",
             "properties": {
                 "category": {

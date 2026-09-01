@@ -10,9 +10,9 @@ import (
 	"github.com/uptrace/bun"
 )
 
-// LiveChannels represents the live_channels table.
-type LiveChannels struct {
-	bun.BaseModel `bun:"table:live_channels,alias:lc"`
+// LivetvChannels represents the livetv_channels table.
+type LivetvChannels struct {
+	bun.BaseModel `bun:"table:livetv_channels,alias:lc"`
 
 	ID uint32 `bun:"id,pk,autoincrement" json:"id"`
 	// 频道名称
@@ -33,9 +33,9 @@ type LiveChannels struct {
 	UpdatedAt time.Time `bun:"updated_at,notnull" json:"updated_at"`
 }
 
-var _ bun.BeforeAppendModelHook = (*LiveChannels)(nil)
+var _ bun.BeforeAppendModelHook = (*LivetvChannels)(nil)
 
-func (m *LiveChannels) BeforeAppendModel(ctx context.Context, query bun.Query) error {
+func (m *LivetvChannels) BeforeAppendModel(ctx context.Context, query bun.Query) error {
 	now := time.Now()
 	switch query.(type) {
 	case *bun.InsertQuery:

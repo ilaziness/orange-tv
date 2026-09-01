@@ -11,9 +11,9 @@ const (
 	KeyCategoryTreeClient = "category:tree:client"
 	TTLCategoryTree       = 5 * time.Minute
 
-	// Live（按是否含流地址分 key：web 无流 / app·tv·desktop 含流）
-	KeyTplLiveListClient = "live:list:client:%s"
-	TTLLiveList          = 5 * time.Minute
+	// LiveTV（按是否含流地址分 key：web 无流 / app·tv·desktop 含流）
+	KeyTplLiveTVListClient = "livetv:list:client:%s"
+	TTLLiveTVList          = 5 * time.Minute
 
 	// Settings (per-group cache)
 	KeyTplSettingsGroup = "settings:group:%s"
@@ -32,15 +32,15 @@ const (
 	TTLVideoList    = 2 * time.Minute
 )
 
-// LiveListKey 生成客户端直播列表缓存键。
+// LiveTVListKey 生成客户端直播列表缓存键。
 // withStream=true（app/tv/desktop）返回含 stream_url 的缓存键；
 // withStream=false（web）返回不含流地址的缓存键。
 // 按是否含流分 key，避免 web 端从共享缓存读到流地址。
-func LiveListKey(withStream bool) string {
+func LiveTVListKey(withStream bool) string {
 	if withStream {
-		return fmt.Sprintf(KeyTplLiveListClient, "stream")
+		return fmt.Sprintf(KeyTplLiveTVListClient, "stream")
 	}
-	return fmt.Sprintf(KeyTplLiveListClient, "web")
+	return fmt.Sprintf(KeyTplLiveTVListClient, "web")
 }
 
 // SettingsGroupKey generates a per-group settings cache key.

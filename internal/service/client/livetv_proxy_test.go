@@ -14,19 +14,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func newTestProxy(t *testing.T) *liveProxyService {
+func newTestProxy(t *testing.T) *liveTVProxyService {
 	t.Helper()
-	proxy := NewLiveProxyService(&mockLiveService{}, nil)
-	return proxy.(*liveProxyService)
+	proxy := NewLiveTVProxyService(&mockLiveTVService{}, nil)
+	return proxy.(*liveTVProxyService)
 }
 
 // newTestProxyWithUpstream creates a proxy whose HTTP client connects to
 // httptest servers (which run on 127.0.0.1) by bypassing the private-IP
 // DialContext check that production uses for SSRF defense.
-func newTestProxyWithUpstream(t *testing.T) *liveProxyService {
+func newTestProxyWithUpstream(t *testing.T) *liveTVProxyService {
 	t.Helper()
-	proxy := NewLiveProxyService(&mockLiveService{}, nil)
-	lps := proxy.(*liveProxyService)
+	proxy := NewLiveTVProxyService(&mockLiveTVService{}, nil)
+	lps := proxy.(*liveTVProxyService)
 	lps.httpc = &http.Client{
 		Timeout: 10 * time.Second,
 	}
@@ -48,15 +48,15 @@ http://another.host/playlist.m3u8
 	lines := strings.Split(rewritten, "\n")
 
 	require.Contains(t, rewritten, "#EXTM3U")
-	assert.True(t, strings.HasPrefix(lines[3], "/api/client/v1/live/play/42?u="))
-	assert.True(t, strings.HasPrefix(lines[5], "/api/client/v1/live/play/42?u="))
-	assert.True(t, strings.HasPrefix(lines[6], "/api/client/v1/live/play/42?u="))
+	assert.True(t, strings.HasPrefix(lines[3], "/api/client/v1/livetv/play/42?u="))
+	assert.True(t, strings.HasPrefix(lines[5], "/api/client/v1/livetv/play/42?u="))
+	assert.True(t, strings.HasPrefix(lines[6], "/api/client/v1/livetv/play/42?u="))
 
 	for _, line := range lines {
 		if strings.TrimSpace(line) == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
-		assert.True(t, strings.HasPrefix(line, "/api/client/v1/live/play/42?u="), "unexpected line: %s", line)
+		assert.True(t, strings.HasPrefix(line, "/api/client/v1/livetv/play/42?u="), "unexpected line: %s", line)
 	}
 }
 
@@ -70,9 +70,9 @@ segment.ts
 	lps := newTestProxy(t)
 	rewritten := lps.rewriteM3U8([]byte(body), "http://origin.example/path/playlist.m3u8", 7)
 
-	assert.Contains(t, rewritten, "#EXT-X-KEY:METHOD=AES-128,URI=\"/api/client/v1/live/play/7?u=")
-	assert.Contains(t, rewritten, "#EXT-X-MAP:URI=\"/api/client/v1/live/play/7?u=")
-	assert.Contains(t, rewritten, "/api/client/v1/live/play/7?u=")
+	assert.Contains(t, rewritten, "#EXT-X-KEY:METHOD=AES-128,URI=\"/api/client/v1/livetv/play/7?u=")
+	assert.Contains(t, rewritten, "#EXT-X-MAP:URI=\"/api/client/v1/livetv/play/7?u=")
+	assert.Contains(t, rewritten, "/api/client/v1/livetv/play/7?u=")
 }
 
 func TestRewriteM3U8_PreservesQueryParams(t *testing.T) {
@@ -87,14 +87,14 @@ segment.ts
 
 	var segLine string
 	for _, line := range lines {
-		if strings.HasPrefix(line, "/api/client/v1/live/play/1?u=") {
+		if strings.HasPrefix(line, "/api/client/v1/livetv/play/1?u=") {
 			segLine = line
 			break
 		}
 	}
 	require.NotEmpty(t, segLine, "segment line not found")
 
-	encoded := strings.TrimPrefix(segLine, "/api/client/v1/live/play/1?u=")
+	encoded := strings.TrimPrefix(segLine, "/api/client/v1/livetv/play/1?u=")
 	decoded, err := lps.decodeSegmentURL(encoded)
 	require.NoError(t, err)
 	// The resolved segment URL should preserve the base query token.
@@ -201,16 +201,16 @@ func TestLooksLikeM3U8_BodyOverContentType(t *testing.T) {
 	assert.True(t, looksLikeM3U8(m3u8Body))
 }
 
-type mockLiveService struct {
+type mockLiveTVService struct {
 	streamURL string
 	streamErr error
 }
 
-func (m *mockLiveService) List(ctx context.Context, req *clientdto.LiveListRequest) ([]clientdto.LiveChannelItem, int, error) {
+func (m *mockLiveTVService) List(ctx context.Context, req *clientdto.LiveTVListRequest) ([]clientdto.LiveTVChannelItem, int, error) {
 	return nil, 0, nil
 }
 
-func (m *mockLiveService) GetStreamURL(ctx context.Context, id uint32) (string, error) {
+func (m *mockLiveTVService) GetStreamURL(ctx context.Context, id uint32) (string, error) {
 	return m.streamURL, m.streamErr
 }
 
@@ -224,7 +224,7 @@ func TestLiveProxyService_proxyURL_PlaylistWithoutExtension(t *testing.T) {
 
 	lps := newTestProxyWithUpstream(t)
 	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/live/play/1", nil)
+	req := httptest.NewRequest(http.MethodGet, "/livetv/play/1", nil)
 	gin.SetMode(gin.TestMode)
 	c, _ := gin.CreateTestContext(w)
 	c.Request = req
@@ -233,7 +233,7 @@ func TestLiveProxyService_proxyURL_PlaylistWithoutExtension(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Equal(t, "application/vnd.apple.mpegurl", w.Header().Get("Content-Type"))
-	assert.Contains(t, w.Body.String(), "/api/client/v1/live/play/1?u=")
+	assert.Contains(t, w.Body.String(), "/api/client/v1/livetv/play/1?u=")
 }
 
 func TestLiveProxyService_proxyURL_SegmentWithoutExtension(t *testing.T) {
@@ -246,7 +246,7 @@ func TestLiveProxyService_proxyURL_SegmentWithoutExtension(t *testing.T) {
 
 	lps := newTestProxyWithUpstream(t)
 	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/live/play/1", nil)
+	req := httptest.NewRequest(http.MethodGet, "/livetv/play/1", nil)
 	gin.SetMode(gin.TestMode)
 	c, _ := gin.CreateTestContext(w)
 	c.Request = req
@@ -269,7 +269,7 @@ func TestLiveProxyService_proxyURL_PlaylistDetectedByBodyPeek(t *testing.T) {
 
 	lps := newTestProxyWithUpstream(t)
 	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/live/play/1", nil)
+	req := httptest.NewRequest(http.MethodGet, "/livetv/play/1", nil)
 	gin.SetMode(gin.TestMode)
 	c, _ := gin.CreateTestContext(w)
 	c.Request = req
@@ -291,7 +291,7 @@ func TestLiveProxyService_proxyURL_SegmentWithoutExtensionDetectedByBody(t *test
 
 	lps := newTestProxyWithUpstream(t)
 	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/live/play/1", nil)
+	req := httptest.NewRequest(http.MethodGet, "/livetv/play/1", nil)
 	gin.SetMode(gin.TestMode)
 	c, _ := gin.CreateTestContext(w)
 	c.Request = req
@@ -311,7 +311,7 @@ func TestLiveProxyService_proxyURL_UpstreamError(t *testing.T) {
 
 	lps := newTestProxyWithUpstream(t)
 	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/live/play/1", nil)
+	req := httptest.NewRequest(http.MethodGet, "/livetv/play/1", nil)
 	gin.SetMode(gin.TestMode)
 	c, _ := gin.CreateTestContext(w)
 	c.Request = req
@@ -321,11 +321,11 @@ func TestLiveProxyService_proxyURL_UpstreamError(t *testing.T) {
 }
 
 func TestLiveProxyService_PrivateIPBlocked(t *testing.T) {
-	svc := &mockLiveService{}
-	proxy := NewLiveProxyService(svc, nil)
-	lps := proxy.(*liveProxyService)
+	svc := &mockLiveTVService{}
+	proxy := NewLiveTVProxyService(svc, nil)
+	lps := proxy.(*liveTVProxyService)
 	w := httptest.NewRecorder()
-	req := httptest.NewRequest(http.MethodGet, "/live/play/1", nil)
+	req := httptest.NewRequest(http.MethodGet, "/livetv/play/1", nil)
 	gin.SetMode(gin.TestMode)
 	c, _ := gin.CreateTestContext(w)
 	c.Request = req

@@ -12,8 +12,8 @@ import (
 	"github.com/sherif-fanous/m3u"
 )
 
-// LiveSourceEntry represents a parsed entry from a live source.
-type LiveSourceEntry struct {
+// LiveTVSourceEntry represents a parsed entry from a live source.
+type LiveTVSourceEntry struct {
 	Category  string
 	Name      string
 	StreamURL string
@@ -21,13 +21,13 @@ type LiveSourceEntry struct {
 	SortOrder uint32
 }
 
-// LiveSourceParser parses raw live source content into entries.
-type LiveSourceParser interface {
-	Parse(raw string) []LiveSourceEntry
+// LiveTVSourceParser parses raw live source content into entries.
+type LiveTVSourceParser interface {
+	Parse(raw string) []LiveTVSourceEntry
 }
 
-// fetchLiveSource fetches raw content from the given live source URL.
-func fetchLiveSource(ctx context.Context, url string) (string, error) {
+// fetchLiveTVSource fetches raw content from the given live source URL.
+func fetchLiveTVSource(ctx context.Context, url string) (string, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return "", fmt.Errorf("create request: %w", err)
@@ -36,12 +36,12 @@ func fetchLiveSource(ctx context.Context, url string) (string, error) {
 	client := &http.Client{Timeout: 30 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("fetch live source: %w", err)
+		return "", fmt.Errorf("fetch livetv source: %w", err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("fetch live source: unexpected status %d", resp.StatusCode)
+		return "", fmt.Errorf("fetch livetv source: unexpected status %d", resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)
@@ -53,7 +53,7 @@ func fetchLiveSource(ctx context.Context, url string) (string, error) {
 }
 
 // selectParser selects a parser based on the URL file extension.
-func selectParser(sourceURL string) (LiveSourceParser, error) {
+func selectParser(sourceURL string) (LiveTVSourceParser, error) {
 	parsed, err := url.Parse(sourceURL)
 	if err != nil {
 		return nil, fmt.Errorf("invalid source URL: %w", err)
@@ -65,7 +65,7 @@ func selectParser(sourceURL string) (LiveSourceParser, error) {
 	case strings.HasSuffix(path, ".txt"):
 		return &txtParser{}, nil
 	default:
-		return nil, fmt.Errorf("unsupported live source format, only .txt and .m3u are supported")
+		return nil, fmt.Errorf("unsupported livetv source format, only .txt and .m3u are supported")
 	}
 }
 
@@ -73,8 +73,8 @@ func selectParser(sourceURL string) (LiveSourceParser, error) {
 
 type txtParser struct{}
 
-func (p *txtParser) Parse(raw string) []LiveSourceEntry {
-	var entries []LiveSourceEntry
+func (p *txtParser) Parse(raw string) []LiveTVSourceEntry {
+	var entries []LiveTVSourceEntry
 	category := ""
 	sortOrder := uint32(0)
 	nameCountInCategory := make(map[string]int)
@@ -127,7 +127,7 @@ func (p *txtParser) Parse(raw string) []LiveSourceEntry {
 		}
 
 		sortOrder++
-		entries = append(entries, LiveSourceEntry{
+		entries = append(entries, LiveTVSourceEntry{
 			Category:  category,
 			Name:      name,
 			StreamURL: streamURL,
@@ -149,13 +149,13 @@ var m3uFilteredGroupKeywords = []string{
 
 type m3uParser struct{}
 
-func (p *m3uParser) Parse(raw string) []LiveSourceEntry {
+func (p *m3uParser) Parse(raw string) []LiveTVSourceEntry {
 	playlist, err := m3u.Unmarshal([]byte(raw))
 	if err != nil {
 		return nil
 	}
 
-	var entries []LiveSourceEntry
+	var entries []LiveTVSourceEntry
 	sortOrder := uint32(0)
 	nameCountInCategory := make(map[string]int)
 
@@ -208,7 +208,7 @@ func (p *m3uParser) Parse(raw string) []LiveSourceEntry {
 		}
 
 		sortOrder++
-		entries = append(entries, LiveSourceEntry{
+		entries = append(entries, LiveTVSourceEntry{
 			Category:  category,
 			Name:      name,
 			StreamURL: streamURL,

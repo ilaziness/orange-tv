@@ -45,7 +45,7 @@ func (a *App) wireHTTP() error {
 	videoRepo := repository.NewVideoRepo(a.db)
 	metaRepo := repository.NewMetadataRepo(a.db)
 	playRepo := repository.NewPlayRepo(a.db)
-	liveRepo := repository.NewLiveRepo(a.db)
+	liveTVRepo := repository.NewLiveTVRepo(a.db)
 	collectRepo := repository.NewCollectRepo(a.db)
 	settingsRepo := repository.NewSettingsRepo(a.db)
 	logRepo := repository.NewLogRepo(a.db)
@@ -55,7 +55,7 @@ func (a *App) wireHTTP() error {
 
 	sharedSettingsSvc := service.NewSettingsService(settingsRepo, a.cache, a.log)
 
-	handlers.LiveFeature = httpmiddleware.LiveFeatureMiddleware(sharedSettingsSvc, a.log)
+	handlers.LiveTVFeature = httpmiddleware.LiveTVFeatureMiddleware(sharedSettingsSvc, a.log)
 
 	recorder := audit.NewRecorder(logRepo, a.log)
 
@@ -64,7 +64,7 @@ func (a *App) wireHTTP() error {
 	adminMetaSvc := adminsvc.NewMetadataService(metaRepo, a.log)
 	adminPlaySvc := adminsvc.NewPlayService(playRepo, videoRepo, a.log)
 	adminVideoSvc := adminsvc.NewVideoService(videoRepo, categoryRepo, metaRepo, playRepo, a.cache, a.log)
-	adminLiveSvc := adminsvc.NewLiveService(liveRepo, a.cache, sharedSettingsSvc, a.log)
+	adminLiveSvc := adminsvc.NewLiveTVService(liveTVRepo, a.cache, sharedSettingsSvc, a.log)
 	adminCommentSvc := adminsvc.NewCommentService(commentRepo, a.log)
 	collectEngine := collect.NewEngine(collectRepo, videoRepo, categoryRepo, metaRepo, playRepo, a.log)
 	adminCollectSvc := adminsvc.NewCollectService(collectRepo, playRepo, categoryRepo, collectEngine, a.log, a.cache)
@@ -76,8 +76,8 @@ func (a *App) wireHTTP() error {
 
 	clientCategorySvc := clientsvc.NewCategoryService(categoryRepo, a.cache, a.log)
 	clientVideoSvc := clientsvc.NewVideoService(videoRepo, metaRepo, playRepo, a.cache, a.log)
-	clientLiveSvc := clientsvc.NewLiveService(liveRepo, a.cache, a.log)
-	clientLiveProxySvc := clientsvc.NewLiveProxyService(clientLiveSvc, a.log)
+	clientLiveSvc := clientsvc.NewLiveTVService(liveTVRepo, a.cache, a.log)
+	clientLiveProxySvc := clientsvc.NewLiveTVProxyService(clientLiveSvc, a.log)
 
 	// 验证码服务：配置了 Cache 时使用外部共享存储（Redis/内存），
 	// 未配置时 New 内部自动降级为 base64Captcha 内置内存 store，
@@ -101,7 +101,7 @@ func (a *App) wireHTTP() error {
 	handlers.AdminVideo = adminhandler.NewVideoHandler(adminVideoSvc)
 	handlers.AdminMetadata = adminhandler.NewMetadataHandler(adminMetaSvc)
 	handlers.AdminPlay = adminhandler.NewPlayHandler(adminPlaySvc)
-	handlers.AdminLive = adminhandler.NewLiveHandler(adminLiveSvc)
+	handlers.AdminLiveTV = adminhandler.NewLiveTVHandler(adminLiveSvc)
 	handlers.AdminComment = adminhandler.NewCommentHandler(adminCommentSvc, recorder)
 	handlers.AdminCollect = adminhandler.NewCollectHandler(adminCollectSvc)
 	handlers.AdminSettings = adminhandler.NewSettingsHandler(adminSettingsSvc, recorder)
@@ -112,7 +112,7 @@ func (a *App) wireHTTP() error {
 
 	handlers.ClientCategory = clienthandler.NewCategoryHandler(clientCategorySvc)
 	handlers.ClientVideo = clienthandler.NewVideoHandler(clientVideoSvc)
-	handlers.ClientLive = clienthandler.NewLiveHandler(clientLiveSvc, clientLiveProxySvc)
+	handlers.ClientLiveTV = clienthandler.NewLiveTVHandler(clientLiveSvc, clientLiveProxySvc)
 	handlers.ClientSettings = clienthandler.NewSettingsHandler(clientSettingsSvc)
 	handlers.ClientUser = clienthandler.NewUserHandler(clientUserSvc)
 	handlers.ClientBanner = clienthandler.NewBannerHandler(clientBannerSvc)

@@ -27,7 +27,7 @@ const siteSettingsSchema = z.object({
 
 function FeatureSettingsTab() {
   const [form, setForm] = useState({
-    live_enabled: false,
+    livetv_enabled: false,
     comment_enabled: true,
     comment_review: true,
     rating_enabled: true,
@@ -41,7 +41,7 @@ function FeatureSettingsTab() {
       const res = await adminApi.getFeatureSettings()
       const f = res.data
       setForm({
-        live_enabled: !!f.live_enabled,
+        livetv_enabled: !!f.livetv_enabled,
         comment_enabled: !!f.comment_enabled,
         comment_review: !!f.comment_review,
         rating_enabled: !!f.rating_enabled,
@@ -88,13 +88,13 @@ function FeatureSettingsTab() {
           <form onSubmit={save} className="flex flex-col gap-4">
             <FieldGroup>
               <Field data-disabled={submitting ? true : undefined}>
-                <FieldLabel htmlFor="live_enabled">电视直播</FieldLabel>
+                <FieldLabel htmlFor="livetv_enabled">电视直播</FieldLabel>
                 <div className="flex items-center gap-2 text-sm">
                   <Switch
-                    id="live_enabled"
-                    checked={form.live_enabled}
+                    id="livetv_enabled"
+                    checked={form.livetv_enabled}
                     onCheckedChange={(checked) =>
-                      setForm((prev) => ({ ...prev, live_enabled: checked }))
+                      setForm((prev) => ({ ...prev, livetv_enabled: checked }))
                     }
                     disabled={submitting}
                   />

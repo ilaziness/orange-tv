@@ -11,11 +11,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestLiveService_List_CategoryFilter(t *testing.T) {
-	svc := newTestLiveService(t)
+func TestLiveTVService_List_CategoryFilter(t *testing.T) {
+	svc := newTestLiveTVService(t)
 	ctx := clienttype.WithContext(context.Background(), constant.ClientTypeApp)
 
-	items, total, err := svc.List(ctx, &clientdto.LiveListRequest{Category: "央视"})
+	items, total, err := svc.List(ctx, &clientdto.LiveTVListRequest{Category: "央视"})
 	require.NoError(t, err)
 	// total 为全部在线频道数，category 仅过滤返回列表
 	assert.Equal(t, 2, total)
@@ -24,16 +24,16 @@ func TestLiveService_List_CategoryFilter(t *testing.T) {
 	assert.NotEmpty(t, items[0].StreamURL)
 }
 
-func TestLiveService_List_UnknownContextDefaultsToWeb(t *testing.T) {
-	svc := newTestLiveService(t)
-	items, _, err := svc.List(context.Background(), &clientdto.LiveListRequest{})
+func TestLiveTVService_List_UnknownContextDefaultsToWeb(t *testing.T) {
+	svc := newTestLiveTVService(t)
+	items, _, err := svc.List(context.Background(), &clientdto.LiveTVListRequest{})
 	require.NoError(t, err)
 	for _, item := range items {
 		assert.Empty(t, item.StreamURL, "unknown client type should default to web (no stream_url)")
 	}
 }
 
-func TestLiveService_List_StreamURLByClientType(t *testing.T) {
+func TestLiveTVService_List_StreamURLByClientType(t *testing.T) {
 	tests := []struct {
 		name       string
 		clientType string
@@ -46,10 +46,10 @@ func TestLiveService_List_StreamURLByClientType(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			svc := newTestLiveService(t)
+			svc := newTestLiveTVService(t)
 			ctx := clienttype.WithContext(context.Background(), tt.clientType)
 
-			items, total, err := svc.List(ctx, &clientdto.LiveListRequest{})
+			items, total, err := svc.List(ctx, &clientdto.LiveTVListRequest{})
 			require.NoError(t, err)
 			require.Equal(t, 2, total) // 仅在线频道，禁用频道被过滤
 			require.Len(t, items, 2)

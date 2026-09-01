@@ -1,6 +1,6 @@
-import { useLive } from './useLive'
-import { LiveDialog } from './LiveDialog'
-import { LiveList } from './LiveList'
+import { useLiveTV } from './useLiveTV'
+import { LiveTVDialog } from './LiveTVDialog'
+import { LiveTVList } from './LiveTVList'
 import { PageContainer, ConfirmDialog, Pagination } from '@/components/shared'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -19,7 +19,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
 
-export default function LivePage() {
+export default function LiveTVPage() {
   const {
     list,
     error,
@@ -48,7 +48,7 @@ export default function LivePage() {
     openCreate,
     openEdit,
     load,
-  } = useLive()
+  } = useLiveTV()
 
   return (
     <PageContainer>
@@ -87,7 +87,7 @@ export default function LivePage() {
           )}
           {list.length > 0 ? (
             <>
-              <LiveList list={list} onEdit={openEdit} onDelete={setDeleteId} />
+              <LiveTVList list={list} onEdit={openEdit} onDelete={setDeleteId} />
               <Pagination
                 page={page}
                 total={total}
@@ -109,7 +109,7 @@ export default function LivePage() {
         </CardContent>
       </Card>
 
-      <LiveDialog
+      <LiveTVDialog
         open={dialogOpen}
         onOpenChange={closeDialog}
         title={editId ? '编辑直播频道' : '新增直播频道'}
@@ -147,9 +147,9 @@ export default function LivePage() {
             </DialogHeader>
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="live-sync-url">直播源地址</FieldLabel>
+                <FieldLabel htmlFor="livetv-sync-url">直播源地址</FieldLabel>
                 <Input
-                  id="live-sync-url"
+                  id="livetv-sync-url"
                   placeholder="请输入直播源文件地址，支持 txt 和 m3u 格式，如 https://example.com/live.txt"
                   value={syncUrl}
                   onChange={(e) => setSyncUrl(e.target.value)}

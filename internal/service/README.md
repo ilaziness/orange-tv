@@ -13,14 +13,14 @@ service/
 │   ├── video.go
 │   ├── metadata.go
 │   ├── play.go
-│   ├── live.go
+│   ├── livetv.go
 │   ├── settings.go      # 管理端设置服务（按组别获取/更新）
 │   └── collect.go       # 采集源/任务/日志 + cron 调度
 ├── client/              # 用户端业务（只读浏览/搜索/播放辅助）
 │   ├── category.go
 │   ├── video.go         # 含 related / 搜索增强
 │   ├── settings.go      # 客户端设置服务（白名单过滤）
-│   └── live.go
+│   └── livetv.go
 └── open/                # 开放 API 业务
     └── resource.go      # 第三方资源站接口（仅判断是否允许采集）
 ```

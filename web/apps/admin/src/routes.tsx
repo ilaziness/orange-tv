@@ -14,7 +14,7 @@ const TagsPage = lazy(() => import('@/pages/content/tags/TagsPage'))
 const PlaySourcesPage = lazy(() => import('@/pages/content/playSources/PlaySourcesPage'))
 const VideosPage = lazy(() => import('@/pages/content/videos/VideosPage'))
 const VideoEditPage = lazy(() => import('@/pages/content/videos/edit/VideoEditPage'))
-const LivePage = lazy(() => import('@/pages/content/live/LivePage'))
+const LiveTVPage = lazy(() => import('@/pages/content/livetv/LiveTVPage'))
 const CommentsPage = lazy(() => import('@/pages/content/comments/CommentsPage'))
 const CollectPage = lazy(() => import('@/pages/content/collect/CollectPage'))
 const BannersPage = lazy(() => import('@/pages/content/banners/BannersPage'))
@@ -129,10 +129,10 @@ export function AppRoutes() {
             }
           />
           <Route
-            path="/content/live"
+            path="/content/livetv"
             element={
               <Lazy>
-                <LivePage />
+                <LiveTVPage />
               </Lazy>
             }
           />

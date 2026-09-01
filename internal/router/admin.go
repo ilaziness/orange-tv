@@ -74,13 +74,13 @@ func registerAdminContentRoutes(v1 *gin.RouterGroup, h *Handlers) {
 	v1.PUT("/tags/:id", h.AdminMetadata.UpdateTag)
 	v1.DELETE("/tags/:id", h.AdminMetadata.DeleteTag)
 
-	// live
-	v1.GET("/live", h.AdminLive.List)
-	v1.POST("/live", h.AdminLive.Create)
-	v1.PUT("/live/:id", h.AdminLive.Update)
-	v1.DELETE("/live/:id", h.AdminLive.Delete)
-	v1.GET("/live/sync-source", h.AdminLive.GetSyncSource)
-	v1.POST("/live/sync", h.AdminLive.Sync)
+	// livetv
+	v1.GET("/livetv", h.AdminLiveTV.List)
+	v1.POST("/livetv", h.AdminLiveTV.Create)
+	v1.PUT("/livetv/:id", h.AdminLiveTV.Update)
+	v1.DELETE("/livetv/:id", h.AdminLiveTV.Delete)
+	v1.GET("/livetv/sync-source", h.AdminLiveTV.GetSyncSource)
+	v1.POST("/livetv/sync", h.AdminLiveTV.Sync)
 
 	// comments
 	v1.GET("/comments", h.AdminComment.List)

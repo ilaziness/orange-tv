@@ -20,8 +20,8 @@ type SiteSettings struct {
 
 // FeatureSettings holds client feature toggle settings.
 type FeatureSettings struct {
-	// 是否启用直播功能
-	LiveEnabled bool `json:"live_enabled"`
+	// 是否启用电视直播功能
+	LiveTVEnabled bool `json:"livetv_enabled"`
 	// 是否启用评论功能
 	CommentEnabled bool `json:"comment_enabled"`
 	// 评论是否需要审核

@@ -2,25 +2,25 @@ package client
 
 import "github.com/ilaziness/orange-tv/internal/dto"
 
-// LiveListRequest filters public live channel list.
+// LiveTVListRequest filters public livetv channel list.
 // 一次性返回所有在线频道，Category 仅用于前端按分类筛选时复用同一接口。
-type LiveListRequest struct {
+type LiveTVListRequest struct {
 	dto.PaginationRequest
 	// 分类筛选（可选）
 	Category string `form:"category"`
 }
 
-// LivePlayRequest binds the live play URI id and optional segment URL query param.
-type LivePlayRequest struct {
+// LiveTVPlayRequest binds the live play URI id and optional segment URL query param.
+type LiveTVPlayRequest struct {
 	// 频道ID（路径参数）
 	ID uint32 `uri:"id" binding:"required,gt=0"`
 	// 分片 URL，用于代理具体分片（可选）
 	U string `form:"u"`
 }
 
-// LiveChannelItem is a live channel payload for client (no status).
+// LiveTVChannelItem is a live channel payload for client (no status).
 // StreamURL 仅 app/tv/desktop 端返回，web 端为空且 omitempty 隐藏。
-type LiveChannelItem struct {
+type LiveTVChannelItem struct {
 	// 频道ID
 	ID uint32 `json:"id"`
 	// 频道名称

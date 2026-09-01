@@ -15,58 +15,58 @@ import (
 	"go.uber.org/zap"
 )
 
-type stubLiveRepo struct {
-	items []model.LiveChannels
+type stubLiveTVRepo struct {
+	items []model.LivetvChannels
 }
 
-func (r *stubLiveRepo) List(ctx context.Context, f repository.LiveListFilter) ([]model.LiveChannels, int, error) {
+func (r *stubLiveTVRepo) List(ctx context.Context, f repository.LiveTVListFilter) ([]model.LivetvChannels, int, error) {
 	return nil, 0, nil
 }
 
-func (r *stubLiveRepo) ListAll(ctx context.Context) ([]model.LiveChannels, error) {
+func (r *stubLiveTVRepo) ListAll(ctx context.Context) ([]model.LivetvChannels, error) {
 	return r.items, nil
 }
 
-func (r *stubLiveRepo) GetByID(ctx context.Context, id uint32) (*model.LiveChannels, error) {
+func (r *stubLiveTVRepo) GetByID(ctx context.Context, id uint32) (*model.LivetvChannels, error) {
 	return nil, nil
 }
 
-func (r *stubLiveRepo) Create(ctx context.Context, m *model.LiveChannels) error {
+func (r *stubLiveTVRepo) Create(ctx context.Context, m *model.LivetvChannels) error {
 	return nil
 }
 
-func (r *stubLiveRepo) BatchCreate(ctx context.Context, items []model.LiveChannels) error {
+func (r *stubLiveTVRepo) BatchCreate(ctx context.Context, items []model.LivetvChannels) error {
 	return nil
 }
 
-func (r *stubLiveRepo) Update(ctx context.Context, m *model.LiveChannels) error {
+func (r *stubLiveTVRepo) Update(ctx context.Context, m *model.LivetvChannels) error {
 	return nil
 }
 
-func (r *stubLiveRepo) Delete(ctx context.Context, id uint32) error {
+func (r *stubLiveTVRepo) Delete(ctx context.Context, id uint32) error {
 	return nil
 }
 
-func (r *stubLiveRepo) DeleteByIDs(ctx context.Context, ids []uint32) error {
+func (r *stubLiveTVRepo) DeleteByIDs(ctx context.Context, ids []uint32) error {
 	return nil
 }
 
-func newTestLiveService(t *testing.T) *liveService {
+func newTestLiveTVService(t *testing.T) *liveTVService {
 	t.Helper()
 	mgr := cache.NewManager(pkgcache.NewNopCache())
-	return newLiveServiceWithCache(t, mgr)
+	return newLiveTVServiceWithCache(t, mgr)
 }
 
-func newLiveServiceWithCache(t *testing.T, mgr *cache.Manager) *liveService {
+func newLiveTVServiceWithCache(t *testing.T, mgr *cache.Manager) *liveTVService {
 	t.Helper()
-	svc := NewLiveService(&stubLiveRepo{
-		items: []model.LiveChannels{
+	svc := NewLiveTVService(&stubLiveTVRepo{
+		items: []model.LivetvChannels{
 			{ID: 1, Name: "CCTV1", Category: "央视", StreamURL: "http://example.com/cctv1.m3u8", Status: 1, SortOrder: 1},
 			{ID: 2, Name: "HBO", Category: "国际", StreamURL: "http://example.com/hbo.flv", Status: 1, SortOrder: 2},
 			{ID: 3, Name: "Disabled", Category: "央视", StreamURL: "http://example.com/off.m3u8", Status: 0, SortOrder: 3},
 		},
 	}, mgr, zap.NewNop())
-	return svc.(*liveService)
+	return svc.(*liveTVService)
 }
 
 // mapCache 简单内存缓存实现，用于验证直播缓存按端分 key 的隔离行为。
@@ -86,7 +86,7 @@ func (c *mapCache) Get(ctx context.Context, key string) (any, error) {
 	if !ok {
 		return nil, pkgcache.ErrCacheMiss
 	}
-	var items []clientdto.LiveChannelItem
+	var items []clientdto.LiveTVChannelItem
 	if err := json.Unmarshal(raw, &items); err != nil {
 		return nil, err
 	}

@@ -2,8 +2,8 @@ package admin
 
 import "github.com/ilaziness/orange-tv/internal/dto"
 
-// LiveListRequest filters admin live channel list.
-type LiveListRequest struct {
+// LiveTVListRequest filters admin livetv channel list.
+type LiveTVListRequest struct {
 	dto.PaginationRequest
 	// 频道分类筛选
 	Category string `form:"category"`
@@ -13,8 +13,8 @@ type LiveListRequest struct {
 	Keyword string `form:"keyword"`
 }
 
-// CreateLiveRequest creates a live channel.
-type CreateLiveRequest struct {
+// CreateLiveTVRequest creates a live channel.
+type CreateLiveTVRequest struct {
 	// 频道名称（必填）
 	Name string `json:"name" binding:"required,min=1,max=100"`
 	// 频道分类
@@ -31,8 +31,8 @@ type CreateLiveRequest struct {
 	Status *uint8 `json:"status" binding:"omitempty,oneof=0 1"`
 }
 
-// UpdateLiveRequest updates a live channel.
-type UpdateLiveRequest struct {
+// UpdateLiveTVRequest updates a live channel.
+type UpdateLiveTVRequest struct {
 	// 频道名称
 	Name *string `json:"name" binding:"omitempty,min=1,max=100"`
 	// 频道分类
@@ -49,8 +49,8 @@ type UpdateLiveRequest struct {
 	Status *uint8 `json:"status" binding:"omitempty,oneof=0 1"`
 }
 
-// LiveChannelItem is a live channel payload for admin (includes status, sort_order, stream_url).
-type LiveChannelItem struct {
+// LiveTVChannelItem is a live channel payload for admin (includes status, sort_order, stream_url).
+type LiveTVChannelItem struct {
 	// 频道ID
 	ID uint32 `json:"id"`
 	// 频道名称
@@ -69,8 +69,8 @@ type LiveChannelItem struct {
 	Status uint8 `json:"status"`
 }
 
-// LiveSyncResult is the result of a live source synchronization.
-type LiveSyncResult struct {
+// LiveTVSyncResult is the result of a live source synchronization.
+type LiveTVSyncResult struct {
 	// 总计频道数
 	Total int `json:"total"`
 	// 新增频道数
@@ -81,14 +81,14 @@ type LiveSyncResult struct {
 	Deleted int `json:"deleted"`
 }
 
-// LiveSyncSourceResponse returns the last saved live source URL.
-type LiveSyncSourceResponse struct {
+// LiveTVSyncSourceResponse returns the last saved live source URL.
+type LiveTVSyncSourceResponse struct {
 	// 直播源地址
 	SourceURL string `json:"source_url"`
 }
 
-// LiveSyncRequest is the request body for live source synchronization.
-type LiveSyncRequest struct {
+// LiveTVSyncRequest is the request body for live source synchronization.
+type LiveTVSyncRequest struct {
 	// 直播源地址（必填，合法 URL）
 	SourceURL string `json:"source_url" binding:"required,url,min=1,max=2000"`
 }

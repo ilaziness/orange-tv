@@ -14,34 +14,34 @@ import (
 	"go.uber.org/zap"
 )
 
-// LiveService manages live channels for admin.
-type LiveService interface {
-	List(ctx context.Context, req *admindto.LiveListRequest) ([]admindto.LiveChannelItem, int, error)
-	Create(ctx context.Context, req *admindto.CreateLiveRequest) (*admindto.LiveChannelItem, error)
-	Update(ctx context.Context, id uint32, req *admindto.UpdateLiveRequest) (*admindto.LiveChannelItem, error)
+// LiveTVService manages livetv channels for admin.
+type LiveTVService interface {
+	List(ctx context.Context, req *admindto.LiveTVListRequest) ([]admindto.LiveTVChannelItem, int, error)
+	Create(ctx context.Context, req *admindto.CreateLiveTVRequest) (*admindto.LiveTVChannelItem, error)
+	Update(ctx context.Context, id uint32, req *admindto.UpdateLiveTVRequest) (*admindto.LiveTVChannelItem, error)
 	Delete(ctx context.Context, id uint32) error
-	SyncFromSource(ctx context.Context, sourceURL string) (*admindto.LiveSyncResult, error)
+	SyncFromSource(ctx context.Context, sourceURL string) (*admindto.LiveTVSyncResult, error)
 	GetSyncSourceURL(ctx context.Context) (string, error)
 	SaveSyncSourceURL(ctx context.Context, sourceURL string) error
 }
 
-type liveService struct {
-	repo     repository.LiveRepository
+type liveTVService struct {
+	repo     repository.LiveTVRepository
 	cache    *cache.Manager
 	settings service.SettingsService
 	log      *zap.Logger
 }
 
-// NewLiveService creates a LiveService.
-func NewLiveService(repo repository.LiveRepository, c *cache.Manager, settings service.SettingsService, log *zap.Logger) LiveService {
+// NewLiveTVService creates a LiveTVService.
+func NewLiveTVService(repo repository.LiveTVRepository, c *cache.Manager, settings service.SettingsService, log *zap.Logger) LiveTVService {
 	if log == nil {
 		log = zap.NewNop()
 	}
-	return &liveService{repo: repo, cache: c, settings: settings, log: log}
+	return &liveTVService{repo: repo, cache: c, settings: settings, log: log}
 }
 
-func (s *liveService) List(ctx context.Context, req *admindto.LiveListRequest) ([]admindto.LiveChannelItem, int, error) {
-	items, total, err := s.repo.List(ctx, repository.LiveListFilter{
+func (s *liveTVService) List(ctx context.Context, req *admindto.LiveTVListRequest) ([]admindto.LiveTVChannelItem, int, error) {
+	items, total, err := s.repo.List(ctx, repository.LiveTVListFilter{
 		Category: strings.TrimSpace(req.Category),
 		Keyword:  strings.TrimSpace(req.Keyword),
 		Status:   req.Status,
@@ -49,13 +49,13 @@ func (s *liveService) List(ctx context.Context, req *admindto.LiveListRequest) (
 		Limit:    req.GetLimit(),
 	})
 	if err != nil {
-		s.log.Error("live: list failed", zap.Error(err))
+		s.log.Error("livetv: list failed", zap.Error(err))
 		return nil, 0, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	return mapLiveItems(items, true), total, nil
+	return mapLiveTVItems(items, true), total, nil
 }
 
-func (s *liveService) Create(ctx context.Context, req *admindto.CreateLiveRequest) (*admindto.LiveChannelItem, error) {
+func (s *liveTVService) Create(ctx context.Context, req *admindto.CreateLiveTVRequest) (*admindto.LiveTVChannelItem, error) {
 	name := strings.TrimSpace(req.Name)
 	streamURL := strings.TrimSpace(req.StreamURL)
 	if name == "" {
@@ -69,7 +69,7 @@ func (s *liveService) Create(ctx context.Context, req *admindto.CreateLiveReques
 		status = *req.Status
 	}
 	desc := strings.TrimSpace(req.Description)
-	item := &model.LiveChannels{
+	item := &model.LivetvChannels{
 		Name:        name,
 		Category:    strings.TrimSpace(req.Category),
 		StreamURL:   streamURL,
@@ -79,22 +79,22 @@ func (s *liveService) Create(ctx context.Context, req *admindto.CreateLiveReques
 		Status:      status,
 	}
 	if err := s.repo.Create(ctx, item); err != nil {
-		s.log.Error("live: create failed", zap.String("name", name), zap.Error(err))
+		s.log.Error("livetv: create failed", zap.String("name", name), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	s.cache.InvalidateLive(ctx)
-	out := toLiveItem(item, true)
+	s.cache.InvalidateLiveTV(ctx)
+	out := toLiveTVItem(item, true)
 	return &out, nil
 }
 
-func (s *liveService) Update(ctx context.Context, id uint32, req *admindto.UpdateLiveRequest) (*admindto.LiveChannelItem, error) {
+func (s *liveTVService) Update(ctx context.Context, id uint32, req *admindto.UpdateLiveTVRequest) (*admindto.LiveTVChannelItem, error) {
 	item, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		s.log.Error("live: get by id failed", zap.Uint32("live_id", id), zap.Error(err))
+		s.log.Error("livetv: get by id failed", zap.Uint32("livetv_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if item == nil {
-		return nil, errcode.LiveChannelNotFound
+		return nil, errcode.LiveTVChannelNotFound
 	}
 	if req.Name != nil {
 		name := strings.TrimSpace(*req.Name)
@@ -126,41 +126,41 @@ func (s *liveService) Update(ctx context.Context, id uint32, req *admindto.Updat
 		item.Status = *req.Status
 	}
 	if err := s.repo.Update(ctx, item); err != nil {
-		s.log.Error("live: update failed", zap.Uint32("live_id", id), zap.Error(err))
+		s.log.Error("livetv: update failed", zap.Uint32("livetv_id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	s.cache.InvalidateLive(ctx)
-	out := toLiveItem(item, true)
+	s.cache.InvalidateLiveTV(ctx)
+	out := toLiveTVItem(item, true)
 	return &out, nil
 }
 
-func (s *liveService) Delete(ctx context.Context, id uint32) error {
+func (s *liveTVService) Delete(ctx context.Context, id uint32) error {
 	item, err := s.repo.GetByID(ctx, id)
 	if err != nil {
-		s.log.Error("live: get by id for delete failed", zap.Uint32("live_id", id), zap.Error(err))
+		s.log.Error("livetv: get by id for delete failed", zap.Uint32("livetv_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
 	if item == nil {
-		return errcode.LiveChannelNotFound
+		return errcode.LiveTVChannelNotFound
 	}
 	if err := s.repo.Delete(ctx, id); err != nil {
-		s.log.Error("live: delete failed", zap.Uint32("live_id", id), zap.Error(err))
+		s.log.Error("livetv: delete failed", zap.Uint32("livetv_id", id), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
-	s.cache.InvalidateLive(ctx)
+	s.cache.InvalidateLiveTV(ctx)
 	return nil
 }
 
-func mapLiveItems(items []model.LiveChannels, withStatus bool) []admindto.LiveChannelItem {
-	out := make([]admindto.LiveChannelItem, 0, len(items))
+func mapLiveTVItems(items []model.LivetvChannels, withStatus bool) []admindto.LiveTVChannelItem {
+	out := make([]admindto.LiveTVChannelItem, 0, len(items))
 	for i := range items {
-		out = append(out, toLiveItem(&items[i], withStatus))
+		out = append(out, toLiveTVItem(&items[i], withStatus))
 	}
 	return out
 }
 
-func toLiveItem(m *model.LiveChannels, withStatus bool) admindto.LiveChannelItem {
-	item := admindto.LiveChannelItem{
+func toLiveTVItem(m *model.LivetvChannels, withStatus bool) admindto.LiveTVChannelItem {
+	item := admindto.LiveTVChannelItem{
 		ID:          m.ID,
 		Name:        m.Name,
 		Category:    m.Category,
@@ -175,66 +175,66 @@ func toLiveItem(m *model.LiveChannels, withStatus bool) admindto.LiveChannelItem
 	return item
 }
 
-func (s *liveService) GetSyncSourceURL(ctx context.Context) (string, error) {
-	m, err := s.settings.LoadMapByGroup(ctx, constant.SettingGroupLive)
+func (s *liveTVService) GetSyncSourceURL(ctx context.Context) (string, error) {
+	m, err := s.settings.LoadMapByGroup(ctx, constant.SettingGroupLiveTV)
 	if err != nil {
-		s.log.Error("live: load sync source url failed", zap.Error(err))
+		s.log.Error("livetv: load sync source url failed", zap.Error(err))
 		return "", errcode.Wrap(errcode.DatabaseError, err)
 	}
-	return service.StrVal(m, constant.SettingLiveSyncSourceURL), nil
+	return service.StrVal(m, constant.SettingLiveTVSyncSourceURL), nil
 }
 
-func (s *liveService) SaveSyncSourceURL(ctx context.Context, sourceURL string) error {
+func (s *liveTVService) SaveSyncSourceURL(ctx context.Context, sourceURL string) error {
 	url := strings.TrimSpace(sourceURL)
 	if url == "" {
 		return errcode.WithMessage(errcode.ParamError, "直播源地址不能为空")
 	}
-	if err := s.settings.UpsertMany(ctx, constant.SettingGroupLive, []repository.SettingUpsert{{
-		Key:         constant.SettingLiveSyncSourceURL,
-		Group:       constant.SettingGroupLive,
+	if err := s.settings.UpsertMany(ctx, constant.SettingGroupLiveTV, []repository.SettingUpsert{{
+		Key:         constant.SettingLiveTVSyncSourceURL,
+		Group:       constant.SettingGroupLiveTV,
 		Value:       url,
 		SettingType: constant.SettingTypeString,
 		Description: "直播源同步地址",
 	}}); err != nil {
-		s.log.Error("live: save sync source url failed", zap.String("url", url), zap.Error(err))
+		s.log.Error("livetv: save sync source url failed", zap.String("url", url), zap.Error(err))
 		return err
 	}
 	return nil
 }
 
-func (s *liveService) SyncFromSource(ctx context.Context, sourceURL string) (*admindto.LiveSyncResult, error) {
+func (s *liveTVService) SyncFromSource(ctx context.Context, sourceURL string) (*admindto.LiveTVSyncResult, error) {
 	sourceURL = strings.TrimSpace(sourceURL)
 	parser, err := selectParser(sourceURL)
 	if err != nil {
-		s.log.Error("live: select parser failed", zap.String("url", sourceURL), zap.Error(err))
-		return nil, errcode.WithMessage(errcode.LiveSyncFailed, err.Error())
+		s.log.Error("livetv: select parser failed", zap.String("url", sourceURL), zap.Error(err))
+		return nil, errcode.WithMessage(errcode.LiveTVSyncFailed, err.Error())
 	}
 
-	raw, err := fetchLiveSource(ctx, sourceURL)
+	raw, err := fetchLiveTVSource(ctx, sourceURL)
 	if err != nil {
-		s.log.Error("live: fetch from source failed", zap.String("url", sourceURL), zap.Error(err))
-		return nil, errcode.WithMessage(errcode.LiveSyncFailed, err.Error())
+		s.log.Error("livetv: fetch from source failed", zap.String("url", sourceURL), zap.Error(err))
+		return nil, errcode.WithMessage(errcode.LiveTVSyncFailed, err.Error())
 	}
 
 	entries := parser.Parse(raw)
 	if len(entries) == 0 {
-		s.log.Warn("live: no entries parsed from source", zap.String("url", sourceURL))
-		return nil, errcode.WithMessage(errcode.LiveSyncFailed, "no valid entries parsed from source")
+		s.log.Warn("livetv: no entries parsed from source", zap.String("url", sourceURL))
+		return nil, errcode.WithMessage(errcode.LiveTVSyncFailed, "no valid entries parsed from source")
 	}
 
 	existing, err := s.repo.ListAll(ctx)
 	if err != nil {
-		s.log.Error("live: list all for sync failed", zap.Error(err))
+		s.log.Error("livetv: list all for sync failed", zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 
-	existingMap := make(map[string]*model.LiveChannels, len(existing))
+	existingMap := make(map[string]*model.LivetvChannels, len(existing))
 	for i := range existing {
 		existingMap[existing[i].Name] = &existing[i]
 	}
 
 	seenNames := make(map[string]bool, len(entries))
-	var toCreate []model.LiveChannels
+	var toCreate []model.LivetvChannels
 	var toDeleteIDs []uint32
 
 	for _, entry := range entries {
@@ -249,11 +249,11 @@ func (s *liveService) SyncFromSource(ctx context.Context, sourceURL string) (*ad
 			item.Logo = strings.TrimSpace(entry.Logo)
 			item.SortOrder = entry.SortOrder
 			if err := s.repo.Update(ctx, item); err != nil {
-				s.log.Error("live: sync update failed", zap.String("name", name), zap.Error(err))
+				s.log.Error("livetv: sync update failed", zap.String("name", name), zap.Error(err))
 				return nil, errcode.Wrap(errcode.DatabaseError, err)
 			}
 		} else {
-			toCreate = append(toCreate, model.LiveChannels{
+			toCreate = append(toCreate, model.LivetvChannels{
 				Name:      name,
 				Category:  strings.TrimSpace(entry.Category),
 				StreamURL: strings.TrimSpace(entry.StreamURL),
@@ -271,16 +271,16 @@ func (s *liveService) SyncFromSource(ctx context.Context, sourceURL string) (*ad
 	}
 
 	if err := s.repo.BatchCreate(ctx, toCreate); err != nil {
-		s.log.Error("live: sync batch create failed", zap.Int("count", len(toCreate)), zap.Error(err))
+		s.log.Error("livetv: sync batch create failed", zap.Int("count", len(toCreate)), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 
 	if err := s.repo.DeleteByIDs(ctx, toDeleteIDs); err != nil {
-		s.log.Error("live: sync delete by ids failed", zap.Int("count", len(toDeleteIDs)), zap.Error(err))
+		s.log.Error("livetv: sync delete by ids failed", zap.Int("count", len(toDeleteIDs)), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 
-	result := &admindto.LiveSyncResult{
+	result := &admindto.LiveTVSyncResult{
 		Total:   len(entries),
 		Created: len(toCreate),
 		Updated: len(entries) - len(toCreate),
@@ -288,6 +288,6 @@ func (s *liveService) SyncFromSource(ctx context.Context, sourceURL string) (*ad
 	}
 	// 同步会批量增删改，按分类精确失效成本高，直接清空直播列表缓存；
 	// 缓存会在下次访问时按需重建。
-	s.cache.InvalidateLive(ctx)
+	s.cache.InvalidateLiveTV(ctx)
 	return result, nil
 }

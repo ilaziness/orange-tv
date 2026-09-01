@@ -16,9 +16,9 @@ import {
   type CollectLog,
   type CollectSource,
   type DashboardData,
-  type LiveChannel,
-  type LiveSyncResult,
-  type LiveSyncSourceResponse,
+  type LiveTVChannel,
+  type LiveTVSyncResult,
+  type LiveTVSyncSourceResponse,
   type AppLogListResponse,
   type BatchUpdateExecuteResult,
   type BatchUpdatePreviewResult,
@@ -202,21 +202,21 @@ export const adminApi = {
       apiPost<{ affected: number }>(ADMIN_API_BASE, '/play-episodes/batch-status', body, { token }),
     ),
 
-  listLive: (query?: Record<string, string | number | undefined>) =>
-    withAuth((token) => apiGet<PageData<LiveChannel>>(ADMIN_API_BASE, '/live', { token, query })),
-  createLive: (body: unknown) =>
-    withAuth((token) => apiPost<LiveChannel>(ADMIN_API_BASE, '/live', body, { token })),
-  updateLive: (id: number, body: unknown) =>
-    withAuth((token) => apiPut<LiveChannel>(ADMIN_API_BASE, `/live/${id}`, body, { token })),
-  deleteLive: (id: number) =>
-    withAuth((token) => apiDelete(ADMIN_API_BASE, `/live/${id}`, { token })),
-  syncLiveSource: (sourceUrl: string) =>
+  listLiveTV: (query?: Record<string, string | number | undefined>) =>
+    withAuth((token) => apiGet<PageData<LiveTVChannel>>(ADMIN_API_BASE, '/livetv', { token, query })),
+  createLiveTV: (body: unknown) =>
+    withAuth((token) => apiPost<LiveTVChannel>(ADMIN_API_BASE, '/livetv', body, { token })),
+  updateLiveTV: (id: number, body: unknown) =>
+    withAuth((token) => apiPut<LiveTVChannel>(ADMIN_API_BASE, `/livetv/${id}`, body, { token })),
+  deleteLiveTV: (id: number) =>
+    withAuth((token) => apiDelete(ADMIN_API_BASE, `/livetv/${id}`, { token })),
+  syncLiveTVSource: (sourceUrl: string) =>
     withAuth((token) =>
-      apiPost<LiveSyncResult>(ADMIN_API_BASE, '/live/sync', { source_url: sourceUrl }, { token }),
+      apiPost<LiveTVSyncResult>(ADMIN_API_BASE, '/livetv/sync', { source_url: sourceUrl }, { token }),
     ),
-  getLiveSyncSource: () =>
+  getLiveTVSyncSource: () =>
     withAuth((token) =>
-      apiGet<LiveSyncSourceResponse>(ADMIN_API_BASE, '/live/sync-source', { token }),
+      apiGet<LiveTVSyncSourceResponse>(ADMIN_API_BASE, '/livetv/sync-source', { token }),
     ),
 
   listCollectSources: (query?: Record<string, string | number | undefined>) =>

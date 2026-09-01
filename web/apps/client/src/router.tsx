@@ -16,7 +16,7 @@ const routes: RouteObject[] = [
           { path: 'videos', lazy: () => import('@/pages/videos/VideosPage') },
           { path: 'video/:id', lazy: () => import('@/pages/video/VideoDetailPage') },
           { path: 'play/:id/:sourceId/:episodeId', lazy: () => import('@/pages/video/PlayPage') },
-          { path: 'live', lazy: () => import('@/pages/live/LivePage') },
+          { path: 'livetv', lazy: () => import('@/pages/livetv/LiveTVPage') },
           { path: 'login', lazy: () => import('@/pages/auth/LoginPage') },
           { path: 'register', lazy: () => import('@/pages/auth/RegisterPage') },
           {

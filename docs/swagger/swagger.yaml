@@ -631,7 +631,7 @@ definitions:
     - play_source_id
     - type
     type: object
-  admin.CreateLiveRequest:
+  admin.CreateLiveTVRequest:
     properties:
       category:
         description: 频道分类
@@ -915,7 +915,7 @@ definitions:
         description: 视频总数
         type: integer
     type: object
-  admin.LiveChannelItem:
+  admin.LiveTVChannelItem:
     properties:
       category:
         description: 频道分类
@@ -942,7 +942,7 @@ definitions:
         description: 播放流地址
         type: string
     type: object
-  admin.LiveSyncRequest:
+  admin.LiveTVSyncRequest:
     properties:
       source_url:
         description: 直播源地址（必填，合法 URL）
@@ -952,7 +952,7 @@ definitions:
     required:
     - source_url
     type: object
-  admin.LiveSyncResult:
+  admin.LiveTVSyncResult:
     properties:
       created:
         description: 新增频道数
@@ -967,7 +967,7 @@ definitions:
         description: 更新频道数
         type: integer
     type: object
-  admin.LiveSyncSourceResponse:
+  admin.LiveTVSyncSourceResponse:
     properties:
       source_url:
         description: 直播源地址
@@ -1338,7 +1338,7 @@ definitions:
     required:
     - status
     type: object
-  admin.UpdateLiveRequest:
+  admin.UpdateLiveTVRequest:
     properties:
       category:
         description: 频道分类
@@ -2054,7 +2054,7 @@ definitions:
         description: 上映年份
         type: string
     type: object
-  client.LiveChannelItem:
+  client.LiveTVChannelItem:
     properties:
       category:
         description: 频道分类
@@ -4393,7 +4393,7 @@ paths:
       summary: 更新用户组
       tags:
       - 管理端｜用户组管理
-  /api/admin/v1/live:
+  /api/admin/v1/livetv:
     get:
       consumes:
       - application/json
@@ -4444,7 +4444,7 @@ paths:
                   - properties:
                       list:
                         items:
-                          $ref: '#/definitions/admin.LiveChannelItem'
+                          $ref: '#/definitions/admin.LiveTVChannelItem'
                         type: array
                     type: object
               type: object
@@ -4463,7 +4463,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/admin.CreateLiveRequest'
+          $ref: '#/definitions/admin.CreateLiveTVRequest'
       produces:
       - application/json
       responses:
@@ -4474,14 +4474,14 @@ paths:
             - $ref: '#/definitions/response.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/admin.LiveChannelItem'
+                  $ref: '#/definitions/admin.LiveTVChannelItem'
               type: object
       security:
       - BearerAuth: []
       summary: 新建直播频道
       tags:
       - 管理端｜直播管理
-  /api/admin/v1/live/{id}:
+  /api/admin/v1/livetv/{id}:
     delete:
       description: 删除指定直播频道
       parameters:
@@ -4517,7 +4517,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/admin.UpdateLiveRequest'
+          $ref: '#/definitions/admin.UpdateLiveTVRequest'
       produces:
       - application/json
       responses:
@@ -4528,14 +4528,14 @@ paths:
             - $ref: '#/definitions/response.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/admin.LiveChannelItem'
+                  $ref: '#/definitions/admin.LiveTVChannelItem'
               type: object
       security:
       - BearerAuth: []
       summary: 更新直播频道
       tags:
       - 管理端｜直播管理
-  /api/admin/v1/live/sync:
+  /api/admin/v1/livetv/sync:
     post:
       consumes:
       - application/json
@@ -4546,7 +4546,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/admin.LiveSyncRequest'
+          $ref: '#/definitions/admin.LiveTVSyncRequest'
       produces:
       - application/json
       responses:
@@ -4557,14 +4557,14 @@ paths:
             - $ref: '#/definitions/response.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/admin.LiveSyncResult'
+                  $ref: '#/definitions/admin.LiveTVSyncResult'
               type: object
       security:
       - BearerAuth: []
       summary: 同步直播源
       tags:
       - 管理端｜直播管理
-  /api/admin/v1/live/sync-source:
+  /api/admin/v1/livetv/sync-source:
     get:
       description: 返回 system_settings 中保存的最近一次直播源同步地址
       produces:
@@ -4577,7 +4577,7 @@ paths:
             - $ref: '#/definitions/response.Response'
             - properties:
                 data:
-                  $ref: '#/definitions/admin.LiveSyncSourceResponse'
+                  $ref: '#/definitions/admin.LiveTVSyncSourceResponse'
               type: object
       security:
       - BearerAuth: []
@@ -6251,11 +6251,11 @@ paths:
       summary: 获取单条播放历史
       tags:
       - 用户端｜用户中心
-  /api/client/v1/live:
+  /api/client/v1/livetv:
     get:
       consumes:
       - application/json
-      description: '分页获取直播频道列表。web 端不返回 stream_url（走 /live/play/:id 代理播放）；app/tv/desktop
+      description: '分页获取直播频道列表。web 端不返回 stream_url（走 /livetv/play/:id 代理播放）；app/tv/desktop
         端（X-Client-Type: app|tv|desktop 或对应 UA）额外返回 stream_url 字段。'
       parameters:
       - description: 分类筛选（可选）
@@ -6295,14 +6295,14 @@ paths:
                   - properties:
                       list:
                         items:
-                          $ref: '#/definitions/client.LiveChannelItem'
+                          $ref: '#/definitions/client.LiveTVChannelItem'
                         type: array
                     type: object
               type: object
       summary: 直播频道列表
       tags:
       - 用户端｜直播观看
-  /api/client/v1/live/play/{id}:
+  /api/client/v1/livetv/play/{id}:
     get:
       description: 代理指定直播频道的播放流
       parameters:

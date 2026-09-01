@@ -2,11 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type * as React from 'react'
 import { z } from 'zod'
 import { adminApi, errorMessage } from '@/lib/api'
-import type { LiveChannel } from '@orange-tv/shared'
+import type { LiveTVChannel } from '@orange-tv/shared'
 import { toast } from 'sonner'
 import { DEFAULT_PAGE_SIZE } from '@/lib/constants'
 
-const liveSchema = z.object({
+const liveTVSchema = z.object({
   name: z.string().min(1, '频道名称不能为空'),
   category: z.string(),
   stream_url: z.string().min(1, '直播流地址不能为空'),
@@ -26,10 +26,10 @@ export const emptyForm = {
   status: '1',
 }
 
-export type LiveFormState = typeof emptyForm
+export type LiveTVFormState = typeof emptyForm
 
-export function useLive() {
-  const [list, setList] = useState<LiveChannel[]>([])
+export function useLiveTV() {
+  const [list, setList] = useState<LiveTVChannel[]>([])
   const [error, setError] = useState('')
   const [dialogError, setDialogError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -54,7 +54,7 @@ export function useLive() {
     setLoading(true)
     setError('')
     try {
-      const res = await adminApi.listLive({ page: p, page_size: DEFAULT_PAGE_SIZE })
+      const res = await adminApi.listLiveTV({ page: p, page_size: DEFAULT_PAGE_SIZE })
       setList(res.data.list || [])
       setTotal(res.data.total || 0)
       setPage(res.data.page || p)
@@ -72,7 +72,7 @@ export function useLive() {
   async function onSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
     setDialogError('')
-    const result = liveSchema.safeParse(form)
+    const result = liveTVSchema.safeParse(form)
     if (!result.success) {
       setDialogError(result.error.issues[0]?.message || '表单校验失败')
       return
@@ -80,10 +80,10 @@ export function useLive() {
     setSubmitting(true)
     try {
       if (editId) {
-        await adminApi.updateLive(editId, result.data)
+        await adminApi.updateLiveTV(editId, result.data)
         toast.success('直播频道已更新')
       } else {
-        await adminApi.createLive(result.data)
+        await adminApi.createLiveTV(result.data)
         toast.success('直播频道已创建')
       }
       setForm(emptyForm)
@@ -101,7 +101,7 @@ export function useLive() {
     if (deleteId === null) return
     setDeleting(true)
     try {
-      await adminApi.deleteLive(deleteId)
+      await adminApi.deleteLiveTV(deleteId)
       toast.success('直播频道已删除')
       await load(page)
     } catch (err) {
@@ -121,7 +121,7 @@ export function useLive() {
     setSyncDialogOpen(false)
     setSyncing(true)
     try {
-      const res = await adminApi.syncLiveSource(url)
+      const res = await adminApi.syncLiveTVSource(url)
       toast.success(
         `同步完成：共 ${res.data.total} 条，新增 ${res.data.created}，更新 ${res.data.updated}，删除 ${res.data.deleted}`,
       )
@@ -137,7 +137,7 @@ export function useLive() {
   async function openSyncDialog() {
     setSyncDialogOpen(true)
     try {
-      const res = await adminApi.getLiveSyncSource()
+      const res = await adminApi.getLiveTVSyncSource()
       setSyncUrl(res.data.source_url || '')
     } catch {
       setSyncUrl('')
@@ -158,7 +158,7 @@ export function useLive() {
     setDialogOpen(true)
   }
 
-  function openEdit(item: LiveChannel) {
+  function openEdit(item: LiveTVChannel) {
     setEditId(item.id)
     setForm({
       name: item.name,

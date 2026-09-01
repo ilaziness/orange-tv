@@ -71,8 +71,8 @@ var (
 	AdKeyExists = &Code{4000091, "广告标识已存在", 409, nil}
 
 	// 直播 (40007xx)
-	LiveChannelNotFound = &Code{4000070, "直播频道不存在", 404, nil}
-	LiveSyncFailed      = &Code{4000071, "直播源同步失败", 502, nil}
+	LiveTVChannelNotFound = &Code{4000070, "直播频道不存在", 404, nil}
+	LiveTVSyncFailed      = &Code{4000071, "直播源同步失败", 502, nil}
 
 	// 采集 (40008xx)
 	CollectSourceNotFound       = &Code{4000080, "采集源不存在", 404, nil}

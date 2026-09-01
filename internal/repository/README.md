@@ -11,7 +11,7 @@ repository/
 ├── video.go
 ├── metadata.go
 ├── play.go              # WithTx 支持采集入库同事务写剧集
-├── live.go
+├── livetv.go
 └── collect.go
 ```
 

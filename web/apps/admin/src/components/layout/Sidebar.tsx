@@ -36,7 +36,7 @@ const contentMenus = [
   { to: '/content/categories', label: '分类管理', icon: FolderTree },
   { to: '/content/play-sources', label: '播放源管理', icon: PlayCircle },
   { to: '/content/videos', label: '影视管理', icon: Film },
-  { to: '/content/live', label: '电视直播管理', icon: Radio },
+  { to: '/content/livetv', label: '电视直播管理', icon: Radio },
   { to: '/content/collect', label: '数据采集', icon: ScanSearch },
   { to: '/content/directors', label: '导演管理', icon: Clapperboard },
   { to: '/content/actors', label: '演员管理', icon: Drama },

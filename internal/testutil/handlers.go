@@ -25,7 +25,7 @@ type BusinessHandlers struct {
 	AdminVideo     *adminhandler.VideoHandler
 	AdminMetadata  *adminhandler.MetadataHandler
 	AdminPlay      *adminhandler.PlayHandler
-	AdminLive      *adminhandler.LiveHandler
+	AdminLiveTV    *adminhandler.LiveTVHandler
 	AdminComment   *adminhandler.CommentHandler
 	AdminCollect   *adminhandler.CollectHandler
 	AdminSettings  *adminhandler.SettingsHandler
@@ -35,12 +35,12 @@ type BusinessHandlers struct {
 	AdminAd        *adminhandler.AdHandler
 	ClientCategory *clienthandler.CategoryHandler
 	ClientVideo    *clienthandler.VideoHandler
-	ClientLive     *clienthandler.LiveHandler
+	ClientLiveTV   *clienthandler.LiveTVHandler
 	ClientSettings *clienthandler.SettingsHandler
 	ClientUser     *clienthandler.UserHandler
 	ClientBanner   *clienthandler.BannerHandler
 	ClientAd       *clienthandler.AdHandler
-	LiveFeature    gin.HandlerFunc
+	LiveTVFeature  gin.HandlerFunc
 	OpenResource   *openhandler.ResourceHandler
 }
 
@@ -152,18 +152,18 @@ func (s adminPlaySvc) BatchUpdateEpisodeStatus(ctx context.Context, req *admindt
 
 type adminLiveSvc struct{}
 
-func (s adminLiveSvc) List(ctx context.Context, req *admindto.LiveListRequest) ([]admindto.LiveChannelItem, int, error) {
+func (s adminLiveSvc) List(ctx context.Context, req *admindto.LiveTVListRequest) ([]admindto.LiveTVChannelItem, int, error) {
 	return nil, 0, nil
 }
-func (s adminLiveSvc) Create(ctx context.Context, req *admindto.CreateLiveRequest) (*admindto.LiveChannelItem, error) {
-	return &admindto.LiveChannelItem{}, nil
+func (s adminLiveSvc) Create(ctx context.Context, req *admindto.CreateLiveTVRequest) (*admindto.LiveTVChannelItem, error) {
+	return &admindto.LiveTVChannelItem{}, nil
 }
-func (s adminLiveSvc) Update(ctx context.Context, id uint32, req *admindto.UpdateLiveRequest) (*admindto.LiveChannelItem, error) {
-	return &admindto.LiveChannelItem{ID: id}, nil
+func (s adminLiveSvc) Update(ctx context.Context, id uint32, req *admindto.UpdateLiveTVRequest) (*admindto.LiveTVChannelItem, error) {
+	return &admindto.LiveTVChannelItem{ID: id}, nil
 }
 func (s adminLiveSvc) Delete(ctx context.Context, id uint32) error { return nil }
-func (s adminLiveSvc) SyncFromSource(ctx context.Context, sourceURL string) (*admindto.LiveSyncResult, error) {
-	return &admindto.LiveSyncResult{}, nil
+func (s adminLiveSvc) SyncFromSource(ctx context.Context, sourceURL string) (*admindto.LiveTVSyncResult, error) {
+	return &admindto.LiveTVSyncResult{}, nil
 }
 func (s adminLiveSvc) GetSyncSourceURL(ctx context.Context) (string, error) {
 	return "", nil
@@ -265,7 +265,7 @@ func (s clientVideoSvc) GetEpisode(ctx context.Context, videoID, episodeID uint3
 
 type clientLiveSvc struct{}
 
-func (s clientLiveSvc) List(ctx context.Context, req *clientdto.LiveListRequest) ([]clientdto.LiveChannelItem, int, error) {
+func (s clientLiveSvc) List(ctx context.Context, req *clientdto.LiveTVListRequest) ([]clientdto.LiveTVChannelItem, int, error) {
 	return nil, 0, nil
 }
 
@@ -475,7 +475,7 @@ func NewBusinessHandlers() BusinessHandlers {
 		AdminVideo:     adminhandler.NewVideoHandler(adminVideoSvc{}),
 		AdminMetadata:  adminhandler.NewMetadataHandler(adminMetadataSvc{}),
 		AdminPlay:      adminhandler.NewPlayHandler(adminPlaySvc{}),
-		AdminLive:      adminhandler.NewLiveHandler(adminLiveSvc{}),
+		AdminLiveTV:    adminhandler.NewLiveTVHandler(adminLiveSvc{}),
 		AdminComment:   adminhandler.NewCommentHandler(adminCommentSvc{}, nil),
 		AdminCollect:   adminhandler.NewCollectHandler(adminCollectSvc{}),
 		AdminSettings:  adminhandler.NewSettingsHandler(adminSettingsSvc{}, nil),
@@ -485,12 +485,12 @@ func NewBusinessHandlers() BusinessHandlers {
 		AdminAd:        adminhandler.NewAdHandler(adminAdSvc{}),
 		ClientCategory: clienthandler.NewCategoryHandler(clientCategorySvc{}),
 		ClientVideo:    clienthandler.NewVideoHandler(clientVideoSvc{}),
-		ClientLive:     clienthandler.NewLiveHandler(liveSvc, clientLiveProxySvc{}),
+		ClientLiveTV:   clienthandler.NewLiveTVHandler(liveSvc, clientLiveProxySvc{}),
 		ClientSettings: clienthandler.NewSettingsHandler(clientSettingsSvc{}),
 		ClientUser:     clienthandler.NewUserHandler(userSvc),
 		ClientBanner:   clienthandler.NewBannerHandler(bannerSvc),
 		ClientAd:       clienthandler.NewAdHandler(clientAdSvc{}),
-		LiveFeature:    func(c *gin.Context) { c.Next() },
+		LiveTVFeature:  func(c *gin.Context) { c.Next() },
 		OpenResource:   openhandler.NewResourceHandler(openResourceSvc{}),
 	}
 }

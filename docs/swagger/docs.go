@@ -3021,7 +3021,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/admin/v1/live": {
+        "/api/admin/v1/livetv": {
             "get": {
                 "security": [
                     {
@@ -3105,7 +3105,7 @@ const docTemplate = `{
                                                         "list": {
                                                             "type": "array",
                                                             "items": {
-                                                                "$ref": "#/definitions/admin.LiveChannelItem"
+                                                                "$ref": "#/definitions/admin.LiveTVChannelItem"
                                                             }
                                                         }
                                                     }
@@ -3143,7 +3143,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/admin.CreateLiveRequest"
+                            "$ref": "#/definitions/admin.CreateLiveTVRequest"
                         }
                     }
                 ],
@@ -3159,7 +3159,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/admin.LiveChannelItem"
+                                            "$ref": "#/definitions/admin.LiveTVChannelItem"
                                         }
                                     }
                                 }
@@ -3169,7 +3169,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/admin/v1/live/sync": {
+        "/api/admin/v1/livetv/sync": {
             "post": {
                 "security": [
                     {
@@ -3194,7 +3194,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/admin.LiveSyncRequest"
+                            "$ref": "#/definitions/admin.LiveTVSyncRequest"
                         }
                     }
                 ],
@@ -3210,7 +3210,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/admin.LiveSyncResult"
+                                            "$ref": "#/definitions/admin.LiveTVSyncResult"
                                         }
                                     }
                                 }
@@ -3220,7 +3220,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/admin/v1/live/sync-source": {
+        "/api/admin/v1/livetv/sync-source": {
             "get": {
                 "security": [
                     {
@@ -3247,7 +3247,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/admin.LiveSyncSourceResponse"
+                                            "$ref": "#/definitions/admin.LiveTVSyncSourceResponse"
                                         }
                                     }
                                 }
@@ -3257,7 +3257,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/admin/v1/live/{id}": {
+        "/api/admin/v1/livetv/{id}": {
             "put": {
                 "security": [
                     {
@@ -3289,7 +3289,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/admin.UpdateLiveRequest"
+                            "$ref": "#/definitions/admin.UpdateLiveTVRequest"
                         }
                     }
                 ],
@@ -3305,7 +3305,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/admin.LiveChannelItem"
+                                            "$ref": "#/definitions/admin.LiveTVChannelItem"
                                         }
                                     }
                                 }
@@ -6148,9 +6148,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/client/v1/live": {
+        "/api/client/v1/livetv": {
             "get": {
-                "description": "分页获取直播频道列表。web 端不返回 stream_url（走 /live/play/:id 代理播放）；app/tv/desktop 端（X-Client-Type: app|tv|desktop 或对应 UA）额外返回 stream_url 字段。",
+                "description": "分页获取直播频道列表。web 端不返回 stream_url（走 /livetv/play/:id 代理播放）；app/tv/desktop 端（X-Client-Type: app|tv|desktop 或对应 UA）额外返回 stream_url 字段。",
                 "consumes": [
                     "application/json"
                 ],
@@ -6215,7 +6215,7 @@ const docTemplate = `{
                                                         "list": {
                                                             "type": "array",
                                                             "items": {
-                                                                "$ref": "#/definitions/client.LiveChannelItem"
+                                                                "$ref": "#/definitions/client.LiveTVChannelItem"
                                                             }
                                                         }
                                                     }
@@ -6230,7 +6230,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/client/v1/live/play/{id}": {
+        "/api/client/v1/livetv/play/{id}": {
             "get": {
                 "description": "代理指定直播频道的播放流",
                 "produces": [
@@ -8138,7 +8138,7 @@ const docTemplate = `{
                 }
             }
         },
-        "admin.CreateLiveRequest": {
+        "admin.CreateLiveTVRequest": {
             "type": "object",
             "required": [
                 "name",
@@ -8510,7 +8510,7 @@ const docTemplate = `{
                 }
             }
         },
-        "admin.LiveChannelItem": {
+        "admin.LiveTVChannelItem": {
             "type": "object",
             "properties": {
                 "category": {
@@ -8547,7 +8547,7 @@ const docTemplate = `{
                 }
             }
         },
-        "admin.LiveSyncRequest": {
+        "admin.LiveTVSyncRequest": {
             "type": "object",
             "required": [
                 "source_url"
@@ -8561,7 +8561,7 @@ const docTemplate = `{
                 }
             }
         },
-        "admin.LiveSyncResult": {
+        "admin.LiveTVSyncResult": {
             "type": "object",
             "properties": {
                 "created": {
@@ -8582,7 +8582,7 @@ const docTemplate = `{
                 }
             }
         },
-        "admin.LiveSyncSourceResponse": {
+        "admin.LiveTVSyncSourceResponse": {
             "type": "object",
             "properties": {
                 "source_url": {
@@ -9086,7 +9086,7 @@ const docTemplate = `{
                 }
             }
         },
-        "admin.UpdateLiveRequest": {
+        "admin.UpdateLiveTVRequest": {
             "type": "object",
             "properties": {
                 "category": {
@@ -10053,7 +10053,7 @@ const docTemplate = `{
                 }
             }
         },
-        "client.LiveChannelItem": {
+        "client.LiveTVChannelItem": {
             "type": "object",
             "properties": {
                 "category": {

@@ -14,12 +14,12 @@ dto/
 │   ├── video.go         # 影视：VideoListRequest / CreateVideoRequest / UpdateVideoRequest / VideoListItem / VideoDetailResponse / VideoSourceGroup ...
 │   ├── metadata.go
 │   ├── play.go
-│   ├── live.go          # 直播：LiveListRequest / CreateLiveRequest / UpdateLiveRequest / LiveChannelItem / LiveSyncResult
+│   ├── livetv.go          # 直播：LiveTVListRequest / CreateLiveTVRequest / UpdateLiveTVRequest / LiveTVChannelItem / LiveTVSyncResult
 │   └── collect.go       # 采集：CollectSourceListRequest / CreateCollectSourceRequest / CollectSourceItem / CollectLogItem ...
 ├── client/              # 用户端 DTO（仅暴露对外必要字段，不含 publish_status / stream_url / 时间戳等）
 │   ├── category.go      # 分类：CategoryResponse（仅展示字段）
 │   ├── video.go         # 影视：VideoListRequest / SearchRequest / VideoListItem / VideoDetailResponse / PlayEpisodeResponse ...
-│   ├── live.go          # 直播：LiveListRequest / LiveChannelItem（不含 stream_url / status）
+│   ├── livetv.go          # 直播：LiveTVListRequest / LiveTVChannelItem（不含 stream_url / status）
 │   ├── settings.go
 │   └── user.go
 └── open/                # 开放 API DTO（第三方资源站接口，独立字段集）

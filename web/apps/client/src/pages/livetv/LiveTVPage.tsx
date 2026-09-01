@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useLoaderData } from 'react-router'
-import type { ClientLiveChannel } from '@orange-tv/shared'
+import type { ClientLiveTVChannel } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
 import { VideoPlayer } from '@/components/Player'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -13,13 +13,13 @@ import { AlertCircleIcon, ChevronRightIcon, TvIcon } from 'lucide-react'
 import { usePageTitle } from '@/hooks/usePageTitle'
 
 type LiveLoaderData = {
-  channels: ClientLiveChannel[]
+  channels: ClientLiveTVChannel[]
   error: string
 }
 
 type ChannelGroup = {
   category: string
-  channels: ClientLiveChannel[]
+  channels: ClientLiveTVChannel[]
 }
 
 function ChannelLogo({ name, logo }: { name: string; logo?: string }) {
@@ -45,7 +45,7 @@ function ChannelLogo({ name, logo }: { name: string; logo?: string }) {
 
 export async function loader(): Promise<LiveLoaderData> {
   try {
-    const res = await clientApi.live()
+    const res = await clientApi.livetv()
     const list = res.data.list || []
     return { channels: list, error: '' }
   } catch (err) {
@@ -65,7 +65,7 @@ export function Component() {
   usePageTitle('电视直播')
 
   const groups = useMemo<ChannelGroup[]>(() => {
-    const map = new Map<string, ClientLiveChannel[]>()
+    const map = new Map<string, ClientLiveTVChannel[]>()
     for (const ch of channels) {
       if (!map.has(ch.category)) {
         map.set(ch.category, [])
@@ -78,7 +78,7 @@ export function Component() {
     return Array.from(map.keys()).map((key) => ({ category: key, channels: map.get(key)! }))
   }, [channels])
 
-  const selectedChannel = useMemo<ClientLiveChannel | null>(() => {
+  const selectedChannel = useMemo<ClientLiveTVChannel | null>(() => {
     return channels.find((ch) => ch.id === selectedId) || null
   }, [channels, selectedId])
 
@@ -94,7 +94,7 @@ export function Component() {
     })
   }
 
-  const handleChannelClick = (ch: ClientLiveChannel) => {
+  const handleChannelClick = (ch: ClientLiveTVChannel) => {
     setSelectedId(ch.id)
     setExpanded((prev) => {
       if (prev.has(ch.category)) return prev
@@ -187,7 +187,7 @@ export function Component() {
           <>
             <div className="overflow-hidden rounded-xl border border-border">
               <VideoPlayer
-                src={clientApi.liveStreamUrl(selectedChannel.id)}
+                src={clientApi.livetvStreamUrl(selectedChannel.id)}
                 format={selectedChannel.format || 'hls'}
               />
             </div>

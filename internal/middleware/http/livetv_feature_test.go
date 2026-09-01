@@ -40,7 +40,7 @@ func (s *stubSettingsService) UpsertMany(ctx context.Context, group string, upse
 	return nil
 }
 
-func TestLiveFeatureMiddleware(t *testing.T) {
+func TestLiveTVFeatureMiddleware(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	tests := []struct {
@@ -50,17 +50,17 @@ func TestLiveFeatureMiddleware(t *testing.T) {
 		wantStatus int
 	}{
 		{
-			name:       "live enabled",
-			m:          map[string]model.SystemSettings{constant.SettingFeatureLiveEnabled: {SettingValue: "true"}},
+			name:       "livetv enabled",
+			m:          map[string]model.SystemSettings{constant.SettingFeatureLiveTVEnabled: {SettingValue: "true"}},
 			wantStatus: http.StatusOK,
 		},
 		{
-			name:       "live disabled",
-			m:          map[string]model.SystemSettings{constant.SettingFeatureLiveEnabled: {SettingValue: "false"}},
+			name:       "livetv disabled",
+			m:          map[string]model.SystemSettings{constant.SettingFeatureLiveTVEnabled: {SettingValue: "false"}},
 			wantStatus: http.StatusNotFound,
 		},
 		{
-			name:       "live missing",
+			name:       "livetv missing",
 			m:          map[string]model.SystemSettings{},
 			wantStatus: http.StatusNotFound,
 		},
@@ -75,18 +75,18 @@ func TestLiveFeatureMiddleware(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			settings := &stubSettingsService{m: tt.m, err: tt.loadErr}
-			mw := LiveFeatureMiddleware(settings, zap.NewNop())
+			mw := LiveTVFeatureMiddleware(settings, zap.NewNop())
 
 			called := false
 			engine := gin.New()
 			engine.Use(mw)
-			engine.GET("/live", func(c *gin.Context) {
+			engine.GET("/livetv", func(c *gin.Context) {
 				called = true
 				c.Status(http.StatusOK)
 			})
 
 			w := httptest.NewRecorder()
-			req := httptest.NewRequest(http.MethodGet, "/live", nil)
+			req := httptest.NewRequest(http.MethodGet, "/livetv", nil)
 			engine.ServeHTTP(w, req)
 
 			assert.Equal(t, tt.wantStatus, w.Code)
