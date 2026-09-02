@@ -3028,7 +3028,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "分页获取直播频道列表",
+                "description": "分页获取电视直播频道列表",
                 "consumes": [
                     "application/json"
                 ],
@@ -3036,9 +3036,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "管理端｜直播管理"
+                    "管理端｜电视直播管理"
                 ],
-                "summary": "直播频道列表",
+                "summary": "电视直播频道列表",
                 "parameters": [
                     {
                         "type": "string",
@@ -3133,9 +3133,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "管理端｜直播管理"
+                    "管理端｜电视直播管理"
                 ],
-                "summary": "新建直播频道",
+                "summary": "新建电视直播频道",
                 "parameters": [
                     {
                         "description": "频道参数",
@@ -3176,7 +3176,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "从外部直播源同步频道列表，支持 txt 和 m3u 格式",
+                "description": "从外部电视直播源同步频道列表，支持 txt 和 m3u 格式",
                 "consumes": [
                     "application/json"
                 ],
@@ -3184,12 +3184,12 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "管理端｜直播管理"
+                    "管理端｜电视直播管理"
                 ],
-                "summary": "同步直播源",
+                "summary": "同步电视直播源",
                 "parameters": [
                     {
-                        "description": "直播源地址",
+                        "description": "电视直播源地址",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -3232,9 +3232,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "管理端｜直播管理"
+                    "管理端｜电视直播管理"
                 ],
-                "summary": "获取上次同步的直播源地址",
+                "summary": "获取上次同步的电视直播源地址",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -3264,7 +3264,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "更新指定直播频道信息",
+                "description": "更新指定电视直播频道信息",
                 "consumes": [
                     "application/json"
                 ],
@@ -3272,7 +3272,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "管理端｜直播管理"
+                    "管理端｜电视直播管理"
                 ],
                 "summary": "更新直播频道",
                 "parameters": [
@@ -3320,14 +3320,14 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "删除指定直播频道",
+                "description": "删除指定电视直播频道",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "管理端｜直播管理"
+                    "管理端｜电视直播管理"
                 ],
-                "summary": "删除直播频道",
+                "summary": "删除电视直播频道",
                 "parameters": [
                     {
                         "type": "integer",
@@ -6150,7 +6150,7 @@ const docTemplate = `{
         },
         "/api/client/v1/livetv": {
             "get": {
-                "description": "分页获取直播频道列表。web 端不返回 stream_url（走 /livetv/play/:id 代理播放）；app/tv/desktop 端（X-Client-Type: app|tv|desktop 或对应 UA）额外返回 stream_url 字段。",
+                "description": "分页获取电视直播频道列表。web 端不返回 stream_url（走 /livetv/play/:id 代理播放）；app/tv/desktop 端（X-Client-Type: app|tv|desktop 或对应 UA）额外返回 stream_url 字段。",
                 "consumes": [
                     "application/json"
                 ],
@@ -6158,9 +6158,9 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "用户端｜直播观看"
+                    "用户端｜电视直播观看"
                 ],
-                "summary": "直播频道列表",
+                "summary": "电视直播频道列表",
                 "parameters": [
                     {
                         "type": "string",
@@ -6232,14 +6232,14 @@ const docTemplate = `{
         },
         "/api/client/v1/livetv/play/{id}": {
             "get": {
-                "description": "代理指定直播频道的播放流",
+                "description": "代理指定电视直播频道的播放流",
                 "produces": [
                     "application/octet-stream"
                 ],
                 "tags": [
-                    "用户端｜直播观看"
+                    "用户端｜电视直播观看"
                 ],
-                "summary": "直播播放代理，浏览器端有CORS限制，需通过本接口代理播放流",
+                "summary": "电视直播播放代理，浏览器端有CORS限制，需通过本接口代理播放流",
                 "parameters": [
                     {
                         "type": "integer",

@@ -20,9 +20,9 @@ func NewLiveTVHandler(svc adminsvc.LiveTVService) *LiveTVHandler {
 }
 
 // List
-// @Summary 直播频道列表
-// @Description 分页获取直播频道列表
-// @Tags 管理端｜直播管理
+// @Summary 电视直播频道列表
+// @Description 分页获取电视直播频道列表
+// @Tags 管理端｜电视直播管理
 // @Accept json
 // @Produce json
 // @Security BearerAuth
@@ -43,9 +43,9 @@ func (h *LiveTVHandler) List(c *gin.Context) {
 }
 
 // Create
-// @Summary 新建直播频道
+// @Summary 新建电视直播频道
 // @Description 创建一个新的直播频道
-// @Tags 管理端｜直播管理
+// @Tags 管理端｜电视直播管理
 // @Accept json
 // @Produce json
 // @Security BearerAuth
@@ -67,8 +67,8 @@ func (h *LiveTVHandler) Create(c *gin.Context) {
 
 // Update
 // @Summary 更新直播频道
-// @Description 更新指定直播频道信息
-// @Tags 管理端｜直播管理
+// @Description 更新指定电视直播频道信息
+// @Tags 管理端｜电视直播管理
 // @Accept json
 // @Produce json
 // @Security BearerAuth
@@ -94,9 +94,9 @@ func (h *LiveTVHandler) Update(c *gin.Context) {
 }
 
 // Delete
-// @Summary 删除直播频道
-// @Description 删除指定直播频道
-// @Tags 管理端｜直播管理
+// @Summary 删除电视直播频道
+// @Description 删除指定电视直播频道
+// @Tags 管理端｜电视直播管理
 // @Produce json
 // @Security BearerAuth
 // @Param id path int true "频道ID"
@@ -115,9 +115,9 @@ func (h *LiveTVHandler) Delete(c *gin.Context) {
 }
 
 // GetSyncSource
-// @Summary 获取上次同步的直播源地址
+// @Summary 获取上次同步的电视直播源地址
 // @Description 返回 system_settings 中保存的最近一次直播源同步地址
-// @Tags 管理端｜直播管理
+// @Tags 管理端｜电视直播管理
 // @Produce json
 // @Security BearerAuth
 // @Success 200 {object} response.Response{data=admindto.LiveTVSyncSourceResponse}
@@ -132,13 +132,13 @@ func (h *LiveTVHandler) GetSyncSource(c *gin.Context) {
 }
 
 // Sync
-// @Summary 同步直播源
-// @Description 从外部直播源同步频道列表，支持 txt 和 m3u 格式
-// @Tags 管理端｜直播管理
+// @Summary 同步电视直播源
+// @Description 从外部电视直播源同步频道列表，支持 txt 和 m3u 格式
+// @Tags 管理端｜电视直播管理
 // @Accept json
 // @Produce json
 // @Security BearerAuth
-// @Param body body admindto.LiveTVSyncRequest true "直播源地址"
+// @Param body body admindto.LiveTVSyncRequest true "电视直播源地址"
 // @Success 200 {object} response.Response{data=admindto.LiveTVSyncResult}
 // @Router /api/admin/v1/livetv/sync [post]
 func (h *LiveTVHandler) Sync(c *gin.Context) {

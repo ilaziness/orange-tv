@@ -22,9 +22,9 @@ func NewLiveTVHandler(svc clientsvc.LiveTVService, proxySvc clientsvc.LiveTVProx
 }
 
 // List
-// @Summary 直播频道列表
-// @Description 分页获取直播频道列表。web 端不返回 stream_url（走 /livetv/play/:id 代理播放）；app/tv/desktop 端（X-Client-Type: app|tv|desktop 或对应 UA）额外返回 stream_url 字段。
-// @Tags 用户端｜直播观看
+// @Summary 电视直播频道列表
+// @Description 分页获取电视直播频道列表。web 端不返回 stream_url（走 /livetv/play/:id 代理播放）；app/tv/desktop 端（X-Client-Type: app|tv|desktop 或对应 UA）额外返回 stream_url 字段。
+// @Tags 用户端｜电视直播观看
 // @Accept json
 // @Produce json
 // @Param req query clientdto.LiveTVListRequest true "筛选参数"
@@ -44,9 +44,9 @@ func (h *LiveTVHandler) List(c *gin.Context) {
 }
 
 // Play proxies a live stream by delegating to LiveTVProxyService.
-// @Summary 直播播放代理，浏览器端有CORS限制，需通过本接口代理播放流
-// @Description 代理指定直播频道的播放流
-// @Tags 用户端｜直播观看
+// @Summary 电视直播播放代理，浏览器端有CORS限制，需通过本接口代理播放流
+// @Description 代理指定电视直播频道的播放流
+// @Tags 用户端｜电视直播观看
 // @Produce octet-stream
 // @Param id path int true "频道ID"
 // @Param u query string false "分片 URL（用于代理具体分片）"

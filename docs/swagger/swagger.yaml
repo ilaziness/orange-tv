@@ -4397,7 +4397,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: 分页获取直播频道列表
+      description: 分页获取电视直播频道列表
       parameters:
       - description: 频道分类筛选
         in: query
@@ -4450,9 +4450,9 @@ paths:
               type: object
       security:
       - BearerAuth: []
-      summary: 直播频道列表
+      summary: 电视直播频道列表
       tags:
-      - 管理端｜直播管理
+      - 管理端｜电视直播管理
     post:
       consumes:
       - application/json
@@ -4478,12 +4478,12 @@ paths:
               type: object
       security:
       - BearerAuth: []
-      summary: 新建直播频道
+      summary: 新建电视直播频道
       tags:
-      - 管理端｜直播管理
+      - 管理端｜电视直播管理
   /api/admin/v1/livetv/{id}:
     delete:
-      description: 删除指定直播频道
+      description: 删除指定电视直播频道
       parameters:
       - description: 频道ID
         in: path
@@ -4499,13 +4499,13 @@ paths:
             $ref: '#/definitions/response.Response'
       security:
       - BearerAuth: []
-      summary: 删除直播频道
+      summary: 删除电视直播频道
       tags:
-      - 管理端｜直播管理
+      - 管理端｜电视直播管理
     put:
       consumes:
       - application/json
-      description: 更新指定直播频道信息
+      description: 更新指定电视直播频道信息
       parameters:
       - description: 频道ID
         in: path
@@ -4534,14 +4534,14 @@ paths:
       - BearerAuth: []
       summary: 更新直播频道
       tags:
-      - 管理端｜直播管理
+      - 管理端｜电视直播管理
   /api/admin/v1/livetv/sync:
     post:
       consumes:
       - application/json
-      description: 从外部直播源同步频道列表，支持 txt 和 m3u 格式
+      description: 从外部电视直播源同步频道列表，支持 txt 和 m3u 格式
       parameters:
-      - description: 直播源地址
+      - description: 电视直播源地址
         in: body
         name: body
         required: true
@@ -4561,9 +4561,9 @@ paths:
               type: object
       security:
       - BearerAuth: []
-      summary: 同步直播源
+      summary: 同步电视直播源
       tags:
-      - 管理端｜直播管理
+      - 管理端｜电视直播管理
   /api/admin/v1/livetv/sync-source:
     get:
       description: 返回 system_settings 中保存的最近一次直播源同步地址
@@ -4581,9 +4581,9 @@ paths:
               type: object
       security:
       - BearerAuth: []
-      summary: 获取上次同步的直播源地址
+      summary: 获取上次同步的电视直播源地址
       tags:
-      - 管理端｜直播管理
+      - 管理端｜电视直播管理
   /api/admin/v1/play-episodes:
     get:
       consumes:
@@ -6255,7 +6255,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: '分页获取直播频道列表。web 端不返回 stream_url（走 /livetv/play/:id 代理播放）；app/tv/desktop
+      description: '分页获取电视直播频道列表。web 端不返回 stream_url（走 /livetv/play/:id 代理播放）；app/tv/desktop
         端（X-Client-Type: app|tv|desktop 或对应 UA）额外返回 stream_url 字段。'
       parameters:
       - description: 分类筛选（可选）
@@ -6299,12 +6299,12 @@ paths:
                         type: array
                     type: object
               type: object
-      summary: 直播频道列表
+      summary: 电视直播频道列表
       tags:
-      - 用户端｜直播观看
+      - 用户端｜电视直播观看
   /api/client/v1/livetv/play/{id}:
     get:
-      description: 代理指定直播频道的播放流
+      description: 代理指定电视直播频道的播放流
       parameters:
       - description: 频道ID
         in: path
@@ -6322,9 +6322,9 @@ paths:
           description: 直播流
           schema:
             type: file
-      summary: 直播播放代理，浏览器端有CORS限制，需通过本接口代理播放流
+      summary: 电视直播播放代理，浏览器端有CORS限制，需通过本接口代理播放流
       tags:
-      - 用户端｜直播观看
+      - 用户端｜电视直播观看
   /api/client/v1/promotions:
     get:
       description: 获取启用的广告列表；scene 可选，不传则返回全部启用广告，传则按场景筛选
