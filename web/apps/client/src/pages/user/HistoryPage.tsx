@@ -8,6 +8,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/u
 import { Button } from '@/components/ui/button'
 import { AlertCircleIcon } from 'lucide-react'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { usePageSeo } from '@/hooks/usePageSeo'
 
 function dayKey(iso: string): string {
   const d = new Date(iso.replace(' ', 'T'))
@@ -75,6 +76,7 @@ export function Component() {
   const [displayError, setError] = useState(error)
 
   usePageTitle('观看历史')
+  usePageSeo({ title: '观看历史', path: '/history', noindex: true })
 
   const groups = useMemo(() => {
     const map = new Map<string, HistoryItem[]>()

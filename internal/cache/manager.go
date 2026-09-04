@@ -4,6 +4,7 @@ package cache
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/ilaziness/orange-tv/internal/constant"
 	clientdto "github.com/ilaziness/orange-tv/internal/dto/client"
@@ -112,6 +113,7 @@ func (m *Manager) SetVideoListClient(ctx context.Context, key string, entry *Vid
 }
 
 // InvalidateVideo 失效视频相关缓存（client 列表 + open 列表/分类）。
+// SEO sitemap 依赖 5 分钟 TTL 自然过期，避免批量改片时反复清空并打爆重建。
 func (m *Manager) InvalidateVideo(ctx context.Context) {
 	for _, sort := range []string{"", "id_desc", "rating_desc", "view_count_desc", "created_at_desc"} {
 		for _, page := range []int{1, 2} {
@@ -144,10 +146,97 @@ func (m *Manager) SetSettingsByGroup(ctx context.Context, group string, settings
 	return m.cache.Set(ctx, SettingsGroupKey(group), settings, TTLSettings)
 }
 
-// InvalidateSettings invalidates all settings caches.
+// InvalidateSettings invalidates all settings caches and SEO documents that depend on them.
 func (m *Manager) InvalidateSettings(ctx context.Context) {
 	for _, g := range constant.AllSettingGroups() {
 		_ = m.cache.Delete(ctx, SettingsGroupKey(g))
+	}
+	m.InvalidateSEO(ctx)
+}
+
+// SEODocumentEntry is a JSON-friendly cache payload for SEO text/xml documents.
+type SEODocumentEntry struct {
+	Body        []byte `json:"body"`
+	ContentType string `json:"content_type"`
+	Status      int    `json:"status"`
+}
+
+// GetSEODocument retrieves a cached SEO document by key.
+func (m *Manager) GetSEODocument(ctx context.Context, key string) (*SEODocumentEntry, error) {
+	v, err := m.cache.Get(ctx, key)
+	if err != nil {
+		return nil, err
+	}
+	switch t := v.(type) {
+	case *SEODocumentEntry:
+		return t, nil
+	case SEODocumentEntry:
+		return &t, nil
+	case string:
+		var entry SEODocumentEntry
+		if json.Unmarshal([]byte(t), &entry) != nil {
+			return nil, nil
+		}
+		return &entry, nil
+	case []byte:
+		var entry SEODocumentEntry
+		if json.Unmarshal(t, &entry) != nil {
+			return nil, nil
+		}
+		return &entry, nil
+	default:
+		return nil, nil
+	}
+}
+
+// SetSEODocument caches an SEO document.
+func (m *Manager) SetSEODocument(ctx context.Context, key string, entry *SEODocumentEntry) error {
+	return m.cache.Set(ctx, key, entry, TTLSEODocument)
+}
+
+// GetSEOPageCursor retrieves a cached sitemap page afterID cursor.
+func (m *Manager) GetSEOPageCursor(ctx context.Context, page int) (uint32, bool, error) {
+	v, err := m.cache.Get(ctx, SEOPageCursorKey(page))
+	if err != nil {
+		return 0, false, err
+	}
+	switch t := v.(type) {
+	case uint32:
+		return t, true, nil
+	case int:
+		return uint32(t), true, nil
+	case float64: // JSON numbers
+		return uint32(t), true, nil
+	case string:
+		var id uint32
+		if json.Unmarshal([]byte(t), &id) != nil {
+			return 0, false, nil
+		}
+		return id, true, nil
+	case []byte:
+		var id uint32
+		if json.Unmarshal(t, &id) != nil {
+			return 0, false, nil
+		}
+		return id, true, nil
+	default:
+		return 0, false, nil
+	}
+}
+
+// SetSEOPageCursor caches a sitemap page afterID cursor.
+func (m *Manager) SetSEOPageCursor(ctx context.Context, page int, afterID uint32) error {
+	return m.cache.Set(ctx, SEOPageCursorKey(page), afterID, TTLSEODocument)
+}
+
+// InvalidateSEO clears SEO document and cursor caches.
+func (m *Manager) InvalidateSEO(ctx context.Context) {
+	for _, name := range []string{"robots", "sitemap", "sitemap-pages", "llms"} {
+		_ = m.cache.Delete(ctx, SEODocumentKey(name))
+	}
+	for page := 1; page <= MaxSEOSitemapVideoPages; page++ {
+		_ = m.cache.Delete(ctx, SEOSitemapVideosKey(page))
+		_ = m.cache.Delete(ctx, SEOPageCursorKey(page))
 	}
 }
 

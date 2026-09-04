@@ -94,4 +94,32 @@ func TestDefaultJWTSkipPaths_coversClientAndLogin(t *testing.T) {
 	require.Contains(t, paths, PathOpenV1+"/*")
 	require.Contains(t, paths, PathAdminV1+"/auth/login")
 	require.Contains(t, paths, PathHealth)
+	require.Contains(t, paths, PathRobotsTxt)
+	require.Contains(t, paths, "/sitemap*")
+	require.Contains(t, paths, "/sitemaps/*")
+	require.Contains(t, paths, PathLLMsTxt)
+}
+
+func TestMergeJWTSkipPaths_keepsDefaultsAndAddsConfig(t *testing.T) {
+	merged := MergeJWTSkipPaths([]string{"/health", "/custom-public"})
+	require.Contains(t, merged, "/sitemap*")
+	require.Contains(t, merged, PathRobotsTxt)
+	require.Contains(t, merged, "/custom-public")
+	count := 0
+	for _, p := range merged {
+		if p == PathHealth {
+			count++
+		}
+	}
+	require.Equal(t, 1, count)
+}
+
+func TestRateLimitSkipPaths_coversSEO(t *testing.T) {
+	paths := RateLimitSkipPaths()
+	require.Contains(t, paths, PathHealth)
+	require.Contains(t, paths, PathRobotsTxt)
+	require.Contains(t, paths, PathSitemapXML)
+	require.Contains(t, paths, PathSitemapPagesXML)
+	require.Contains(t, paths, PathSitemapVideosXML)
+	require.Contains(t, paths, PathLLMsTxt)
 }

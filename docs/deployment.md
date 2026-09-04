@@ -184,6 +184,8 @@ docker compose exec app /app/orange-tv migrate up -c /app/configs/config.prod.ya
 - 管理端访问：`http://<host>:81`
 - Docker 容器内后端监听 `127.0.0.1:8080`，由同容器 nginx 反代，无需对外暴露
 
+> **SEO 约定文件**：用户端 nginx 须将 `/robots.txt`、`/llms.txt`、`/sitemap.xml`、`/sitemaps/` 反代到后端，否则会落到 SPA 的 `index.html`。`pack/nginx.conf` 已包含这些 location；自建 nginx 请一并拷贝。
+
 ### 4. 相关 Makefile 目标
 
 | 目标 | 说明 |

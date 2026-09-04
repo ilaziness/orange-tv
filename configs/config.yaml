@@ -57,7 +57,7 @@ redis:
 # JWT configuration
 # jwt.secret should be set via JWT_SECRET environment variable in production
 jwt:
-  access_token_ttl: 7200   # 2 hours in seconds
+  access_token_ttl: 7200 # 2 hours in seconds
   refresh_token_ttl: 604800 # 7 days in seconds
   skip_paths:
     - /health
@@ -69,11 +69,15 @@ jwt:
     - /api/client/v2/*
     - /api/open/v1/*
     - /api/admin/v1/auth/login
+    - /robots.txt
+    - /sitemap*
+    - /sitemaps/*
+    - /llms.txt
 
 # Rate limiting configuration (disabled by default)
 rate_limit:
   enabled: false
-  store: memory  # memory or redis
+  store: memory # memory or redis
   global_rps: 10000
   ip_rps: 100
   user_rps: 50
@@ -81,10 +85,10 @@ rate_limit:
 # Cache configuration (enable memory cache for hot client/open reads in phase 4)
 cache:
   enabled: true
-  driver: memory  # memory, redis, multi
+  driver: memory # memory, redis, multi
   memory:
     num_counters: 1000000
-    max_cost: 1073741824  # 1GB
+    max_cost: 1073741824 # 1GB
     buffer_items: 64
   redis:
     key_prefix: "app:"
@@ -94,8 +98,8 @@ cache:
 # Uses OTLP protocol (Jaeger, Tempo, and other backends support OTLP)
 tracing:
   enabled: false
-  endpoint: localhost:4317  # OTLP gRPC endpoint (e.g., Jaeger collector at localhost:4317)
-  sample_rate: 1.0  # 采样率，1.0 表示全采样
+  endpoint: localhost:4317 # OTLP gRPC endpoint (e.g., Jaeger collector at localhost:4317)
+  sample_rate: 1.0 # 采样率，1.0 表示全采样
 
 # Metrics configuration (disabled by default)
 metrics:

@@ -35,6 +35,7 @@ import {
   type APISettings,
   type AdItem,
   type FeatureSettings,
+  type SEOSettings,
   type UpdateSettingsRequest,
   type UpdateProfileRequest,
   type UserGroupItem,
@@ -275,6 +276,10 @@ export const adminApi = {
   getFeatureSettings: () =>
     withAuth((token) =>
       apiGet<FeatureSettings>(ADMIN_API_BASE, '/settings', { token, query: { group: 'feature' } }),
+    ),
+  getSEOSettings: () =>
+    withAuth((token) =>
+      apiGet<SEOSettings>(ADMIN_API_BASE, '/settings', { token, query: { group: 'seo' } }),
     ),
   updateSettings: (body: UpdateSettingsRequest) =>
     withAuth((token) =>

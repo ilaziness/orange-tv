@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Spinner } from '@/components/ui/spinner'
 import { AlertCircleIcon } from 'lucide-react'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { usePageSeo } from '@/hooks/usePageSeo'
 import { CaptchaInput } from '@/components/auth/CaptchaInput'
 
 export function Component() {
@@ -27,6 +28,7 @@ export function Component() {
   const captchaRefreshRef = useRef<() => void>(() => {})
 
   usePageTitle('登录')
+  usePageSeo({ title: '登录', path: '/login', noindex: true })
 
   useEffect(() => {
     if (token && profile) {

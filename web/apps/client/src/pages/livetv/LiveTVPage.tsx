@@ -11,6 +11,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { cn } from '@/lib/utils'
 import { AlertCircleIcon, ChevronRightIcon, TvIcon } from 'lucide-react'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { usePageSeo } from '@/hooks/usePageSeo'
 
 type LiveLoaderData = {
   channels: ClientLiveTVChannel[]
@@ -63,6 +64,7 @@ export function Component() {
   const [selectedId, setSelectedId] = useState<number | null>(() => channels[0]?.id ?? null)
 
   usePageTitle('电视直播')
+  usePageSeo({ title: '电视直播', path: '/livetv' })
 
   const groups = useMemo<ChannelGroup[]>(() => {
     const map = new Map<string, ClientLiveTVChannel[]>()

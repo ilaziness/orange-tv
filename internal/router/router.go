@@ -15,9 +15,21 @@ func RegisterRoutes(engine *gin.Engine, h *Handlers) error {
 
 	engine.GET(PathSwagger, ginSwagger.WrapHandler(swaggerFiles.Handler))
 	registerSystemRoutes(engine, h.Health)
+	registerSEORoutes(engine, h)
 	registerClientRoutes(engine, h)
 	registerAdminRoutes(engine, h)
 	registerOpenRoutes(engine, h)
 	registerInternalRoutes(engine, h)
 	return nil
+}
+
+func registerSEORoutes(engine *gin.Engine, h *Handlers) {
+	if h.SEO == nil {
+		return
+	}
+	engine.GET(PathRobotsTxt, h.SEO.Robots)
+	engine.GET(PathSitemapXML, h.SEO.Sitemap)
+	engine.GET(PathSitemapPagesXML, h.SEO.SitemapPages)
+	engine.GET(PathSitemapVideosXML, h.SEO.SitemapVideos)
+	engine.GET(PathLLMsTxt, h.SEO.LLMs)
 }

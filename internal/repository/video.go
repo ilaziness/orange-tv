@@ -21,6 +21,12 @@ type VideoTagRow struct {
 	Name    string `bun:"name"`
 }
 
+// SitemapVideoRow is a lightweight video row for sitemap generation.
+type SitemapVideoRow struct {
+	ID        uint32    `bun:"id"`
+	UpdatedAt time.Time `bun:"updated_at"`
+}
+
 // VideoListFilter filters video queries.
 type VideoListFilter struct {
 	Keyword          string
@@ -73,6 +79,13 @@ type VideoRepository interface {
 	CountVideosToday(ctx context.Context, since time.Time) (int, error)
 	CountVideosByStatus(ctx context.Context, status uint8) (int, error)
 	CountCategories(ctx context.Context) (int, error)
+
+	// Sitemap (SEO)
+	CountOnlineForSitemap(ctx context.Context) (int, error)
+	ListOnlineForSitemap(ctx context.Context, afterID uint32, limit int) ([]SitemapVideoRow, error)
+	// OnlineIDAtOffset returns the id at 0-based offset among online videos (ORDER BY id ASC).
+	// ok=false when the offset is past the end.
+	OnlineIDAtOffset(ctx context.Context, offset int) (id uint32, ok bool, err error)
 
 	// UpdateCoverDomainByCollectSource batch-replaces the host portion of cover_image
 	// for all videos collected by the given collect source. Used when a remote source
@@ -460,6 +473,55 @@ func (r *videoRepo) CountCategories(ctx context.Context) (int, error) {
 		return 0, fmt.Errorf("count categories: %w", err)
 	}
 	return count, nil
+}
+
+func (r *videoRepo) CountOnlineForSitemap(ctx context.Context) (int, error) {
+	return r.CountVideosByStatus(ctx, constant.PublishStatusOnline)
+}
+
+func (r *videoRepo) ListOnlineForSitemap(ctx context.Context, afterID uint32, limit int) ([]SitemapVideoRow, error) {
+	if limit <= 0 {
+		return nil, nil
+	}
+	var rows []SitemapVideoRow
+	q := r.db.NewSelect().Model((*model.Videos)(nil)).
+		Column("id", "updated_at").
+		Where("deleted_at IS NULL").
+		Where("publish_status = ?", constant.PublishStatusOnline).
+		OrderExpr("id ASC").
+		Limit(limit)
+	if afterID > 0 {
+		q = q.Where("id > ?", afterID)
+	}
+	if err := q.Scan(ctx, &rows); err != nil {
+		return nil, fmt.Errorf("list online videos for sitemap: %w", err)
+	}
+	return rows, nil
+}
+
+func (r *videoRepo) OnlineIDAtOffset(ctx context.Context, offset int) (uint32, bool, error) {
+	if offset < 0 {
+		return 0, false, nil
+	}
+	var id uint32
+	err := r.db.NewSelect().Model((*model.Videos)(nil)).
+		Column("id").
+		Where("deleted_at IS NULL").
+		Where("publish_status = ?", constant.PublishStatusOnline).
+		OrderExpr("id ASC").
+		Offset(offset).
+		Limit(1).
+		Scan(ctx, &id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, false, nil
+		}
+		return 0, false, fmt.Errorf("online id at offset: %w", err)
+	}
+	if id == 0 {
+		return 0, false, nil
+	}
+	return id, true, nil
 }
 
 // UpdateCoverDomainByCollectSource batch-replaces the host portion of cover_image

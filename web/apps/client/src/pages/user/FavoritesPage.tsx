@@ -7,6 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { AlertCircleIcon } from 'lucide-react'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { usePageSeo } from '@/hooks/usePageSeo'
 
 type FavoritesLoaderData = {
   favorites: FavoriteItem[]
@@ -28,6 +29,7 @@ export function Component() {
   const { error } = data
 
   usePageTitle('我的收藏')
+  usePageSeo({ title: '我的收藏', path: '/favorites', noindex: true })
 
   const handleRemoved = (videoId: number) => {
     setFavorites((prev) => prev.filter((f) => f.video_id !== videoId))

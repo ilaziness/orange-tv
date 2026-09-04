@@ -22,6 +22,7 @@ import {
   PlayCircle,
   Settings,
   Globe,
+  Search,
   ShieldCheck,
   Users,
   Image,
@@ -54,6 +55,7 @@ const userMenus = [
 
 const systemMenus = [
   { to: '/system/site', label: '站点设置', icon: Globe },
+  { to: '/system/seo', label: 'SEO 设置', icon: Search },
   { to: '/system/api', label: 'API配置', icon: Settings },
   { to: '/system/ad', label: '广告设置', icon: Megaphone },
   { to: '/system/log', label: '系统日志', icon: ScrollText },

@@ -42,4 +42,5 @@ func applyBusinessHandlers(h *Handlers, b testutil.BusinessHandlers) {
 	h.ClientAd = b.ClientAd
 	h.LiveTVFeature = b.LiveTVFeature
 	h.OpenResource = b.OpenResource
+	h.SEO = b.SEO
 }

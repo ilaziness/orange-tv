@@ -55,6 +55,7 @@ func TestNewHTTPServer_registersRoutes(t *testing.T) {
 	handlers.ClientAd = b.ClientAd
 	handlers.LiveTVFeature = b.LiveTVFeature
 	handlers.OpenResource = b.OpenResource
+	handlers.SEO = b.SEO
 
 	srv, err := NewHTTPServer(cfg, logger, logger, handlers, nil, nil)
 	require.NoError(t, err)

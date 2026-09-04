@@ -9,6 +9,7 @@ import (
 	adminhandler "github.com/ilaziness/orange-tv/internal/handler/http/admin"
 	clienthandler "github.com/ilaziness/orange-tv/internal/handler/http/client"
 	openhandler "github.com/ilaziness/orange-tv/internal/handler/http/open"
+	seohandler "github.com/ilaziness/orange-tv/internal/handler/http/seo"
 	"github.com/ilaziness/orange-tv/internal/health"
 	"github.com/ilaziness/orange-tv/internal/logger"
 	httpmiddleware "github.com/ilaziness/orange-tv/internal/middleware/http"
@@ -20,6 +21,7 @@ import (
 	adminsvc "github.com/ilaziness/orange-tv/internal/service/admin"
 	clientsvc "github.com/ilaziness/orange-tv/internal/service/client"
 	opensvc "github.com/ilaziness/orange-tv/internal/service/open"
+	seosvc "github.com/ilaziness/orange-tv/internal/service/seo"
 	"github.com/ilaziness/orange-tv/pkg/captcha"
 )
 
@@ -118,6 +120,9 @@ func (a *App) wireHTTP() error {
 	handlers.ClientBanner = clienthandler.NewBannerHandler(clientBannerSvc)
 	handlers.ClientAd = clienthandler.NewAdHandler(clientAdSvc)
 	handlers.OpenResource = openhandler.NewResourceHandler(openResourceSvc)
+
+	seoSvc := seosvc.NewService(sharedSettingsSvc, videoRepo, a.cache, a.log)
+	handlers.SEO = seohandler.NewHandler(seoSvc, a.log)
 
 	// ── scheduler ──────────────────────────────────────────────────────────
 	sched := scheduler.NewScheduler(a.redisClient)

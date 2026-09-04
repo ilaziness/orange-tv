@@ -184,6 +184,15 @@ func (v *videoRepoStub) CountVideosByStatus(ctx context.Context, status uint8) (
 	return 0, nil
 }
 func (v *videoRepoStub) CountCategories(ctx context.Context) (int, error) { return 0, nil }
+func (v *videoRepoStub) CountOnlineForSitemap(ctx context.Context) (int, error) {
+	return 0, nil
+}
+func (v *videoRepoStub) ListOnlineForSitemap(ctx context.Context, afterID uint32, limit int) ([]repository.SitemapVideoRow, error) {
+	return nil, nil
+}
+func (v *videoRepoStub) OnlineIDAtOffset(ctx context.Context, offset int) (uint32, bool, error) {
+	return 0, false, nil
+}
 func (v *videoRepoStub) ListTagsByVideoIDs(ctx context.Context, videoIDs []uint32) ([]repository.VideoTagRow, error) {
 	return nil, nil
 }

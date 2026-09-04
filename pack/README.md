@@ -78,6 +78,8 @@ app 容器启动时会自动执行数据库迁移（`AUTO_MIGRATE=true`），无
 4. 用 nginx 托管前端（参考 `nginx/nginx.conf`）：
    - 将 `nginx.conf` 拷贝/软链到 nginx 配置目录（如 `/etc/nginx/conf.d/`）
    - 确认静态资源路径与配置一致（默认指向本目录下的 `web/client` 与 `web/admin`，请按实际部署路径调整）
+   - 用户端须将 `/robots.txt`、`/llms.txt`、`/sitemap.xml`、`/sitemaps/` 反代到后端（示例配置已包含），否则会落到 SPA
+   - SEO 的「公开站点根地址」应填用户端对外域名（如 `https://example.com`，对应 80/443），不要填管理端 81 端口
    - reload nginx：`nginx -s reload`
 
 ## 方式三：裸机运行（Windows）
@@ -97,6 +99,7 @@ app 容器启动时会自动执行数据库迁移（`AUTO_MIGRATE=true`），无
    ```
 
 4. 用 IIS 或其他 Web 服务器托管 `web\client` 与 `web\admin` 下的前端静态资源，将 `/api` 反向代理到 `http://127.0.0.1:8080`。
+   同时将 `/robots.txt`、`/llms.txt`、`/sitemap.xml`、`/sitemaps/` 反代到后端，否则这些 SEO 约定文件会落到 SPA。
 
 ## 方式四：Docker 单独构建（可选）
 

@@ -23,6 +23,7 @@ const UserGroupsPage = lazy(() => import('@/pages/user/groups/UserGroupsPage'))
 const UsersPage = lazy(() => import('@/pages/user/users/UsersPage'))
 const LoginLogsPage = lazy(() => import('@/pages/user/loginLogs/LoginLogsPage'))
 const SiteSettingsPage = lazy(() => import('@/pages/system/site/SiteSettingsPage'))
+const SEOSettingsPage = lazy(() => import('@/pages/system/seo/SEOSettingsPage'))
 const APISettingsPage = lazy(() => import('@/pages/system/api/APISettingsPage'))
 const AdsPage = lazy(() => import('@/pages/system/ad/AdsPage'))
 const SystemLogPage = lazy(() => import('@/pages/system/log/SystemLogPage'))
@@ -197,6 +198,14 @@ export function AppRoutes() {
             element={
               <Lazy>
                 <SiteSettingsPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/system/seo"
+            element={
+              <Lazy>
+                <SEOSettingsPage />
               </Lazy>
             }
           />

@@ -12,6 +12,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { AlertCircleIcon, FilmIcon } from 'lucide-react'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { usePageSeo } from '@/hooks/usePageSeo'
 
 type VideoDetailLoaderData = {
   detail: ClientVideoDetail | null
@@ -56,6 +57,14 @@ export function Component() {
   const { feature } = useSettings()
 
   usePageTitle(detail ? detail.title : '影视详情')
+  usePageSeo({
+    title: detail ? detail.title : '影视详情',
+    description: detail?.description,
+    image: detail?.cover || undefined,
+    path: id ? `/video/${id}` : undefined,
+    type: 'video.movie',
+    noindex: !detail || !!error,
+  })
 
   const loadComments = () => {
     if (!id) return

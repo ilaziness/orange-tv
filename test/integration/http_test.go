@@ -67,6 +67,7 @@ func setupTestRouter(t *testing.T) *gin.Engine {
 	handlers.ClientAd = b.ClientAd
 	handlers.LiveTVFeature = b.LiveTVFeature
 	handlers.OpenResource = b.OpenResource
+	handlers.SEO = b.SEO
 
 	engine := gin.New()
 	require.NoError(t, router.RegisterRoutes(engine, handlers))

@@ -75,6 +75,8 @@ func (s *settingsService) MapGroupToResponse(group string, m map[string]model.Sy
 		return mapToSiteSettings(m), nil
 	case constant.SettingGroupFeature:
 		return mapToFeatureSettings(m), nil
+	case constant.SettingGroupSEO:
+		return mapToPublicSEOSettings(m), nil
 	default:
 		return nil, fmt.Errorf("unsupported group for shared mapping: %s", group)
 	}
@@ -124,5 +126,31 @@ func mapToFeatureSettings(m map[string]model.SystemSettings) dto.FeatureSettings
 		CommentEnabled: BoolVal(m, constant.SettingFeatureCommentEnabled, true),
 		CommentReview:  BoolVal(m, constant.SettingFeatureCommentReview, true),
 		RatingEnabled:  BoolVal(m, constant.SettingFeatureRatingEnabled, true),
+	}
+}
+
+func mapToPublicSEOSettings(m map[string]model.SystemSettings) dto.PublicSEOSettings {
+	return dto.PublicSEOSettings{
+		PublicBaseURL:          StrVal(m, constant.SettingSEOPublicBaseURL),
+		DefaultOGImage:         StrVal(m, constant.SettingSEODefaultOGImage),
+		GoogleSiteVerification: StrVal(m, constant.SettingSEOGoogleSiteVerification),
+		BaiduSiteVerification:  StrVal(m, constant.SettingSEOBaiduSiteVerification),
+		BingSiteVerification:   StrVal(m, constant.SettingSEOBingSiteVerification),
+	}
+}
+
+// MapToSEOSettings maps a settings map to the full admin SEO DTO.
+func MapToSEOSettings(m map[string]model.SystemSettings) dto.SEOSettings {
+	return dto.SEOSettings{
+		PublicBaseURL:          StrVal(m, constant.SettingSEOPublicBaseURL),
+		DefaultOGImage:         StrVal(m, constant.SettingSEODefaultOGImage),
+		SitemapEnabled:         BoolVal(m, constant.SettingSEOSitemapEnabled, true),
+		LLMsEnabled:            BoolVal(m, constant.SettingSEOLLMsEnabled, true),
+		LLMsIntro:              StrVal(m, constant.SettingSEOLLMsIntro),
+		AllowAISearch:          BoolVal(m, constant.SettingSEOAllowAISearch, true),
+		AllowAITraining:        BoolVal(m, constant.SettingSEOAllowAITraining, false),
+		GoogleSiteVerification: StrVal(m, constant.SettingSEOGoogleSiteVerification),
+		BaiduSiteVerification:  StrVal(m, constant.SettingSEOBaiduSiteVerification),
+		BingSiteVerification:   StrVal(m, constant.SettingSEOBingSiteVerification),
 	}
 }

@@ -8,6 +8,7 @@ import (
 	adminhandler "github.com/ilaziness/orange-tv/internal/handler/http/admin"
 	clienthandler "github.com/ilaziness/orange-tv/internal/handler/http/client"
 	openhandler "github.com/ilaziness/orange-tv/internal/handler/http/open"
+	seohandler "github.com/ilaziness/orange-tv/internal/handler/http/seo"
 	adminsvc "github.com/ilaziness/orange-tv/internal/service/admin"
 )
 
@@ -46,6 +47,9 @@ type Handlers struct {
 
 	// Open resource station
 	OpenResource *openhandler.ResourceHandler
+
+	// SEO well-known documents (robots/sitemap/llms)
+	SEO *seohandler.Handler
 
 	InternalServiceKey string
 	// RequireAdminAuth enables auth middleware on admin business routes.
@@ -109,6 +113,7 @@ func (h *Handlers) validateForRoutes() error {
 		{"client ad handler", h.ClientAd != nil},
 		{"client livetv feature middleware", h.LiveTVFeature != nil},
 		{"open resource handler", h.OpenResource != nil},
+		{"seo handler", h.SEO != nil},
 	}
 	for _, item := range required {
 		if !item.ok {

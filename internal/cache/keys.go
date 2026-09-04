@@ -30,6 +30,15 @@ const (
 	// Video (client) - 视频列表（动态键）
 	KeyTplVideoList = "video:list:%d:%d:%s:%d:%d"
 	TTLVideoList    = 2 * time.Minute
+
+	// SEO documents（robots / sitemap / llms）
+	KeyTplSEODocument      = "seo:doc:%s"
+	KeyTplSEOSitemapVideos = "seo:doc:sitemap-videos:%d"
+	KeyTplSEOPageCursor    = "seo:sitemap-cursor:%d"
+	TTLSEODocument         = 5 * time.Minute
+
+	// MaxSEOSitemapVideoPages limits cached/invalidated video sitemap shards (50k URLs each).
+	MaxSEOSitemapVideoPages = 100
 )
 
 // LiveTVListKey 生成客户端直播列表缓存键。
@@ -57,4 +66,19 @@ func VideoListKey(categoryID, parentCategoryID uint32, sort string, page, limit 
 // dataRange 和 source 为筛选维度，空字符串表示无筛选。
 func OpenVideoListKey(page, pageSize int, dataRange, source string) string {
 	return fmt.Sprintf(KeyTplOpenVideoList, page, pageSize, dataRange, source)
+}
+
+// SEODocumentKey returns the cache key for a named SEO document (robots/sitemap/llms/pages).
+func SEODocumentKey(name string) string {
+	return fmt.Sprintf(KeyTplSEODocument, name)
+}
+
+// SEOSitemapVideosKey returns the cache key for videos-{n}.xml.
+func SEOSitemapVideosKey(page int) string {
+	return fmt.Sprintf(KeyTplSEOSitemapVideos, page)
+}
+
+// SEOPageCursorKey returns the cache key for sitemap page start cursor (afterID).
+func SEOPageCursorKey(page int) string {
+	return fmt.Sprintf(KeyTplSEOPageCursor, page)
 }

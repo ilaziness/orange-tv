@@ -13,8 +13,11 @@ import (
 	adminhandler "github.com/ilaziness/orange-tv/internal/handler/http/admin"
 	clienthandler "github.com/ilaziness/orange-tv/internal/handler/http/client"
 	openhandler "github.com/ilaziness/orange-tv/internal/handler/http/open"
+	seohandler "github.com/ilaziness/orange-tv/internal/handler/http/seo"
 	"github.com/ilaziness/orange-tv/internal/model"
 	adminsvc "github.com/ilaziness/orange-tv/internal/service/admin"
+	seosvc "github.com/ilaziness/orange-tv/internal/service/seo"
+	"go.uber.org/zap"
 )
 
 // BusinessHandlers holds no-op business handlers for route registration tests.
@@ -42,6 +45,7 @@ type BusinessHandlers struct {
 	ClientAd       *clienthandler.AdHandler
 	LiveTVFeature  gin.HandlerFunc
 	OpenResource   *openhandler.ResourceHandler
+	SEO            *seohandler.Handler
 }
 
 type authSvc struct{}
@@ -492,5 +496,6 @@ func NewBusinessHandlers() BusinessHandlers {
 		ClientAd:       clienthandler.NewAdHandler(clientAdSvc{}),
 		LiveTVFeature:  func(c *gin.Context) { c.Next() },
 		OpenResource:   openhandler.NewResourceHandler(openResourceSvc{}),
+		SEO:            seohandler.NewHandler(seosvc.StubService{}, zap.NewNop()),
 	}
 }

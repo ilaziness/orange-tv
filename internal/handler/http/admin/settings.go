@@ -25,7 +25,7 @@ func NewSettingsHandler(svc adminsvc.SettingsService, recorder *audit.Recorder) 
 
 // GetSettings
 // @Summary 获取系统设置
-// @Description 按分组获取系统设置。data 结构随 group 变化：site=SiteSettings，api=APISettings，feature=FeatureSettings
+// @Description 按分组获取系统设置。data 结构随 group 变化：site=SiteSettings，api=APISettings，feature=FeatureSettings，seo=SEOSettings
 // @Tags 管理端｜系统设置
 // @Accept json
 // @Produce json
@@ -48,7 +48,7 @@ func (h *SettingsHandler) Get(c *gin.Context) {
 
 // UpdateSettings
 // @Summary 更新系统设置
-// @Description 按分组更新系统设置，data 为对应分组的 key-value JSON（site/api/feature），返回更新后的设置结构
+// @Description 按分组更新系统设置，data 为对应分组的 key-value JSON（site/api/feature/seo），返回更新后的设置结构
 // @Tags 管理端｜系统设置
 // @Accept json
 // @Produce json

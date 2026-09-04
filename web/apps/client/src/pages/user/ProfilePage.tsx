@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 import type { LoginHistoryItem, UserProfile } from '@orange-tv/shared'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { usePageSeo } from '@/hooks/usePageSeo'
 
 const statusMap: Record<number, string> = {
   1: '正常',
@@ -37,6 +38,7 @@ export function Component() {
   const [tab, setTab] = useState<Tab>('basic')
 
   usePageTitle('个人中心')
+  usePageSeo({ title: '个人中心', path: '/profile', noindex: true })
 
   useEffect(() => {
     void loadProfile()

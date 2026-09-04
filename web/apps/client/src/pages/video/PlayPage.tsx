@@ -17,6 +17,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/u
 import { AlertCircleIcon } from 'lucide-react'
 import { FavoriteButton, RatingStars } from '@/components/common'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { usePageSeo } from '@/hooks/usePageSeo'
 
 type PlayLoaderData = {
   detail: ClientVideoDetail | null
@@ -87,6 +88,15 @@ export function Component() {
       ? `${detail.title}${currentEpNumber ? ` 第${currentEpNumber}集` : ''} - 播放`
       : '视频播放',
   )
+  usePageSeo({
+    title: detail
+      ? `${detail.title}${currentEpNumber ? ` 第${currentEpNumber}集` : ''} - 播放`
+      : '视频播放',
+    description: detail?.description,
+    image: detail?.cover || undefined,
+    path: id ? `/video/${id}` : undefined,
+    noindex: true,
+  })
 
   const handleProgress = useCallback(
     (currentTime: number, duration: number) => {

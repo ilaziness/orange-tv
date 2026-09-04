@@ -95,6 +95,15 @@ func (s *settingsService) parseUpdateData(group string, data json.RawMessage) ([
 			return nil, errcode.WithMessage(errcode.ParamError, err.Error())
 		}
 		return s.buildFeatureUpserts(&req), nil
+	case constant.SettingGroupSEO:
+		var req admindto.UpdateSEOSettings
+		if err := json.Unmarshal(data, &req); err != nil {
+			return nil, errcode.WithMessage(errcode.ParamError, "无效的设置数据")
+		}
+		if err := validator.Validate(&req); err != nil {
+			return nil, errcode.WithMessage(errcode.ParamError, err.Error())
+		}
+		return s.buildSEOUpserts(&req)
 	default:
 		return nil, errcode.WithMessage(errcode.ParamError, "无效的设置分组")
 	}
@@ -173,6 +182,8 @@ func (s *settingsService) mapToResponse(group string, m map[string]model.SystemS
 		return resp
 	case constant.SettingGroupAPI:
 		return mapToAPISettings(m)
+	case constant.SettingGroupSEO:
+		return service.MapToSEOSettings(m)
 	default:
 		return nil
 	}
@@ -227,4 +238,93 @@ func (s *settingsService) buildFeatureUpserts(f *admindto.UpdateFeatureSettings)
 		})
 	}
 	return upserts
+}
+
+func (s *settingsService) buildSEOUpserts(seo *admindto.UpdateSEOSettings) ([]repository.SettingUpsert, error) {
+	var upserts []repository.SettingUpsert
+	if seo.PublicBaseURL != nil {
+		normalized, err := service.NormalizePublicBaseURL(*seo.PublicBaseURL)
+		if err != nil {
+			return nil, errcode.WithMessage(errcode.ParamError, err.Error())
+		}
+		upserts = append(upserts, repository.SettingUpsert{
+			Key: constant.SettingSEOPublicBaseURL, Group: constant.SettingGroupSEO, Value: normalized,
+			SettingType: constant.SettingTypeString, Description: "公开站点根地址（无尾斜杠）",
+		})
+	}
+	if seo.DefaultOGImage != nil {
+		normalized, err := service.NormalizeOptionalHTTPURL(*seo.DefaultOGImage)
+		if err != nil {
+			return nil, errcode.WithMessage(errcode.ParamError, err.Error())
+		}
+		upserts = append(upserts, repository.SettingUpsert{
+			Key: constant.SettingSEODefaultOGImage, Group: constant.SettingGroupSEO, Value: normalized,
+			SettingType: constant.SettingTypeString, Description: "默认 Open Graph 图片地址",
+		})
+	}
+	if seo.SitemapEnabled != nil {
+		v := "0"
+		if *seo.SitemapEnabled {
+			v = "1"
+		}
+		upserts = append(upserts, repository.SettingUpsert{
+			Key: constant.SettingSEOSitemapEnabled, Group: constant.SettingGroupSEO, Value: v,
+			SettingType: constant.SettingTypeBoolean, Description: "是否输出 sitemap",
+		})
+	}
+	if seo.LLMsEnabled != nil {
+		v := "0"
+		if *seo.LLMsEnabled {
+			v = "1"
+		}
+		upserts = append(upserts, repository.SettingUpsert{
+			Key: constant.SettingSEOLLMsEnabled, Group: constant.SettingGroupSEO, Value: v,
+			SettingType: constant.SettingTypeBoolean, Description: "是否输出 llms.txt",
+		})
+	}
+	if seo.LLMsIntro != nil {
+		upserts = append(upserts, repository.SettingUpsert{
+			Key: constant.SettingSEOLLMsIntro, Group: constant.SettingGroupSEO, Value: strings.TrimSpace(*seo.LLMsIntro),
+			SettingType: constant.SettingTypeString, Description: "llms.txt 站点简介",
+		})
+	}
+	if seo.AllowAISearch != nil {
+		v := "0"
+		if *seo.AllowAISearch {
+			v = "1"
+		}
+		upserts = append(upserts, repository.SettingUpsert{
+			Key: constant.SettingSEOAllowAISearch, Group: constant.SettingGroupSEO, Value: v,
+			SettingType: constant.SettingTypeBoolean, Description: "是否允许 AI 检索类爬虫",
+		})
+	}
+	if seo.AllowAITraining != nil {
+		v := "0"
+		if *seo.AllowAITraining {
+			v = "1"
+		}
+		upserts = append(upserts, repository.SettingUpsert{
+			Key: constant.SettingSEOAllowAITraining, Group: constant.SettingGroupSEO, Value: v,
+			SettingType: constant.SettingTypeBoolean, Description: "是否允许 AI 训练类爬虫",
+		})
+	}
+	if seo.GoogleSiteVerification != nil {
+		upserts = append(upserts, repository.SettingUpsert{
+			Key: constant.SettingSEOGoogleSiteVerification, Group: constant.SettingGroupSEO, Value: strings.TrimSpace(*seo.GoogleSiteVerification),
+			SettingType: constant.SettingTypeString, Description: "Google 站点验证码",
+		})
+	}
+	if seo.BaiduSiteVerification != nil {
+		upserts = append(upserts, repository.SettingUpsert{
+			Key: constant.SettingSEOBaiduSiteVerification, Group: constant.SettingGroupSEO, Value: strings.TrimSpace(*seo.BaiduSiteVerification),
+			SettingType: constant.SettingTypeString, Description: "百度站点验证码",
+		})
+	}
+	if seo.BingSiteVerification != nil {
+		upserts = append(upserts, repository.SettingUpsert{
+			Key: constant.SettingSEOBingSiteVerification, Group: constant.SettingGroupSEO, Value: strings.TrimSpace(*seo.BingSiteVerification),
+			SettingType: constant.SettingTypeString, Description: "Bing 站点验证码",
+		})
+	}
+	return upserts, nil
 }

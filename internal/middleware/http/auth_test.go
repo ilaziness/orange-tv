@@ -118,7 +118,7 @@ func TestJWTAuth_SkipPathPrefix(t *testing.T) {
 	mgr := newAuthTestManager()
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	r.Use(JWTAuth(mgr, "/api/client/*", "/api/admin/v1/auth/login"))
+	r.Use(JWTAuth(mgr, "/api/client/*", "/api/admin/v1/auth/login", "/sitemap*", "/sitemaps/*"))
 	r.GET("/api/client/v1/categories", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"ok": true})
 	})
@@ -127,6 +127,15 @@ func TestJWTAuth_SkipPathPrefix(t *testing.T) {
 	})
 	r.GET("/api/admin/v1/videos", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"ok": true})
+	})
+	r.GET("/sitemap.xml", func(c *gin.Context) {
+		c.String(http.StatusOK, "sitemap")
+	})
+	r.GET("/sitemap-41.xml", func(c *gin.Context) {
+		c.String(http.StatusOK, "shard")
+	})
+	r.GET("/sitemaps/videos-1.xml", func(c *gin.Context) {
+		c.String(http.StatusOK, "videos")
 	})
 
 	w := httptest.NewRecorder()
@@ -143,12 +152,20 @@ func TestJWTAuth_SkipPathPrefix(t *testing.T) {
 	req, _ = http.NewRequest(http.MethodGet, "/api/admin/v1/videos", nil)
 	r.ServeHTTP(w, req)
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+	for _, path := range []string{"/sitemap.xml", "/sitemap-41.xml", "/sitemaps/videos-1.xml"} {
+		w = httptest.NewRecorder()
+		req, _ = http.NewRequest(http.MethodGet, path, nil)
+		r.ServeHTTP(w, req)
+		assert.Equal(t, http.StatusOK, w.Code, path)
+	}
 }
 
 func TestPathSkipped(t *testing.T) {
 	assert.True(t, pathSkipped("/api/client/v1/videos", "/api/client/v1/videos", []string{"/api/client/*"}))
 	assert.True(t, pathSkipped("/swagger/index.html", "/swagger/index.html", []string{"/swagger/*any"}))
 	assert.True(t, pathSkipped("/health", "/health", []string{"/health"}))
+	assert.True(t, pathSkipped("", "/sitemap-41.xml", []string{"/sitemap*"}))
 	assert.False(t, pathSkipped("/api/admin/v1/videos", "/api/admin/v1/videos", []string{"/api/client/*"}))
 }
 

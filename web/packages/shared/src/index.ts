@@ -439,8 +439,32 @@ export type FeatureSettings = {
   rating_enabled: boolean
 }
 
+export type SEOSettings = {
+  public_base_url: string
+  default_og_image: string
+  sitemap_enabled: boolean
+  llms_enabled: boolean
+  llms_intro: string
+  allow_ai_search: boolean
+  allow_ai_training: boolean
+  google_site_verification: string
+  baidu_site_verification: string
+  bing_site_verification: string
+}
+
+export type PublicSEOSettings = {
+  public_base_url: string
+  default_og_image: string
+  google_site_verification: string
+  baidu_site_verification: string
+  bing_site_verification: string
+}
+
 export type SettingsResponse =
-  SiteSettings | FeatureSettings | Record<string, SiteSettings | FeatureSettings>
+  | SiteSettings
+  | FeatureSettings
+  | PublicSEOSettings
+  | Record<string, SiteSettings | FeatureSettings | PublicSEOSettings>
 
 export type UpdateSettingsRequest = {
   group: string

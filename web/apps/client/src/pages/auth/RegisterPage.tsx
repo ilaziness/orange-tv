@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Spinner } from '@/components/ui/spinner'
 import { AlertCircleIcon } from 'lucide-react'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { usePageSeo } from '@/hooks/usePageSeo'
 import { CaptchaInput } from '@/components/auth/CaptchaInput'
 
 export function Component() {
@@ -27,6 +28,7 @@ export function Component() {
   const captchaRefreshRef = useRef<() => void>(() => {})
 
   usePageTitle('注册')
+  usePageSeo({ title: '注册', path: '/register', noindex: true })
 
   const hasRedirected = useRef(false)
   useEffect(() => {

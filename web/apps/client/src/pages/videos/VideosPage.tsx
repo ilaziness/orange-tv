@@ -8,6 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { AlertCircleIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
 import { usePageTitle } from '@/hooks/usePageTitle'
+import { usePageSeo } from '@/hooks/usePageSeo'
 
 const MOBILE_PAGE_SIZE = 24
 const PC_PAGE_SIZE = 64
@@ -129,6 +130,7 @@ export function Component() {
   const title = keyword ? `搜索：${keyword}` : currentCategory ? currentCategory.name : '影视列表'
 
   usePageTitle(title)
+  usePageSeo({ title, path: '/videos', noindex: Boolean(keyword) })
 
   const hasMore = videos.length < total
 

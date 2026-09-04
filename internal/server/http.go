@@ -73,12 +73,11 @@ func NewHTTPServer(cfg *config.Config, logger *zap.Logger, accessLogger *zap.Log
 		ginRouter.Use(metrics.Middleware(m, router.SystemPaths...))
 	}
 
-	// Apply JWT middleware if manager is provided
+	// Apply JWT middleware if manager is provided.
+	// Always merge DefaultJWTSkipPaths so SEO well-known routes stay public
+	// even when jwt.skip_paths in config is a partial list.
 	if jwtMgr != nil {
-		skipPaths := cfg.JWT.SkipPaths
-		if len(skipPaths) == 0 {
-			skipPaths = router.DefaultJWTSkipPaths()
-		}
+		skipPaths := router.MergeJWTSkipPaths(cfg.JWT.SkipPaths)
 		ginRouter.Use(httpmiddleware.JWTAuth(jwtMgr, skipPaths...))
 	}
 
@@ -109,7 +108,7 @@ func NewHTTPServer(cfg *config.Config, logger *zap.Logger, accessLogger *zap.Log
 			IPRPS:     cfg.RateLimit.IPRPS,
 			UserRPS:   cfg.RateLimit.UserRPS,
 			Store:     store,
-			SkipPaths: router.SystemPaths,
+			SkipPaths: router.RateLimitSkipPaths(),
 		}
 		ginRouter.Use(httpmiddleware.RateLimit(rateCfg, logger))
 	}

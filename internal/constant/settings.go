@@ -6,11 +6,12 @@ const (
 	SettingGroupAPI     = "api"     // API/资源站设置
 	SettingGroupFeature = "feature" // 功能设置
 	SettingGroupLiveTV  = "livetv"  // 电视直播设置
+	SettingGroupSEO     = "seo"     // SEO / 社交分享设置
 )
 
 // AllSettingGroups returns all valid setting group names.
 func AllSettingGroups() []string {
-	return []string{SettingGroupSite, SettingGroupAPI, SettingGroupFeature, SettingGroupLiveTV}
+	return []string{SettingGroupSite, SettingGroupAPI, SettingGroupFeature, SettingGroupLiveTV, SettingGroupSEO}
 }
 
 // System setting keys.
@@ -32,6 +33,18 @@ const (
 
 	// LiveTV settings keys.
 	SettingLiveTVSyncSourceURL = "livetv_sync_source_url" // 直播源同步地址
+
+	// SEO settings keys.
+	SettingSEOPublicBaseURL          = "seo_public_base_url"
+	SettingSEODefaultOGImage         = "seo_default_og_image"
+	SettingSEOSitemapEnabled         = "seo_sitemap_enabled"
+	SettingSEOLLMsEnabled            = "seo_llms_enabled"
+	SettingSEOLLMsIntro              = "seo_llms_intro"
+	SettingSEOAllowAISearch          = "seo_allow_ai_search"
+	SettingSEOAllowAITraining        = "seo_allow_ai_training"
+	SettingSEOGoogleSiteVerification = "seo_google_site_verification"
+	SettingSEOBaiduSiteVerification  = "seo_baidu_site_verification"
+	SettingSEOBingSiteVerification   = "seo_bing_site_verification"
 )
 
 // GroupKeys maps each setting group to its constituent key list.
@@ -57,21 +70,43 @@ var GroupKeys = map[string][]string{
 	SettingGroupLiveTV: {
 		SettingLiveTVSyncSourceURL,
 	},
+	SettingGroupSEO: {
+		SettingSEOPublicBaseURL,
+		SettingSEODefaultOGImage,
+		SettingSEOSitemapEnabled,
+		SettingSEOLLMsEnabled,
+		SettingSEOLLMsIntro,
+		SettingSEOAllowAISearch,
+		SettingSEOAllowAITraining,
+		SettingSEOGoogleSiteVerification,
+		SettingSEOBaiduSiteVerification,
+		SettingSEOBingSiteVerification,
+	},
 }
 
 // KeyToGroup maps each setting key to its group.
 var KeyToGroup = map[string]string{
-	SettingSiteName:                SettingGroupSite,
-	SettingSiteLogo:                SettingGroupSite,
-	SettingSiteCopyright:           SettingGroupSite,
-	SettingSiteICP:                 SettingGroupSite,
-	SettingSiteSEOKeywords:         SettingGroupSite,
-	SettingSiteDescription:         SettingGroupSite,
-	SettingSiteAnalyticsCode:       SettingGroupSite,
-	SettingEnableThirdPartyCollect: SettingGroupAPI,
-	SettingFeatureLiveTVEnabled:    SettingGroupFeature,
-	SettingFeatureCommentEnabled:   SettingGroupFeature,
-	SettingFeatureCommentReview:    SettingGroupFeature,
-	SettingFeatureRatingEnabled:    SettingGroupFeature,
-	SettingLiveTVSyncSourceURL:     SettingGroupLiveTV,
+	SettingSiteName:                  SettingGroupSite,
+	SettingSiteLogo:                  SettingGroupSite,
+	SettingSiteCopyright:             SettingGroupSite,
+	SettingSiteICP:                   SettingGroupSite,
+	SettingSiteSEOKeywords:           SettingGroupSite,
+	SettingSiteDescription:           SettingGroupSite,
+	SettingSiteAnalyticsCode:         SettingGroupSite,
+	SettingEnableThirdPartyCollect:   SettingGroupAPI,
+	SettingFeatureLiveTVEnabled:      SettingGroupFeature,
+	SettingFeatureCommentEnabled:     SettingGroupFeature,
+	SettingFeatureCommentReview:      SettingGroupFeature,
+	SettingFeatureRatingEnabled:      SettingGroupFeature,
+	SettingLiveTVSyncSourceURL:       SettingGroupLiveTV,
+	SettingSEOPublicBaseURL:          SettingGroupSEO,
+	SettingSEODefaultOGImage:         SettingGroupSEO,
+	SettingSEOSitemapEnabled:         SettingGroupSEO,
+	SettingSEOLLMsEnabled:            SettingGroupSEO,
+	SettingSEOLLMsIntro:              SettingGroupSEO,
+	SettingSEOAllowAISearch:          SettingGroupSEO,
+	SettingSEOAllowAITraining:        SettingGroupSEO,
+	SettingSEOGoogleSiteVerification: SettingGroupSEO,
+	SettingSEOBaiduSiteVerification:  SettingGroupSEO,
+	SettingSEOBingSiteVerification:   SettingGroupSEO,
 }
