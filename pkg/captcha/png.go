@@ -15,9 +15,9 @@ import (
 // 高度过大时字会画出右边界；故用较扁画布，保证 4 字完整落入图内。
 const (
 	defaultLength = 4   // 验证码字符数
-	defaultWidth  = 150 // 图片宽度（像素）
-	defaultHeight = 50  // 图片高度（像素）；字号随高度增大，过高会裁掉末字
-	defaultNoise  = 5   // 噪点字符；库内噪点为浅色，过多会糊成一片
+	defaultWidth  = 120 // 图片宽度（像素）
+	defaultHeight = 32  // 图片高度（像素）；字号随高度增大，过高会裁掉末字
+	defaultNoise  = 6   // 噪点字符；库内噪点为浅色，过多会糊成一片
 	// defaultExpireTTL 验证码默认有效期，同时用于内置内存 store 的过期回收
 	// 与外部 cache store 的 TTL。调用方可通过 WithExpireTTL / WithCacheStore 覆盖。
 	defaultExpireTTL = 5 * time.Minute
@@ -49,10 +49,10 @@ type Options struct {
 	// Width 图片宽度（像素），默认 120。
 	Width int
 
-	// Height 图片高度（像素），默认 60。
+	// Height 图片高度（像素），默认 32。
 	Height int
 
-	// NoiseCount 噪点字符数，默认 0。
+	// NoiseCount 噪点字符数，默认 6。
 	NoiseCount int
 
 	// ExpireTTL 验证码有效期，默认 5 分钟。

@@ -6,6 +6,10 @@ import { Field, FieldLabel } from '@/components/ui/field'
 
 type CaptchaScene = 'login' | 'register'
 
+/** 与后端 pkg/captcha 默认生成尺寸一致（120×32）。 */
+const CAPTCHA_WIDTH = 120
+const CAPTCHA_HEIGHT = 32
+
 interface CaptchaInputProps {
   scene: CaptchaScene
   // 当验证码 ID 或用户输入变化时通知父组件。
@@ -104,17 +108,23 @@ export function CaptchaInput({
         <Button
           type="button"
           variant="outline"
-          size="lg"
-          className="h-10 w-40 shrink-0 overflow-hidden bg-white p-0"
+          // 尺寸由图片撑开，避免固定宽高 + border 挤占内容区导致 object-contain 两侧留白
+          className="h-auto w-auto shrink-0 overflow-hidden bg-white p-0"
           title="点击刷新验证码"
           aria-label="刷新验证码"
           disabled={disabled || loading}
           onClick={() => void refresh()}
         >
           {image ? (
-            <img src={image} alt="验证码" className="h-full w-full object-contain" />
+            <img
+              src={image}
+              alt="验证码"
+              width={CAPTCHA_WIDTH}
+              height={CAPTCHA_HEIGHT}
+              className="block h-[32px] w-[120px] max-w-none"
+            />
           ) : (
-            <span className="text-xs text-muted-foreground">
+            <span className="inline-flex h-[32px] w-[120px] items-center justify-center text-xs text-muted-foreground">
               {loading ? '加载中' : '点击获取'}
             </span>
           )}

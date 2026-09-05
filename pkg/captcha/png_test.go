@@ -1,8 +1,11 @@
 package captcha
 
 import (
+	"bytes"
 	"context"
+	"encoding/base64"
 	"errors"
+	"image/png"
 	"strings"
 	"testing"
 )
@@ -147,5 +150,26 @@ func TestNilStoreFallbackToMemory(t *testing.T) {
 	}
 	if err := c.Verify(context.Background(), img.ID, answer); err != nil {
 		t.Fatalf("Verify with fallback store failed: %v", err)
+	}
+}
+
+func TestDefaultImageSize(t *testing.T) {
+	c := New()
+	img, err := c.Generate(context.Background(), "login")
+	if err != nil {
+		t.Fatalf("Generate failed: %v", err)
+	}
+	raw := strings.TrimPrefix(img.Content, "data:image/png;base64,")
+	data, err := base64.StdEncoding.DecodeString(raw)
+	if err != nil {
+		t.Fatalf("decode base64: %v", err)
+	}
+	decoded, err := png.Decode(bytes.NewReader(data))
+	if err != nil {
+		t.Fatalf("decode png: %v", err)
+	}
+	b := decoded.Bounds()
+	if b.Dx() != defaultWidth || b.Dy() != defaultHeight {
+		t.Fatalf("expected %dx%d, got %dx%d", defaultWidth, defaultHeight, b.Dx(), b.Dy())
 	}
 }
