@@ -121,10 +121,10 @@ export function CaptchaInput({
               alt="验证码"
               width={CAPTCHA_WIDTH}
               height={CAPTCHA_HEIGHT}
-              className="block h-[32px] w-[120px] max-w-none"
+              className="block h-8 w-30 max-w-none"
             />
           ) : (
-            <span className="inline-flex h-[32px] w-[120px] items-center justify-center text-xs text-muted-foreground">
+            <span className="inline-flex h-8 w-30 items-center justify-center text-xs text-muted-foreground">
               {loading ? '加载中' : '点击获取'}
             </span>
           )}
