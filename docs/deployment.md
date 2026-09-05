@@ -130,6 +130,8 @@ curl http://localhost:8080/version
 
 `make pack` 会构建前端（client + admin）与后端二进制，并组装出一个自包含的发布目录 `build/<版本号>/`，内含运行服务所需的全部资源，修改配置后即可直接启动。
 
+正式发布版本以 Makefile 的 `VERSION` 为准：打包时会**永久写入** `web/package.json`、`web/apps/admin`、`web/apps/client`、`web/packages/shared` 的 `version` 字段（失败不回滚），再构建前端，使管理端展示的版本与 Go 二进制一致。仅执行 `npm run build` / `npm run build:admin` **不会**同步该版本号。
+
 ### 1. 执行打包
 
 ```bash

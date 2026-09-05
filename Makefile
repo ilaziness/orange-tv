@@ -170,6 +170,8 @@ swagger-clean:
 ## pack: Build frontend + backend and assemble a self-contained release directory at build/$(VERSION)
 ##        生成 Linux (orange-tv) 与 Windows (orange-tv.exe) 两种后端二进制，
 ##        前端构建产物、配置、迁移脚本、Docker 部署文件一并打包。
+##        正式发布版本以本目标的 VERSION 为准：会永久写入 web 各 package.json（失败不回滚），
+##        再构建前端；仅执行 npm run build / npm run build:admin 不会同步该版本号。
 pack:
 	@echo "==> [1/5] Cleaning pack directory $(PACK_DIR)..."
 	@rm -rf $(PACK_DIR)
@@ -180,7 +182,8 @@ pack:
 	@echo "==> [3/5] Building backend for windows/amd64..."
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 $(GOBUILD) $(LDFLAGS) \
 		-o $(PACK_DIR)/$(APP_NAME).exe $(MAIN_PATH)
-	@echo "==> [4/5] Building frontend (shared -> client -> admin)..."
+	@echo "==> [4/5] Syncing frontend package.json version to $(VERSION) and building..."
+	@node scripts/sync-frontend-version.js "$(VERSION)"
 	cd web && npm run build
 	@echo "==> [5/5] Assembling release directory..."
 	@cp configs/config.prod.yaml $(PACK_DIR)/configs/config.prod.yaml
@@ -251,6 +254,6 @@ help:
 	@echo "  clean-all          Clean all artifacts including Docker"
 	@echo "  swagger            Generate Swagger documentation"
 	@echo "  swagger-clean      Clean generated Swagger documentation"
-	@echo "  pack               Build frontend + backend (linux+windows) and assemble build/$(VERSION) release dir"
+	@echo "  pack               Build release (sync VERSION into web package.json permanently, then build FE+BE)"
 	@echo "  pack-clean         Clean the pack release directory"
 	@echo "  help               Show this help message"
