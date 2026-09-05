@@ -27,12 +27,23 @@ web/
 └── packages/shared   # 共享类型与 API 工具
 ```
 
-开发服务器将 `/api` 代理到 `http://127.0.0.1:8080`。
+开发服务器将 `/api` 代理到 `VITE_DEV_PROXY_TARGET`（默认 `http://127.0.0.1:8080`，见 `web/.env.development`）。
 
 API 前缀：
 
 - 用户端：`/api/client/v1`
 - 管理端：`/api/admin/v1`
+
+### API 地址配置
+
+| 场景 | 做法 |
+| ---- | ---- |
+| 开发切换后端 | 改 `web/.env.development` 的 `VITE_DEV_PROXY_TARGET`，或设 `VITE_API_BASE_URL` 直连 |
+| 打包前写死生产 API | 改 `web/.env.production` 的 `VITE_API_BASE_URL` 后 `npm run build` / `make pack` |
+| 打包后改 API | 编辑产物 `web/client/config.js`、`web/admin/config.js` 的 `apiBaseUrl`，刷新即可 |
+
+优先级：运行时 `config.js` > 构建时 `VITE_API_BASE_URL` > 同源相对路径。只填 origin，不要带 `/api`。请限制发布包中 `config.js` 的写权限。
+
 
 ## npm run 命令说明
 

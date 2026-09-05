@@ -5,6 +5,7 @@ import {
   apiGet,
   apiPost,
   apiPut,
+  resolveApiUrl,
   type ClientBanner,
   type ClientCategory,
   type ClientLiveTVChannel,
@@ -164,7 +165,7 @@ export const clientApi = {
     apiGet<PageData<ClientLiveTVChannel>>(CLIENT_API_BASE, '/livetv', { query }),
   livetvChannelDetail: (id: number) => apiGet<ClientLiveTVChannel>(CLIENT_API_BASE, `/livetv/${id}`),
   // livetvStreamUrl 返回直播流的代理播放地址，前端不接触真实 stream_url。
-  livetvStreamUrl: (id: number) => `${CLIENT_API_BASE}/livetv/play/${id}`,
+  livetvStreamUrl: (id: number) => resolveApiUrl(CLIENT_API_BASE, `/livetv/play/${id}`),
   banners: () => apiGet<ClientBanner[]>(CLIENT_API_BASE, '/banners'),
   ads: (scene: string) =>
     apiGet<ClientAdItem[]>(CLIENT_API_BASE, '/promotions', { query: { scene } }),

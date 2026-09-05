@@ -10,8 +10,8 @@
 │   └── config.prod.yaml       # 生产环境配置（裸机与 Docker 共用，可通过环境变量覆盖）
 ├── migrations/                # 数据库迁移脚本
 ├── web/
-│   ├── client/                # 用户端前端构建产物
-│   └── admin/                 # 管理端前端构建产物
+│   ├── client/                # 用户端前端构建产物（含 config.js）
+│   └── admin/                 # 管理端前端构建产物（含 config.js）
 ├── nginx/
 │   └── nginx.conf             # nginx 示例配置（用户端 80 / 管理端 81）
 ├── .env.example               # Docker Compose 环境变量示例
@@ -20,6 +20,25 @@
 ├── docker-entrypoint.sh       # 容器入口脚本（自动迁移 + 启动后端 + nginx）
 └── README.md
 ```
+
+## 前端 API 地址（可选）
+
+默认走同源 `/api`（nginx 反代到后端），一般不用改。
+
+若前端与后端不同源，编辑发布包里的：
+
+```text
+web/client/config.js
+web/admin/config.js
+```
+
+```js
+window.__ORANGE_TV_CONFIG__ = {
+  apiBaseUrl: 'https://api.example.com', // 只填 origin，不要带 /api
+}
+```
+
+保存后刷新浏览器即可，无需重新打包。留空则继续同源。请限制这两个文件的写权限。
 
 ## 方式一：Docker Compose 一键部署（推荐）
 

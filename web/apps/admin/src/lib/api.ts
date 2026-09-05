@@ -7,6 +7,7 @@ import {
   apiGet,
   apiPost,
   apiPut,
+  resolveApiUrl,
   type AdminProfile,
   type AdminItem,
   type BannerItem,
@@ -71,13 +72,15 @@ async function withAuth<T>(fn: (token: string | null) => Promise<T>): Promise<T>
 
 export async function downloadBackup(native = false): Promise<Response> {
   const token = getToken()
-  const qs = native ? '?native=1' : ''
-  const res = await fetch(`${ADMIN_API_BASE}/data/backup${qs}`, {
-    headers: {
-      Accept: 'application/sql',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  const res = await fetch(
+    resolveApiUrl(ADMIN_API_BASE, '/data/backup', native ? { native: 1 } : undefined),
+    {
+      headers: {
+        Accept: 'application/sql',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
     },
-  })
+  )
   if (!res.ok) {
     let message = `HTTP ${res.status}`
     try {

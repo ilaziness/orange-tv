@@ -84,14 +84,35 @@ Directory structure after extraction:
 │   └── config.prod.yaml       # production config (overridable via env vars)
 ├── migrations/                # database migration scripts
 ├── web/
-│   ├── client/                # client frontend build artifacts
-│   └── admin/                 # admin frontend build artifacts
+│   ├── client/                # client frontend build (includes config.js)
+│   └── admin/                 # admin frontend build (includes config.js)
 ├── nginx/nginx.conf           # nginx sample config (client 80 / admin 81)
 ├── .env.example               # Docker Compose env var sample
 ├── Dockerfile                 # all-in-one image build file
 ├── docker-compose.yml         # one-click Docker Compose (app + MySQL)
 └── docker-entrypoint.sh       # container entrypoint script
 ```
+
+### Frontend API URL (optional)
+
+By default the frontend calls same-origin `/api` (nginx proxies to the backend). No change needed for typical installs.
+
+If the frontend and API are on different origins, edit these files in the release package:
+
+```text
+web/client/config.js
+web/admin/config.js
+```
+
+Set `apiBaseUrl` to the API origin only (no `/api` path):
+
+```js
+window.__ORANGE_TV_CONFIG__ = {
+  apiBaseUrl: 'https://api.example.com',
+}
+```
+
+Save and refresh the browser — no rebuild required. Leave empty for same-origin. Restrict write access to these files.
 
 ### 3. Run
 

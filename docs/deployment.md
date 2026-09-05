@@ -152,14 +152,35 @@ build/1.0.0/
 │   └── config.prod.yaml   # 生产环境配置（裸机与 Docker 共用，可通过环境变量覆盖）
 ├── migrations/            # 数据库迁移脚本
 ├── web/
-│   ├── client/            # 用户端前端构建产物
-│   └── admin/             # 管理端前端构建产物
+│   ├── client/            # 用户端前端（含 config.js）
+│   └── admin/             # 管理端前端（含 config.js）
 ├── nginx/nginx.conf       # nginx 示例配置（用户端 80 / 管理端 81）
 ├── Dockerfile             # 一体化镜像构建文件
 ├── docker-compose.yml     # 一键 Docker Compose（应用 + MySQL）
 ├── docker-entrypoint.sh   # 容器入口脚本
 └── README.md              # 发布包说明
 ```
+
+### 前端 API 地址（可选）
+
+默认走同源 `/api`（nginx 反代），一般不用改。
+
+若需指向独立后端，编辑发布目录中的：
+
+```text
+web/client/config.js
+web/admin/config.js
+```
+
+```js
+window.__ORANGE_TV_CONFIG__ = {
+  apiBaseUrl: 'https://api.example.com', // 只填 origin，不要带 /api
+}
+```
+
+保存后刷新即可，无需重新打包。留空则同源。请限制这两个文件的写权限。
+
+源码打包前也可在 `web/.env.production` 设置 `VITE_API_BASE_URL` 再执行 `make pack`。
 
 ### 3. 启动
 

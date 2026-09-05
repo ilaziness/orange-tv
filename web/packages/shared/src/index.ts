@@ -16,6 +16,57 @@ export type PageData<T = unknown> = {
 export const CLIENT_API_BASE = '/api/client/v1'
 export const ADMIN_API_BASE = '/api/admin/v1'
 
+/** Build-time default from VITE_API_BASE_URL; overridden by runtime config.js when set. */
+let buildTimeApiOrigin = ''
+
+/**
+ * Normalize an API origin: must be http(s), trailing slash stripped.
+ * Returns '' for empty/invalid values (caller falls back to same-origin).
+ */
+export function normalizeApiOrigin(value: string | undefined | null): string {
+  if (value === undefined || value === null) return ''
+  const trimmed = String(value).trim()
+  if (!trimmed) return ''
+  try {
+    const url = new URL(trimmed)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      console.warn(`[orange-tv] invalid API origin (need http/https): ${trimmed}`)
+      return ''
+    }
+    if (url.pathname && url.pathname !== '/') {
+      console.warn(
+        `[orange-tv] API origin path ignored, use origin only (no /api): ${trimmed} → ${url.origin}`,
+      )
+    }
+    return url.origin
+  } catch {
+    console.warn(`[orange-tv] invalid API origin: ${trimmed}`)
+    return ''
+  }
+}
+
+/**
+ * Register the build-time API origin (from import.meta.env.VITE_API_BASE_URL).
+ * Call once at app startup before any API requests.
+ */
+export function configureApi(origin: string | undefined | null): void {
+  buildTimeApiOrigin = normalizeApiOrigin(origin)
+}
+
+/**
+ * Resolve API origin priority:
+ * 1. window.__ORANGE_TV_CONFIG__.apiBaseUrl (runtime config.js)
+ * 2. build-time VITE_API_BASE_URL via configureApi
+ * 3. '' → same-origin relative paths
+ */
+export function getApiOrigin(): string {
+  if (typeof window !== 'undefined') {
+    const runtime = normalizeApiOrigin(window.__ORANGE_TV_CONFIG__?.apiBaseUrl)
+    if (runtime) return runtime
+  }
+  return buildTimeApiOrigin
+}
+
 export class ApiError extends Error {
   code: number
   httpStatus: number
@@ -34,10 +85,10 @@ export type RequestOptions = RequestInit & {
 }
 
 function buildURL(base: string, path: string, query?: RequestOptions['query']): string {
-  const url = new URL(
-    `${base}${path}`,
-    typeof window !== 'undefined' ? window.location.origin : 'http://localhost',
-  )
+  const origin = getApiOrigin()
+  const fallbackBase =
+    typeof window !== 'undefined' ? window.location.origin : 'http://localhost'
+  const url = new URL(`${base}${path}`, origin || fallbackBase)
   if (query) {
     Object.entries(query).forEach(([key, value]) => {
       if (value === undefined || value === null || value === '') return
@@ -51,7 +102,17 @@ function buildURL(base: string, path: string, query?: RequestOptions['query']): 
       url.searchParams.set(key, String(value))
     })
   }
-  return url.pathname + url.search
+  // Absolute URL when custom origin is set; relative path keeps same-origin / proxy behavior.
+  return origin ? url.href : url.pathname + url.search
+}
+
+/** Resolve a full or relative API URL for non-apiRequest callers (e.g. backup download, media src). */
+export function resolveApiUrl(
+  base: string,
+  path = '',
+  query?: RequestOptions['query'],
+): string {
+  return buildURL(base, path, query)
 }
 
 export async function apiRequest<T>(
