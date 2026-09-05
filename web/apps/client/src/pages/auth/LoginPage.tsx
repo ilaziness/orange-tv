@@ -13,6 +13,7 @@ import { AlertCircleIcon } from 'lucide-react'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { usePageSeo } from '@/hooks/usePageSeo'
 import { CaptchaInput } from '@/components/auth/CaptchaInput'
+import { PasswordInput } from '@/components/shared'
 
 export function Component() {
   const [email, setEmail] = useState('')
@@ -96,9 +97,8 @@ export function Component() {
               </Field>
               <Field>
                 <FieldLabel htmlFor="password">密码</FieldLabel>
-                <Input
+                <PasswordInput
                   id="password"
-                  type="password"
                   placeholder="请输入密码"
                   minLength={5}
                   maxLength={30}

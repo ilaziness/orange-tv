@@ -18,6 +18,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Spinner } from '@/components/ui/spinner'
 import { AlertCircleIcon } from 'lucide-react'
 import { CaptchaInput } from '@/components/auth/CaptchaInput'
+import { PasswordInput } from '@/components/shared'
 
 export function LoginDialog() {
   const [email, setEmail] = useState('')
@@ -95,9 +96,8 @@ export function LoginDialog() {
             </Field>
             <Field>
               <FieldLabel htmlFor="login-dialog-password">密码</FieldLabel>
-              <Input
+              <PasswordInput
                 id="login-dialog-password"
-                type="password"
                 placeholder="请输入密码"
                 minLength={5}
                 maxLength={30}

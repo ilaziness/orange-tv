@@ -19,6 +19,7 @@ import { toast } from 'sonner'
 import type { LoginHistoryItem, UserProfile } from '@orange-tv/shared'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { usePageSeo } from '@/hooks/usePageSeo'
+import { PasswordInput } from '@/components/shared'
 
 const statusMap: Record<number, string> = {
   1: '正常',
@@ -287,9 +288,8 @@ function ChangePassword() {
         <FieldGroup>
           <Field>
             <FieldLabel htmlFor="current_password">当前密码</FieldLabel>
-            <Input
+            <PasswordInput
               id="current_password"
-              type="password"
               value={form.current_password}
               onChange={(e) => update('current_password', e.target.value)}
               placeholder="请输入当前密码"
@@ -299,9 +299,8 @@ function ChangePassword() {
           </Field>
           <Field>
             <FieldLabel htmlFor="new_password">新密码</FieldLabel>
-            <Input
+            <PasswordInput
               id="new_password"
-              type="password"
               value={form.new_password}
               onChange={(e) => update('new_password', e.target.value)}
               placeholder="5-30 位"
@@ -311,9 +310,8 @@ function ChangePassword() {
           </Field>
           <Field>
             <FieldLabel htmlFor="confirm_password">确认新密码</FieldLabel>
-            <Input
+            <PasswordInput
               id="confirm_password"
-              type="password"
               value={form.confirm_password}
               onChange={(e) => update('confirm_password', e.target.value)}
               placeholder="再次输入新密码"
