@@ -237,7 +237,7 @@ type BannerItem struct {
 	Link string `json:"link"`
 	// 关联视频ID
 	VideoID uint32 `json:"video_id"`
-	// 排序权重，值越小越靠前
+	// 排序权重，值越大越靠前
 	Sort uint32 `json:"sort"`
 	// 状态（0=禁用，1=启用）
 	Status uint8 `json:"status"`
@@ -253,7 +253,7 @@ type CreateBannerRequest struct {
 	Link string `json:"link" binding:"omitempty,max=500"`
 	// 关联视频ID
 	VideoID uint32 `json:"video_id" binding:"omitempty,min=1"`
-	// 排序权重，值越小越靠前
+	// 排序权重，值越大越靠前
 	Sort uint32 `json:"sort" binding:"omitempty,min=0"`
 	// 状态（0=禁用，1=启用）
 	Status *uint8 `json:"status" binding:"omitempty,oneof=0 1"`
@@ -267,9 +267,9 @@ type UpdateBannerRequest struct {
 	Cover string `json:"cover" binding:"omitempty,max=500"`
 	// 跳转链接
 	Link string `json:"link" binding:"omitempty,max=500"`
-	// 关联视频ID
-	VideoID *uint32 `json:"video_id" binding:"omitempty,min=1"`
-	// 排序权重，值越小越靠前
+	// 关联视频ID（0 表示未关联）
+	VideoID *uint32 `json:"video_id" binding:"omitempty"`
+	// 排序权重，值越大越靠前
 	Sort *uint32 `json:"sort" binding:"omitempty,min=0"`
 	// 状态（0=禁用，1=启用）
 	Status *uint8 `json:"status" binding:"omitempty,oneof=0 1"`

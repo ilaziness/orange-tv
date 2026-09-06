@@ -463,7 +463,7 @@ func (r *userFeatureRepo) ListBanners(ctx context.Context, status *uint8) ([]mod
 	if status != nil {
 		q = q.Where("status = ?", *status)
 	}
-	if err := q.Order("sort ASC, id DESC").Scan(ctx); err != nil {
+	if err := q.OrderExpr("sort DESC, created_at DESC").Scan(ctx); err != nil {
 		return nil, fmt.Errorf("list banners: %w", err)
 	}
 	return items, nil
@@ -476,7 +476,7 @@ func (r *userFeatureRepo) ListAllBanners(ctx context.Context, offset, limit int)
 	if err != nil {
 		return nil, 0, fmt.Errorf("count banners: %w", err)
 	}
-	if err := q.Order("sort ASC, id DESC").Offset(offset).Limit(limit).Scan(ctx); err != nil {
+	if err := q.OrderExpr("sort DESC, created_at DESC").Offset(offset).Limit(limit).Scan(ctx); err != nil {
 		return nil, 0, fmt.Errorf("list banners: %w", err)
 	}
 	return items, total, nil

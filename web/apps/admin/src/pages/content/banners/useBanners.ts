@@ -12,7 +12,10 @@ const bannerSchema = z.object({
   link: z.string(),
   video_id: z.union([z.string(), z.number()]).transform((v) => Number(v) || 0),
   sort: z.union([z.string(), z.number()]).transform((v) => Number(v) || 0),
-  status: z.union([z.string(), z.number()]).transform((v) => Number(v)),
+  status: z.union([z.string(), z.number()]).transform((v) => {
+    if (v === '' || v === undefined || v === null) return 1
+    return Number(v) === 0 ? 0 : 1
+  }),
 })
 
 const emptyForm = { title: '', cover: '', link: '', video_id: '', sort: '', status: '' }
@@ -69,8 +72,8 @@ export function useBanners() {
       title: banner.title,
       cover: banner.cover,
       link: banner.link,
-      video_id: String(banner.video_id || ''),
-      sort: String(banner.sort || ''),
+      video_id: banner.video_id ? String(banner.video_id) : '',
+      sort: String(banner.sort),
       status: String(banner.status),
     })
     setSelectedVideo(banner.video_id ? { id: banner.video_id, title: '' } : null)
@@ -91,10 +94,7 @@ export function useBanners() {
       return
     }
 
-    const submitData = {
-      ...result.data,
-      status: result.data.status || 1,
-    }
+    const submitData = result.data
 
     setSubmitting(true)
     try {

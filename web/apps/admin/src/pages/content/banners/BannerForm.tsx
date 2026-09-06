@@ -89,9 +89,10 @@ export function BannerFormDialog({
                   placeholder="请输入封面URL"
                   value={form.cover}
                   onChange={(e) => setForm((prev) => ({ ...prev, cover: e.target.value }))}
+                  required
                   disabled={submitting}
                 />
-                <FieldDescription>推荐21:9比例，最大尺寸1536 × 658</FieldDescription>
+                <FieldDescription>推荐24:9比例，最大尺寸1920 × 720</FieldDescription>
               </Field>
 
               <Field data-disabled={submitting ? true : undefined}>
@@ -153,11 +154,12 @@ export function BannerFormDialog({
                 <Input
                   id="banner-sort"
                   type="number"
-                  placeholder="请输入排序（默认0）"
+                  placeholder="请输入排序"
                   value={form.sort}
                   onChange={(e) => setForm((prev) => ({ ...prev, sort: e.target.value }))}
                   disabled={submitting}
                 />
+                <FieldDescription>值越大越靠前，默认 0</FieldDescription>
               </Field>
 
               <Field data-disabled={submitting ? true : undefined}>
