@@ -4,7 +4,7 @@ import type { ClientCategory } from '@orange-tv/shared'
 import { sanitizeSearchInput } from '@orange-tv/shared'
 import { useAuth } from '@/hooks/useAuth'
 import { useSettings } from '@/hooks/useSettings'
-import { clientApi } from '@/lib/api'
+import { clientApi, errorMessage } from '@/lib/api'
 import { getHistory, formatTime, type PlaybackHistoryItem } from '@/lib/playbackHistory'
 import type { HistoryItem } from '@orange-tv/shared'
 import { ThemeToggle } from '@/components/ThemeToggle'
@@ -12,6 +12,8 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { InputGroup, InputGroupInput, InputGroupAddon } from '@/components/ui/input-group'
 import { Separator } from '@/components/ui/separator'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import {
   DropdownMenu,
@@ -34,6 +36,7 @@ import {
   FilterIcon,
   TvIcon,
   FilmIcon,
+  AlertCircleIcon,
 } from 'lucide-react'
 import { TopLoader } from '@/components/TopLoader'
 import { LoginDialog } from '@/components/auth/LoginDialog'
@@ -71,6 +74,31 @@ function fromRemote(it: HistoryItem): HistoryEntry {
   }
 }
 
+function HistoryListSkeleton() {
+  return (
+    <div className="flex flex-col gap-2 p-2">
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} className="flex items-center justify-between gap-2 px-1 py-1">
+          <Skeleton className="h-4 flex-1" />
+          <Skeleton className="h-4 w-8" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function HistoryEmpty({ error }: { error: string }) {
+  return (
+    <Empty className="min-h-0 p-4">
+      <EmptyHeader>
+        <EmptyMedia variant="icon">{error ? <AlertCircleIcon /> : <HistoryIcon />}</EmptyMedia>
+        <EmptyTitle>{error ? '加载失败' : '暂无播放历史'}</EmptyTitle>
+        <EmptyDescription>{error || '观看记录将显示在这里'}</EmptyDescription>
+      </EmptyHeader>
+    </Empty>
+  )
+}
+
 type ClientLayoutLoaderData = {
   categories: ClientCategory[]
 }
@@ -92,6 +120,8 @@ export function ClientLayout() {
   const [categoryOpen, setCategoryOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
   const [historyList, setHistoryList] = useState<HistoryEntry[]>([])
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [historyError, setHistoryError] = useState('')
   const [params] = useSearchParams()
   const selectedParentId = Number(params.get('parent_category_id') || 0)
   const selectedCategoryId = Number(params.get('category_id') || 0)
@@ -102,16 +132,26 @@ export function ClientLayout() {
   // 加载历史：已登录拉远端最近若干条；未登录用本地 localStorage
   const loadHistory = useCallback(() => {
     if (profile) {
+      setHistoryLoading(true)
+      setHistoryError('')
       clientApi
         .listHistory(1)
         .then((res) => {
           setHistoryList((res.data.list || []).slice(0, 8).map(fromRemote))
         })
-        .catch(() => {
-          // 远端失败时回退本地，保证弹窗不空
-          setHistoryList(getHistory().slice(0, 8).map(fromLocal))
+        .catch((err: unknown) => {
+          const local = getHistory().slice(0, 8).map(fromLocal)
+          setHistoryList(local)
+          if (local.length === 0) {
+            setHistoryError(errorMessage(err))
+          }
+        })
+        .finally(() => {
+          setHistoryLoading(false)
         })
     } else {
+      setHistoryLoading(false)
+      setHistoryError('')
       setHistoryList(getHistory().slice(0, 8).map(fromLocal))
     }
   }, [profile])
@@ -253,8 +293,10 @@ export function ClientLayout() {
         }
       />
       <PopoverContent align="start" side="bottom" className="w-72 p-2">
-        {historyList.length === 0 ? (
-          <p className="py-4 text-center text-sm text-muted-foreground">暂无播放历史</p>
+        {historyLoading && historyList.length === 0 ? (
+          <HistoryListSkeleton />
+        ) : historyList.length === 0 ? (
+          <HistoryEmpty error={historyError} />
         ) : (
           <div className="flex flex-col gap-0.5">
             {historyList.map((item) => (
@@ -429,7 +471,9 @@ export function ClientLayout() {
                     </div>
                     <Separator />
                     <div className="flex flex-col gap-2">
-                      {historyList.length > 0 ? (
+                      {historyLoading && historyList.length === 0 ? (
+                        <HistoryListSkeleton />
+                      ) : historyList.length > 0 ? (
                         <>
                           {historyList.map((item) => (
                             <Button
@@ -459,7 +503,7 @@ export function ClientLayout() {
                           </Button>
                         </>
                       ) : (
-                        <p className="px-2 py-1 text-sm text-muted-foreground">暂无播放历史</p>
+                        <HistoryEmpty error={historyError} />
                       )}
                     </div>
                     <Separator />
