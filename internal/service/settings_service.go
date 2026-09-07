@@ -15,17 +15,19 @@ import (
 )
 
 // SettingsService is the shared service for reading and writing system settings.
-// It provides cached reads, DTO mapping for client-visible groups (site/feature),
+// It provides cached reads, DTO mapping for client-visible groups (site/feature/seo),
 // and upsert execution with cache invalidation for admin writes.
 type SettingsService interface {
 	// LoadMapByGroup loads settings for a single group as a key→model map (with cache).
 	LoadMapByGroup(ctx context.Context, group string) (map[string]model.SystemSettings, error)
 	// LoadGroupMaps loads multiple groups, returning group→key→model maps.
 	LoadGroupMaps(ctx context.Context, groups []string) (map[string]map[string]model.SystemSettings, error)
-	// MapGroupToResponse maps a single group's settings to its shared DTO (site/feature only).
+	// MapGroupToResponse maps a single group's settings to its shared DTO (site/seo).
+	// Feature group must use MapToFeatureMatrix (admin) or MapToFeatureSettings (client).
 	MapGroupToResponse(group string, m map[string]model.SystemSettings) (any, error)
-	// MapGroupsToResponse maps multiple groups: single group → flat DTO, multiple → map[string]any.
-	MapGroupsToResponse(groups []string, maps map[string]map[string]model.SystemSettings) (any, error)
+	// MapGroupsToResponse maps multiple groups for the client API.
+	// Feature group is flattened by clientType; single group → flat DTO, multiple → map[string]any.
+	MapGroupsToResponse(groups []string, maps map[string]map[string]model.SystemSettings, clientType string) (any, error)
 	// UpsertMany executes upserts and invalidates settings cache.
 	UpsertMany(ctx context.Context, group string, upserts []repository.SettingUpsert) error
 }
@@ -73,8 +75,6 @@ func (s *settingsService) MapGroupToResponse(group string, m map[string]model.Sy
 	switch group {
 	case constant.SettingGroupSite:
 		return mapToSiteSettings(m), nil
-	case constant.SettingGroupFeature:
-		return mapToFeatureSettings(m), nil
 	case constant.SettingGroupSEO:
 		return mapToPublicSEOSettings(m), nil
 	default:
@@ -82,13 +82,19 @@ func (s *settingsService) MapGroupToResponse(group string, m map[string]model.Sy
 	}
 }
 
-func (s *settingsService) MapGroupsToResponse(groups []string, maps map[string]map[string]model.SystemSettings) (any, error) {
+func (s *settingsService) MapGroupsToResponse(groups []string, maps map[string]map[string]model.SystemSettings, clientType string) (any, error) {
+	mapOne := func(group string) (any, error) {
+		if group == constant.SettingGroupFeature {
+			return MapToFeatureSettings(maps[group], clientType), nil
+		}
+		return s.MapGroupToResponse(group, maps[group])
+	}
 	if len(groups) == 1 {
-		return s.MapGroupToResponse(groups[0], maps[groups[0]])
+		return mapOne(groups[0])
 	}
 	result := make(map[string]any, len(groups))
 	for _, g := range groups {
-		resp, err := s.MapGroupToResponse(g, maps[g])
+		resp, err := mapOne(g)
 		if err != nil {
 			return nil, err
 		}
@@ -120,12 +126,26 @@ func mapToSiteSettings(m map[string]model.SystemSettings) dto.SiteSettings {
 	}
 }
 
-func mapToFeatureSettings(m map[string]model.SystemSettings) dto.FeatureSettings {
+// MapToFeatureMatrix maps feature settings to the admin per-platform matrix.
+func MapToFeatureMatrix(m map[string]model.SystemSettings) dto.FeatureMatrix {
+	commentEnabled := ParsePlatformFlags(StrVal(m, constant.SettingFeatureCommentEnabled), true)
+	commentReview := ParsePlatformFlags(StrVal(m, constant.SettingFeatureCommentReview), true)
+	return dto.FeatureMatrix{
+		LiveTVEnabled:  ParsePlatformFlags(StrVal(m, constant.SettingFeatureLiveTVEnabled), false),
+		CommentEnabled: commentEnabled,
+		CommentReview:  AndPlatformFlags(commentReview, commentEnabled),
+		RatingEnabled:  ParsePlatformFlags(StrVal(m, constant.SettingFeatureRatingEnabled), true),
+	}
+}
+
+// MapToFeatureSettings flattens the feature matrix for one client type.
+func MapToFeatureSettings(m map[string]model.SystemSettings, clientType string) dto.FeatureSettings {
+	matrix := MapToFeatureMatrix(m)
 	return dto.FeatureSettings{
-		LiveTVEnabled:  BoolVal(m, constant.SettingFeatureLiveTVEnabled, false),
-		CommentEnabled: BoolVal(m, constant.SettingFeatureCommentEnabled, true),
-		CommentReview:  BoolVal(m, constant.SettingFeatureCommentReview, true),
-		RatingEnabled:  BoolVal(m, constant.SettingFeatureRatingEnabled, true),
+		LiveTVEnabled:  PickPlatformFlag(matrix.LiveTVEnabled, clientType),
+		CommentEnabled: PickPlatformFlag(matrix.CommentEnabled, clientType),
+		CommentReview:  PickPlatformFlag(matrix.CommentReview, clientType),
+		RatingEnabled:  PickPlatformFlag(matrix.RatingEnabled, clientType),
 	}
 }
 

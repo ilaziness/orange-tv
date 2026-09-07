@@ -18,7 +18,31 @@ type SiteSettings struct {
 	AnalyticsCode string `json:"analytics_code"`
 }
 
-// FeatureSettings holds client feature toggle settings.
+// PlatformFlags holds per-platform (web/desktop/app/tv) enable flags for one feature.
+type PlatformFlags struct {
+	// 网页端
+	Web bool `json:"web"`
+	// 桌面端
+	Desktop bool `json:"desktop"`
+	// 移动 App 端
+	App bool `json:"app"`
+	// 电视端
+	TV bool `json:"tv"`
+}
+
+// FeatureMatrix holds admin feature toggles as a per-platform matrix.
+type FeatureMatrix struct {
+	// 是否启用电视直播功能（按端）
+	LiveTVEnabled PlatformFlags `json:"livetv_enabled"`
+	// 是否启用评论功能（按端）
+	CommentEnabled PlatformFlags `json:"comment_enabled"`
+	// 评论是否需要审核（按端）
+	CommentReview PlatformFlags `json:"comment_review"`
+	// 是否启用评分功能（按端）
+	RatingEnabled PlatformFlags `json:"rating_enabled"`
+}
+
+// FeatureSettings holds client feature toggles flattened for the current client type.
 type FeatureSettings struct {
 	// 是否启用电视直播功能
 	LiveTVEnabled bool `json:"livetv_enabled"`

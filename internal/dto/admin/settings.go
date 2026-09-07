@@ -7,8 +7,11 @@ import (
 // SiteSettings is an alias to the shared DTO for admin convenience.
 type SiteSettings = dto.SiteSettings
 
-// FeatureSettings is an alias to the shared DTO for admin convenience.
-type FeatureSettings = dto.FeatureSettings
+// FeatureMatrix is an alias to the shared DTO for admin convenience.
+type FeatureMatrix = dto.FeatureMatrix
+
+// PlatformFlags is an alias to the shared DTO for admin convenience.
+type PlatformFlags = dto.PlatformFlags
 
 // APISettings holds resource-station / API mode settings.
 type APISettings struct {
@@ -60,15 +63,16 @@ type UpdateAPISettings struct {
 }
 
 // UpdateFeatureSettings updates client feature toggles (all optional).
+// When a field is present, all four platform booleans are written together.
 type UpdateFeatureSettings struct {
-	// 是否启用电视直播功能
-	LiveTVEnabled *bool `json:"livetv_enabled"`
-	// 是否启用评论功能
-	CommentEnabled *bool `json:"comment_enabled"`
-	// 评论是否需要审核
-	CommentReview *bool `json:"comment_review"`
-	// 是否启用评分功能
-	RatingEnabled *bool `json:"rating_enabled"`
+	// 是否启用电视直播功能（按端）
+	LiveTVEnabled *dto.PlatformFlags `json:"livetv_enabled"`
+	// 是否启用评论功能（按端）
+	CommentEnabled *dto.PlatformFlags `json:"comment_enabled"`
+	// 评论是否需要审核（按端）
+	CommentReview *dto.PlatformFlags `json:"comment_review"`
+	// 是否启用评分功能（按端）
+	RatingEnabled *dto.PlatformFlags `json:"rating_enabled"`
 }
 
 // UpdateSEOSettings updates SEO / social-sharing fields (all optional).

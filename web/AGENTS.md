@@ -94,11 +94,12 @@ API 前缀：
 6. **API 调用**：统一通过 `@orange-tv/shared` 的 `apiGet` / `apiPost` / `apiPut` / `apiDelete`；不要在页面内直接写 `fetch`
 7. **路径别名**：`@` 指向当前应用 `src`，`@orange-tv/shared` 指向共享包入口；不要使用相对路径跨层引用
 8. **样式**：Tailwind CSS 4 工具类优先；主题变量通过 CSS 变量管理，禁止硬编码色值
-9. **路由**：React Router v8，路由集中配置在 `src/routes.tsx`；新页面放在 `src/pages/<模块>/` 并按模块分子包
-10. **依赖管理**：新增依赖在每个应用或 `packages/shared` 的 `package.json` 中声明；使用 `npm install -w <workspace>`，不要手动改 lock 文件
-11. **修改后验证**：`npm run lint && npm run typecheck && npm run build`
-12. **外部输入边界验证**：处理 HTTP 响应、表单输入、URL 参数、localStorage 等外部数据时验证边界（空值、类型、范围、越界）；无效输入应给出明确用户提示并阻止继续处理
-13. **文件拆分**：单个源文件超过 1000 行时，应合理拆分为多个文件，避免单个文件过大，保持代码可维护性
+9. **可点击指针**：凡鼠标可点击的交互元素（按钮、链接、可点文字/图标、Switch、Tab、菜单项、卡片点击区等），悬停时必须显示手型指针（`cursor-pointer`）；禁用态用 `disabled:cursor-not-allowed`（或等价样式），不要用手型。原生 `<button>` / `<a>` 若组件或全局样式已保证手型可不再重复添加；自定义 `div`/`span`/`role="button"` 等可点区域必须显式加上
+10. **路由**：React Router v8，路由集中配置在 `src/routes.tsx`；新页面放在 `src/pages/<模块>/` 并按模块分子包
+11. **依赖管理**：新增依赖在每个应用或 `packages/shared` 的 `package.json` 中声明；使用 `npm install -w <workspace>`，不要手动改 lock 文件
+12. **修改后验证**：`npm run lint && npm run typecheck && npm run build`
+13. **外部输入边界验证**：处理 HTTP 响应、表单输入、URL 参数、localStorage 等外部数据时验证边界（空值、类型、范围、越界）；无效输入应给出明确用户提示并阻止继续处理
+14. **文件拆分**：单个源文件超过 1000 行时，应合理拆分为多个文件，避免单个文件过大，保持代码可维护性
 
 ## 按需查阅
 

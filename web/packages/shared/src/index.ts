@@ -500,6 +500,20 @@ export type FeatureSettings = {
   rating_enabled: boolean
 }
 
+export type PlatformFlags = {
+  web: boolean
+  desktop: boolean
+  app: boolean
+  tv: boolean
+}
+
+export type FeatureMatrix = {
+  livetv_enabled: PlatformFlags
+  comment_enabled: PlatformFlags
+  comment_review: PlatformFlags
+  rating_enabled: PlatformFlags
+}
+
 export type SEOSettings = {
   public_base_url: string
   default_og_image: string

@@ -35,7 +35,7 @@ import {
   type SiteSettings,
   type APISettings,
   type AdItem,
-  type FeatureSettings,
+  type FeatureMatrix,
   type SEOSettings,
   type UpdateSettingsRequest,
   type UpdateProfileRequest,
@@ -278,16 +278,14 @@ export const adminApi = {
     ),
   getFeatureSettings: () =>
     withAuth((token) =>
-      apiGet<FeatureSettings>(ADMIN_API_BASE, '/settings', { token, query: { group: 'feature' } }),
+      apiGet<FeatureMatrix>(ADMIN_API_BASE, '/settings', { token, query: { group: 'feature' } }),
     ),
   getSEOSettings: () =>
     withAuth((token) =>
       apiGet<SEOSettings>(ADMIN_API_BASE, '/settings', { token, query: { group: 'seo' } }),
     ),
-  updateSettings: (body: UpdateSettingsRequest) =>
-    withAuth((token) =>
-      apiPut<Record<string, unknown>>(ADMIN_API_BASE, '/settings', body, { token }),
-    ),
+  updateSettings: <T = Record<string, unknown>>(body: UpdateSettingsRequest) =>
+    withAuth((token) => apiPut<T>(ADMIN_API_BASE, '/settings', body, { token })),
   listSystemLogs: (query?: Record<string, string | number | undefined>) =>
     withAuth((token) =>
       apiGet<PageData<SystemLogItem>>(ADMIN_API_BASE, '/system-logs', { token, query }),

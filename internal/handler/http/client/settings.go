@@ -20,7 +20,7 @@ func NewSettingsHandler(settings clientsvc.ClientSettingsService) *SettingsHandl
 
 // GetSettings
 // @Summary 获取客户端设置
-// @Description 按分组获取客户端设置（支持多分组：site/feature/seo）。单分组时 data 为对应结构，多分组时 data 为 "分组名→结构" 的 map
+// @Description 按分组获取客户端设置（支持多分组：site/feature/seo）。feature 按请求端类型（X-Client-Type）拍平为布尔值。单分组时 data 为对应结构，多分组时 data 为 "分组名→结构" 的 map
 // @Tags 用户端｜站点设置
 // @Accept json
 // @Produce json

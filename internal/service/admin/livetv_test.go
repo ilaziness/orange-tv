@@ -35,7 +35,7 @@ func (s *stubLiveTVSyncSettingsService) MapGroupToResponse(group string, m map[s
 	return nil, nil
 }
 
-func (s *stubLiveTVSyncSettingsService) MapGroupsToResponse(groups []string, maps map[string]map[string]model.SystemSettings) (any, error) {
+func (s *stubLiveTVSyncSettingsService) MapGroupsToResponse(groups []string, maps map[string]map[string]model.SystemSettings, clientType string) (any, error) {
 	return nil, nil
 }
 

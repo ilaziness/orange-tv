@@ -32,7 +32,7 @@ func (s *stubSettingsService) MapGroupToResponse(group string, m map[string]mode
 	return nil, nil
 }
 
-func (s *stubSettingsService) MapGroupsToResponse(groups []string, maps map[string]map[string]model.SystemSettings) (any, error) {
+func (s *stubSettingsService) MapGroupsToResponse(groups []string, maps map[string]map[string]model.SystemSettings, clientType string) (any, error) {
 	return nil, nil
 }
 
@@ -46,18 +46,31 @@ func TestLiveTVFeatureMiddleware(t *testing.T) {
 	tests := []struct {
 		name       string
 		m          map[string]model.SystemSettings
+		clientType string
 		loadErr    error
 		wantStatus int
 	}{
 		{
-			name:       "livetv enabled",
-			m:          map[string]model.SystemSettings{constant.SettingFeatureLiveTVEnabled: {SettingValue: "true"}},
+			name: "livetv enabled for web",
+			m: map[string]model.SystemSettings{
+				constant.SettingFeatureLiveTVEnabled: {SettingValue: `{"web":true,"desktop":false,"app":false,"tv":false}`},
+			},
 			wantStatus: http.StatusOK,
 		},
 		{
-			name:       "livetv disabled",
-			m:          map[string]model.SystemSettings{constant.SettingFeatureLiveTVEnabled: {SettingValue: "false"}},
+			name: "livetv disabled for web",
+			m: map[string]model.SystemSettings{
+				constant.SettingFeatureLiveTVEnabled: {SettingValue: `{"web":false,"desktop":true,"app":true,"tv":true}`},
+			},
 			wantStatus: http.StatusNotFound,
+		},
+		{
+			name: "livetv enabled for app",
+			m: map[string]model.SystemSettings{
+				constant.SettingFeatureLiveTVEnabled: {SettingValue: `{"web":false,"desktop":false,"app":true,"tv":false}`},
+			},
+			clientType: constant.ClientTypeApp,
+			wantStatus: http.StatusOK,
 		},
 		{
 			name:       "livetv missing",
@@ -79,6 +92,7 @@ func TestLiveTVFeatureMiddleware(t *testing.T) {
 
 			called := false
 			engine := gin.New()
+			engine.Use(ClientTypeMiddleware())
 			engine.Use(mw)
 			engine.GET("/livetv", func(c *gin.Context) {
 				called = true
@@ -87,6 +101,9 @@ func TestLiveTVFeatureMiddleware(t *testing.T) {
 
 			w := httptest.NewRecorder()
 			req := httptest.NewRequest(http.MethodGet, "/livetv", nil)
+			if tt.clientType != "" {
+				req.Header.Set(constant.ClientTypeHeader, tt.clientType)
+			}
 			engine.ServeHTTP(w, req)
 
 			assert.Equal(t, tt.wantStatus, w.Code)

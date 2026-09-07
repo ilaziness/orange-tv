@@ -40,7 +40,7 @@ func (f *fakeSettings) LoadGroupMaps(ctx context.Context, groups []string) (map[
 func (f *fakeSettings) MapGroupToResponse(group string, m map[string]model.SystemSettings) (any, error) {
 	return service.NewSettingsService(nil, nil, zap.NewNop()).MapGroupToResponse(group, m)
 }
-func (f *fakeSettings) MapGroupsToResponse(groups []string, maps map[string]map[string]model.SystemSettings) (any, error) {
+func (f *fakeSettings) MapGroupsToResponse(groups []string, maps map[string]map[string]model.SystemSettings, clientType string) (any, error) {
 	return nil, nil
 }
 func (f *fakeSettings) UpsertMany(ctx context.Context, group string, upserts []repository.SettingUpsert) error {
@@ -92,7 +92,7 @@ func testSEOSettings() *fakeSettings {
 			constant.SettingSiteName: setting(constant.SettingSiteName, "Demo\nSite", constant.SettingTypeString),
 		},
 		constant.SettingGroupFeature: {
-			constant.SettingFeatureLiveTVEnabled: setting(constant.SettingFeatureLiveTVEnabled, "1", constant.SettingTypeBoolean),
+			constant.SettingFeatureLiveTVEnabled: setting(constant.SettingFeatureLiveTVEnabled, `{"web":true,"desktop":true,"app":true,"tv":true}`, constant.SettingTypeJSON),
 		},
 	}}
 }

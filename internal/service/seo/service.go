@@ -421,7 +421,8 @@ func (s *seoService) liveTVEnabled(ctx context.Context) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return service.BoolVal(m, constant.SettingFeatureLiveTVEnabled, false), nil
+	// Public sitemap targets the web site.
+	return service.PlatformBoolVal(m, constant.SettingFeatureLiveTVEnabled, constant.ClientTypeWeb, false), nil
 }
 
 func staticPaths(liveTVEnabled bool) []string {

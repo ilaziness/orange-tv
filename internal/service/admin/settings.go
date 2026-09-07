@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/ilaziness/orange-tv/internal/constant"
+	dto "github.com/ilaziness/orange-tv/internal/dto"
 	admindto "github.com/ilaziness/orange-tv/internal/dto/admin"
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
@@ -47,7 +48,7 @@ func (s *settingsService) Update(ctx context.Context, group string, data json.Ra
 		return nil, errcode.WithMessage(errcode.ParamError, "无更新内容")
 	}
 
-	upserts, err := s.parseUpdateData(group, data)
+	upserts, err := s.parseUpdateData(ctx, group, data)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +67,7 @@ func (s *settingsService) Update(ctx context.Context, group string, data json.Ra
 	return s.mapToResponse(group, m), nil
 }
 
-func (s *settingsService) parseUpdateData(group string, data json.RawMessage) ([]repository.SettingUpsert, error) {
+func (s *settingsService) parseUpdateData(ctx context.Context, group string, data json.RawMessage) ([]repository.SettingUpsert, error) {
 	switch group {
 	case constant.SettingGroupSite:
 		var req admindto.UpdateSiteSettings
@@ -87,14 +88,7 @@ func (s *settingsService) parseUpdateData(group string, data json.RawMessage) ([
 		}
 		return s.buildAPIUpserts(&req), nil
 	case constant.SettingGroupFeature:
-		var req admindto.UpdateFeatureSettings
-		if err := json.Unmarshal(data, &req); err != nil {
-			return nil, errcode.WithMessage(errcode.ParamError, "无效的设置数据")
-		}
-		if err := validator.Validate(&req); err != nil {
-			return nil, errcode.WithMessage(errcode.ParamError, err.Error())
-		}
-		return s.buildFeatureUpserts(&req), nil
+		return s.parseFeatureUpdate(ctx, data)
 	case constant.SettingGroupSEO:
 		var req admindto.UpdateSEOSettings
 		if err := json.Unmarshal(data, &req); err != nil {
@@ -107,6 +101,71 @@ func (s *settingsService) parseUpdateData(group string, data json.RawMessage) ([
 	default:
 		return nil, errcode.WithMessage(errcode.ParamError, "无效的设置分组")
 	}
+}
+
+func (s *settingsService) parseFeatureUpdate(ctx context.Context, data json.RawMessage) ([]repository.SettingUpsert, error) {
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return nil, errcode.WithMessage(errcode.ParamError, "无效的设置数据")
+	}
+
+	var req admindto.UpdateFeatureSettings
+	decode := func(field string) (*dto.PlatformFlags, error) {
+		v, ok := raw[field]
+		if !ok {
+			return nil, nil
+		}
+		flags, err := service.DecodePlatformFlags(v)
+		if err != nil {
+			return nil, errcode.WithMessage(errcode.ParamError, field+": "+err.Error())
+		}
+		return &flags, nil
+	}
+
+	var err error
+	if req.LiveTVEnabled, err = decode("livetv_enabled"); err != nil {
+		return nil, err
+	}
+	if req.CommentEnabled, err = decode("comment_enabled"); err != nil {
+		return nil, err
+	}
+	if req.CommentReview, err = decode("comment_review"); err != nil {
+		return nil, err
+	}
+	if req.RatingEnabled, err = decode("rating_enabled"); err != nil {
+		return nil, err
+	}
+
+	if req.LiveTVEnabled == nil && req.CommentEnabled == nil && req.CommentReview == nil && req.RatingEnabled == nil {
+		return nil, nil
+	}
+
+	// Keep comment_review consistent with comment_enabled per platform.
+	if req.CommentEnabled != nil || req.CommentReview != nil {
+		commentEnabled := req.CommentEnabled
+		commentReview := req.CommentReview
+		if commentEnabled == nil || commentReview == nil {
+			current, loadErr := s.shared.LoadMapByGroup(ctx, constant.SettingGroupFeature)
+			if loadErr != nil {
+				return nil, loadErr
+			}
+			if commentEnabled == nil {
+				flags := service.ParsePlatformFlags(service.StrVal(current, constant.SettingFeatureCommentEnabled), true)
+				commentEnabled = &flags
+			}
+			if commentReview == nil {
+				flags := service.ParsePlatformFlags(service.StrVal(current, constant.SettingFeatureCommentReview), true)
+				commentReview = &flags
+			}
+		}
+		normalized := service.AndPlatformFlags(*commentReview, *commentEnabled)
+		req.CommentReview = &normalized
+		if req.CommentEnabled != nil {
+			req.CommentEnabled = commentEnabled
+		}
+	}
+
+	return s.buildFeatureUpserts(&req), nil
 }
 
 func (s *settingsService) buildSiteUpserts(site *admindto.UpdateSiteSettings) []repository.SettingUpsert {
@@ -173,13 +232,15 @@ func (s *settingsService) buildAPIUpserts(api *admindto.UpdateAPISettings) []rep
 
 func (s *settingsService) mapToResponse(group string, m map[string]model.SystemSettings) any {
 	switch group {
-	case constant.SettingGroupSite, constant.SettingGroupFeature:
+	case constant.SettingGroupSite:
 		resp, err := s.shared.MapGroupToResponse(group, m)
 		if err != nil {
 			s.log.Error("settings: map group to response failed", zap.String("group", group), zap.Error(err))
 			return nil
 		}
 		return resp
+	case constant.SettingGroupFeature:
+		return service.MapToFeatureMatrix(m)
 	case constant.SettingGroupAPI:
 		return mapToAPISettings(m)
 	case constant.SettingGroupSEO:
@@ -198,43 +259,31 @@ func mapToAPISettings(m map[string]model.SystemSettings) admindto.APISettings {
 func (s *settingsService) buildFeatureUpserts(f *admindto.UpdateFeatureSettings) []repository.SettingUpsert {
 	var upserts []repository.SettingUpsert
 	if f.LiveTVEnabled != nil {
-		v := "0"
-		if *f.LiveTVEnabled {
-			v = "1"
-		}
 		upserts = append(upserts, repository.SettingUpsert{
-			Key: constant.SettingFeatureLiveTVEnabled, Group: constant.SettingGroupFeature, Value: v,
-			SettingType: constant.SettingTypeBoolean, Description: "电视直播开关",
+			Key: constant.SettingFeatureLiveTVEnabled, Group: constant.SettingGroupFeature,
+			Value:       service.MarshalPlatformFlags(*f.LiveTVEnabled),
+			SettingType: constant.SettingTypeJSON, Description: "电视直播开关（按端）",
 		})
 	}
 	if f.CommentEnabled != nil {
-		v := "0"
-		if *f.CommentEnabled {
-			v = "1"
-		}
 		upserts = append(upserts, repository.SettingUpsert{
-			Key: constant.SettingFeatureCommentEnabled, Group: constant.SettingGroupFeature, Value: v,
-			SettingType: constant.SettingTypeBoolean, Description: "视频评论开关",
+			Key: constant.SettingFeatureCommentEnabled, Group: constant.SettingGroupFeature,
+			Value:       service.MarshalPlatformFlags(*f.CommentEnabled),
+			SettingType: constant.SettingTypeJSON, Description: "视频评论开关（按端）",
 		})
 	}
 	if f.CommentReview != nil {
-		v := "0"
-		if *f.CommentReview {
-			v = "1"
-		}
 		upserts = append(upserts, repository.SettingUpsert{
-			Key: constant.SettingFeatureCommentReview, Group: constant.SettingGroupFeature, Value: v,
-			SettingType: constant.SettingTypeBoolean, Description: "评论是否需要审核",
+			Key: constant.SettingFeatureCommentReview, Group: constant.SettingGroupFeature,
+			Value:       service.MarshalPlatformFlags(*f.CommentReview),
+			SettingType: constant.SettingTypeJSON, Description: "评论是否需要审核（按端）",
 		})
 	}
 	if f.RatingEnabled != nil {
-		v := "0"
-		if *f.RatingEnabled {
-			v = "1"
-		}
 		upserts = append(upserts, repository.SettingUpsert{
-			Key: constant.SettingFeatureRatingEnabled, Group: constant.SettingGroupFeature, Value: v,
-			SettingType: constant.SettingTypeBoolean, Description: "视频评分开关",
+			Key: constant.SettingFeatureRatingEnabled, Group: constant.SettingGroupFeature,
+			Value:       service.MarshalPlatformFlags(*f.RatingEnabled),
+			SettingType: constant.SettingTypeJSON, Description: "视频评分开关（按端）",
 		})
 	}
 	return upserts

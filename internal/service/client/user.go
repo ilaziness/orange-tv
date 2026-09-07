@@ -13,6 +13,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/ilaziness/orange-tv/internal/auth"
+	"github.com/ilaziness/orange-tv/internal/clienttype"
 	"github.com/ilaziness/orange-tv/internal/constant"
 	"github.com/ilaziness/orange-tv/internal/crypto"
 	clientdto "github.com/ilaziness/orange-tv/internal/dto/client"
@@ -690,7 +691,8 @@ func (s *userService) CreateComment(ctx context.Context, userID uint32, req *cli
 		s.log.Error("client user: load feature settings for create comment failed", zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	if !service.BoolVal(featureMap, constant.SettingFeatureCommentEnabled, true) {
+	clientType := clienttype.FromContext(ctx)
+	if !service.PlatformBoolVal(featureMap, constant.SettingFeatureCommentEnabled, clientType, true) {
 		return nil, errcode.CommentDisabled
 	}
 
@@ -726,7 +728,7 @@ func (s *userService) CreateComment(ctx context.Context, userID uint32, req *cli
 
 	// Determine comment status based on review toggle
 	status := constant.CommentStatusNormal
-	if service.BoolVal(featureMap, constant.SettingFeatureCommentReview, true) {
+	if service.PlatformBoolVal(featureMap, constant.SettingFeatureCommentReview, clientType, true) {
 		status = constant.CommentStatusHidden
 	}
 
@@ -865,7 +867,8 @@ func (s *userService) RateVideo(ctx context.Context, userID, videoID uint32, req
 		s.log.Error("client user: load feature settings for rate video failed", zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	if !service.BoolVal(featureMap, constant.SettingFeatureRatingEnabled, true) {
+	clientType := clienttype.FromContext(ctx)
+	if !service.PlatformBoolVal(featureMap, constant.SettingFeatureRatingEnabled, clientType, true) {
 		return nil, errcode.RatingDisabled
 	}
 
