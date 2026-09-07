@@ -105,7 +105,7 @@ type UpdateProfileRequest struct {
 	// 邮箱（可选）
 	Email string `json:"email" binding:"omitempty,email,max=128"`
 	// 头像地址（可选）
-	Avatar string `json:"avatar" binding:"omitempty,url,max=120"`
+	Avatar string `json:"avatar" binding:"omitempty,url,max=500"`
 }
 
 // ChangePasswordRequest changes the current user's password.

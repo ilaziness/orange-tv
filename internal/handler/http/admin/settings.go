@@ -25,7 +25,7 @@ func NewSettingsHandler(svc adminsvc.SettingsService, recorder *audit.Recorder) 
 
 // GetSettings
 // @Summary 获取系统设置
-// @Description 按分组获取系统设置。data 结构随 group 变化：site=SiteSettings，api=APISettings，feature=FeatureMatrix，seo=SEOSettings
+// @Description 按分组获取系统设置。data 结构随 group 变化：site=SiteSettings，api=APISettings，feature=FeatureMatrix，seo=SEOSettings，storage=StorageSettings
 // @Tags 管理端｜系统设置
 // @Accept json
 // @Produce json

@@ -3,6 +3,7 @@ package admin
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/ilaziness/orange-tv/internal/constant"
@@ -13,6 +14,7 @@ import (
 	"github.com/ilaziness/orange-tv/internal/repository"
 	"github.com/ilaziness/orange-tv/internal/service"
 	"github.com/ilaziness/orange-tv/internal/validator"
+	"github.com/ilaziness/orange-tv/pkg/objectstorage"
 	"go.uber.org/zap"
 )
 
@@ -98,6 +100,8 @@ func (s *settingsService) parseUpdateData(ctx context.Context, group string, dat
 			return nil, errcode.WithMessage(errcode.ParamError, err.Error())
 		}
 		return s.buildSEOUpserts(&req)
+	case constant.SettingGroupStorage:
+		return s.parseStorageUpdate(ctx, data)
 	default:
 		return nil, errcode.WithMessage(errcode.ParamError, "无效的设置分组")
 	}
@@ -245,6 +249,8 @@ func (s *settingsService) mapToResponse(group string, m map[string]model.SystemS
 		return mapToAPISettings(m)
 	case constant.SettingGroupSEO:
 		return service.MapToSEOSettings(m)
+	case constant.SettingGroupStorage:
+		return service.MapToStorageSettings(m)
 	default:
 		return nil
 	}
@@ -373,6 +379,120 @@ func (s *settingsService) buildSEOUpserts(seo *admindto.UpdateSEOSettings) ([]re
 		upserts = append(upserts, repository.SettingUpsert{
 			Key: constant.SettingSEOBingSiteVerification, Group: constant.SettingGroupSEO, Value: strings.TrimSpace(*seo.BingSiteVerification),
 			SettingType: constant.SettingTypeString, Description: "Bing 站点验证码",
+		})
+	}
+	return upserts, nil
+}
+
+func (s *settingsService) parseStorageUpdate(ctx context.Context, data json.RawMessage) ([]repository.SettingUpsert, error) {
+	var req admindto.UpdateStorageSettings
+	if err := json.Unmarshal(data, &req); err != nil {
+		return nil, errcode.WithMessage(errcode.ParamError, "无效的设置数据")
+	}
+	if err := validator.Validate(&req); err != nil {
+		return nil, errcode.WithMessage(errcode.ParamError, err.Error())
+	}
+	if req.Provider == nil && req.Aliyun == nil && req.Tencent == nil && req.Qiniu == nil {
+		return nil, nil
+	}
+
+	current, err := s.shared.LoadMapByGroup(ctx, constant.SettingGroupStorage)
+	if err != nil {
+		return nil, err
+	}
+
+	aliyun := service.ParseStorageProviderRaw(service.StrVal(current, constant.SettingStorageAliyun))
+	tencent := service.ParseStorageProviderRaw(service.StrVal(current, constant.SettingStorageTencent))
+	qiniu := service.ParseStorageProviderRaw(service.StrVal(current, constant.SettingStorageQiniu))
+	provider := service.StrVal(current, constant.SettingStorageProvider)
+	if provider == "" {
+		provider = constant.StorageProviderNone
+	}
+
+	merge := func(dst *service.StorageProviderRaw, src *admindto.UpdateStorageProviderConfig) error {
+		if src == nil {
+			return nil
+		}
+		if src.Bucket != nil {
+			dst.Bucket = strings.TrimSpace(*src.Bucket)
+		}
+		if src.Region != nil {
+			dst.Region = strings.TrimSpace(*src.Region)
+		}
+		if src.Endpoint != nil {
+			dst.Endpoint = strings.TrimSpace(*src.Endpoint)
+		}
+		if src.AccessKey != nil && strings.TrimSpace(*src.AccessKey) != "" {
+			dst.AccessKey = strings.TrimSpace(*src.AccessKey)
+		}
+		if src.SecretKey != nil && strings.TrimSpace(*src.SecretKey) != "" {
+			dst.SecretKey = strings.TrimSpace(*src.SecretKey)
+		}
+		if src.CDNDomain != nil {
+			cdn, normErr := objectstorage.NormalizeCDNDomain(*src.CDNDomain)
+			if normErr != nil {
+				return fmt.Errorf("加速域名格式无效")
+			}
+			dst.CDNDomain = cdn
+		}
+		return nil
+	}
+
+	if err := merge(&aliyun, req.Aliyun); err != nil {
+		return nil, errcode.WithMessage(errcode.ParamError, "阿里云: "+err.Error())
+	}
+	if err := merge(&tencent, req.Tencent); err != nil {
+		return nil, errcode.WithMessage(errcode.ParamError, "腾讯云: "+err.Error())
+	}
+	if err := merge(&qiniu, req.Qiniu); err != nil {
+		return nil, errcode.WithMessage(errcode.ParamError, "七牛云: "+err.Error())
+	}
+
+	if req.Provider != nil {
+		p, normErr := service.NormalizeStorageProviderName(*req.Provider)
+		if normErr != nil {
+			return nil, errcode.WithMessage(errcode.ParamError, normErr.Error())
+		}
+		provider = p
+	}
+
+	// Validate each vendor that has any fields; enabled vendor must be complete.
+	if err := service.ValidateStorageProviderConfig(constant.StorageProviderAliyun, aliyun, provider == constant.StorageProviderAliyun); err != nil {
+		return nil, errcode.WithMessage(errcode.ParamError, "阿里云: "+err.Error())
+	}
+	if err := service.ValidateStorageProviderConfig(constant.StorageProviderTencent, tencent, provider == constant.StorageProviderTencent); err != nil {
+		return nil, errcode.WithMessage(errcode.ParamError, "腾讯云: "+err.Error())
+	}
+	if err := service.ValidateStorageProviderConfig(constant.StorageProviderQiniu, qiniu, provider == constant.StorageProviderQiniu); err != nil {
+		return nil, errcode.WithMessage(errcode.ParamError, "七牛云: "+err.Error())
+	}
+
+	var upserts []repository.SettingUpsert
+	if req.Provider != nil {
+		upserts = append(upserts, repository.SettingUpsert{
+			Key: constant.SettingStorageProvider, Group: constant.SettingGroupStorage, Value: provider,
+			SettingType: constant.SettingTypeString, Description: "当前启用的云存储厂商",
+		})
+	}
+	if req.Aliyun != nil {
+		upserts = append(upserts, repository.SettingUpsert{
+			Key: constant.SettingStorageAliyun, Group: constant.SettingGroupStorage,
+			Value:       service.MarshalStorageProviderRaw(aliyun),
+			SettingType: constant.SettingTypeJSON, Description: "阿里云 OSS 配置 JSON",
+		})
+	}
+	if req.Tencent != nil {
+		upserts = append(upserts, repository.SettingUpsert{
+			Key: constant.SettingStorageTencent, Group: constant.SettingGroupStorage,
+			Value:       service.MarshalStorageProviderRaw(tencent),
+			SettingType: constant.SettingTypeJSON, Description: "腾讯云 COS 配置 JSON",
+		})
+	}
+	if req.Qiniu != nil {
+		upserts = append(upserts, repository.SettingUpsert{
+			Key: constant.SettingStorageQiniu, Group: constant.SettingGroupStorage,
+			Value:       service.MarshalStorageProviderRaw(qiniu),
+			SettingType: constant.SettingTypeJSON, Description: "七牛云 Kodo 配置 JSON",
 		})
 	}
 	return upserts, nil

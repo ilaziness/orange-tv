@@ -29,6 +29,9 @@ func registerClientContentRoutes(v1 *gin.RouterGroup, h *Handlers) {
 	v1.GET("/banners", h.ClientBanner.List)
 	v1.GET("/promotions", h.ClientAd.List)
 
+	// Media upload (requires JWT)
+	v1.POST("/media", h.ClientMedia.Upload)
+
 	// User auth (C5) — public
 	v1.GET("/auth/captcha", h.ClientUser.Captcha)
 	v1.POST("/auth/register", h.ClientUser.Register)

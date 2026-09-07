@@ -21,20 +21,20 @@ type APISettings struct {
 
 // GetSettingsQuery binds the group query parameter.
 type GetSettingsQuery struct {
-	// 配置分组（site=站点信息，api=API/资源站，feature=功能开关，seo=SEO设置）
-	Group string `form:"group" binding:"required,oneof=site api feature seo"`
+	// 配置分组（site=站点信息，api=API/资源站，feature=功能开关，seo=SEO设置，storage=云存储）
+	Group string `form:"group" binding:"required,oneof=site api feature seo storage"`
 }
 
 // UpdateSettingsRequest updates settings for a single group.
 // Data is the group-specific key-value JSON payload. The service layer unmarshals it
-// into the per-group struct (UpdateSiteSettings/UpdateAPISettings/UpdateFeatureSettings/UpdateSEOSettings)
+// into the per-group struct (UpdateSiteSettings/UpdateAPISettings/UpdateFeatureSettings/UpdateSEOSettings/UpdateStorageSettings)
 // and upserts each string/bool value into its own system_settings row; the raw payload
 // is therefore never stored as a whole, so decoding it as `any` and re-marshaling is
 // semantically identical to keeping the raw bytes.
 type UpdateSettingsRequest struct {
-	// 配置分组（必填：site=站点信息，api=API/资源站，feature=功能开关，seo=SEO设置）
-	Group string `json:"group" binding:"required,oneof=site api feature seo"`
-	// 分组配置键值 JSON 数据（结构随分组变化：site=UpdateSiteSettings，api=UpdateAPISettings，feature=UpdateFeatureSettings，seo=UpdateSEOSettings）
+	// 配置分组（必填：site=站点信息，api=API/资源站，feature=功能开关，seo=SEO设置，storage=云存储）
+	Group string `json:"group" binding:"required,oneof=site api feature seo storage"`
+	// 分组配置键值 JSON 数据（结构随分组变化）
 	Data any `json:"data" binding:"required"`
 }
 

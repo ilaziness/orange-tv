@@ -76,6 +76,12 @@ func (a *App) wireHTTP() error {
 	adminMgmtSvc := adminsvc.NewManagementService(adminRepo, videoRepo, userFeatureRepo, recorder, a.log)
 	adminDataSvc := adminsvc.NewDataService(a.db, a.cfg, logRepo, a.log)
 
+	mediaRepo := repository.NewMediaRepo(a.db)
+	storageResolver := service.NewStorageResolver(sharedSettingsSvc, a.log)
+	mediaUploader := service.NewMediaUploader(storageResolver, mediaRepo, a.log)
+	adminMediaSvc := adminsvc.NewMediaService(mediaUploader, storageResolver, mediaRepo, a.log)
+	clientMediaSvc := clientsvc.NewMediaService(mediaUploader)
+
 	clientCategorySvc := clientsvc.NewCategoryService(categoryRepo, a.cache, a.log)
 	clientVideoSvc := clientsvc.NewVideoService(videoRepo, metaRepo, playRepo, a.cache, a.log)
 	clientLiveSvc := clientsvc.NewLiveTVService(liveTVRepo, a.cache, a.log)
@@ -111,6 +117,7 @@ func (a *App) wireHTTP() error {
 	handlers.AdminMgmt = adminhandler.NewManagementHandler(adminMgmtSvc)
 	handlers.AdminData = adminhandler.NewDataHandler(adminDataSvc)
 	handlers.AdminAd = adminhandler.NewAdHandler(adminAdSvc)
+	handlers.AdminMedia = adminhandler.NewMediaHandler(adminMediaSvc)
 
 	handlers.ClientCategory = clienthandler.NewCategoryHandler(clientCategorySvc)
 	handlers.ClientVideo = clienthandler.NewVideoHandler(clientVideoSvc)
@@ -119,6 +126,7 @@ func (a *App) wireHTTP() error {
 	handlers.ClientUser = clienthandler.NewUserHandler(clientUserSvc)
 	handlers.ClientBanner = clienthandler.NewBannerHandler(clientBannerSvc)
 	handlers.ClientAd = clienthandler.NewAdHandler(clientAdSvc)
+	handlers.ClientMedia = clienthandler.NewMediaHandler(clientMediaSvc)
 	handlers.OpenResource = openhandler.NewResourceHandler(openResourceSvc)
 
 	seoSvc := seosvc.NewService(sharedSettingsSvc, videoRepo, a.cache, a.log)

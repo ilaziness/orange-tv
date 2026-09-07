@@ -91,3 +91,63 @@ type PublicSEOSettings struct {
 	// Bing Webmaster 验证码
 	BingSiteVerification string `json:"bing_site_verification"`
 }
+
+// StorageProviderConfig is one cloud vendor credential set (GET is masked).
+type StorageProviderConfig struct {
+	// 存储桶 / 空间名
+	Bucket string `json:"bucket"`
+	// 区域（如 oss-cn-hangzhou、ap-guangzhou、z0）
+	Region string `json:"region"`
+	// 可选自定义 API Endpoint
+	Endpoint string `json:"endpoint"`
+	// AccessKey / SecretId；GET 永远为空，用 access_configured 判断是否已配置
+	AccessKey string `json:"access_key"`
+	// SecretKey；GET 永远为空，用 secret_configured 判断是否已配置
+	SecretKey string `json:"secret_key"`
+	// 是否已配置 AccessKey（仅响应）
+	AccessConfigured bool `json:"access_configured"`
+	// 是否已配置 Secret（仅响应）
+	SecretConfigured bool `json:"secret_configured"`
+	// 加速域名（https，无尾斜杠）
+	CDNDomain string `json:"cdn_domain"`
+}
+
+// StorageSettings is the admin storage group response.
+type StorageSettings struct {
+	// 当前启用厂商：none / aliyun / tencent / qiniu
+	Provider string `json:"provider"`
+	// 阿里云 OSS
+	Aliyun StorageProviderConfig `json:"aliyun"`
+	// 腾讯云 COS
+	Tencent StorageProviderConfig `json:"tencent"`
+	// 七牛云 Kodo
+	Qiniu StorageProviderConfig `json:"qiniu"`
+}
+
+// MediaAsset is a media library item returned by upload/list APIs.
+type MediaAsset struct {
+	// 媒体 ID
+	ID uint64 `json:"id"`
+	// 媒体类型（当前仅 image）
+	MediaType string `json:"media_type"`
+	// 上传方 admin/user
+	OwnerKind string `json:"owner_kind"`
+	// 上传方 ID
+	OwnerID uint32 `json:"owner_id"`
+	// 云厂商
+	Provider string `json:"provider"`
+	// 加速域名公网地址
+	URL string `json:"url"`
+	// MIME
+	Mime string `json:"mime"`
+	// 大小（字节）
+	Size uint64 `json:"size"`
+	// 原始文件名
+	OriginalName string `json:"original_name"`
+	// 宽
+	Width uint32 `json:"width"`
+	// 高
+	Height uint32 `json:"height"`
+	// 创建时间
+	CreatedAt string `json:"created_at"`
+}

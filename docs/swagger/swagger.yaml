@@ -132,7 +132,7 @@ definitions:
         description: 跳转链接
         type: string
       sort:
-        description: 排序权重，值越小越靠前
+        description: 排序权重，值越大越靠前
         type: integer
       status:
         description: 状态（0=禁用，1=启用）
@@ -504,7 +504,7 @@ definitions:
     properties:
       avatar:
         description: 头像地址（可选）
-        maxLength: 500
+        maxLength: 1024
         type: string
       email:
         description: 邮箱（可选）
@@ -539,14 +539,14 @@ definitions:
     properties:
       cover:
         description: 封面地址（必填）
-        maxLength: 500
+        maxLength: 1024
         type: string
       link:
         description: 跳转链接
         maxLength: 500
         type: string
       sort:
-        description: 排序权重，值越小越靠前
+        description: 排序权重，值越大越靠前
         minimum: 0
         type: integer
       status:
@@ -643,7 +643,7 @@ definitions:
         type: string
       logo:
         description: 频道 Logo 地址
-        maxLength: 500
+        maxLength: 1024
         type: string
       name:
         description: 频道名称（必填）
@@ -773,7 +773,7 @@ definitions:
     properties:
       avatar:
         description: 头像地址（可选）
-        maxLength: 500
+        maxLength: 1024
         type: string
       email:
         description: 邮箱（必填）
@@ -812,7 +812,7 @@ definitions:
         type: integer
       cover_image:
         description: 封面地址
-        maxLength: 500
+        maxLength: 1024
         type: string
       description:
         description: 剧情简介
@@ -833,7 +833,7 @@ definitions:
         type: string
       poster_image:
         description: 海报地址
-        maxLength: 500
+        maxLength: 1024
         type: string
       publish_status:
         description: 上架状态（0=未上架，1=已上架）
@@ -1005,6 +1005,45 @@ definitions:
         description: 令牌类型（如 Bearer）
         type: string
     type: object
+  admin.MediaAsset:
+    properties:
+      created_at:
+        description: 创建时间
+        type: string
+      height:
+        description: 高
+        type: integer
+      id:
+        description: 媒体 ID
+        type: integer
+      media_type:
+        description: 媒体类型（当前仅 image）
+        type: string
+      mime:
+        description: MIME
+        type: string
+      original_name:
+        description: 原始文件名
+        type: string
+      owner_id:
+        description: 上传方 ID
+        type: integer
+      owner_kind:
+        description: 上传方 admin/user
+        type: string
+      provider:
+        description: 云厂商
+        type: string
+      size:
+        description: 大小（字节）
+        type: integer
+      url:
+        description: 加速域名公网地址
+        type: string
+      width:
+        description: 宽
+        type: integer
+    type: object
   admin.NamedResponse:
     properties:
       id:
@@ -1134,6 +1173,18 @@ definitions:
           $ref: '#/definitions/admin.CollectCategoryInput'
         type: array
     type: object
+  admin.StoragePingResponse:
+    properties:
+      ok:
+        description: 是否成功
+        type: boolean
+      provider:
+        description: 当前厂商
+        type: string
+      url:
+        description: 探针对象加速域名地址（已删除）
+        type: string
+    type: object
   admin.SystemLogItem:
     properties:
       action:
@@ -1219,7 +1270,7 @@ definitions:
     properties:
       avatar:
         description: 头像地址
-        maxLength: 500
+        maxLength: 1024
         type: string
       email:
         description: 邮箱
@@ -1245,14 +1296,14 @@ definitions:
     properties:
       cover:
         description: 封面地址
-        maxLength: 500
+        maxLength: 1024
         type: string
       link:
         description: 跳转链接
         maxLength: 500
         type: string
       sort:
-        description: 排序权重，值越小越靠前
+        description: 排序权重，值越大越靠前
         minimum: 0
         type: integer
       status:
@@ -1267,8 +1318,7 @@ definitions:
         minLength: 1
         type: string
       video_id:
-        description: 关联视频ID
-        minimum: 1
+        description: 关联视频ID（0 表示未关联）
         type: integer
     type: object
   admin.UpdateCategoryRequest:
@@ -1350,7 +1400,7 @@ definitions:
         type: string
       logo:
         description: 频道 Logo 地址
-        maxLength: 500
+        maxLength: 1024
         type: string
       name:
         description: 频道名称
@@ -1451,7 +1501,7 @@ definitions:
     properties:
       avatar:
         description: 头像地址（可选）
-        maxLength: 500
+        maxLength: 1024
         type: string
       email:
         description: 邮箱（可选）
@@ -1465,13 +1515,15 @@ definitions:
   admin.UpdateSettingsRequest:
     properties:
       data:
-        description: 分组配置键值 JSON 数据（结构随分组变化：site=UpdateSiteSettings，api=UpdateAPISettings，feature=UpdateFeatureSettings）
+        description: 分组配置键值 JSON 数据（结构随分组变化）
       group:
-        description: 配置分组（必填：site=站点信息，api=API/资源站，feature=功能开关）
+        description: 配置分组（必填：site=站点信息，api=API/资源站，feature=功能开关，seo=SEO设置，storage=云存储）
         enum:
         - site
         - api
         - feature
+        - seo
+        - storage
         type: string
     required:
     - data
@@ -1497,7 +1549,7 @@ definitions:
     properties:
       avatar:
         description: 头像地址
-        maxLength: 500
+        maxLength: 1024
         type: string
       email:
         description: 邮箱
@@ -1528,7 +1580,7 @@ definitions:
         type: integer
       cover_image:
         description: 封面地址
-        maxLength: 500
+        maxLength: 1024
         type: string
       description:
         description: 剧情简介
@@ -1549,7 +1601,7 @@ definitions:
         type: string
       poster_image:
         description: 海报地址
-        maxLength: 500
+        maxLength: 1024
         type: string
       publish_status:
         description: 上架状态（0=未上架，1=已上架）
@@ -2259,7 +2311,7 @@ definitions:
     properties:
       avatar:
         description: 头像地址（可选）
-        maxLength: 120
+        maxLength: 1024
         type: string
       email:
         description: 邮箱（可选）
@@ -2269,6 +2321,19 @@ definitions:
         description: 昵称（3-15 位，可选）
         maxLength: 15
         minLength: 3
+        type: string
+    type: object
+  client.UploadMediaResponse:
+    properties:
+      id:
+        type: integer
+      media_type:
+        type: string
+      mime:
+        type: string
+      size:
+        type: integer
+      url:
         type: string
     type: object
   client.UpsertHistoryRequest:
@@ -4584,6 +4649,110 @@ paths:
       summary: 获取上次同步的电视直播源地址
       tags:
       - 管理端｜电视直播管理
+  /api/admin/v1/media:
+    get:
+      consumes:
+      - application/json
+      description: 分页获取媒体库资源，可按 media_type 筛选
+      parameters:
+      - description: 每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - description: 媒体类型筛选（当前仅 image）
+        enum:
+        - image
+        in: query
+        name: media_type
+        type: string
+      - description: 页码，从 1 开始
+        in: query
+        maximum: 1000000
+        minimum: 1
+        name: page
+        type: integer
+      - description: 每页数量（优先于 limit），范围 1-100
+        in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/admin.MediaAsset'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 媒体库列表
+      tags:
+      - 管理端｜媒体库
+    post:
+      consumes:
+      - multipart/form-data
+      description: 上传图片到云存储并写入媒体库（multipart 字段 file）
+      parameters:
+      - description: 图片文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.MediaAsset'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 上传媒体
+      tags:
+      - 管理端｜媒体库
+  /api/admin/v1/media/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: 删除云对象与媒体库记录（不清理业务表中已引用的 URL）
+      parameters:
+      - description: 媒体 ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 删除媒体
+      tags:
+      - 管理端｜媒体库
   /api/admin/v1/play-episodes:
     get:
       consumes:
@@ -4867,13 +5036,15 @@ paths:
     get:
       consumes:
       - application/json
-      description: 按分组获取系统设置。data 结构随 group 变化：site=SiteSettings，api=APISettings，feature=FeatureSettings
+      description: 按分组获取系统设置。data 结构随 group 变化：site=SiteSettings，api=APISettings，feature=FeatureMatrix，seo=SEOSettings，storage=StorageSettings
       parameters:
-      - description: 配置分组（site=站点信息，api=API/资源站，feature=功能开关）
+      - description: 配置分组（site=站点信息，api=API/资源站，feature=功能开关，seo=SEO设置，storage=云存储）
         enum:
         - site
         - api
         - feature
+        - seo
+        - storage
         in: query
         name: group
         required: true
@@ -4899,7 +5070,7 @@ paths:
     put:
       consumes:
       - application/json
-      description: 按分组更新系统设置，data 为对应分组的 key-value JSON（site/api/feature），返回更新后的设置结构
+      description: 按分组更新系统设置，data 为对应分组的 key-value JSON（site/api/feature/seo），返回更新后的设置结构
       parameters:
       - description: 更新设置请求
         in: body
@@ -4925,6 +5096,28 @@ paths:
       summary: 更新系统设置
       tags:
       - 管理端｜系统设置
+  /api/admin/v1/storage/ping:
+    post:
+      consumes:
+      - application/json
+      description: 使用当前启用的云存储配置 Put 再 Delete 一个探针对象
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.StoragePingResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 测试云存储连通性
+      tags:
+      - 管理端｜云存储
   /api/admin/v1/system-logs:
     get:
       consumes:
@@ -6325,6 +6518,34 @@ paths:
       summary: 电视直播播放代理，浏览器端有CORS限制，需通过本接口代理播放流
       tags:
       - 用户端｜电视直播观看
+  /api/client/v1/media:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 登录用户上传图片到云存储并写入媒体库，返回加速域名 URL
+      parameters:
+      - description: 图片文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/client.UploadMediaResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 上传图片
+      tags:
+      - 用户端｜媒体
   /api/client/v1/promotions:
     get:
       description: 获取启用的广告列表；scene 可选，不传则返回全部启用广告，传则按场景筛选
@@ -6490,11 +6711,11 @@ paths:
     get:
       consumes:
       - application/json
-      description: 按分组获取客户端设置（支持多分组：site/feature）。单分组时 data 为对应结构，多分组时 data 为 "分组名→结构"
-        的 map
+      description: 按分组获取客户端设置（支持多分组：site/feature/seo）。feature 按请求端类型（X-Client-Type）拍平为布尔值。单分组时
+        data 为对应结构，多分组时 data 为 "分组名→结构" 的 map
       parameters:
       - collectionFormat: csv
-        description: 配置分组（site=站点信息，feature=功能开关），可传多个
+        description: 配置分组（site=站点信息，feature=功能开关，seo=SEO公开字段），可传多个
         in: query
         items:
           type: string
@@ -6893,6 +7114,22 @@ paths:
       summary: 存活检查
       tags:
       - 健康检查
+  /llms.txt:
+    get:
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: llms.txt
+      tags:
+      - SEO
   /readiness:
     get:
       consumes:
@@ -6924,6 +7161,72 @@ paths:
       summary: 就绪检查
       tags:
       - 健康检查
+  /robots.txt:
+    get:
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: robots.txt
+      tags:
+      - SEO
+  /sitemap.xml:
+    get:
+      produces:
+      - text/xml
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: sitemap.xml
+      tags:
+      - SEO
+  /sitemaps/{name}:
+    get:
+      parameters:
+      - description: 形如 videos-1.xml；分页序号从 1 开始
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - text/xml
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: sitemaps/videos-{n}.xml
+      tags:
+      - SEO
+  /sitemaps/pages.xml:
+    get:
+      produces:
+      - text/xml
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: sitemaps/pages.xml
+      tags:
+      - SEO
   /version:
     get:
       consumes:

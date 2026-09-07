@@ -1,5 +1,19 @@
+-- Reverse feature platform flags + cloud storage + media library (reverse order).
+
+DROP TABLE IF EXISTS `media_assets`;
+
+--bun:split
+
+DELETE FROM `system_settings` WHERE `setting_key` IN (
+  'storage_provider',
+  'storage_aliyun',
+  'storage_tencent',
+  'storage_qiniu'
+);
+
+--bun:split
+
 -- Revert per-platform JSON feature flags back to global boolean strings.
--- Uses the web platform value when present; otherwise falls back to feature defaults.
 UPDATE `system_settings`
 SET `setting_value` = CASE
     WHEN JSON_VALID(`setting_value`) AND JSON_EXTRACT(`setting_value`, '$.web') IS NOT NULL THEN

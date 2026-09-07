@@ -87,6 +87,15 @@ var (
 	CollectRemoteCategoryFailed = &Code{4000089, "获取远程分类失败", 502, nil}
 	CollectInvalidDataRange     = &Code{4000091, "数据范围参数无效", 400, nil}
 
+	// 媒体 / 云存储 (40010xx)
+	StorageNotEnabled    = &Code{4001001, "云存储未启用", 400, nil}
+	StorageConfigInvalid = &Code{4001002, "云存储配置无效", 400, nil}
+	StorageUploadFailed  = &Code{4001003, "文件上传失败", 502, nil}
+	MediaNotFound        = &Code{4001004, "媒体不存在", 404, nil}
+	MediaInvalidType     = &Code{4001005, "不支持的文件类型", 400, nil}
+	MediaTooLarge        = &Code{4001006, "文件过大", 400, nil}
+	MediaDeleteFailed    = &Code{4001007, "媒体删除失败", 502, nil}
+
 	// 系统模块 (900xxxx)
 	InternalError        = &Code{9000001, "服务器内部错误", 500, nil}
 	DatabaseError        = &Code{9000002, "数据库错误", 500, nil}

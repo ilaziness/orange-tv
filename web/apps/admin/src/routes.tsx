@@ -18,6 +18,7 @@ const LiveTVPage = lazy(() => import('@/pages/content/livetv/LiveTVPage'))
 const CommentsPage = lazy(() => import('@/pages/content/comments/CommentsPage'))
 const CollectPage = lazy(() => import('@/pages/content/collect/CollectPage'))
 const BannersPage = lazy(() => import('@/pages/content/banners/BannersPage'))
+const MediaLibraryPage = lazy(() => import('@/pages/content/media/MediaLibraryPage'))
 const AdminsPage = lazy(() => import('@/pages/user/admins/AdminsPage'))
 const UserGroupsPage = lazy(() => import('@/pages/user/groups/UserGroupsPage'))
 const UsersPage = lazy(() => import('@/pages/user/users/UsersPage'))
@@ -25,6 +26,7 @@ const LoginLogsPage = lazy(() => import('@/pages/user/loginLogs/LoginLogsPage'))
 const SiteSettingsPage = lazy(() => import('@/pages/system/site/SiteSettingsPage'))
 const FeatureSettingsPage = lazy(() => import('@/pages/system/feature/FeatureSettingsPage'))
 const SEOSettingsPage = lazy(() => import('@/pages/system/seo/SEOSettingsPage'))
+const StorageSettingsPage = lazy(() => import('@/pages/system/storage/StorageSettingsPage'))
 const APISettingsPage = lazy(() => import('@/pages/system/api/APISettingsPage'))
 const AdsPage = lazy(() => import('@/pages/system/ad/AdsPage'))
 const SystemLogPage = lazy(() => import('@/pages/system/log/SystemLogPage'))
@@ -163,6 +165,14 @@ export function AppRoutes() {
             }
           />
           <Route
+            path="/content/media"
+            element={
+              <Lazy>
+                <MediaLibraryPage />
+              </Lazy>
+            }
+          />
+          <Route
             path="/user/admins"
             element={
               <Lazy>
@@ -215,6 +225,14 @@ export function AppRoutes() {
             element={
               <Lazy>
                 <SEOSettingsPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/system/storage"
+            element={
+              <Lazy>
+                <StorageSettingsPage />
               </Lazy>
             }
           />

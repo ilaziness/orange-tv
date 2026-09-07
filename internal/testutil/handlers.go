@@ -5,8 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"mime/multipart"
 
 	"github.com/gin-gonic/gin"
+	dto "github.com/ilaziness/orange-tv/internal/dto"
 	admindto "github.com/ilaziness/orange-tv/internal/dto/admin"
 	clientdto "github.com/ilaziness/orange-tv/internal/dto/client"
 	opendto "github.com/ilaziness/orange-tv/internal/dto/open"
@@ -36,6 +38,7 @@ type BusinessHandlers struct {
 	AdminMgmt      *adminhandler.ManagementHandler
 	AdminData      *adminhandler.DataHandler
 	AdminAd        *adminhandler.AdHandler
+	AdminMedia     *adminhandler.MediaHandler
 	ClientCategory *clienthandler.CategoryHandler
 	ClientVideo    *clienthandler.VideoHandler
 	ClientLiveTV   *clienthandler.LiveTVHandler
@@ -43,6 +46,7 @@ type BusinessHandlers struct {
 	ClientUser     *clienthandler.UserHandler
 	ClientBanner   *clienthandler.BannerHandler
 	ClientAd       *clienthandler.AdHandler
+	ClientMedia    *clienthandler.MediaHandler
 	LiveTVFeature  gin.HandlerFunc
 	OpenResource   *openhandler.ResourceHandler
 	SEO            *seohandler.Handler
@@ -465,6 +469,25 @@ func (s clientAdSvc) List(ctx context.Context, scene string) ([]clientdto.AdItem
 	return nil, nil
 }
 
+type adminMediaSvc struct{}
+
+func (s adminMediaSvc) Upload(ctx context.Context, adminID uint32, fh *multipart.FileHeader) (*dto.MediaAsset, error) {
+	return &dto.MediaAsset{}, nil
+}
+func (s adminMediaSvc) List(ctx context.Context, mediaType string, offset, limit int) ([]dto.MediaAsset, int, error) {
+	return nil, 0, nil
+}
+func (s adminMediaSvc) Delete(ctx context.Context, id uint64) error { return nil }
+func (s adminMediaSvc) Ping(ctx context.Context) (*admindto.StoragePingResponse, error) {
+	return &admindto.StoragePingResponse{OK: true}, nil
+}
+
+type clientMediaSvc struct{}
+
+func (s clientMediaSvc) Upload(ctx context.Context, userID uint32, fh *multipart.FileHeader) (*clientdto.UploadMediaResponse, error) {
+	return &clientdto.UploadMediaResponse{}, nil
+}
+
 // NewBusinessHandlers builds no-op business handlers for tests.
 func NewBusinessHandlers() BusinessHandlers {
 	auth := authSvc{}
@@ -487,6 +510,7 @@ func NewBusinessHandlers() BusinessHandlers {
 		AdminMgmt:      adminhandler.NewManagementHandler(mgmt),
 		AdminData:      adminhandler.NewDataHandler(adminDataSvc{}),
 		AdminAd:        adminhandler.NewAdHandler(adminAdSvc{}),
+		AdminMedia:     adminhandler.NewMediaHandler(adminMediaSvc{}),
 		ClientCategory: clienthandler.NewCategoryHandler(clientCategorySvc{}),
 		ClientVideo:    clienthandler.NewVideoHandler(clientVideoSvc{}),
 		ClientLiveTV:   clienthandler.NewLiveTVHandler(liveSvc, clientLiveProxySvc{}),
@@ -494,6 +518,7 @@ func NewBusinessHandlers() BusinessHandlers {
 		ClientUser:     clienthandler.NewUserHandler(userSvc),
 		ClientBanner:   clienthandler.NewBannerHandler(bannerSvc),
 		ClientAd:       clienthandler.NewAdHandler(clientAdSvc{}),
+		ClientMedia:    clienthandler.NewMediaHandler(clientMediaSvc{}),
 		LiveTVFeature:  func(c *gin.Context) { c.Next() },
 		OpenResource:   openhandler.NewResourceHandler(openResourceSvc{}),
 		SEO:            seohandler.NewHandler(seosvc.StubService{}, zap.NewNop()),

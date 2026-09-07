@@ -148,6 +148,11 @@ func registerAdminSystemRoutes(v1 *gin.RouterGroup, h *Handlers) {
 	v1.GET("/settings", h.AdminSettings.Get)
 	v1.PUT("/settings", h.AdminSettings.Update)
 
+	v1.GET("/media", h.AdminMedia.List)
+	v1.POST("/media", h.AdminMedia.Upload)
+	v1.DELETE("/media/:id", h.AdminMedia.Delete)
+	v1.POST("/storage/ping", h.AdminMedia.Ping)
+
 	v1.GET("/system-logs", h.AdminLog.ListSystemLogs)
 	v1.GET("/admin-login-logs", h.AdminLog.ListAdminLoginLogs)
 	v1.GET("/user-login-logs", h.AdminMgmt.ListUserLoginLogs)

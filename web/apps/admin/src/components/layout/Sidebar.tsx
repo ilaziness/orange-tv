@@ -34,6 +34,8 @@ import {
   Database,
   Megaphone,
   ArrowUpRight,
+  Cloud,
+  Images,
 } from 'lucide-react'
 
 const GITHUB_REPO_URL = 'https://github.com/ilaziness/orange-tv'
@@ -63,6 +65,7 @@ const contentMenus = [
   { to: '/content/actors', label: '演员管理', icon: Drama },
   { to: '/content/tags', label: '标签管理', icon: Tag },
   { to: '/content/banners', label: '首页Banner', icon: Image },
+  { to: '/content/media', label: '媒体库', icon: Images },
   { to: '/content/comments', label: '评论管理', icon: MessageCircle },
 ]
 
@@ -77,6 +80,7 @@ const systemMenus = [
   { to: '/system/site', label: '站点设置', icon: Globe },
   { to: '/system/feature', label: '功能设置', icon: ToggleLeft },
   { to: '/system/seo', label: 'SEO 设置', icon: Search },
+  { to: '/system/storage', label: '云存储', icon: Cloud },
   { to: '/system/api', label: 'API配置', icon: Settings },
   { to: '/system/ad', label: '广告设置', icon: Megaphone },
   { to: '/system/log', label: '系统日志', icon: ScrollText },

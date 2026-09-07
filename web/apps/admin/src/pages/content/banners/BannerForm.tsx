@@ -1,6 +1,8 @@
 import type * as React from 'react'
+import { useState } from 'react'
 import type { BannerFormType } from './useBanners'
 import { VideoPickerDialog } from './VideoPickerDialog'
+import { MediaPickerDialog } from '@/components/shared'
 import {
   Dialog,
   DialogContent,
@@ -18,9 +20,15 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from '@/components/ui/input-group'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
-import { Film, X } from 'lucide-react'
+import { Film, ImageIcon, X } from 'lucide-react'
 
 interface BannerFormDialogProps {
   open: boolean
@@ -49,6 +57,8 @@ export function BannerFormDialog({
   videoPickerOpen,
   setVideoPickerOpen,
 }: BannerFormDialogProps) {
+  const [mediaPickerOpen, setMediaPickerOpen] = useState(false)
+
   return (
     <>
       <Dialog
@@ -84,15 +94,27 @@ export function BannerFormDialog({
                 <FieldLabel htmlFor="banner-cover">
                   封面URL<span className="ml-0.5 text-destructive">*</span>
                 </FieldLabel>
-                <Input
-                  id="banner-cover"
-                  placeholder="请输入封面URL"
-                  value={form.cover}
-                  onChange={(e) => setForm((prev) => ({ ...prev, cover: e.target.value }))}
-                  required
-                  disabled={submitting}
-                />
-                <FieldDescription>推荐24:9比例，最大尺寸1920 × 720</FieldDescription>
+                <InputGroup data-disabled={submitting || undefined}>
+                  <InputGroupInput
+                    id="banner-cover"
+                    placeholder="请输入封面URL"
+                    value={form.cover}
+                    onChange={(e) => setForm((prev) => ({ ...prev, cover: e.target.value }))}
+                    required
+                    disabled={submitting}
+                  />
+                  <InputGroupAddon align="inline-end">
+                    <InputGroupButton
+                      type="button"
+                      disabled={submitting}
+                      onClick={() => setMediaPickerOpen(true)}
+                    >
+                      <ImageIcon data-icon="inline-start" />
+                      媒体库
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+                <FieldDescription>推荐24:9比例，最大尺寸1920 × 720；可从媒体库选择</FieldDescription>
               </Field>
 
               <Field data-disabled={submitting ? true : undefined}>
@@ -111,7 +133,7 @@ export function BannerFormDialog({
                 {selectedVideo ? (
                   <div className="flex items-center gap-2">
                     <span className="flex flex-1 items-center gap-1.5 rounded-lg border px-3 py-2 text-sm">
-                      <Film className="size-4 text-muted-foreground" />
+                      <Film className="size-4 shrink-0 text-muted-foreground" />
                       {selectedVideo.title || `影视 #${selectedVideo.id}`}
                     </span>
                     <Button
@@ -204,6 +226,11 @@ export function BannerFormDialog({
         open={videoPickerOpen}
         onOpenChange={setVideoPickerOpen}
         onSelect={onPickVideo}
+      />
+      <MediaPickerDialog
+        open={mediaPickerOpen}
+        onOpenChange={setMediaPickerOpen}
+        onSelect={(media) => setForm((prev) => ({ ...prev, cover: media.url }))}
       />
     </>
   )

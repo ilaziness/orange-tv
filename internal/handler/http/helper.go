@@ -1,6 +1,9 @@
 package http
 
 import (
+	"errors"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/response"
@@ -16,6 +19,20 @@ func BindAndValidate(c *gin.Context, obj any) bool {
 		return false
 	}
 
+	return true
+}
+
+// BindUploadAndValidate binds multipart forms; maps http.MaxBytesError to MediaTooLarge.
+func BindUploadAndValidate(c *gin.Context, obj any) bool {
+	if err := c.ShouldBind(obj); err != nil {
+		var maxErr *http.MaxBytesError
+		if errors.As(err, &maxErr) {
+			response.Error(c, errcode.MediaTooLarge)
+			return false
+		}
+		response.Error(c, errcode.Wrap(errcode.ParamError, validator.TranslateError(err)))
+		return false
+	}
 	return true
 }
 

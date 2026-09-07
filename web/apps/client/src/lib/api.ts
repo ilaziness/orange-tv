@@ -5,6 +5,7 @@ import {
   apiGet,
   apiPost,
   apiPut,
+  apiUpload,
   resolveApiUrl,
   type ClientBanner,
   type ClientCategory,
@@ -22,6 +23,7 @@ import {
   type RefreshTokenResult,
   type SettingsResponse,
   type ClientAdItem,
+  type UploadMediaResponse,
   type UserLoginResult,
   type UserProfile,
   type CaptchaResult,
@@ -273,6 +275,13 @@ export const clientApi = {
     withAuth((token) =>
       apiPost<RatingResult>(CLIENT_API_BASE, `/ratings/${videoId}`, { score }, { token }),
     ),
+
+  uploadMedia: (file: File) =>
+    withAuth((token) => {
+      const fd = new FormData()
+      fd.append('file', file)
+      return apiUpload<UploadMediaResponse>(CLIENT_API_BASE, '/media', fd, { token })
+    }),
 }
 
 export function errorMessage(err: unknown): string {

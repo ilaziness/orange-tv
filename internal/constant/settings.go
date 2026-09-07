@@ -7,11 +7,12 @@ const (
 	SettingGroupFeature = "feature" // 功能设置
 	SettingGroupLiveTV  = "livetv"  // 电视直播设置
 	SettingGroupSEO     = "seo"     // SEO / 社交分享设置
+	SettingGroupStorage = "storage" // 云存储设置
 )
 
 // AllSettingGroups returns all valid setting group names.
 func AllSettingGroups() []string {
-	return []string{SettingGroupSite, SettingGroupAPI, SettingGroupFeature, SettingGroupLiveTV, SettingGroupSEO}
+	return []string{SettingGroupSite, SettingGroupAPI, SettingGroupFeature, SettingGroupLiveTV, SettingGroupSEO, SettingGroupStorage}
 }
 
 // System setting keys.
@@ -45,6 +46,28 @@ const (
 	SettingSEOGoogleSiteVerification = "seo_google_site_verification"
 	SettingSEOBaiduSiteVerification  = "seo_baidu_site_verification"
 	SettingSEOBingSiteVerification   = "seo_bing_site_verification"
+
+	// Storage settings keys.
+	SettingStorageProvider = "storage_provider" // 当前启用厂商 none/aliyun/tencent/qiniu
+	SettingStorageAliyun   = "storage_aliyun"   // 阿里云配置 JSON
+	SettingStorageTencent  = "storage_tencent"  // 腾讯云配置 JSON
+	SettingStorageQiniu    = "storage_qiniu"    // 七牛云配置 JSON
+)
+
+// Storage provider values.
+const (
+	StorageProviderNone    = "none"
+	StorageProviderAliyun  = "aliyun"
+	StorageProviderTencent = "tencent"
+	StorageProviderQiniu   = "qiniu"
+)
+
+// Media type / owner constants.
+const (
+	MediaTypeImage = "image"
+
+	MediaOwnerAdmin = "admin"
+	MediaOwnerUser  = "user"
 )
 
 // GroupKeys maps each setting group to its constituent key list.
@@ -82,6 +105,12 @@ var GroupKeys = map[string][]string{
 		SettingSEOBaiduSiteVerification,
 		SettingSEOBingSiteVerification,
 	},
+	SettingGroupStorage: {
+		SettingStorageProvider,
+		SettingStorageAliyun,
+		SettingStorageTencent,
+		SettingStorageQiniu,
+	},
 }
 
 // KeyToGroup maps each setting key to its group.
@@ -109,4 +138,8 @@ var KeyToGroup = map[string]string{
 	SettingSEOGoogleSiteVerification: SettingGroupSEO,
 	SettingSEOBaiduSiteVerification:  SettingGroupSEO,
 	SettingSEOBingSiteVerification:   SettingGroupSEO,
+	SettingStorageProvider:           SettingGroupStorage,
+	SettingStorageAliyun:             SettingGroupStorage,
+	SettingStorageTencent:            SettingGroupStorage,
+	SettingStorageQiniu:              SettingGroupStorage,
 }

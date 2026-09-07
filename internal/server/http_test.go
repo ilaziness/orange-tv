@@ -46,6 +46,7 @@ func TestNewHTTPServer_registersRoutes(t *testing.T) {
 	handlers.AdminMgmt = b.AdminMgmt
 	handlers.AdminData = b.AdminData
 	handlers.AdminAd = b.AdminAd
+	handlers.AdminMedia = b.AdminMedia
 	handlers.ClientCategory = b.ClientCategory
 	handlers.ClientVideo = b.ClientVideo
 	handlers.ClientLiveTV = b.ClientLiveTV
@@ -53,6 +54,7 @@ func TestNewHTTPServer_registersRoutes(t *testing.T) {
 	handlers.ClientUser = b.ClientUser
 	handlers.ClientBanner = b.ClientBanner
 	handlers.ClientAd = b.ClientAd
+	handlers.ClientMedia = b.ClientMedia
 	handlers.LiveTVFeature = b.LiveTVFeature
 	handlers.OpenResource = b.OpenResource
 	handlers.SEO = b.SEO

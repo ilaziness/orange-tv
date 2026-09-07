@@ -121,11 +121,12 @@ export async function apiRequest<T>(
   options: RequestOptions = {},
 ): Promise<ApiResponse<T>> {
   const { token, query, headers, ...init } = options
+  const isFormData = typeof FormData !== 'undefined' && init.body instanceof FormData
   const res = await fetch(buildURL(base, path, query), {
     ...init,
     headers: {
       Accept: 'application/json',
-      ...(init.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(init.body && !isFormData ? { 'Content-Type': 'application/json' } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(headers ?? {}),
     },
@@ -194,6 +195,20 @@ export async function apiDelete<T>(
   options?: RequestOptions,
 ): Promise<ApiResponse<T>> {
   return apiRequest<T>(base, path, { ...options, method: 'DELETE' })
+}
+
+/** Multipart upload helper; do not set Content-Type (browser adds boundary). */
+export async function apiUpload<T>(
+  base: string,
+  path: string,
+  formData: FormData,
+  options?: RequestOptions,
+): Promise<ApiResponse<T>> {
+  return apiRequest<T>(base, path, {
+    ...options,
+    method: 'POST',
+    body: formData,
+  })
 }
 
 // Shared domain types
@@ -533,6 +548,55 @@ export type PublicSEOSettings = {
   google_site_verification: string
   baidu_site_verification: string
   bing_site_verification: string
+}
+
+export type StorageProvider = 'none' | 'aliyun' | 'tencent' | 'qiniu'
+
+export type StorageProviderConfig = {
+  bucket: string
+  region: string
+  endpoint: string
+  access_key: string
+  secret_key: string
+  access_configured: boolean
+  secret_configured: boolean
+  cdn_domain: string
+}
+
+export type StorageSettings = {
+  provider: StorageProvider
+  aliyun: StorageProviderConfig
+  tencent: StorageProviderConfig
+  qiniu: StorageProviderConfig
+}
+
+export type MediaAsset = {
+  id: number
+  media_type: string
+  owner_kind: string
+  owner_id: number
+  provider: string
+  url: string
+  mime: string
+  size: number
+  original_name: string
+  width: number
+  height: number
+  created_at: string
+}
+
+export type UploadMediaResponse = {
+  id: number
+  url: string
+  media_type: string
+  mime: string
+  size: number
+}
+
+export type StoragePingResponse = {
+  provider: string
+  url: string
+  ok: boolean
 }
 
 export type SettingsResponse =

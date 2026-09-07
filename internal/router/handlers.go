@@ -31,6 +31,7 @@ type Handlers struct {
 	AdminMgmt     *adminhandler.ManagementHandler
 	AdminData     *adminhandler.DataHandler
 	AdminAd       *adminhandler.AdHandler
+	AdminMedia    *adminhandler.MediaHandler
 	AuthService   adminsvc.AuthService
 
 	// Client surface
@@ -41,6 +42,7 @@ type Handlers struct {
 	ClientUser     *clienthandler.UserHandler
 	ClientBanner   *clienthandler.BannerHandler
 	ClientAd       *clienthandler.AdHandler
+	ClientMedia    *clienthandler.MediaHandler
 
 	// LiveTVFeature guards client livetv endpoints based on the livetv_enabled setting.
 	LiveTVFeature gin.HandlerFunc
@@ -104,6 +106,7 @@ func (h *Handlers) validateForRoutes() error {
 		{"admin management handler", h.AdminMgmt != nil},
 		{"admin data handler", h.AdminData != nil},
 		{"admin ad handler", h.AdminAd != nil},
+		{"admin media handler", h.AdminMedia != nil},
 		{"client category handler", h.ClientCategory != nil},
 		{"client video handler", h.ClientVideo != nil},
 		{"client livetv handler", h.ClientLiveTV != nil},
@@ -111,6 +114,7 @@ func (h *Handlers) validateForRoutes() error {
 		{"client user handler", h.ClientUser != nil},
 		{"client banner handler", h.ClientBanner != nil},
 		{"client ad handler", h.ClientAd != nil},
+		{"client media handler", h.ClientMedia != nil},
 		{"client livetv feature middleware", h.LiveTVFeature != nil},
 		{"open resource handler", h.OpenResource != nil},
 		{"seo handler", h.SEO != nil},

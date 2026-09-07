@@ -7,6 +7,7 @@ import {
   apiGet,
   apiPost,
   apiPut,
+  apiUpload,
   resolveApiUrl,
   type AdminProfile,
   type AdminItem,
@@ -37,6 +38,9 @@ import {
   type AdItem,
   type FeatureMatrix,
   type SEOSettings,
+  type StorageSettings,
+  type StoragePingResponse,
+  type MediaAsset,
   type UpdateSettingsRequest,
   type UpdateProfileRequest,
   type UserGroupItem,
@@ -284,8 +288,26 @@ export const adminApi = {
     withAuth((token) =>
       apiGet<SEOSettings>(ADMIN_API_BASE, '/settings', { token, query: { group: 'seo' } }),
     ),
+  getStorageSettings: () =>
+    withAuth((token) =>
+      apiGet<StorageSettings>(ADMIN_API_BASE, '/settings', { token, query: { group: 'storage' } }),
+    ),
   updateSettings: <T = Record<string, unknown>>(body: UpdateSettingsRequest) =>
     withAuth((token) => apiPut<T>(ADMIN_API_BASE, '/settings', body, { token })),
+  pingStorage: () =>
+    withAuth((token) => apiPost<StoragePingResponse>(ADMIN_API_BASE, '/storage/ping', null, { token })),
+  listMedia: (query?: Record<string, string | number | undefined>) =>
+    withAuth((token) =>
+      apiGet<PageData<MediaAsset>>(ADMIN_API_BASE, '/media', { token, query }),
+    ),
+  uploadMedia: (file: File) =>
+    withAuth((token) => {
+      const fd = new FormData()
+      fd.append('file', file)
+      return apiUpload<MediaAsset>(ADMIN_API_BASE, '/media', fd, { token })
+    }),
+  deleteMedia: (id: number) =>
+    withAuth((token) => apiDelete(ADMIN_API_BASE, `/media/${id}`, { token })),
   listSystemLogs: (query?: Record<string, string | number | undefined>) =>
     withAuth((token) =>
       apiGet<PageData<SystemLogItem>>(ADMIN_API_BASE, '/system-logs', { token, query }),
