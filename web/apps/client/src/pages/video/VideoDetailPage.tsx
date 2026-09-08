@@ -105,7 +105,7 @@ export function Component() {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-6 md:flex-row">
-        <div className="relative flex aspect-[2/3] w-40 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-muted shadow-lg md:w-56">
+        <div className="relative flex aspect-2/3 w-40 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-muted shadow-lg md:w-56">
           {detail.cover && !posterError ? (
             <img
               src={detail.cover}
