@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router'
 import type { CommentItem } from '@orange-tv/shared'
-import { clientApi, errorMessage, getToken } from '@/lib/api'
+import { clientApi, errorMessage } from '@/lib/api'
+import { useAuth } from '@/hooks/useAuth'
+import { useLoginDialogStore } from '@/store/loginDialog'
 import { cn } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
-import { Loader2, ThumbsDown, ThumbsUp } from 'lucide-react'
+import { Spinner } from '@/components/ui/spinner'
+import { ThumbsDown, ThumbsUp } from 'lucide-react'
 import { toast } from 'sonner'
+import { CommentComposer } from './CommentComposer'
 
 type CommentSectionProps = {
   videoId: number
@@ -35,7 +37,9 @@ function CommentNode({ comment, videoId, depth = 0 }: CommentNodeProps) {
   const [showReplyInput, setShowReplyInput] = useState(false)
   const [replyText, setReplyText] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const isLoggedIn = !!getToken()
+  const { profile } = useAuth()
+  const isLoggedIn = !!profile
+  const openLoginDialog = useLoginDialogStore((s) => s.open)
 
   useEffect(() => {
     setData(comment)
@@ -48,7 +52,7 @@ function CommentNode({ comment, videoId, depth = 0 }: CommentNodeProps) {
 
   const handleVote = async (action: 'like' | 'dislike' | 'cancel') => {
     if (!isLoggedIn) {
-      toast.error('请登录后再操作')
+      openLoginDialog()
       return
     }
     try {
@@ -139,16 +143,20 @@ function CommentNode({ comment, videoId, depth = 0 }: CommentNodeProps) {
             <ThumbsDown data-icon="inline-start" />
             {data.dislike_count}
           </Button>
-          {isLoggedIn && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="xs"
-              onClick={() => setShowReplyInput((v) => !v)}
-            >
-              回复
-            </Button>
-          )}
+          <Button
+            type="button"
+            variant="ghost"
+            size="xs"
+            onClick={() => {
+              if (!isLoggedIn) {
+                openLoginDialog()
+                return
+              }
+              setShowReplyInput((v) => !v)
+            }}
+          >
+            回复
+          </Button>
           {replyCount > 0 && !expanded && (
             <Button
               type="button"
@@ -159,7 +167,7 @@ function CommentNode({ comment, videoId, depth = 0 }: CommentNodeProps) {
             >
               {loading ? (
                 <>
-                  <Loader2 data-icon="inline-start" className="animate-spin" />
+                  <Spinner data-icon="inline-start" />
                   加载中...
                 </>
               ) : (
@@ -180,7 +188,14 @@ function CommentNode({ comment, videoId, depth = 0 }: CommentNodeProps) {
             />
             <div className="flex gap-2">
               <Button type="submit" size="sm" disabled={submitting || !replyText.trim()}>
-                {submitting ? '发表中...' : '回复'}
+                {submitting ? (
+                  <>
+                    <Spinner data-icon="inline-start" />
+                    发表中...
+                  </>
+                ) : (
+                  '回复'
+                )}
               </Button>
               <Button
                 type="button"
@@ -218,29 +233,9 @@ function CommentNode({ comment, videoId, depth = 0 }: CommentNodeProps) {
 }
 
 export function CommentSection({ videoId, comments, onRefresh }: CommentSectionProps) {
-  const [text, setText] = useState('')
-  const [submitting, setSubmitting] = useState(false)
-  const isLoggedIn = !!getToken()
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const content = text.trim()
-    if (!content || content.length > 200) {
-      toast.error('评论内容不能为空且最多 200 字')
-      return
-    }
-    setSubmitting(true)
-    try {
-      await clientApi.createComment(videoId, content)
-      setText('')
-      onRefresh()
-      toast.success('评论发表成功')
-    } catch (err) {
-      toast.error(errorMessage(err))
-    } finally {
-      setSubmitting(false)
-    }
-  }
+  const { profile } = useAuth()
+  const isLoggedIn = !!profile
+  const openLoginDialog = useLoginDialogStore((s) => s.open)
 
   return (
     <Card>
@@ -249,31 +244,17 @@ export function CommentSection({ videoId, comments, onRefresh }: CommentSectionP
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {isLoggedIn ? (
-          <form onSubmit={handleSubmit}>
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="comment">发表评论</FieldLabel>
-                <Textarea
-                  id="comment"
-                  placeholder="写下你的评论（最多 200 字）"
-                  maxLength={200}
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  className="min-h-20"
-                />
-              </Field>
-              <div>
-                <Button type="submit" disabled={submitting || !text.trim()}>
-                  {submitting ? '发表中...' : '发表'}
-                </Button>
-              </div>
-            </FieldGroup>
-          </form>
+          <CommentComposer videoId={videoId} onSuccess={onRefresh} />
         ) : (
           <p className="text-sm text-muted-foreground">
-            <Link to="/login" className="text-primary underline-offset-4 hover:underline">
+            <Button
+              type="button"
+              variant="link"
+              className="h-auto p-0"
+              onClick={openLoginDialog}
+            >
               登录
-            </Link>{' '}
+            </Button>{' '}
             后发表评论
           </p>
         )}

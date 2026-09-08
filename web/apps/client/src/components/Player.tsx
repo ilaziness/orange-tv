@@ -670,7 +670,7 @@ export function VideoPlayer({
   }
 
   return (
-    <div className="relative flex h-[40vh] w-full overflow-hidden sm:h-[55vh] lg:h-[65vh]">
+    <div className="relative isolate z-0 flex h-[40vh] w-full overflow-hidden sm:h-[55vh] lg:h-[65vh]">
       <div ref={containerRef} className="min-w-0 flex-1" />
       {hasPlaylist && (
         <div

@@ -3,19 +3,21 @@ import { useParams, useNavigate, Link, useLoaderData } from 'react-router'
 import type {
   ClientAdItem,
   ClientVideoDetail,
+  CommentItem,
   PlayEpisodeResponse,
   VideoDetailSourceGroup,
 } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
 import { useAuth } from '@/hooks/useAuth'
+import { useSettings } from '@/hooks/useSettings'
 import { VideoPlayer } from '@/components/Player'
 import { saveHistory } from '@/lib/playbackHistory'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { AlertCircleIcon } from 'lucide-react'
 import { FavoriteButton, RatingStars } from '@/components/common'
+import { CommentSection, QuickCommentInput } from '@/components/comment'
+import { PlaySourceEpisodeList } from '@/components/PlaySourceEpisodeList'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { usePageSeo } from '@/hooks/usePageSeo'
 
@@ -54,14 +56,49 @@ export function Component() {
   const navigate = useNavigate()
   const [videoAds, setVideoAds] = useState<ClientAdItem[]>([])
   const { profile } = useAuth()
+  const { feature } = useSettings()
   const data = useLoaderData<PlayLoaderData>()
   const { detail, episode, error } = data
+  const [comments, setComments] = useState<CommentItem[] | null>(null)
   const [resumeAt, setResumeAt] = useState<number | undefined>(undefined)
   const remoteSyncInFlight = useRef(false)
+  const commentsFetchSeq = useRef(0)
 
   const sourceIdNum = Number(sourceId || 0)
   const epIdNum = Number(episodeId || 0)
   const videoIdNum = Number(id || 0)
+  const commentEnabled = feature.comment_enabled
+
+  const loadComments = useCallback(() => {
+    if (!id) return
+    const seq = ++commentsFetchSeq.current
+    void clientApi
+      .listComments(Number(id), 1)
+      .then((res) => {
+        if (seq === commentsFetchSeq.current) setComments(res.data.list || [])
+      })
+      .catch(() => undefined)
+  }, [id])
+
+  useEffect(() => {
+    if (!commentEnabled || !id) {
+      setComments(null)
+      return
+    }
+    setComments(null)
+    const seq = ++commentsFetchSeq.current
+    void clientApi
+      .listComments(Number(id), 1)
+      .then((res) => {
+        if (seq === commentsFetchSeq.current) setComments(res.data.list || [])
+      })
+      .catch(() => {
+        if (seq === commentsFetchSeq.current) setComments([])
+      })
+    return () => {
+      commentsFetchSeq.current += 1
+    }
+  }, [commentEnabled, id])
 
   // Load video loading ads once on mount
   useEffect(() => {
@@ -210,49 +247,37 @@ export function Component() {
       </div>
 
       <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Link
             to={`/video/${id}`}
-            className="text-xl font-bold hover:text-primary transition-colors"
+            className="shrink-0 text-xl font-bold transition-colors hover:text-primary"
           >
             {detail.title}
           </Link>
-          <FavoriteButton videoId={Number(id)} />
+          <FavoriteButton videoId={videoIdNum} />
+          {commentEnabled ? (
+            <QuickCommentInput videoId={videoIdNum} onSuccess={loadComments} />
+          ) : null}
         </div>
         <RatingStars
-          videoId={Number(id)}
+          videoId={videoIdNum}
           rating={detail.rating}
           ratingCount={detail.rating_count}
         />
 
         {detail.sources && detail.sources.length > 0 ? (
-          <div className="flex flex-col gap-4">
-            {detail.sources.map((source) => (
-              <Card key={source.id}>
-                <CardHeader>
-                  <CardTitle>{source.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-wrap gap-2">
-                    {source.episodes.map((ep) => (
-                      <Button
-                        key={ep.id}
-                        variant={
-                          source.id === sourceIdNum && ep.id === epIdNum ? 'default' : 'outline'
-                        }
-                        size="sm"
-                        onClick={() => navigate(`/play/${id}/${source.id}/${ep.id}`)}
-                      >
-                        {ep.title || `第${ep.episode}集`}
-                      </Button>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <PlaySourceEpisodeList
+            sources={detail.sources}
+            currentSourceId={sourceIdNum}
+            currentEpisodeId={epIdNum}
+            onSelectEpisode={(srcId, epId) => navigate(`/play/${id}/${srcId}/${epId}`)}
+          />
         ) : null}
       </div>
+
+      {commentEnabled && comments ? (
+        <CommentSection videoId={videoIdNum} comments={comments} onRefresh={loadComments} />
+      ) : null}
     </div>
   )
 }

@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams, useLoaderData } from 'react-router'
 import type { CommentItem, ClientVideoDetail, ClientVideoListItem } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
 import { VideoGrid, FavoriteButton, RatingStars } from '@/components/common'
-import { CommentSection } from '@/components/CommentSection'
+import { CommentSection } from '@/components/comment'
 import { useSettings } from '@/hooks/useSettings'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -55,6 +55,10 @@ export function Component() {
   const [comments, setComments] = useState<CommentItem[]>(initialComments)
   const [posterError, setPosterError] = useState(false)
   const { feature } = useSettings()
+
+  useEffect(() => {
+    setComments(initialComments)
+  }, [initialComments])
 
   usePageTitle(detail ? detail.title : '影视详情')
   usePageSeo({
