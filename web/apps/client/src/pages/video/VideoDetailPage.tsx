@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, useLoaderData } from 'react-router'
 import type { CommentItem, ClientVideoDetail, ClientVideoListItem } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
@@ -13,11 +13,15 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/u
 import { AlertCircleIcon, FilmIcon } from 'lucide-react'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { usePageSeo } from '@/hooks/usePageSeo'
+import { toast } from 'sonner'
 
 type VideoDetailLoaderData = {
   detail: ClientVideoDetail | null
   related: ClientVideoListItem[]
   comments: CommentItem[]
+  commentTotal: number
+  commentPage: number
+  commentTotalPages: number
   error: string
 }
 
@@ -28,7 +32,15 @@ export async function loader({
 }): Promise<VideoDetailLoaderData> {
   const id = params.id
   if (!id) {
-    return { detail: null, related: [], comments: [], error: '' }
+    return {
+      detail: null,
+      related: [],
+      comments: [],
+      commentTotal: 0,
+      commentPage: 1,
+      commentTotalPages: 0,
+      error: '',
+    }
   }
   try {
     const [res, rel, com] = await Promise.all([
@@ -40,10 +52,21 @@ export async function loader({
       detail: res.data || null,
       related: rel.data || [],
       comments: com.data.list || [],
+      commentTotal: com.data.total || 0,
+      commentPage: com.data.page || 1,
+      commentTotalPages: com.data.total_pages || 0,
       error: '',
     }
   } catch (err) {
-    return { detail: null, related: [], comments: [], error: errorMessage(err) }
+    return {
+      detail: null,
+      related: [],
+      comments: [],
+      commentTotal: 0,
+      commentPage: 1,
+      commentTotalPages: 0,
+      error: errorMessage(err),
+    }
   }
 }
 
@@ -51,14 +74,32 @@ export function Component() {
   const { id } = useParams()
   const data = useLoaderData<VideoDetailLoaderData>()
   const navigate = useNavigate()
-  const { detail, related, comments: initialComments, error } = data
+  const {
+    detail,
+    related,
+    comments: initialComments,
+    commentTotal: initialTotal,
+    commentPage: initialPage,
+    commentTotalPages: initialTotalPages,
+    error,
+  } = data
   const [comments, setComments] = useState<CommentItem[]>(initialComments)
+  const [commentTotal, setCommentTotal] = useState(initialTotal)
+  const [commentPage, setCommentPage] = useState(initialPage)
+  const [commentTotalPages, setCommentTotalPages] = useState(initialTotalPages)
+  const [commentsLoading, setCommentsLoading] = useState(false)
   const [posterError, setPosterError] = useState(false)
+  const commentsFetchSeq = useRef(0)
   const { feature } = useSettings()
 
   useEffect(() => {
+    commentsFetchSeq.current += 1
     setComments(initialComments)
-  }, [initialComments])
+    setCommentTotal(initialTotal)
+    setCommentPage(initialPage)
+    setCommentTotalPages(initialTotalPages)
+    setCommentsLoading(false)
+  }, [initialComments, initialTotal, initialPage, initialTotalPages])
 
   usePageTitle(detail ? detail.title : '影视详情')
   usePageSeo({
@@ -70,9 +111,26 @@ export function Component() {
     noindex: !detail || !!error,
   })
 
-  const loadComments = () => {
+  const loadComments = (page = 1) => {
     if (!id) return
-    void clientApi.listComments(Number(id), 1).then((res) => setComments(res.data.list || []))
+    const seq = ++commentsFetchSeq.current
+    setCommentsLoading(true)
+    void clientApi
+      .listComments(Number(id), page)
+      .then((res) => {
+        if (seq !== commentsFetchSeq.current) return
+        setComments(res.data.list || [])
+        setCommentTotal(res.data.total || 0)
+        setCommentPage(res.data.page || page)
+        setCommentTotalPages(res.data.total_pages || 0)
+      })
+      .catch((err) => {
+        if (seq !== commentsFetchSeq.current) return
+        toast.error(errorMessage(err))
+      })
+      .finally(() => {
+        if (seq === commentsFetchSeq.current) setCommentsLoading(false)
+      })
   }
 
   if (error) {
@@ -197,7 +255,16 @@ export function Component() {
       </Card>
 
       {feature.comment_enabled ? (
-        <CommentSection videoId={Number(id)} comments={comments} onRefresh={loadComments} />
+        <CommentSection
+          videoId={Number(id)}
+          comments={comments}
+          total={commentTotal}
+          page={commentPage}
+          totalPages={commentTotalPages}
+          loading={commentsLoading}
+          onRefresh={() => loadComments(1)}
+          onPageChange={loadComments}
+        />
       ) : null}
 
       {related.length ? (

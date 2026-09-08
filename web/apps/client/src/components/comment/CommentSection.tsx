@@ -4,20 +4,32 @@ import { clientApi, errorMessage } from '@/lib/api'
 import { useAuth } from '@/hooks/useAuth'
 import { useLoginDialogStore } from '@/store/loginDialog'
 import { cn } from '@/lib/utils'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Spinner } from '@/components/ui/spinner'
-import { ThumbsDown, ThumbsUp } from 'lucide-react'
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronsLeftIcon,
+  ChevronsRightIcon,
+  ThumbsDown,
+  ThumbsUp,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import { CommentComposer } from './CommentComposer'
 
 type CommentSectionProps = {
   videoId: number
   comments: CommentItem[]
+  total: number
+  page: number
+  totalPages: number
+  loading?: boolean
   onRefresh: () => void
+  onPageChange: (page: number) => void
 }
 
 type CommentNodeProps = {
@@ -232,15 +244,27 @@ function CommentNode({ comment, videoId, depth = 0 }: CommentNodeProps) {
   )
 }
 
-export function CommentSection({ videoId, comments, onRefresh }: CommentSectionProps) {
+export function CommentSection({
+  videoId,
+  comments,
+  total,
+  page,
+  totalPages,
+  loading,
+  onRefresh,
+  onPageChange,
+}: CommentSectionProps) {
   const { profile } = useAuth()
   const isLoggedIn = !!profile
   const openLoginDialog = useLoginDialogStore((s) => s.open)
+  const showPager = totalPages > 1
+  const canPrev = page > 1
+  const canNext = page < totalPages
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>评论 ({comments.length})</CardTitle>
+        <CardTitle>评论 ({total})</CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {isLoggedIn ? (
@@ -272,6 +296,55 @@ export function CommentSection({ videoId, comments, onRefresh }: CommentSectionP
           )}
         </div>
       </CardContent>
+
+      {showPager ? (
+        <CardFooter className="flex-wrap justify-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={loading || !canPrev}
+            onClick={() => onPageChange(1)}
+          >
+            <ChevronsLeftIcon data-icon="inline-start" />
+            首页
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={loading || !canPrev}
+            onClick={() => onPageChange(page - 1)}
+          >
+            <ChevronLeftIcon data-icon="inline-start" />
+            上一页
+          </Button>
+          <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+            {loading ? <Spinner /> : null}
+            第 {page}/{totalPages} 页
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={loading || !canNext}
+            onClick={() => onPageChange(page + 1)}
+          >
+            下一页
+            <ChevronRightIcon data-icon="inline-end" />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={loading || !canNext}
+            onClick={() => onPageChange(totalPages)}
+          >
+            尾页
+            <ChevronsRightIcon data-icon="inline-end" />
+          </Button>
+        </CardFooter>
+      ) : null}
     </Card>
   )
 }

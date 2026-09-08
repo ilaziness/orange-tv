@@ -20,6 +20,7 @@ import { CommentSection, QuickCommentInput } from '@/components/comment'
 import { PlaySourceEpisodeList } from '@/components/PlaySourceEpisodeList'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { usePageSeo } from '@/hooks/usePageSeo'
+import { toast } from 'sonner'
 
 type PlayLoaderData = {
   detail: ClientVideoDetail | null
@@ -60,6 +61,10 @@ export function Component() {
   const data = useLoaderData<PlayLoaderData>()
   const { detail, episode, error } = data
   const [comments, setComments] = useState<CommentItem[] | null>(null)
+  const [commentTotal, setCommentTotal] = useState(0)
+  const [commentPage, setCommentPage] = useState(1)
+  const [commentTotalPages, setCommentTotalPages] = useState(0)
+  const [commentsLoading, setCommentsLoading] = useState(false)
   const [resumeAt, setResumeAt] = useState<number | undefined>(undefined)
   const remoteSyncInFlight = useRef(false)
   const commentsFetchSeq = useRef(0)
@@ -69,36 +74,47 @@ export function Component() {
   const videoIdNum = Number(id || 0)
   const commentEnabled = feature.comment_enabled
 
-  const loadComments = useCallback(() => {
-    if (!id) return
-    const seq = ++commentsFetchSeq.current
-    void clientApi
-      .listComments(Number(id), 1)
-      .then((res) => {
-        if (seq === commentsFetchSeq.current) setComments(res.data.list || [])
-      })
-      .catch(() => undefined)
-  }, [id])
+  const loadComments = useCallback(
+    (page = 1) => {
+      if (!id) return
+      const seq = ++commentsFetchSeq.current
+      setCommentsLoading(true)
+      void clientApi
+        .listComments(Number(id), page)
+        .then((res) => {
+          if (seq !== commentsFetchSeq.current) return
+          setComments(res.data.list || [])
+          setCommentTotal(res.data.total || 0)
+          setCommentPage(res.data.page || page)
+          setCommentTotalPages(res.data.total_pages || 0)
+        })
+        .catch((err) => {
+          if (seq !== commentsFetchSeq.current) return
+          setComments((prev) => prev ?? [])
+          toast.error(errorMessage(err))
+        })
+        .finally(() => {
+          if (seq === commentsFetchSeq.current) setCommentsLoading(false)
+        })
+    },
+    [id],
+  )
 
   useEffect(() => {
     if (!commentEnabled || !id) {
       setComments(null)
+      setCommentTotal(0)
+      setCommentPage(1)
+      setCommentTotalPages(0)
+      setCommentsLoading(false)
       return
     }
     setComments(null)
-    const seq = ++commentsFetchSeq.current
-    void clientApi
-      .listComments(Number(id), 1)
-      .then((res) => {
-        if (seq === commentsFetchSeq.current) setComments(res.data.list || [])
-      })
-      .catch(() => {
-        if (seq === commentsFetchSeq.current) setComments([])
-      })
+    loadComments(1)
     return () => {
       commentsFetchSeq.current += 1
     }
-  }, [commentEnabled, id])
+  }, [commentEnabled, id, loadComments])
 
   // Load video loading ads once on mount
   useEffect(() => {
@@ -256,7 +272,7 @@ export function Component() {
           </Link>
           <FavoriteButton videoId={videoIdNum} />
           {commentEnabled ? (
-            <QuickCommentInput videoId={videoIdNum} onSuccess={loadComments} />
+            <QuickCommentInput videoId={videoIdNum} onSuccess={() => loadComments(1)} />
           ) : null}
         </div>
         <RatingStars
@@ -276,7 +292,16 @@ export function Component() {
       </div>
 
       {commentEnabled && comments ? (
-        <CommentSection videoId={videoIdNum} comments={comments} onRefresh={loadComments} />
+        <CommentSection
+          videoId={videoIdNum}
+          comments={comments}
+          total={commentTotal}
+          page={commentPage}
+          totalPages={commentTotalPages}
+          loading={commentsLoading}
+          onRefresh={() => loadComments(1)}
+          onPageChange={loadComments}
+        />
       ) : null}
     </div>
   )
