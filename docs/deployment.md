@@ -208,6 +208,8 @@ docker compose exec app /app/orange-tv migrate up -c /app/configs/config.prod.ya
 - Docker 容器内后端监听 `127.0.0.1:8080`，由同容器 nginx 反代，无需对外暴露
 
 > **SEO 约定文件**：用户端 nginx 须将 `/robots.txt`、`/llms.txt`、`/sitemap.xml`、`/sitemaps/` 反代到后端，否则会落到 SPA 的 `index.html`。`pack/nginx.conf` 已包含这些 location；自建 nginx 请一并拷贝。
+>
+> **PWA**：用户端支持「添加到主屏幕」与 App Shell 离线（不缓存片源）。安装需 **HTTPS**（localhost 除外）。自建 nginx 须将 `/sw.js`、`/workbox-*.js` 设为 `Cache-Control: no-cache`，并为 `/manifest.webmanifest` 提供 `application/manifest+json`（`pack/nginx.conf` 已包含）。`config.js` 不会被 PWA 预缓存，改完刷新即可。详见证发布包 `pack/README.md`「用户端 PWA」。
 
 ### 4. 相关 Makefile 目标
 

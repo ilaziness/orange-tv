@@ -10,8 +10,8 @@
 │   └── config.prod.yaml       # 生产环境配置（裸机与 Docker 共用，可通过环境变量覆盖）
 ├── migrations/                # 数据库迁移脚本
 ├── web/
-│   ├── client/                # 用户端前端构建产物（含 config.js）
-│   └── admin/                 # 管理端前端构建产物（含 config.js）
+│   ├── client/                # 用户端前端构建产物（含 config.js、PWA：sw.js / workbox-*.js / manifest.webmanifest）
+│   └── admin/                 # 管理端前端构建产物（含 config.js；无 PWA）
 ├── nginx/
 │   └── nginx.conf             # nginx 示例配置（用户端 80 / 管理端 81）
 ├── .env.example               # Docker Compose 环境变量示例
@@ -39,6 +39,21 @@ window.__ORANGE_TV_CONFIG__ = {
 ```
 
 保存后刷新浏览器即可，无需重新打包。留空则继续同源。请限制这两个文件的写权限。
+
+用户端 PWA **不会**把 `config.js` 打进预缓存；改完刷新即可，不必清除站点数据或 Service Worker。
+
+## 用户端 PWA
+
+仅 **用户端**（`web/client`）支持「添加到主屏幕」与 App Shell 离线；管理端不加 PWA。
+
+| 项 | 说明 |
+| ---- | ---- |
+| 安装条件 | 需 **HTTPS**（或 localhost）。仅 `http://<host>:80` 时浏览器通常**不会**给出安装提示 |
+| 离线能力 | 可打开站点框架/壳；列表、播放、直播仍需网络，**不**缓存片源 |
+| 必备静态文件 | `sw.js`、`workbox-*.js`、`manifest.webmanifest`、以及 `pwa-*.png` / `apple-touch-icon.png`（随构建产物一起发布，勿漏拷） |
+| nginx | 示例 [`nginx/nginx.conf`](nginx.conf) 已为 `/sw.js`、`/workbox-*.js` 设置 `Cache-Control: no-cache`，并为 `/manifest.webmanifest` 设置 `application/manifest+json`。自建或改过配置时请保留，否则 SW 可能无法更新 |
+| Docker / 裸机 HTTP | 默认 80/81 为 HTTP，站点可正常浏览；若要真机安装 PWA，请在前置反代/CDN 终止 TLS，或自行给用户端 server 配 SSL（示例配置未内置证书） |
+| 发版后 | 用户再次打开时可能出现「有新版本，点刷新生效」提示；点刷新后才会切换到新壳，避免播放中被强制打断 |
 
 ## 方式一：Docker Compose 一键部署（推荐）
 
@@ -78,6 +93,8 @@ app 容器启动时会自动执行数据库迁移（`AUTO_MIGRATE=true`），无
 - 用户端：`http://<host>:80`（默认，可通过 `HTTP_PORT` 修改）
 - 管理端：`http://<host>:81`（默认，可通过 `ADMIN_PORT` 修改）
 
+> 默认映射为 HTTP。需要用户端 PWA「添加到主屏幕」时，请在外层提供 HTTPS（反代/CDN），或自行扩展 nginx SSL；详见上方「用户端 PWA」。
+
 ## 方式二：裸机运行（Linux）
 
 1. 修改配置：编辑 `configs/config.prod.yaml`，确认数据库连接等信息正确（或通过环境变量覆盖）。
@@ -98,6 +115,7 @@ app 容器启动时会自动执行数据库迁移（`AUTO_MIGRATE=true`），无
    - 将 `nginx.conf` 拷贝/软链到 nginx 配置目录（如 `/etc/nginx/conf.d/`）
    - 确认静态资源路径与配置一致（默认指向本目录下的 `web/client` 与 `web/admin`，请按实际部署路径调整）
    - 用户端须将 `/robots.txt`、`/llms.txt`、`/sitemap.xml`、`/sitemaps/` 反代到后端（示例配置已包含），否则会落到 SPA
+   - 用户端 PWA 相关 location（`/sw.js`、`/workbox-*.js`、`/manifest.webmanifest`）示例已包含；安装与 HTTPS 要求见上方「用户端 PWA」
    - SEO 的「公开站点根地址」应填用户端对外域名（如 `https://example.com`，对应 80/443），不要填管理端 81 端口
    - reload nginx：`nginx -s reload`
 
@@ -119,6 +137,7 @@ app 容器启动时会自动执行数据库迁移（`AUTO_MIGRATE=true`），无
 
 4. 用 IIS 或其他 Web 服务器托管 `web\client` 与 `web\admin` 下的前端静态资源，将 `/api` 反向代理到 `http://127.0.0.1:8080`。
    同时将 `/robots.txt`、`/llms.txt`、`/sitemap.xml`、`/sitemaps/` 反代到后端，否则这些 SEO 约定文件会落到 SPA。
+   若启用用户端 PWA：需 HTTPS；对 `/sw.js`、`/workbox-*.js` 禁用长期缓存；为 `manifest.webmanifest` 配置 MIME `application/manifest+json`（可参考 `nginx/nginx.conf`）。详见上方「用户端 PWA」。
 
 ## 方式四：Docker 单独构建（可选）
 
