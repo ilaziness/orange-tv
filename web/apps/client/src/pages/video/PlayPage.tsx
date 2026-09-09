@@ -15,7 +15,7 @@ import { saveHistory } from '@/lib/playbackHistory'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { AlertCircleIcon } from 'lucide-react'
-import { FavoriteButton, RatingStars } from '@/components/common'
+import { FavoriteButton, RatingStars, BackButton } from '@/components/common'
 import { CommentSection, QuickCommentInput } from '@/components/comment'
 import { PlaySourceEpisodeList } from '@/components/PlaySourceEpisodeList'
 import { usePageTitle } from '@/hooks/usePageTitle'
@@ -198,18 +198,19 @@ export function Component() {
       .catch(() => undefined)
   }, [id, profile])
 
+  const playFallback = id ? `/video/${id}` : '/'
+
+  let content
   if (error) {
-    return (
+    content = (
       <Alert variant="destructive">
         <AlertCircleIcon />
         <AlertTitle>加载失败</AlertTitle>
         <AlertDescription>{error}</AlertDescription>
       </Alert>
     )
-  }
-
-  if (!detail) {
-    return (
+  } else if (!detail) {
+    content = (
       <Empty>
         <EmptyHeader>
           <EmptyTitle>影视不存在</EmptyTitle>
@@ -217,10 +218,8 @@ export function Component() {
         </EmptyHeader>
       </Empty>
     )
-  }
-
-  if (!episode) {
-    return (
+  } else if (!episode) {
+    content = (
       <Empty>
         <EmptyHeader>
           <EmptyTitle>剧集不存在</EmptyTitle>
@@ -228,81 +227,88 @@ export function Component() {
         </EmptyHeader>
       </Empty>
     )
-  }
+  } else {
+    const sourceGroup: VideoDetailSourceGroup | undefined = detail.sources?.find(
+      (s) => s.id === sourceIdNum,
+    )
+    const playlist = sourceGroup?.episodes?.map((ep) => ({
+      episodeId: ep.id,
+      title: ep.title || `第${ep.episode}集`,
+    }))
 
-  const sourceGroup: VideoDetailSourceGroup | undefined = detail.sources?.find(
-    (s) => s.id === sourceIdNum,
-  )
-  const playlist = sourceGroup?.episodes?.map((ep) => ({
-    episodeId: ep.id,
-    title: ep.title || `第${ep.episode}集`,
-  }))
-
-  return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <p className="text-sm text-muted-foreground">
-          正在播放：{detail.title}
-          {currentEpNumber ? ` - 第${currentEpNumber}集` : ''}
-        </p>
-        <div className="overflow-hidden rounded-xl border">
-          <VideoPlayer
-            src={episode.url}
-            format={episode.format}
-            videoId={videoIdNum}
-            sourceId={sourceIdNum}
-            episodeId={epIdNum}
-            resumeAt={resumeAt}
-            ads={videoAds}
-            playlist={playlist}
-            currentEpisodeId={epIdNum}
-            onEpisodeChange={(epId) => navigate(`/play/${id}/${sourceIdNum}/${epId}`)}
-            onProgress={handleProgress}
-          />
+    content = (
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-muted-foreground">
+            正在播放：{detail.title}
+            {currentEpNumber ? ` - 第${currentEpNumber}集` : ''}
+          </p>
+          <div className="overflow-hidden rounded-xl border">
+            <VideoPlayer
+              src={episode.url}
+              format={episode.format}
+              videoId={videoIdNum}
+              sourceId={sourceIdNum}
+              episodeId={epIdNum}
+              resumeAt={resumeAt}
+              ads={videoAds}
+              playlist={playlist}
+              currentEpisodeId={epIdNum}
+              onEpisodeChange={(epId) => navigate(`/play/${id}/${sourceIdNum}/${epId}`)}
+              onProgress={handleProgress}
+            />
+          </div>
         </div>
-      </div>
 
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-3">
-          <Link
-            to={`/video/${id}`}
-            className="shrink-0 text-xl font-bold transition-colors hover:text-primary"
-          >
-            {detail.title}
-          </Link>
-          <FavoriteButton videoId={videoIdNum} />
-          {commentEnabled ? (
-            <QuickCommentInput videoId={videoIdNum} onSuccess={() => loadComments(1)} />
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              to={`/video/${id}`}
+              className="shrink-0 text-xl font-bold transition-colors hover:text-primary"
+            >
+              {detail.title}
+            </Link>
+            <FavoriteButton videoId={videoIdNum} />
+            {commentEnabled ? (
+              <QuickCommentInput videoId={videoIdNum} onSuccess={() => loadComments(1)} />
+            ) : null}
+          </div>
+          <RatingStars
+            videoId={videoIdNum}
+            rating={detail.rating}
+            ratingCount={detail.rating_count}
+          />
+
+          {detail.sources && detail.sources.length > 0 ? (
+            <PlaySourceEpisodeList
+              sources={detail.sources}
+              currentSourceId={sourceIdNum}
+              currentEpisodeId={epIdNum}
+              onSelectEpisode={(srcId, epId) => navigate(`/play/${id}/${srcId}/${epId}`)}
+            />
           ) : null}
         </div>
-        <RatingStars
-          videoId={videoIdNum}
-          rating={detail.rating}
-          ratingCount={detail.rating_count}
-        />
 
-        {detail.sources && detail.sources.length > 0 ? (
-          <PlaySourceEpisodeList
-            sources={detail.sources}
-            currentSourceId={sourceIdNum}
-            currentEpisodeId={epIdNum}
-            onSelectEpisode={(srcId, epId) => navigate(`/play/${id}/${srcId}/${epId}`)}
+        {commentEnabled && comments ? (
+          <CommentSection
+            videoId={videoIdNum}
+            comments={comments}
+            total={commentTotal}
+            page={commentPage}
+            totalPages={commentTotalPages}
+            loading={commentsLoading}
+            onRefresh={() => loadComments(1)}
+            onPageChange={loadComments}
           />
         ) : null}
       </div>
+    )
+  }
 
-      {commentEnabled && comments ? (
-        <CommentSection
-          videoId={videoIdNum}
-          comments={comments}
-          total={commentTotal}
-          page={commentPage}
-          totalPages={commentTotalPages}
-          loading={commentsLoading}
-          onRefresh={() => loadComments(1)}
-          onPageChange={loadComments}
-        />
-      ) : null}
+  return (
+    <div className="flex flex-col gap-4">
+      <BackButton fallback={playFallback} />
+      {content}
     </div>
   )
 }
