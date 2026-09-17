@@ -4,6 +4,12 @@
 
 An out-of-the-box video management system for building an online video website for viewers. It supports content management, playback and backend operations, with a responsive front-end for phones, tablets and desktops.
 
+## Supported platforms
+
+- Web: responsive layout for PC, phones, tablets, and other screen sizes
+- Mobile app: Android and iOS
+- TV: Android TV
+
 ## What can this system do?
 
 A viewing website for regular audiences. Visitors can:

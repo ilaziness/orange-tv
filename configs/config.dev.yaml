@@ -3,6 +3,7 @@ app:
   env: dev
 
 http:
+  host: 0.0.0.0
   port: 8080
   shutdown_timeout: 30
 
