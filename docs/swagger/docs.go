@@ -6689,8 +6689,20 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "description": "演员ID筛选",
+                        "name": "actor_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
                         "description": "分类ID筛选",
                         "name": "category_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "导演ID筛选",
+                        "name": "director_id",
                         "in": "query"
                     },
                     {
@@ -6742,6 +6754,12 @@ const docTemplate = `{
                         "type": "string",
                         "description": "排序方式（如 latest=最新，rating=评分）",
                         "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "标签ID筛选",
+                        "name": "tag_id",
                         "in": "query"
                     },
                     {
@@ -6860,8 +6878,20 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "integer",
+                        "description": "演员ID筛选",
+                        "name": "actor_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
                         "description": "分类ID筛选",
                         "name": "category_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "导演ID筛选",
+                        "name": "director_id",
                         "in": "query"
                     },
                     {
@@ -6904,6 +6934,12 @@ const docTemplate = `{
                         "type": "string",
                         "description": "排序方式（如 latest=最新，rating=评分）",
                         "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "标签ID筛选",
+                        "name": "tag_id",
                         "in": "query"
                     },
                     {
@@ -8372,7 +8408,7 @@ const docTemplate = `{
                 "avatar": {
                     "description": "头像地址（可选）",
                     "type": "string",
-                    "maxLength": 1024
+                    "maxLength": 500
                 },
                 "email": {
                     "description": "邮箱（可选）",
@@ -8416,7 +8452,7 @@ const docTemplate = `{
                 "cover": {
                     "description": "封面地址（必填）",
                     "type": "string",
-                    "maxLength": 1024
+                    "maxLength": 500
                 },
                 "link": {
                     "description": "跳转链接",
@@ -8551,7 +8587,7 @@ const docTemplate = `{
                 "logo": {
                     "description": "频道 Logo 地址",
                     "type": "string",
-                    "maxLength": 1024
+                    "maxLength": 500
                 },
                 "name": {
                     "description": "频道名称（必填）",
@@ -8721,7 +8757,7 @@ const docTemplate = `{
                 "avatar": {
                     "description": "头像地址（可选）",
                     "type": "string",
-                    "maxLength": 1024
+                    "maxLength": 500
                 },
                 "email": {
                     "description": "邮箱（必填）",
@@ -8772,7 +8808,7 @@ const docTemplate = `{
                 "cover_image": {
                     "description": "封面地址",
                     "type": "string",
-                    "maxLength": 1024
+                    "maxLength": 500
                 },
                 "description": {
                     "description": "剧情简介",
@@ -8799,7 +8835,7 @@ const docTemplate = `{
                 "poster_image": {
                     "description": "海报地址",
                     "type": "string",
-                    "maxLength": 1024
+                    "maxLength": 500
                 },
                 "publish_status": {
                     "description": "上架状态（0=未上架，1=已上架）",
@@ -9393,7 +9429,7 @@ const docTemplate = `{
                 "avatar": {
                     "description": "头像地址",
                     "type": "string",
-                    "maxLength": 1024
+                    "maxLength": 500
                 },
                 "email": {
                     "description": "邮箱",
@@ -9427,7 +9463,7 @@ const docTemplate = `{
                 "cover": {
                     "description": "封面地址",
                     "type": "string",
-                    "maxLength": 1024
+                    "maxLength": 500
                 },
                 "link": {
                     "description": "跳转链接",
@@ -9564,7 +9600,7 @@ const docTemplate = `{
                 "logo": {
                     "description": "频道 Logo 地址",
                     "type": "string",
-                    "maxLength": 1024
+                    "maxLength": 500
                 },
                 "name": {
                     "description": "频道名称",
@@ -9696,7 +9732,7 @@ const docTemplate = `{
                 "avatar": {
                     "description": "头像地址（可选）",
                     "type": "string",
-                    "maxLength": 1024
+                    "maxLength": 500
                 },
                 "email": {
                     "description": "邮箱（可选）",
@@ -9760,7 +9796,7 @@ const docTemplate = `{
                 "avatar": {
                     "description": "头像地址",
                     "type": "string",
-                    "maxLength": 1024
+                    "maxLength": 500
                 },
                 "email": {
                     "description": "邮箱",
@@ -9801,7 +9837,7 @@ const docTemplate = `{
                 "cover_image": {
                     "description": "封面地址",
                     "type": "string",
-                    "maxLength": 1024
+                    "maxLength": 500
                 },
                 "description": {
                     "description": "剧情简介",
@@ -9828,7 +9864,7 @@ const docTemplate = `{
                 "poster_image": {
                     "description": "海报地址",
                     "type": "string",
-                    "maxLength": 1024
+                    "maxLength": 500
                 },
                 "publish_status": {
                     "description": "上架状态（0=未上架，1=已上架）",
@@ -10800,7 +10836,7 @@ const docTemplate = `{
                 "avatar": {
                     "description": "头像地址（可选）",
                     "type": "string",
-                    "maxLength": 1024
+                    "maxLength": 500
                 },
                 "email": {
                     "description": "邮箱（可选）",

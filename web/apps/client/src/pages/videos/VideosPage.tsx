@@ -1,6 +1,7 @@
 import { useLoaderData, useOutletContext, useSearchParams } from 'react-router'
 import type { ClientCategory, ClientVideoListItem } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
+import { parsePositiveInt } from '@/lib/videoListFilters'
 import { VideoGrid } from '@/components/common'
 import { FilterBar } from '@/components/FilterBar'
 import { Button } from '@/components/ui/button'
@@ -21,6 +22,12 @@ type FilterParams = {
   yearEnd: number
   region: string
   keyword: string
+  directorId: number
+  directorName: string
+  actorId: number
+  actorName: string
+  tagId: number
+  tagName: string
   page: number
 }
 
@@ -41,13 +48,48 @@ function getPageSize(): number {
 
 function parseFilters(params: URLSearchParams): FilterParams {
   return {
-    parentCategoryId: Number(params.get('parent_category_id') || 0),
-    categoryId: Number(params.get('category_id') || 0),
-    yearStart: Number(params.get('year_start') || 0),
-    yearEnd: Number(params.get('year_end') || 0),
+    parentCategoryId: parsePositiveInt(params.get('parent_category_id')),
+    categoryId: parsePositiveInt(params.get('category_id')),
+    yearStart: parsePositiveInt(params.get('year_start')),
+    yearEnd: parsePositiveInt(params.get('year_end')),
     region: params.get('region') || '',
     keyword: params.get('keyword') || '',
-    page: Number(params.get('page') || 1),
+    directorId: parsePositiveInt(params.get('director_id')),
+    directorName: (params.get('director_name') || '').trim(),
+    actorId: parsePositiveInt(params.get('actor_id')),
+    actorName: (params.get('actor_name') || '').trim(),
+    tagId: parsePositiveInt(params.get('tag_id')),
+    tagName: (params.get('tag_name') || '').trim(),
+    page: parsePositiveInt(params.get('page')) || 1,
+  }
+}
+
+function listTitle(filters: FilterParams, categoryName: string | null): string {
+  if (filters.keyword) return `搜索：${filters.keyword}`
+  if (filters.directorId) {
+    return filters.directorName ? `导演：${filters.directorName}` : '导演的影视列表'
+  }
+  if (filters.actorId) {
+    return filters.actorName ? `主演：${filters.actorName}` : '主演的影视列表'
+  }
+  if (filters.tagId) {
+    return filters.tagName ? `类型：${filters.tagName}` : '类型影视列表'
+  }
+  return categoryName || '影视列表'
+}
+
+function toListQuery(filters: FilterParams, pageSize: number): Record<string, string | number | undefined> {
+  return {
+    page: filters.page,
+    page_size: pageSize,
+    parent_category_id: filters.parentCategoryId || undefined,
+    category_id: filters.categoryId || undefined,
+    year_start: filters.yearStart || undefined,
+    year_end: filters.yearEnd || undefined,
+    region: filters.region || undefined,
+    director_id: filters.directorId || undefined,
+    actor_id: filters.actorId || undefined,
+    tag_id: filters.tagId || undefined,
   }
 }
 
@@ -55,27 +97,12 @@ export async function loader({ request }: { request: Request }): Promise<VideosL
   const url = new URL(request.url)
   const filters = parseFilters(url.searchParams)
   const pageSize = getPageSize()
-  const { page, keyword, parentCategoryId, categoryId, yearStart, yearEnd, region } = filters
+  const query = toListQuery(filters, pageSize)
 
   try {
-    const listRes = keyword
-      ? await clientApi.search(keyword, page, {
-          page_size: pageSize,
-          parent_category_id: parentCategoryId || undefined,
-          category_id: categoryId || undefined,
-          year_start: yearStart || undefined,
-          year_end: yearEnd || undefined,
-          region: region || undefined,
-        })
-      : await clientApi.videos({
-          page,
-          page_size: pageSize,
-          parent_category_id: parentCategoryId || undefined,
-          category_id: categoryId || undefined,
-          year_start: yearStart || undefined,
-          year_end: yearEnd || undefined,
-          region: region || undefined,
-        })
+    const listRes = filters.keyword
+      ? await clientApi.search(filters.keyword, filters.page, query)
+      : await clientApi.videos(query)
     return {
       videos: listRes.data.list || [],
       total: listRes.data.total || 0,
@@ -127,16 +154,20 @@ export function Component() {
   const subCategoriesToShow = currentRoot?.children || []
   const filterParentCategoryId = currentRoot?.id || 0
 
-  const title = keyword ? `搜索：${keyword}` : currentCategory ? currentCategory.name : '影视列表'
+  const title = listTitle(filters, currentCategory ? currentCategory.name : null)
 
   usePageTitle(title)
-  usePageSeo({ title, path: '/videos', noindex: Boolean(keyword) })
+  usePageSeo({
+    title,
+    path: '/videos',
+    noindex: Boolean(keyword || filters.directorId || filters.actorId || filters.tagId),
+  })
 
   const hasMore = videos.length < total
 
   return (
     <div className="flex flex-col gap-6">
-      <h2 className="text-lg font-semibold">{title}</h2>
+      <h2 className="text-lg font-semibold text-pretty break-words">{title}</h2>
 
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap gap-2">

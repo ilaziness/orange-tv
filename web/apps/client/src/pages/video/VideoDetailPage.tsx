@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, useLoaderData } from 'react-router'
 import type { CommentItem, ClientVideoDetail, ClientVideoListItem } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
-import { VideoGrid, FavoriteButton, RatingStars, BackButton } from '@/components/common'
+import { VideoGrid, FavoriteButton, RatingStars, BackButton, NamedItemField } from '@/components/common'
 import { CommentSection } from '@/components/comment'
 import { useSettings } from '@/hooks/useSettings'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -158,12 +158,6 @@ export function Component() {
       </div>
     )
   } else {
-    const directorText = detail.directors?.length
-      ? detail.directors.map((d) => d.name).join(' / ')
-      : '暂无'
-    const actorText = detail.actors?.length ? detail.actors.map((a) => a.name).join(' / ') : '暂无'
-    const tagsText = detail.tags?.length ? detail.tags.map((t) => t.name).join(' / ') : ''
-
     content = (
       <div className="flex flex-col gap-8">
         <div className="flex flex-col gap-6 md:flex-row">
@@ -202,20 +196,9 @@ export function Component() {
                   {detail.subtitle}
                 </p>
               ) : null}
-              {tagsText ? (
-                <p>
-                  <span className="text-muted-foreground">类型: </span>
-                  {tagsText}
-                </p>
-              ) : null}
-              <p>
-                <span className="text-muted-foreground">导演: </span>
-                {directorText}
-              </p>
-              <p>
-                <span className="text-muted-foreground">主演: </span>
-                {actorText}
-              </p>
+              <NamedItemField label="类型" items={detail.tags} kind="tag" />
+              <NamedItemField label="导演" items={detail.directors} kind="director" emptyText="暂无" />
+              <NamedItemField label="主演" items={detail.actors} kind="actor" emptyText="暂无" />
             </div>
             <p className="text-sm leading-relaxed">
               <span className="text-muted-foreground">剧情简介：</span>

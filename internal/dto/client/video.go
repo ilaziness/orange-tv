@@ -17,6 +17,12 @@ type VideoListRequest struct {
 	Region string `form:"region"`
 	// 排序方式（如 latest=最新，rating=评分）
 	Sort string `form:"sort"`
+	// 导演ID筛选
+	DirectorID uint32 `form:"director_id"`
+	// 演员ID筛选
+	ActorID uint32 `form:"actor_id"`
+	// 标签ID筛选
+	TagID uint32 `form:"tag_id"`
 }
 
 // SearchRequest is the public search query with optional filters.
@@ -36,6 +42,12 @@ type SearchRequest struct {
 	Region string `form:"region"`
 	// 排序方式（如 latest=最新，rating=评分）
 	Sort string `form:"sort"`
+	// 导演ID筛选
+	DirectorID uint32 `form:"director_id"`
+	// 演员ID筛选
+	ActorID uint32 `form:"actor_id"`
+	// 标签ID筛选
+	TagID uint32 `form:"tag_id"`
 }
 
 // RelatedRequest loads related videos for a detail page.

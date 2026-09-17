@@ -52,7 +52,8 @@ func (s *videoService) List(ctx context.Context, req *clientdto.VideoListRequest
 		sort = "year_desc"
 	}
 	// Cache hot home/list queries without keyword search complexity.
-	cacheable := strings.TrimSpace(req.Region) == "" && req.YearStart == 0 && req.YearEnd == 0
+	cacheable := strings.TrimSpace(req.Region) == "" && req.YearStart == 0 && req.YearEnd == 0 &&
+		req.DirectorID == 0 && req.ActorID == 0 && req.TagID == 0
 	cacheKey := ""
 	if cacheable {
 		cacheKey = cache.VideoListKey(req.CategoryID, req.ParentCategoryID, sort, req.GetPage(), req.GetLimit())
@@ -68,6 +69,9 @@ func (s *videoService) List(ctx context.Context, req *clientdto.VideoListRequest
 		YearEnd:          req.YearEnd,
 		Region:           strings.TrimSpace(req.Region),
 		Sort:             sort,
+		DirectorID:       req.DirectorID,
+		ActorID:          req.ActorID,
+		TagID:            req.TagID,
 		OnlyOnline:       true,
 		Offset:           req.GetOffset(),
 		Limit:            req.GetLimit(),
@@ -96,6 +100,9 @@ func (s *videoService) Search(ctx context.Context, req *clientdto.SearchRequest)
 		YearEnd:          req.YearEnd,
 		Region:           strings.TrimSpace(req.Region),
 		Sort:             sort,
+		DirectorID:       req.DirectorID,
+		ActorID:          req.ActorID,
+		TagID:            req.TagID,
 		OnlyOnline:       true,
 		Offset:           req.GetOffset(),
 		Limit:            req.GetLimit(),

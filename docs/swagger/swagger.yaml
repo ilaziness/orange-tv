@@ -504,7 +504,7 @@ definitions:
     properties:
       avatar:
         description: 头像地址（可选）
-        maxLength: 1024
+        maxLength: 500
         type: string
       email:
         description: 邮箱（可选）
@@ -539,7 +539,7 @@ definitions:
     properties:
       cover:
         description: 封面地址（必填）
-        maxLength: 1024
+        maxLength: 500
         type: string
       link:
         description: 跳转链接
@@ -643,7 +643,7 @@ definitions:
         type: string
       logo:
         description: 频道 Logo 地址
-        maxLength: 1024
+        maxLength: 500
         type: string
       name:
         description: 频道名称（必填）
@@ -773,7 +773,7 @@ definitions:
     properties:
       avatar:
         description: 头像地址（可选）
-        maxLength: 1024
+        maxLength: 500
         type: string
       email:
         description: 邮箱（必填）
@@ -812,7 +812,7 @@ definitions:
         type: integer
       cover_image:
         description: 封面地址
-        maxLength: 1024
+        maxLength: 500
         type: string
       description:
         description: 剧情简介
@@ -833,7 +833,7 @@ definitions:
         type: string
       poster_image:
         description: 海报地址
-        maxLength: 1024
+        maxLength: 500
         type: string
       publish_status:
         description: 上架状态（0=未上架，1=已上架）
@@ -1270,7 +1270,7 @@ definitions:
     properties:
       avatar:
         description: 头像地址
-        maxLength: 1024
+        maxLength: 500
         type: string
       email:
         description: 邮箱
@@ -1296,7 +1296,7 @@ definitions:
     properties:
       cover:
         description: 封面地址
-        maxLength: 1024
+        maxLength: 500
         type: string
       link:
         description: 跳转链接
@@ -1400,7 +1400,7 @@ definitions:
         type: string
       logo:
         description: 频道 Logo 地址
-        maxLength: 1024
+        maxLength: 500
         type: string
       name:
         description: 频道名称
@@ -1501,7 +1501,7 @@ definitions:
     properties:
       avatar:
         description: 头像地址（可选）
-        maxLength: 1024
+        maxLength: 500
         type: string
       email:
         description: 邮箱（可选）
@@ -1549,7 +1549,7 @@ definitions:
     properties:
       avatar:
         description: 头像地址
-        maxLength: 1024
+        maxLength: 500
         type: string
       email:
         description: 邮箱
@@ -1580,7 +1580,7 @@ definitions:
         type: integer
       cover_image:
         description: 封面地址
-        maxLength: 1024
+        maxLength: 500
         type: string
       description:
         description: 剧情简介
@@ -1601,7 +1601,7 @@ definitions:
         type: string
       poster_image:
         description: 海报地址
-        maxLength: 1024
+        maxLength: 500
         type: string
       publish_status:
         description: 上架状态（0=未上架，1=已上架）
@@ -2311,7 +2311,7 @@ definitions:
     properties:
       avatar:
         description: 头像地址（可选）
-        maxLength: 1024
+        maxLength: 500
         type: string
       email:
         description: 邮箱（可选）
@@ -6636,9 +6636,17 @@ paths:
       - application/json
       description: 根据关键词分页搜索影视
       parameters:
+      - description: 演员ID筛选
+        in: query
+        name: actor_id
+        type: integer
       - description: 分类ID筛选
         in: query
         name: category_id
+        type: integer
+      - description: 导演ID筛选
+        in: query
+        name: director_id
         type: integer
       - description: 搜索关键词（1-10 字，必填）
         in: query
@@ -6677,6 +6685,10 @@ paths:
         in: query
         name: sort
         type: string
+      - description: 标签ID筛选
+        in: query
+        name: tag_id
+        type: integer
       - description: 结束年份筛选
         in: query
         name: year_end
@@ -6745,9 +6757,17 @@ paths:
       - application/json
       description: 分页获取影视列表
       parameters:
+      - description: 演员ID筛选
+        in: query
+        name: actor_id
+        type: integer
       - description: 分类ID筛选
         in: query
         name: category_id
+        type: integer
+      - description: 导演ID筛选
+        in: query
+        name: director_id
         type: integer
       - description: 每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100
         in: query
@@ -6779,6 +6799,10 @@ paths:
         in: query
         name: sort
         type: string
+      - description: 标签ID筛选
+        in: query
+        name: tag_id
+        type: integer
       - description: 结束年份筛选
         in: query
         name: year_end

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, type SubmitEvent } from 'react'
 import { Link, Outlet, useLoaderData, useNavigate, useSearchParams } from 'react-router'
 import type { ClientCategory } from '@orange-tv/shared'
 import { sanitizeSearchInput } from '@orange-tv/shared'
@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useSettings } from '@/hooks/useSettings'
 import { clientApi, errorMessage } from '@/lib/api'
 import { getHistory, formatTime, type PlaybackHistoryItem } from '@/lib/playbackHistory'
+import { deleteNamedFilterParams } from '@/lib/videoListFilters'
 import type { HistoryItem } from '@orange-tv/shared'
 import { ThemeToggle } from '@/components/ThemeToggle'
 import { cn } from '@/lib/utils'
@@ -158,11 +159,12 @@ export function ClientLayout() {
 
   const roots = categories.slice().sort((a, b) => a.sort_order - b.sort_order)
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault()
     const q = keyword.trim()
     if (q && q.length <= 10) {
       const newParams = new URLSearchParams(params)
+      deleteNamedFilterParams(newParams)
       newParams.set('keyword', q)
       newParams.set('page', '1')
       navigate(`/videos?${newParams.toString()}`)
