@@ -136,20 +136,26 @@ export function Component() {
   let content
   if (error) {
     content = (
-      <Alert variant="destructive">
-        <AlertCircleIcon />
-        <AlertTitle>加载失败</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
+      <div className="flex flex-col gap-4">
+        <BackButton fallback="/" />
+        <Alert variant="destructive">
+          <AlertCircleIcon />
+          <AlertTitle>加载失败</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      </div>
     )
   } else if (!detail) {
     content = (
-      <Empty>
-        <EmptyHeader>
-          <EmptyTitle>影视不存在</EmptyTitle>
-          <EmptyDescription>该视频可能已下架</EmptyDescription>
-        </EmptyHeader>
-      </Empty>
+      <div className="flex flex-col gap-4">
+        <BackButton fallback="/" />
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>影视不存在</EmptyTitle>
+            <EmptyDescription>该视频可能已下架</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      </div>
     )
   } else {
     const directorText = detail.directors?.length
@@ -175,6 +181,7 @@ export function Component() {
           </div>
           <div className="flex max-w-4xl flex-1 flex-col gap-3">
             <div className="flex items-center gap-3">
+              <BackButton fallback="/" />
               <h1 className="text-2xl font-bold tracking-tight">{detail.title}</h1>
               <FavoriteButton videoId={Number(id)} />
             </div>
@@ -275,10 +282,5 @@ export function Component() {
     )
   }
 
-  return (
-    <div className="flex flex-col gap-4">
-      <BackButton fallback="/" />
-      {content}
-    </div>
-  )
+  return <div className="flex flex-col gap-4">{content}</div>
 }

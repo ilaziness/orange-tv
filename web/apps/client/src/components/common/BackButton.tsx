@@ -20,7 +20,7 @@ export function BackButton({ fallback }: BackButtonProps) {
   }
 
   return (
-    <Button type="button" variant="ghost" size="sm" onClick={handleClick}>
+    <Button type="button" variant="outline" size="sm" className="self-start" onClick={handleClick}>
       <ArrowLeftIcon data-icon="inline-start" />
       返回
     </Button>

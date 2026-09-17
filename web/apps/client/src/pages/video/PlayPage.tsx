@@ -203,29 +203,38 @@ export function Component() {
   let content
   if (error) {
     content = (
-      <Alert variant="destructive">
-        <AlertCircleIcon />
-        <AlertTitle>加载失败</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
+      <div className="flex flex-col gap-4">
+        <BackButton fallback={playFallback} />
+        <Alert variant="destructive">
+          <AlertCircleIcon />
+          <AlertTitle>加载失败</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      </div>
     )
   } else if (!detail) {
     content = (
-      <Empty>
-        <EmptyHeader>
-          <EmptyTitle>影视不存在</EmptyTitle>
-          <EmptyDescription>该视频可能已下架</EmptyDescription>
-        </EmptyHeader>
-      </Empty>
+      <div className="flex flex-col gap-4">
+        <BackButton fallback={playFallback} />
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>影视不存在</EmptyTitle>
+            <EmptyDescription>该视频可能已下架</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      </div>
     )
   } else if (!episode) {
     content = (
-      <Empty>
-        <EmptyHeader>
-          <EmptyTitle>剧集不存在</EmptyTitle>
-          <EmptyDescription>该剧集可能已下架</EmptyDescription>
-        </EmptyHeader>
-      </Empty>
+      <div className="flex flex-col gap-4">
+        <BackButton fallback={playFallback} />
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>剧集不存在</EmptyTitle>
+            <EmptyDescription>该剧集可能已下架</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      </div>
     )
   } else {
     const sourceGroup: VideoDetailSourceGroup | undefined = detail.sources?.find(
@@ -239,10 +248,13 @@ export function Component() {
     content = (
       <div className="flex flex-col gap-6">
         <div className="flex flex-col gap-2">
-          <p className="text-sm text-muted-foreground">
-            正在播放：{detail.title}
-            {currentEpNumber ? ` - 第${currentEpNumber}集` : ''}
-          </p>
+          <div className="flex items-center gap-3">
+            <BackButton fallback={playFallback} />
+            <p className="text-sm text-muted-foreground">
+              正在播放：{detail.title}
+              {currentEpNumber ? ` - 第${currentEpNumber}集` : ''}
+            </p>
+          </div>
           <div className="overflow-hidden rounded-xl border">
             <VideoPlayer
               src={episode.url}
@@ -305,10 +317,5 @@ export function Component() {
     )
   }
 
-  return (
-    <div className="flex flex-col gap-4">
-      <BackButton fallback={playFallback} />
-      {content}
-    </div>
-  )
+  return <div className="flex flex-col gap-4">{content}</div>
 }
