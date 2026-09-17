@@ -138,29 +138,27 @@ export function Component() {
     <div className="flex flex-col gap-6">
       <h2 className="text-lg font-semibold">{title}</h2>
 
-      {!keyword ? (
-        <div className="flex flex-col gap-2">
-          <div className="flex flex-wrap gap-2">
+      <div className="flex flex-col gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant={!parentCategoryId && !categoryId ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => updateParams({ parent_category_id: null, category_id: null })}
+          >
+            全部
+          </Button>
+          {roots.map((c) => (
             <Button
-              variant={!parentCategoryId && !categoryId ? 'default' : 'outline'}
+              key={c.id}
+              variant={parentCategoryId === c.id ? 'default' : 'outline'}
               size="sm"
-              onClick={() => updateParams({ parent_category_id: null, category_id: null })}
+              onClick={() => updateParams({ parent_category_id: c.id, category_id: null })}
             >
-              全部
+              {c.name}
             </Button>
-            {roots.map((c) => (
-              <Button
-                key={c.id}
-                variant={parentCategoryId === c.id ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => updateParams({ parent_category_id: c.id, category_id: null })}
-              >
-                {c.name}
-              </Button>
-            ))}
-          </div>
+          ))}
         </div>
-      ) : null}
+      </div>
 
       <FilterBar
         categoryId={categoryId}
