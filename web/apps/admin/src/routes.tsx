@@ -27,6 +27,9 @@ const SiteSettingsPage = lazy(() => import('@/pages/system/site/SiteSettingsPage
 const FeatureSettingsPage = lazy(() => import('@/pages/system/feature/FeatureSettingsPage'))
 const SEOSettingsPage = lazy(() => import('@/pages/system/seo/SEOSettingsPage'))
 const StorageSettingsPage = lazy(() => import('@/pages/system/storage/StorageSettingsPage'))
+const PaymentProvidersPage = lazy(
+  () => import('@/pages/finance/payment-providers/PaymentProvidersPage'),
+)
 const APISettingsPage = lazy(() => import('@/pages/system/api/APISettingsPage'))
 const AdsPage = lazy(() => import('@/pages/system/ad/AdsPage'))
 const SystemLogPage = lazy(() => import('@/pages/system/log/SystemLogPage'))
@@ -233,6 +236,14 @@ export function AppRoutes() {
             element={
               <Lazy>
                 <StorageSettingsPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/finance/payment-providers"
+            element={
+              <Lazy>
+                <PaymentProvidersPage />
               </Lazy>
             }
           />

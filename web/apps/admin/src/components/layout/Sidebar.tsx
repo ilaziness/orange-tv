@@ -36,6 +36,7 @@ import {
   ArrowUpRight,
   Cloud,
   Images,
+  Wallet,
 } from 'lucide-react'
 
 const GITHUB_REPO_URL = 'https://github.com/ilaziness/orange-tv'
@@ -75,6 +76,8 @@ const userMenus = [
   { to: '/user/users', label: '用户', icon: User2 },
   { to: '/user/login-logs', label: '登录日志', icon: LogIn },
 ]
+
+const financeMenus = [{ to: '/finance/payment-providers', label: '支付商管理', icon: Wallet }]
 
 const systemMenus = [
   { to: '/system/site', label: '站点设置', icon: Globe },
@@ -147,6 +150,24 @@ export function AppSidebar() {
           <SidebarGroupLabel>用户管理</SidebarGroupLabel>
           <SidebarMenu>
             {userMenus.map((item) => (
+              <SidebarMenuItem key={item.to}>
+                <SidebarMenuButton
+                  tooltip={item.label}
+                  isActive={location.pathname.startsWith(item.to)}
+                  render={<Link to={item.to} />}
+                >
+                  <item.icon />
+                  <span>{item.label}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>财务管理</SidebarGroupLabel>
+          <SidebarMenu>
+            {financeMenus.map((item) => (
               <SidebarMenuItem key={item.to}>
                 <SidebarMenuButton
                   tooltip={item.label}

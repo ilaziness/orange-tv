@@ -124,6 +124,50 @@ type StorageSettings struct {
 	Qiniu StorageProviderConfig `json:"qiniu"`
 }
 
+// PaymentAlipayConfig is Alipay merchant settings (GET secrets masked).
+type PaymentAlipayConfig struct {
+	Enabled                    bool   `json:"enabled"`
+	Sandbox                    bool   `json:"sandbox"`
+	AppID                      string `json:"app_id"`
+	SignMode                   string `json:"sign_mode"`
+	PrivateKey                 string `json:"private_key"`
+	PrivateKeyConfigured       bool   `json:"private_key_configured"`
+	AlipayPublicKey            string `json:"alipay_public_key"`
+	AlipayPublicKeyConfigured  bool   `json:"alipay_public_key_configured"`
+	AppCert                    string `json:"app_cert"`
+	AppCertConfigured          bool   `json:"app_cert_configured"`
+	AlipayPublicCert           string `json:"alipay_public_cert"`
+	AlipayPublicCertConfigured bool   `json:"alipay_public_cert_configured"`
+	AlipayRootCert             string `json:"alipay_root_cert"`
+	AlipayRootCertConfigured   bool   `json:"alipay_root_cert_configured"`
+	NotifyURL                  string `json:"notify_url"`
+	ReturnURL                  string `json:"return_url"`
+	PCWebEnabled               bool   `json:"pc_web_enabled"`
+	AppEnabled                 bool   `json:"app_enabled"`
+}
+
+// PaymentWechatConfig is WeChat Pay merchant settings (GET secrets masked).
+type PaymentWechatConfig struct {
+	Enabled              bool   `json:"enabled"`
+	MchID                string `json:"mch_id"`
+	MchSerialNo          string `json:"mch_serial_no"`
+	APIv3Key             string `json:"api_v3_key"`
+	APIv3KeyConfigured   bool   `json:"api_v3_key_configured"`
+	PrivateKey           string `json:"private_key"`
+	PrivateKeyConfigured bool   `json:"private_key_configured"`
+	AppIDWeb             string `json:"app_id_web"`
+	AppIDApp             string `json:"app_id_app"`
+	NotifyURL            string `json:"notify_url"`
+	PCWebEnabled         bool   `json:"pc_web_enabled"`
+	AppEnabled           bool   `json:"app_enabled"`
+}
+
+// PaymentSettings is the admin payment group response.
+type PaymentSettings struct {
+	Alipay PaymentAlipayConfig `json:"alipay"`
+	Wechat PaymentWechatConfig `json:"wechat"`
+}
+
 // MediaAsset is a media library item returned by upload/list APIs.
 type MediaAsset struct {
 	// 媒体 ID

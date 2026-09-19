@@ -570,6 +570,47 @@ export type StorageSettings = {
   qiniu: StorageProviderConfig
 }
 
+export type PaymentAlipayConfig = {
+  enabled: boolean
+  sandbox: boolean
+  app_id: string
+  sign_mode: 'key' | 'cert'
+  private_key: string
+  private_key_configured: boolean
+  alipay_public_key: string
+  alipay_public_key_configured: boolean
+  app_cert: string
+  app_cert_configured: boolean
+  alipay_public_cert: string
+  alipay_public_cert_configured: boolean
+  alipay_root_cert: string
+  alipay_root_cert_configured: boolean
+  notify_url: string
+  return_url: string
+  pc_web_enabled: boolean
+  app_enabled: boolean
+}
+
+export type PaymentWechatConfig = {
+  enabled: boolean
+  mch_id: string
+  mch_serial_no: string
+  api_v3_key: string
+  api_v3_key_configured: boolean
+  private_key: string
+  private_key_configured: boolean
+  app_id_web: string
+  app_id_app: string
+  notify_url: string
+  pc_web_enabled: boolean
+  app_enabled: boolean
+}
+
+export type PaymentSettings = {
+  alipay: PaymentAlipayConfig
+  wechat: PaymentWechatConfig
+}
+
 export type MediaAsset = {
   id: number
   media_type: string

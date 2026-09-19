@@ -19,10 +19,13 @@ type APISettings struct {
 	EnableThirdPartyCollect bool `json:"enable_third_party_collect"`
 }
 
+// PaymentSettings is an alias for admin convenience.
+type PaymentSettings = dto.PaymentSettings
+
 // GetSettingsQuery binds the group query parameter.
 type GetSettingsQuery struct {
-	// 配置分组（site=站点信息，api=API/资源站，feature=功能开关，seo=SEO设置，storage=云存储）
-	Group string `form:"group" binding:"required,oneof=site api feature seo storage"`
+	// 配置分组（site=站点信息，api=API/资源站，feature=功能开关，seo=SEO设置，storage=云存储，payment=支付商）
+	Group string `form:"group" binding:"required,oneof=site api feature seo storage payment"`
 }
 
 // UpdateSettingsRequest updates settings for a single group.
@@ -32,8 +35,8 @@ type GetSettingsQuery struct {
 // is therefore never stored as a whole, so decoding it as `any` and re-marshaling is
 // semantically identical to keeping the raw bytes.
 type UpdateSettingsRequest struct {
-	// 配置分组（必填：site=站点信息，api=API/资源站，feature=功能开关，seo=SEO设置，storage=云存储）
-	Group string `json:"group" binding:"required,oneof=site api feature seo storage"`
+	// 配置分组（必填：site=站点信息，api=API/资源站，feature=功能开关，seo=SEO设置，storage=云存储，payment=支付商）
+	Group string `json:"group" binding:"required,oneof=site api feature seo storage payment"`
 	// 分组配置键值 JSON 数据（结构随分组变化）
 	Data any `json:"data" binding:"required"`
 }
@@ -97,4 +100,42 @@ type UpdateSEOSettings struct {
 	BaiduSiteVerification *string `json:"baidu_site_verification" binding:"omitempty,max=255"`
 	// Bing Webmaster 验证码
 	BingSiteVerification *string `json:"bing_site_verification" binding:"omitempty,max=255"`
+}
+
+// UpdatePaymentAlipayConfig updates Alipay merchant JSON (all optional).
+// Empty secret/cert fields keep the stored values.
+type UpdatePaymentAlipayConfig struct {
+	Enabled          *bool   `json:"enabled"`
+	Sandbox          *bool   `json:"sandbox"`
+	AppID            *string `json:"app_id" binding:"omitempty,max=64"`
+	SignMode         *string `json:"sign_mode" binding:"omitempty,oneof=key cert"`
+	PrivateKey       *string `json:"private_key"`
+	AlipayPublicKey  *string `json:"alipay_public_key"`
+	AppCert          *string `json:"app_cert"`
+	AlipayPublicCert *string `json:"alipay_public_cert"`
+	AlipayRootCert   *string `json:"alipay_root_cert"`
+	NotifyURL        *string `json:"notify_url" binding:"omitempty,max=500"`
+	ReturnURL        *string `json:"return_url" binding:"omitempty,max=500"`
+	PCWebEnabled     *bool   `json:"pc_web_enabled"`
+	AppEnabled       *bool   `json:"app_enabled"`
+}
+
+// UpdatePaymentWechatConfig updates WeChat Pay merchant JSON (all optional).
+type UpdatePaymentWechatConfig struct {
+	Enabled      *bool   `json:"enabled"`
+	MchID        *string `json:"mch_id" binding:"omitempty,max=32"`
+	MchSerialNo  *string `json:"mch_serial_no" binding:"omitempty,max=64"`
+	APIv3Key     *string `json:"api_v3_key"`
+	PrivateKey   *string `json:"private_key"`
+	AppIDWeb     *string `json:"app_id_web" binding:"omitempty,max=64"`
+	AppIDApp     *string `json:"app_id_app" binding:"omitempty,max=64"`
+	NotifyURL    *string `json:"notify_url" binding:"omitempty,max=500"`
+	PCWebEnabled *bool   `json:"pc_web_enabled"`
+	AppEnabled   *bool   `json:"app_enabled"`
+}
+
+// UpdatePaymentSettings updates one or both payment merchants.
+type UpdatePaymentSettings struct {
+	Alipay *UpdatePaymentAlipayConfig `json:"alipay"`
+	Wechat *UpdatePaymentWechatConfig `json:"wechat"`
 }

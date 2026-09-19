@@ -23,6 +23,8 @@ import (
 	opensvc "github.com/ilaziness/orange-tv/internal/service/open"
 	seosvc "github.com/ilaziness/orange-tv/internal/service/seo"
 	"github.com/ilaziness/orange-tv/pkg/captcha"
+	"github.com/ilaziness/orange-tv/pkg/payment"
+	_ "github.com/ilaziness/orange-tv/pkg/payment/drivers"
 )
 
 func (a *App) wireHTTP() error {
@@ -70,7 +72,8 @@ func (a *App) wireHTTP() error {
 	adminCommentSvc := adminsvc.NewCommentService(commentRepo, a.log)
 	collectEngine := collect.NewEngine(collectRepo, videoRepo, categoryRepo, metaRepo, playRepo, a.log)
 	adminCollectSvc := adminsvc.NewCollectService(collectRepo, playRepo, categoryRepo, collectEngine, a.log, a.cache)
-	adminSettingsSvc := adminsvc.NewSettingsService(sharedSettingsSvc, a.log)
+	paymentResolver := service.NewPaymentResolver(sharedSettingsSvc, payment.New(), a.log)
+	adminSettingsSvc := adminsvc.NewSettingsService(sharedSettingsSvc, paymentResolver, a.log)
 	clientSettingsSvc := clientsvc.NewClientSettingsService(sharedSettingsSvc)
 	adminLogSvc := adminsvc.NewLogService(logRepo, a.log, a.cfg.Log.Filename)
 	adminMgmtSvc := adminsvc.NewManagementService(adminRepo, videoRepo, userFeatureRepo, recorder, a.log)

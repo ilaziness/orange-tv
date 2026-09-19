@@ -1,6 +1,6 @@
 // Package errcode provides error codes and error types following PRD specification.
 // Error code format: {3-digit module code}{4-digit business code}
-// Module codes: 100=General, 200=User, 300=Auth, 400=Content, 900=System
+// Module codes: 100=General, 200=User, 300=Auth, 400=Content, 500=Payment, 900=System
 // Business codes: 0001-0999=General, 1000-1999=Business Logic, 2000-2999=Permission, 5000-5999=System
 package errcode
 
@@ -95,6 +95,14 @@ var (
 	MediaInvalidType     = &Code{4001005, "不支持的文件类型", 400, nil}
 	MediaTooLarge        = &Code{4001006, "文件过大", 400, nil}
 	MediaDeleteFailed    = &Code{4001007, "媒体删除失败", 502, nil}
+
+	// 支付 (500xxxx)
+	PaymentConfigInvalid    = &Code{5000001, "支付配置无效", 400, nil}
+	PaymentProviderDisabled = &Code{5000002, "支付商未启用", 400, nil}
+	PaymentChannelDisabled  = &Code{5000003, "支付渠道未启用", 400, nil}
+	PaymentCreateFailed     = &Code{5000004, "创建支付失败", 502, nil}
+	PaymentNotifyInvalid    = &Code{5000005, "支付回调无效", 400, nil}
+	PaymentQueryFailed      = &Code{5000006, "查询支付失败", 502, nil}
 
 	// 系统模块 (900xxxx)
 	InternalError        = &Code{9000001, "服务器内部错误", 500, nil}

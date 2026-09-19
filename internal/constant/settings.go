@@ -8,11 +8,12 @@ const (
 	SettingGroupLiveTV  = "livetv"  // 电视直播设置
 	SettingGroupSEO     = "seo"     // SEO / 社交分享设置
 	SettingGroupStorage = "storage" // 云存储设置
+	SettingGroupPayment = "payment" // 支付商设置
 )
 
 // AllSettingGroups returns all valid setting group names.
 func AllSettingGroups() []string {
-	return []string{SettingGroupSite, SettingGroupAPI, SettingGroupFeature, SettingGroupLiveTV, SettingGroupSEO, SettingGroupStorage}
+	return []string{SettingGroupSite, SettingGroupAPI, SettingGroupFeature, SettingGroupLiveTV, SettingGroupSEO, SettingGroupStorage, SettingGroupPayment}
 }
 
 // System setting keys.
@@ -52,6 +53,10 @@ const (
 	SettingStorageAliyun   = "storage_aliyun"   // 阿里云配置 JSON
 	SettingStorageTencent  = "storage_tencent"  // 腾讯云配置 JSON
 	SettingStorageQiniu    = "storage_qiniu"    // 七牛云配置 JSON
+
+	// Payment settings keys.
+	SettingPaymentAlipay = "payment_alipay" // 支付宝配置 JSON
+	SettingPaymentWechat = "payment_wechat" // 微信支付配置 JSON
 )
 
 // Storage provider values.
@@ -111,6 +116,10 @@ var GroupKeys = map[string][]string{
 		SettingStorageTencent,
 		SettingStorageQiniu,
 	},
+	SettingGroupPayment: {
+		SettingPaymentAlipay,
+		SettingPaymentWechat,
+	},
 }
 
 // KeyToGroup maps each setting key to its group.
@@ -142,4 +151,6 @@ var KeyToGroup = map[string]string{
 	SettingStorageAliyun:             SettingGroupStorage,
 	SettingStorageTencent:            SettingGroupStorage,
 	SettingStorageQiniu:              SettingGroupStorage,
+	SettingPaymentAlipay:             SettingGroupPayment,
+	SettingPaymentWechat:             SettingGroupPayment,
 }

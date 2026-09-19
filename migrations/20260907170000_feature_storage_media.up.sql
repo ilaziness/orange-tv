@@ -23,6 +23,17 @@ INSERT IGNORE INTO `system_settings` (`setting_key`, `setting_group`, `setting_v
 
 --bun:split
 
+ALTER TABLE `system_settings`
+    MODIFY `setting_value` TEXT NOT NULL COMMENT '设置值';
+
+--bun:split
+
+INSERT IGNORE INTO `system_settings` (`setting_key`, `setting_group`, `setting_value`, `setting_type`, `description`, `created_at`, `updated_at`) VALUES
+('payment_alipay', 'payment', '{}', 4, '支付宝配置 JSON', NOW(), NOW()),
+('payment_wechat', 'payment', '{}', 4, '微信支付配置 JSON', NOW(), NOW());
+
+--bun:split
+
 CREATE TABLE IF NOT EXISTS `media_assets` (
     `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     `media_type` VARCHAR(32) NOT NULL COMMENT '媒体类型：image（预留 video 等）',

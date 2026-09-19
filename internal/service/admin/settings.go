@@ -15,6 +15,7 @@ import (
 	"github.com/ilaziness/orange-tv/internal/service"
 	"github.com/ilaziness/orange-tv/internal/validator"
 	"github.com/ilaziness/orange-tv/pkg/objectstorage"
+	"github.com/ilaziness/orange-tv/pkg/payment"
 	"go.uber.org/zap"
 )
 
@@ -25,16 +26,14 @@ type SettingsService interface {
 }
 
 type settingsService struct {
-	shared service.SettingsService
-	log    *zap.Logger
+	shared   service.SettingsService
+	payments service.PaymentResolver
+	log      *zap.Logger
 }
 
 // NewSettingsService creates a SettingsService.
-func NewSettingsService(shared service.SettingsService, log *zap.Logger) SettingsService {
-	if log == nil {
-		log = zap.NewNop()
-	}
-	return &settingsService{shared: shared, log: log}
+func NewSettingsService(shared service.SettingsService, payments service.PaymentResolver, log *zap.Logger) SettingsService {
+	return &settingsService{shared: shared, payments: payments, log: log}
 }
 
 func (s *settingsService) Get(ctx context.Context, group string) (any, error) {
@@ -102,6 +101,8 @@ func (s *settingsService) parseUpdateData(ctx context.Context, group string, dat
 		return s.buildSEOUpserts(&req)
 	case constant.SettingGroupStorage:
 		return s.parseStorageUpdate(ctx, data)
+	case constant.SettingGroupPayment:
+		return s.parsePaymentUpdate(ctx, data)
 	default:
 		return nil, errcode.WithMessage(errcode.ParamError, "无效的设置分组")
 	}
@@ -251,6 +252,8 @@ func (s *settingsService) mapToResponse(group string, m map[string]model.SystemS
 		return service.MapToSEOSettings(m)
 	case constant.SettingGroupStorage:
 		return service.MapToStorageSettings(m)
+	case constant.SettingGroupPayment:
+		return service.MapToPaymentSettings(m)
 	default:
 		return nil
 	}
@@ -496,4 +499,158 @@ func (s *settingsService) parseStorageUpdate(ctx context.Context, data json.RawM
 		})
 	}
 	return upserts, nil
+}
+
+func keepSecret(dst *string, src *string) {
+	if src == nil {
+		return
+	}
+	if v := strings.TrimSpace(*src); v != "" {
+		*dst = v
+	}
+}
+
+func keepString(dst *string, src *string) {
+	if src == nil {
+		return
+	}
+	*dst = strings.TrimSpace(*src)
+}
+
+func keepBool(dst *bool, src *bool) {
+	if src == nil {
+		return
+	}
+	*dst = *src
+}
+
+func (s *settingsService) parsePaymentUpdate(ctx context.Context, data json.RawMessage) ([]repository.SettingUpsert, error) {
+	var req admindto.UpdatePaymentSettings
+	if err := json.Unmarshal(data, &req); err != nil {
+		return nil, errcode.WithMessage(errcode.ParamError, "无效的设置数据")
+	}
+	if err := validator.Validate(&req); err != nil {
+		return nil, errcode.WithMessage(errcode.ParamError, err.Error())
+	}
+	if req.Alipay == nil && req.Wechat == nil {
+		return nil, nil
+	}
+
+	current, err := s.shared.LoadMapByGroup(ctx, constant.SettingGroupPayment)
+	if err != nil {
+		return nil, err
+	}
+
+	alipay := parsePaymentAlipayFromSettings(current)
+	wechat := parsePaymentWechatFromSettings(current)
+
+	if req.Alipay != nil {
+		src := req.Alipay
+		keepBool(&alipay.Enabled, src.Enabled)
+		keepBool(&alipay.Sandbox, src.Sandbox)
+		keepString(&alipay.AppID, src.AppID)
+		keepString(&alipay.SignMode, src.SignMode)
+		keepSecret(&alipay.PrivateKey, src.PrivateKey)
+		keepSecret(&alipay.AlipayPublicKey, src.AlipayPublicKey)
+		keepSecret(&alipay.AppCert, src.AppCert)
+		keepSecret(&alipay.AlipayPublicCert, src.AlipayPublicCert)
+		keepSecret(&alipay.AlipayRootCert, src.AlipayRootCert)
+		keepString(&alipay.NotifyURL, src.NotifyURL)
+		keepString(&alipay.ReturnURL, src.ReturnURL)
+		keepBool(&alipay.PCWebEnabled, src.PCWebEnabled)
+		keepBool(&alipay.AppEnabled, src.AppEnabled)
+	}
+	if req.Wechat != nil {
+		src := req.Wechat
+		keepBool(&wechat.Enabled, src.Enabled)
+		keepString(&wechat.MchID, src.MchID)
+		keepString(&wechat.MchSerialNo, src.MchSerialNo)
+		keepSecret(&wechat.APIv3Key, src.APIv3Key)
+		keepSecret(&wechat.PrivateKey, src.PrivateKey)
+		keepString(&wechat.AppIDWeb, src.AppIDWeb)
+		keepString(&wechat.AppIDApp, src.AppIDApp)
+		keepString(&wechat.NotifyURL, src.NotifyURL)
+		keepBool(&wechat.PCWebEnabled, src.PCWebEnabled)
+		keepBool(&wechat.AppEnabled, src.AppEnabled)
+	}
+
+	var upserts []repository.SettingUpsert
+	if req.Alipay != nil {
+		raw, err := json.Marshal(alipay)
+		if err != nil {
+			return nil, errcode.Wrap(errcode.InternalError, err)
+		}
+		if err := s.payments.Validate(payment.ProviderAlipay, raw); err != nil {
+			return nil, err
+		}
+		upserts = append(upserts, repository.SettingUpsert{
+			Key: constant.SettingPaymentAlipay, Group: constant.SettingGroupPayment,
+			Value:       string(raw),
+			SettingType: constant.SettingTypeJSON, Description: "支付宝配置 JSON",
+		})
+	}
+	if req.Wechat != nil {
+		raw, err := json.Marshal(wechat)
+		if err != nil {
+			return nil, errcode.Wrap(errcode.InternalError, err)
+		}
+		if err := s.payments.Validate(payment.ProviderWechat, raw); err != nil {
+			return nil, err
+		}
+		upserts = append(upserts, repository.SettingUpsert{
+			Key: constant.SettingPaymentWechat, Group: constant.SettingGroupPayment,
+			Value:       string(raw),
+			SettingType: constant.SettingTypeJSON, Description: "微信支付配置 JSON",
+		})
+	}
+	return upserts, nil
+}
+
+type paymentAlipayStore struct {
+	Enabled          bool   `json:"enabled"`
+	Sandbox          bool   `json:"sandbox"`
+	AppID            string `json:"app_id"`
+	SignMode         string `json:"sign_mode"`
+	PrivateKey       string `json:"private_key"`
+	AlipayPublicKey  string `json:"alipay_public_key"`
+	AppCert          string `json:"app_cert"`
+	AlipayPublicCert string `json:"alipay_public_cert"`
+	AlipayRootCert   string `json:"alipay_root_cert"`
+	NotifyURL        string `json:"notify_url"`
+	ReturnURL        string `json:"return_url"`
+	PCWebEnabled     bool   `json:"pc_web_enabled"`
+	AppEnabled       bool   `json:"app_enabled"`
+}
+
+type paymentWechatStore struct {
+	Enabled      bool   `json:"enabled"`
+	MchID        string `json:"mch_id"`
+	MchSerialNo  string `json:"mch_serial_no"`
+	APIv3Key     string `json:"api_v3_key"`
+	PrivateKey   string `json:"private_key"`
+	AppIDWeb     string `json:"app_id_web"`
+	AppIDApp     string `json:"app_id_app"`
+	NotifyURL    string `json:"notify_url"`
+	PCWebEnabled bool   `json:"pc_web_enabled"`
+	AppEnabled   bool   `json:"app_enabled"`
+}
+
+func parsePaymentAlipayFromSettings(m map[string]model.SystemSettings) paymentAlipayStore {
+	raw := strings.TrimSpace(service.StrVal(m, constant.SettingPaymentAlipay))
+	if raw == "" || raw == "{}" || raw == "null" {
+		return paymentAlipayStore{}
+	}
+	var out paymentAlipayStore
+	_ = json.Unmarshal([]byte(raw), &out)
+	return out
+}
+
+func parsePaymentWechatFromSettings(m map[string]model.SystemSettings) paymentWechatStore {
+	raw := strings.TrimSpace(service.StrVal(m, constant.SettingPaymentWechat))
+	if raw == "" || raw == "{}" || raw == "null" {
+		return paymentWechatStore{}
+	}
+	var out paymentWechatStore
+	_ = json.Unmarshal([]byte(raw), &out)
+	return out
 }

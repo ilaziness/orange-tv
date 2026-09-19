@@ -39,6 +39,7 @@ import {
   type FeatureMatrix,
   type SEOSettings,
   type StorageSettings,
+  type PaymentSettings,
   type StoragePingResponse,
   type MediaAsset,
   type UpdateSettingsRequest,
@@ -291,6 +292,10 @@ export const adminApi = {
   getStorageSettings: () =>
     withAuth((token) =>
       apiGet<StorageSettings>(ADMIN_API_BASE, '/settings', { token, query: { group: 'storage' } }),
+    ),
+  getPaymentSettings: () =>
+    withAuth((token) =>
+      apiGet<PaymentSettings>(ADMIN_API_BASE, '/settings', { token, query: { group: 'payment' } }),
     ),
   updateSettings: <T = Record<string, unknown>>(body: UpdateSettingsRequest) =>
     withAuth((token) => apiPut<T>(ADMIN_API_BASE, '/settings', body, { token })),
