@@ -147,7 +147,7 @@ type paymentResolver struct {
 	log      *zap.Logger
 }
 
-// NewPaymentResolver creates a PaymentResolver. pay should be a shared payment.New() client.
+// NewPaymentResolver creates a PaymentResolver. pay is the process-wide payment.New() client.
 func NewPaymentResolver(settings SettingsService, pay *payment.Client, log *zap.Logger) PaymentResolver {
 	return &paymentResolver{settings: settings, pay: pay, log: log}
 }

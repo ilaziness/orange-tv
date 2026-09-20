@@ -1,7 +1,6 @@
 package payment
 
 import (
-	"fmt"
 	"strings"
 	"sync"
 )
@@ -29,13 +28,12 @@ func Register(provider string, impl Payment) {
 	impls[p] = impl
 }
 
-func lookup(provider string) (Payment, error) {
-	p := normalizeProvider(provider)
+func snapshot() map[string]Payment {
 	regMu.RLock()
 	defer regMu.RUnlock()
-	impl := impls[p]
-	if impl == nil {
-		return nil, fmt.Errorf("%w: %s", ErrProviderNotRegistered, p)
+	out := make(map[string]Payment, len(impls))
+	for k, v := range impls {
+		out[k] = v
 	}
-	return impl, nil
+	return out
 }

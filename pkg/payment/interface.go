@@ -6,8 +6,8 @@ import (
 	"fmt"
 )
 
-// Payment is implemented by a payment vendor.
-// Unused methods should keep the embedded Nop default.
+// Payment is implemented by a payment vendor (alipay, wechat, ...).
+// Embed Nop and override only the methods the vendor supports.
 type Payment interface {
 	Create(ctx context.Context, cfg json.RawMessage, channel Channel, req CreateRequest) (*CreateResult, error)
 	Query(ctx context.Context, cfg json.RawMessage, req QueryRequest) (*QueryResult, error)

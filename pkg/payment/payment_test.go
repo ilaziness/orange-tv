@@ -117,3 +117,14 @@ func TestDispatchCreateUsesNopWhenUnimplemented(t *testing.T) {
 		t.Fatalf("got %v", err)
 	}
 }
+
+func TestNewSnapshotsRegistry(t *testing.T) {
+	pay := New()
+	Register("late-vendor", Nop{})
+	if pay.Registered("late-vendor") {
+		t.Fatal("existing client should not see vendors registered after New")
+	}
+	if !New().Registered("late-vendor") {
+		t.Fatal("New after Register should see late-vendor")
+	}
+}

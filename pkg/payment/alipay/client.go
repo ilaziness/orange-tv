@@ -26,13 +26,13 @@ func newClient(cfg Config) (*sdk.Client, error) {
 			return nil, fmt.Errorf("%w: alipay public key: %v", payment.ErrInvalidConfig, err)
 		}
 	case signModeCert:
-		if err := client.LoadAppPublicCert(strings.TrimSpace(cfg.AppCert)); err != nil {
+		if err := client.LoadAppCertPublicKey(strings.TrimSpace(cfg.AppCert)); err != nil {
 			return nil, fmt.Errorf("%w: app cert: %v", payment.ErrInvalidConfig, err)
 		}
 		if err := client.LoadAliPayRootCert(strings.TrimSpace(cfg.AlipayRootCert)); err != nil {
 			return nil, fmt.Errorf("%w: alipay root cert: %v", payment.ErrInvalidConfig, err)
 		}
-		if err := client.LoadAliPayPublicCert(strings.TrimSpace(cfg.AlipayPublicCert)); err != nil {
+		if err := client.LoadAlipayCertPublicKey(strings.TrimSpace(cfg.AlipayPublicCert)); err != nil {
 			return nil, fmt.Errorf("%w: alipay public cert: %v", payment.ErrInvalidConfig, err)
 		}
 	default:
