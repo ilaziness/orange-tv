@@ -20,6 +20,7 @@ import (
 	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
 	"github.com/ilaziness/orange-tv/internal/repository"
+	"github.com/ilaziness/orange-tv/internal/utils"
 	"go.uber.org/zap"
 	_ "golang.org/x/image/webp"
 )
@@ -94,10 +95,10 @@ func (u *mediaUploader) UploadImage(ctx context.Context, in UploadImageInput) (*
 	var width, height uint32
 	if cfg, _, decErr := image.DecodeConfig(bytes.NewReader(data)); decErr == nil {
 		if cfg.Width > 0 {
-			width = uint32(cfg.Width)
+			width = utils.IntToUint32(cfg.Width)
 		}
 		if cfg.Height > 0 {
-			height = uint32(cfg.Height)
+			height = utils.IntToUint32(cfg.Height)
 		}
 	}
 

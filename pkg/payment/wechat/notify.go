@@ -23,7 +23,7 @@ func (driver) Notify(ctx context.Context, raw json.RawMessage, req payment.Notif
 	if !cfg.Enabled {
 		return nil, payment.ErrProviderDisabled
 	}
-	if _, err := newClient(ctx, cfg); err != nil {
+	if _, err = newClient(ctx, cfg); err != nil {
 		return nil, err
 	}
 	handler, err := notify.NewRSANotifyHandler(
@@ -41,7 +41,7 @@ func (driver) Notify(ctx context.Context, raw json.RawMessage, req payment.Notif
 		httpReq.Header = req.Headers.Clone()
 	}
 	content := new(payments.Transaction)
-	if _, err := handler.ParseNotifyRequest(ctx, httpReq, content); err != nil {
+	if _, err = handler.ParseNotifyRequest(ctx, httpReq, content); err != nil {
 		return nil, fmt.Errorf("wechat notify: %w", err)
 	}
 	q := mapTransaction(content)

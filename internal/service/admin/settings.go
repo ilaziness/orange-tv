@@ -576,7 +576,7 @@ func (s *settingsService) parsePaymentUpdate(ctx context.Context, data json.RawM
 
 	var upserts []repository.SettingUpsert
 	if req.Alipay != nil {
-		raw, err := json.Marshal(alipay)
+		raw, err := json.Marshal(alipay) //nolint:gosec // G117: persist payment credentials into settings JSON
 		if err != nil {
 			return nil, errcode.Wrap(errcode.InternalError, err)
 		}
@@ -590,7 +590,7 @@ func (s *settingsService) parsePaymentUpdate(ctx context.Context, data json.RawM
 		})
 	}
 	if req.Wechat != nil {
-		raw, err := json.Marshal(wechat)
+		raw, err := json.Marshal(wechat) //nolint:gosec // G117: persist payment credentials into settings JSON
 		if err != nil {
 			return nil, errcode.Wrap(errcode.InternalError, err)
 		}

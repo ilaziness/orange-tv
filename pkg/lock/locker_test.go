@@ -58,7 +58,7 @@ func TestMemoryLocker_LockAndRelease(t *testing.T) {
 	errIsLockNotHeld(t, err)
 
 	// 释放后应可重新获取。
-	if err := lock.Release(ctx); err != nil {
+	if err = lock.Release(ctx); err != nil {
 		t.Fatalf("release failed: %v", err)
 	}
 	lock2, err := l.Lock(ctx, "k1")
@@ -155,7 +155,7 @@ func TestRedisLocker_LockAndRelease(t *testing.T) {
 	_, err = l.Lock(ctx, "k1")
 	errIsLockNotHeld(t, err)
 
-	if err := lock.Release(ctx); err != nil {
+	if err = lock.Release(ctx); err != nil {
 		t.Fatalf("release failed: %v", err)
 	}
 	// 释放后可重新获取。

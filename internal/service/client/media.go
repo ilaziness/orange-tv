@@ -38,7 +38,7 @@ func (s *mediaService) Upload(ctx context.Context, userID uint32, fh *multipart.
 	if err != nil {
 		return nil, errcode.WithMessage(errcode.ParamError, "无法读取上传文件")
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	asset, err := s.uploader.UploadImage(ctx, service.UploadImageInput{
 		OwnerKind:    constant.MediaOwnerUser,

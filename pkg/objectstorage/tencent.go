@@ -25,7 +25,7 @@ func NewTencent(cfg Config) (Storage, error) {
 		return nil, err
 	}
 	cfg.CDNDomain = cdn
-	if err := cfg.Validate(); err != nil {
+	if err = cfg.Validate(); err != nil {
 		return nil, err
 	}
 	region := strings.TrimSpace(cfg.Region)

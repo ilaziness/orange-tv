@@ -444,7 +444,7 @@ func (s *seoService) cached(ctx context.Context, key string, gen func(context.Co
 		s.log.Warn("seo: cache get failed", zap.String("key", key), zap.Error(err))
 	}
 
-	// Detach from caller cancel so a cancelled first request does not fail all singleflight waiters.
+	// Detach from caller cancel so a canceled first request does not fail all singleflight waiters.
 	genCtx := context.WithoutCancel(ctx)
 	v, err, _ := s.sf.Do(key, func() (any, error) {
 		// Re-check cache inside singleflight to avoid duplicate work after a peer fill.
@@ -479,7 +479,11 @@ func (s *seoService) cached(ctx context.Context, key string, gen func(context.Co
 	if err != nil {
 		return Document{}, err
 	}
-	return v.(Document), nil
+	doc, ok := v.(Document)
+	if !ok {
+		return Document{}, fmt.Errorf("seo: unexpected singleflight type %T", v)
+	}
+	return doc, nil
 }
 
 type urlSet struct {

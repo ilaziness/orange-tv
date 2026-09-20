@@ -10,6 +10,7 @@ import (
 	clientdto "github.com/ilaziness/orange-tv/internal/dto/client"
 	opendto "github.com/ilaziness/orange-tv/internal/dto/open"
 	"github.com/ilaziness/orange-tv/internal/model"
+	"github.com/ilaziness/orange-tv/internal/utils"
 	pkgcache "github.com/ilaziness/orange-tv/pkg/cache"
 )
 
@@ -204,7 +205,7 @@ func (m *Manager) GetSEOPageCursor(ctx context.Context, page int) (uint32, bool,
 	case uint32:
 		return t, true, nil
 	case int:
-		return uint32(t), true, nil
+		return utils.IntToUint32(t), true, nil
 	case float64: // JSON numbers
 		return uint32(t), true, nil
 	case string:

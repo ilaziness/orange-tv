@@ -39,7 +39,7 @@ func ParseStorageProviderRaw(raw string) StorageProviderRaw {
 
 // MarshalStorageProviderRaw encodes provider config for storage.
 func MarshalStorageProviderRaw(cfg StorageProviderRaw) string {
-	b, err := json.Marshal(cfg)
+	b, err := json.Marshal(cfg) //nolint:gosec // G117: persist storage credentials into settings JSON
 	if err != nil {
 		return "{}"
 	}
@@ -118,22 +118,22 @@ func ValidateStorageProviderConfig(provider string, cfg StorageProviderRaw, requ
 	}
 	if requireComplete || hasAny {
 		if strings.TrimSpace(cfg.Bucket) == "" {
-			return fmt.Errorf("Bucket 不能为空")
+			return fmt.Errorf("存储桶不能为空")
 		}
 		if strings.TrimSpace(cfg.AccessKey) == "" {
-			return fmt.Errorf("AccessKey 不能为空")
+			return fmt.Errorf("访问密钥不能为空")
 		}
 		if strings.TrimSpace(cfg.SecretKey) == "" {
-			return fmt.Errorf("SecretKey 不能为空")
+			return fmt.Errorf("密钥不能为空")
 		}
 		switch provider {
 		case constant.StorageProviderAliyun:
 			if strings.TrimSpace(cfg.Region) == "" && strings.TrimSpace(cfg.Endpoint) == "" {
-				return fmt.Errorf("Region 或 Endpoint 至少填写一项")
+				return fmt.Errorf("地域或接入点至少填写一项")
 			}
 		case constant.StorageProviderTencent:
 			if strings.TrimSpace(cfg.Region) == "" {
-				return fmt.Errorf("Region 不能为空")
+				return fmt.Errorf("地域不能为空")
 			}
 		}
 	}
