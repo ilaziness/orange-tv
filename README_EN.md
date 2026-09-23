@@ -201,17 +201,19 @@ On success it prints something like `Created super_admin: id=1 username=admin`. 
 
 ### Client
 
-|                                |                                |
-| ------------------------------ | ------------------------------ |
-| ![Client 1](screenshot/01.png) | ![Client 2](screenshot/02.png) |
-| ![Client 3](screenshot/03.png) | ![Client 4](screenshot/04.png) |
-| ![Client 5](screenshot/05.png) |                                |
+More screenshots: [screenshot](screenshot).
+
+![Client](screenshot/01.png)
+
+### Desktop
+
+More screenshots: [screenshot/desktop](screenshot/desktop).
+
+![Desktop home](screenshot/desktop/home.png)
 
 ### Admin backend
 
-|                                              |
-| -------------------------------------------- |
-| ![Admin dashboard](screenshot/dashboard.png) |
+![Admin dashboard](screenshot/dashboard.png)
 
 ## How do I get started? (build from source)
 
