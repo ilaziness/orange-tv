@@ -43,6 +43,9 @@ import { TopLoader } from '@/components/TopLoader'
 import { LoginDialog } from '@/components/auth/LoginDialog'
 import { AnalyticsCode } from '@/components/AnalyticsCode'
 
+/** Header / main / footer 共用的内容列：最大 1920px 居中 + 响应式水平 gutter */
+const pageShellClass = 'mx-auto w-full max-w-page px-4 md:px-6 xl:px-8'
+
 // 统一展示类型：本地与远端历史映射为同一结构
 type HistoryEntry = {
   videoId: number
@@ -408,7 +411,7 @@ export function ClientLayout() {
       <AnalyticsCode code={site.analytics_code} />
       <div className="flex min-h-screen flex-col">
         <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm">
-          <div className="flex h-14 w-full items-center justify-between gap-4 px-4">
+          <div className={cn(pageShellClass, 'flex h-14 items-center justify-between gap-4')}>
             {/* 左侧：Logo + 导航 */}
             <div className="flex items-center gap-4">
               {renderLogo()}
@@ -597,12 +600,17 @@ export function ClientLayout() {
           </div>
         </header>
 
-        <main className="w-full flex-1 px-4 py-6">
+        <main className={cn(pageShellClass, 'flex-1 py-6')}>
           <Outlet context={{ categories }} />
         </main>
 
         <footer className="border-t border-border py-6">
-          <div className="flex w-full flex-col items-center gap-1 px-4 text-center text-sm text-muted-foreground">
+          <div
+            className={cn(
+              pageShellClass,
+              'flex flex-col items-center gap-1 text-center text-sm text-muted-foreground',
+            )}
+          >
             {site.copyright ? <p>{site.copyright}</p> : null}
             {site.icp ? <p>{site.icp}</p> : null}
             {!site.copyright && !site.icp ? (

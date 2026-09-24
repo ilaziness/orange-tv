@@ -58,6 +58,7 @@
 }
 
 @theme inline {
+  --max-width-page: 1920px;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

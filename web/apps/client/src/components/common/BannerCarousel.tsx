@@ -26,7 +26,7 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
   const goNext = () => setBannerIdx((i) => (i + 1) % banners.length)
 
   return (
-    <section className="group relative mx-auto w-full max-w-[1920px] overflow-hidden rounded-2xl border border-border bg-background shadow-sm aspect-[24/9]">
+    <section className="group relative w-full overflow-hidden rounded-2xl border border-border bg-background shadow-sm aspect-24/9">
       {banners.map((banner, i) => (
         <div
           key={banner.id}

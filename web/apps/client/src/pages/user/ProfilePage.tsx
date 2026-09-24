@@ -46,32 +46,30 @@ export function Component() {
   }, [loadProfile])
 
   return (
-    <main className="container mx-auto p-4 py-6 md:p-8">
-      <div className="grid gap-6 md:grid-cols-[12rem_1fr]">
-        <ToggleGroup
-          value={[tab]}
-          onValueChange={(v) => v[0] && setTab(v[0] as Tab)}
-          orientation="vertical"
-          className="w-full flex-col"
-        >
-          <ToggleGroupItem value="basic" className="w-full justify-start">
-            基本资料
-          </ToggleGroupItem>
-          <ToggleGroupItem value="password" className="w-full justify-start">
-            修改密码
-          </ToggleGroupItem>
-          <ToggleGroupItem value="history" className="w-full justify-start">
-            登录历史
-          </ToggleGroupItem>
-        </ToggleGroup>
+    <div className="grid gap-6 md:grid-cols-[12rem_1fr]">
+      <ToggleGroup
+        value={[tab]}
+        onValueChange={(v) => v[0] && setTab(v[0] as Tab)}
+        orientation="vertical"
+        className="w-full flex-col"
+      >
+        <ToggleGroupItem value="basic" className="w-full justify-start">
+          基本资料
+        </ToggleGroupItem>
+        <ToggleGroupItem value="password" className="w-full justify-start">
+          修改密码
+        </ToggleGroupItem>
+        <ToggleGroupItem value="history" className="w-full justify-start">
+          登录历史
+        </ToggleGroupItem>
+      </ToggleGroup>
 
-        <div>
-          {tab === 'basic' && <BasicInfo profile={profile} loadProfile={loadProfile} />}
-          {tab === 'password' && <ChangePassword />}
-          {tab === 'history' && <LoginHistory />}
-        </div>
+      <div>
+        {tab === 'basic' && <BasicInfo profile={profile} loadProfile={loadProfile} />}
+        {tab === 'password' && <ChangePassword />}
+        {tab === 'history' && <LoginHistory />}
       </div>
-    </main>
+    </div>
   )
 }
 
