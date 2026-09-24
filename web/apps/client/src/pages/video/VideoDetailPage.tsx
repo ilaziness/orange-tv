@@ -1,8 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams, useLoaderData } from 'react-router'
-import type { CommentItem, ClientVideoDetail, ClientVideoListItem } from '@orange-tv/shared'
+import { useNavigate, useParams, useLoaderData, useOutletContext } from 'react-router'
+import type {
+  ClientCategory,
+  CommentItem,
+  ClientVideoDetail,
+  ClientVideoListItem,
+} from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
-import { VideoGrid, FavoriteButton, RatingStars, BackButton, NamedItemField } from '@/components/common'
+import {
+  VideoGrid,
+  FavoriteButton,
+  RatingStars,
+  BackButton,
+  NamedItemField,
+  InlineLink,
+} from '@/components/common'
 import { CommentSection } from '@/components/comment'
 import { useSettings } from '@/hooks/useSettings'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,6 +25,7 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/u
 import { AlertCircleIcon, FilmIcon } from 'lucide-react'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { usePageSeo } from '@/hooks/usePageSeo'
+import { categoryVideosPath, resolveCategoryPath } from '@/lib/videoListFilters'
 import { toast } from 'sonner'
 
 type VideoDetailLoaderData = {
@@ -74,6 +87,7 @@ export function Component() {
   const { id } = useParams()
   const data = useLoaderData<VideoDetailLoaderData>()
   const navigate = useNavigate()
+  const { categories } = useOutletContext<{ categories: ClientCategory[] }>()
   const {
     detail,
     related,
@@ -91,6 +105,9 @@ export function Component() {
   const [posterError, setPosterError] = useState(false)
   const commentsFetchSeq = useRef(0)
   const { feature } = useSettings()
+  const categoryPath = detail
+    ? resolveCategoryPath(categories || [], detail.category_id)
+    : {}
 
   useEffect(() => {
     commentsFetchSeq.current += 1
@@ -190,6 +207,27 @@ export function Component() {
               ratingCount={detail.rating_count}
             />
             <div className="flex flex-col gap-1 text-sm">
+              {categoryPath.primary ? (
+                <p>
+                  <span className="text-muted-foreground">分类: </span>
+                  <InlineLink to={categoryVideosPath(categoryPath.primary.id)}>
+                    {categoryPath.primary.name}
+                  </InlineLink>
+                  {categoryPath.secondary ? (
+                    <>
+                      {' / '}
+                      <InlineLink
+                        to={categoryVideosPath(
+                          categoryPath.primary.id,
+                          categoryPath.secondary.id,
+                        )}
+                      >
+                        {categoryPath.secondary.name}
+                      </InlineLink>
+                    </>
+                  ) : null}
+                </p>
+              ) : null}
               {detail.subtitle ? (
                 <p>
                   <span className="text-muted-foreground">别名: </span>

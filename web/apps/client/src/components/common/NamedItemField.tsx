@@ -1,7 +1,7 @@
 import { Fragment } from 'react'
-import { Link } from 'react-router'
 import type { NamedItem } from '@orange-tv/shared'
 import { namedItemVideosPath, type NamedItemFilterKind } from '@/lib/videoListFilters'
+import { InlineLink } from './InlineLink'
 
 type NamedItemFieldProps = {
   label: string
@@ -24,12 +24,7 @@ export function NamedItemField({ label, items, kind, emptyText }: NamedItemField
         ? list.map((item, index) => (
             <Fragment key={`${kind}-${item.id}-${index}`}>
               {index > 0 ? ' / ' : null}
-              <Link
-                to={namedItemVideosPath(kind, item.id, item.name)}
-                className="cursor-pointer break-words text-primary underline-offset-4 hover:underline focus-visible:underline"
-              >
-                {item.name}
-              </Link>
+              <InlineLink to={namedItemVideosPath(kind, item.id, item.name)}>{item.name}</InlineLink>
             </Fragment>
           ))
         : emptyText}
