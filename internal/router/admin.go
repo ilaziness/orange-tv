@@ -162,4 +162,29 @@ func registerAdminSystemRoutes(v1 *gin.RouterGroup, h *Handlers) {
 	v1.GET("/data/backup", h.AdminData.Backup)
 	v1.POST("/data/batch-update/preview", h.AdminData.BatchUpdatePreview)
 	v1.POST("/data/batch-update/execute", h.AdminData.BatchUpdateExecute)
+
+	registerAdminLiveRoutes(v1, h)
+}
+
+func registerAdminLiveRoutes(v1 *gin.RouterGroup, h *Handlers) {
+	live := v1.Group("/live")
+
+	live.GET("/categories", h.AdminLive.ListCategories)
+	live.POST("/categories", h.AdminLive.CreateCategory)
+	live.PUT("/categories/:id", h.AdminLive.UpdateCategory)
+	live.DELETE("/categories/:id", h.AdminLive.DeleteCategory)
+
+	live.GET("/applies", h.AdminLive.ListApplies)
+	live.PUT("/applies/:id/approve", h.AdminLive.ApproveApply)
+	live.PUT("/applies/:id/reject", h.AdminLive.RejectApply)
+
+	live.GET("/streamers", h.AdminLive.ListStreamers)
+	live.PUT("/streamers/:userId/revoke", h.AdminLive.RevokeStreamer)
+
+	live.GET("/rooms", h.AdminLive.ListRooms)
+	live.POST("/rooms/:id/force-stop", h.AdminLive.ForceStopRoom)
+	live.PUT("/rooms/:id/ban", h.AdminLive.BanRoom)
+	live.PUT("/rooms/:id/unban", h.AdminLive.UnbanRoom)
+
+	live.GET("/sessions", h.AdminLive.ListSessions)
 }

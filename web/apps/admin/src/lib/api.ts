@@ -40,6 +40,12 @@ import {
   type SEOSettings,
   type StorageSettings,
   type PaymentSettings,
+  type LiveSettings,
+  type AdminLiveApplyItem,
+  type AdminLiveStreamerItem,
+  type AdminLiveRoomItem,
+  type AdminLiveSessionItem,
+  type AdminLiveCategoryItem,
   type StoragePingResponse,
   type MediaAsset,
   type UpdateSettingsRequest,
@@ -297,6 +303,10 @@ export const adminApi = {
     withAuth((token) =>
       apiGet<PaymentSettings>(ADMIN_API_BASE, '/settings', { token, query: { group: 'payment' } }),
     ),
+  getLiveSettings: () =>
+    withAuth((token) =>
+      apiGet<LiveSettings>(ADMIN_API_BASE, '/settings', { token, query: { group: 'live' } }),
+    ),
   updateSettings: <T = Record<string, unknown>>(body: UpdateSettingsRequest) =>
     withAuth((token) => apiPut<T>(ADMIN_API_BASE, '/settings', body, { token })),
   pingStorage: () =>
@@ -411,6 +421,67 @@ export const adminApi = {
     withAuth((token) =>
       apiPost<BatchUpdateExecuteResult>(ADMIN_API_BASE, '/data/batch-update/execute', body, {
         token,
+      }),
+    ),
+
+  // User live-streaming (admin)
+  listLiveCategories: (query?: Record<string, string | number | undefined>) =>
+    withAuth((token) =>
+      apiGet<PageData<AdminLiveCategoryItem>>(ADMIN_API_BASE, '/live/categories', {
+        token,
+        query,
+      }),
+    ),
+  createLiveCategory: (body: { name: string; sort?: number; status?: number }) =>
+    withAuth((token) => apiPost(ADMIN_API_BASE, '/live/categories', body, { token })),
+  updateLiveCategory: (
+    id: number,
+    body: { name?: string; sort?: number; status?: number },
+  ) => withAuth((token) => apiPut(ADMIN_API_BASE, `/live/categories/${id}`, body, { token })),
+  deleteLiveCategory: (id: number) =>
+    withAuth((token) => apiDelete(ADMIN_API_BASE, `/live/categories/${id}`, { token })),
+
+  listLiveApplies: (query?: Record<string, string | number | undefined>) =>
+    withAuth((token) =>
+      apiGet<PageData<AdminLiveApplyItem>>(ADMIN_API_BASE, '/live/applies', { token, query }),
+    ),
+  approveLiveApply: (id: number, remark?: string) =>
+    withAuth((token) =>
+      apiPut(ADMIN_API_BASE, `/live/applies/${id}/approve`, { remark: remark || '' }, { token }),
+    ),
+  rejectLiveApply: (id: number, remark?: string) =>
+    withAuth((token) =>
+      apiPut(ADMIN_API_BASE, `/live/applies/${id}/reject`, { remark: remark || '' }, { token }),
+    ),
+
+  listLiveStreamers: (query?: Record<string, string | number | undefined>) =>
+    withAuth((token) =>
+      apiGet<PageData<AdminLiveStreamerItem>>(ADMIN_API_BASE, '/live/streamers', {
+        token,
+        query,
+      }),
+    ),
+  revokeLiveStreamer: (userId: number) =>
+    withAuth((token) =>
+      apiPut(ADMIN_API_BASE, `/live/streamers/${userId}/revoke`, null, { token }),
+    ),
+
+  listLiveRooms: (query?: Record<string, string | number | undefined>) =>
+    withAuth((token) =>
+      apiGet<PageData<AdminLiveRoomItem>>(ADMIN_API_BASE, '/live/rooms', { token, query }),
+    ),
+  forceStopLiveRoom: (id: number) =>
+    withAuth((token) => apiPost(ADMIN_API_BASE, `/live/rooms/${id}/force-stop`, null, { token })),
+  banLiveRoom: (id: number) =>
+    withAuth((token) => apiPut(ADMIN_API_BASE, `/live/rooms/${id}/ban`, null, { token })),
+  unbanLiveRoom: (id: number) =>
+    withAuth((token) => apiPut(ADMIN_API_BASE, `/live/rooms/${id}/unban`, null, { token })),
+
+  listLiveSessions: (query?: Record<string, string | number | undefined>) =>
+    withAuth((token) =>
+      apiGet<PageData<AdminLiveSessionItem>>(ADMIN_API_BASE, '/live/sessions', {
+        token,
+        query,
       }),
     ),
 }

@@ -48,7 +48,12 @@ const FEATURES: { key: FeatureKey; label: string; description: string }[] = [
   {
     key: 'livetv_enabled',
     label: '电视直播',
-    description: '按端开启用户端电视直播功能',
+    description: '按端开启用户端电视直播（IPTV）功能',
+  },
+  {
+    key: 'live_enabled',
+    label: '用户直播',
+    description: '按端开启用户主播开播与观看功能（与电视直播独立）',
   },
   {
     key: 'comment_enabled',
@@ -76,6 +81,7 @@ const DEFAULT_FLAGS = (value: boolean): PlatformFlags => ({
 
 const DEFAULT_FORM: FeatureMatrix = {
   livetv_enabled: DEFAULT_FLAGS(false),
+  live_enabled: DEFAULT_FLAGS(false),
   comment_enabled: DEFAULT_FLAGS(true),
   comment_review: DEFAULT_FLAGS(true),
   rating_enabled: DEFAULT_FLAGS(true),
@@ -96,6 +102,7 @@ function normalizeMatrix(f: FeatureMatrix): FeatureMatrix {
   const commentReview = normalizeFlags(f.comment_review, true)
   return {
     livetv_enabled: normalizeFlags(f.livetv_enabled, false),
+    live_enabled: normalizeFlags(f.live_enabled, false),
     comment_enabled: commentEnabled,
     comment_review: {
       web: commentReview.web && commentEnabled.web,
@@ -265,7 +272,7 @@ export default function FeatureSettingsPage() {
         <CardContent>
           {loading ? (
             <FieldGroup>
-              {Array.from({ length: 4 }).map((_, i) => (
+              {Array.from({ length: 5 }).map((_, i) => (
                 <Skeleton key={i} className="h-20 w-full" />
               ))}
             </FieldGroup>

@@ -510,6 +510,7 @@ export type ClientAdItem = {
 
 export type FeatureSettings = {
   livetv_enabled: boolean
+  live_enabled: boolean
   comment_enabled: boolean
   comment_review: boolean
   rating_enabled: boolean
@@ -524,9 +525,94 @@ export type PlatformFlags = {
 
 export type FeatureMatrix = {
   livetv_enabled: PlatformFlags
+  live_enabled: PlatformFlags
   comment_enabled: PlatformFlags
   comment_review: PlatformFlags
   rating_enabled: PlatformFlags
+}
+
+/** Admin settings group=live (push/play templates). Never expose to client app. */
+export type LiveSettings = {
+  push_server: string
+  play_hls_template: string
+  play_flv_template: string
+}
+
+/** Apply status: 0=pending, 1=approved, 2=rejected */
+export type AdminLiveApplyItem = {
+  id: number
+  user_id: number
+  user_str_id: string
+  nickname: string
+  email: string
+  avatar: string
+  reason: string
+  contact: string
+  status: number
+  review_admin_id: number
+  review_remark: string
+  reviewed_at?: string
+  created_at: string
+}
+
+export type AdminLiveStreamerItem = {
+  user_id: number
+  user_str_id: string
+  nickname: string
+  email: string
+  avatar: string
+  streamer_at?: string
+  room_id: number
+  room_title: string
+  /** Room status: 0=idle, 1=living, 2=banned */
+  room_status: number
+  category_id: number
+  category_name: string
+}
+
+/** Room status: 0=idle, 1=living, 2=banned */
+export type AdminLiveRoomItem = {
+  id: number
+  user_id: number
+  user_str_id: string
+  nickname: string
+  avatar: string
+  category_id: number
+  category_name: string
+  title: string
+  cover: string
+  notice: string
+  stream_key: string
+  status: number
+  current_session_id?: number
+  started_at?: string
+  ended_at?: string
+  created_at: string
+  updated_at: string
+}
+
+export type AdminLiveSessionItem = {
+  id: number
+  room_id: number
+  user_id: number
+  title: string
+  category_id: number
+  category_name: string
+  streamer_nickname: string
+  streamer_avatar: string
+  started_at: string
+  ended_at?: string
+  /** host | admin | revoke | banned */
+  end_reason: string
+}
+
+export type AdminLiveCategoryItem = {
+  id: number
+  name: string
+  sort: number
+  status: number
+  created_at: string
+  updated_at: string
 }
 
 export type SEOSettings = {
@@ -759,6 +845,8 @@ export type ClientBanner = {
   video_id: number
 }
 
+export type StreamerApplyStatus = 'none' | 'pending' | 'approved' | 'rejected'
+
 export type UserProfile = {
   id: number
   str_id: string
@@ -766,6 +854,105 @@ export type UserProfile = {
   email: string
   avatar: string
   status: number
+  is_streamer: boolean
+  streamer_apply_status: StreamerApplyStatus
+}
+
+/** streamer_applies.status */
+export const LiveApplyStatusPending = 0
+export const LiveApplyStatusApproved = 1
+export const LiveApplyStatusRejected = 2
+
+/** live_rooms.status */
+export const LiveRoomStatusIdle = 0
+export const LiveRoomStatusLiving = 1
+export const LiveRoomStatusBanned = 2
+
+export type ClientLiveApply = {
+  id: number
+  reason: string
+  contact: string
+  status: number
+  review_remark: string
+  reviewed_at?: string
+  created_at: string
+}
+
+export type ClientLiveCategory = {
+  id: number
+  name: string
+  sort: number
+}
+
+export type ClientLiveRoomListItem = {
+  id: number
+  title: string
+  cover: string
+  category_id: number
+  category_name: string
+  streamer_user_id: number
+  streamer_str_id: string
+  streamer_nickname: string
+  streamer_avatar: string
+  started_at?: string
+}
+
+export type ClientLiveRoomDetail = {
+  id: number
+  title: string
+  cover: string
+  notice: string
+  category_id: number
+  category_name: string
+  status: number
+  streamer_user_id: number
+  streamer_str_id: string
+  streamer_nickname: string
+  streamer_avatar: string
+  play_hls_url: string
+  play_flv_url: string
+  started_at?: string
+}
+
+export type ClientMyLiveRoom = {
+  id: number
+  category_id: number
+  category_name: string
+  title: string
+  cover: string
+  notice: string
+  status: number
+  stream_key: string
+  push_server: string
+  current_session_id?: number
+  started_at?: string
+  ended_at?: string
+}
+
+export type UpdateMyLiveRoomRequest = {
+  title?: string
+  cover?: string
+  notice?: string
+  category_id?: number
+}
+
+export type StartLiveRequest = {
+  category_id?: number
+  title?: string
+}
+
+export type StartLiveResponse = {
+  room_id: number
+  session_id: number
+  status: number
+  push_server: string
+  stream_key: string
+  started_at: string
+}
+
+export type CreateLiveApplyRequest = {
+  reason: string
+  contact: string
 }
 
 export type LoginHistoryItem = {

@@ -11,4 +11,4 @@
 | [verification.md](verification.md) | 修改后验证流程 |
 | [commands.md](commands.md) | Makefile 与 CLI 常用命令 |
 
-其他人类文档见 `docs/`（如 [module-usage.md](../module-usage.md)）。
+其他人类文档见 `docs/`（如 [module-usage.md](../module-usage.md)、[live-streaming.md](../live-streaming.md) 用户主播直播运维）。

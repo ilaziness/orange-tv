@@ -4,6 +4,7 @@ import { clientApi } from '@/lib/api'
 
 const DEFAULT_FEATURE: FeatureSettings = {
   livetv_enabled: false,
+  live_enabled: false,
   comment_enabled: true,
   comment_review: true,
   rating_enabled: true,
@@ -62,7 +63,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         seo_keywords: site?.seo_keywords || '',
         description: site?.description || '',
         analytics_code: site?.analytics_code || '',
-        feature: feature || DEFAULT_FEATURE,
+        feature: { ...DEFAULT_FEATURE, ...(feature || {}) },
         seo: {
           public_base_url: seo?.public_base_url || '',
           default_og_image: seo?.default_og_image || '',

@@ -34,6 +34,8 @@ type PlatformFlags struct {
 type FeatureMatrix struct {
 	// 是否启用电视直播功能（按端）
 	LiveTVEnabled PlatformFlags `json:"livetv_enabled"`
+	// 是否启用用户直播功能（按端）
+	LiveEnabled PlatformFlags `json:"live_enabled"`
 	// 是否启用评论功能（按端）
 	CommentEnabled PlatformFlags `json:"comment_enabled"`
 	// 评论是否需要审核（按端）
@@ -46,12 +48,24 @@ type FeatureMatrix struct {
 type FeatureSettings struct {
 	// 是否启用电视直播功能
 	LiveTVEnabled bool `json:"livetv_enabled"`
+	// 是否启用用户直播功能
+	LiveEnabled bool `json:"live_enabled"`
 	// 是否启用评论功能
 	CommentEnabled bool `json:"comment_enabled"`
 	// 评论是否需要审核
 	CommentReview bool `json:"comment_review"`
 	// 是否启用评分功能
 	RatingEnabled bool `json:"rating_enabled"`
+}
+
+// LiveSettings is the admin live (user streaming) group response.
+type LiveSettings struct {
+	// OBS 推流服务器地址
+	PushServer string `json:"push_server"`
+	// HLS 播放地址模板（含 {stream_key}）
+	PlayHLSTemplate string `json:"play_hls_template"`
+	// FLV 播放地址模板（含 {stream_key}，可空）
+	PlayFLVTemplate string `json:"play_flv_template"`
 }
 
 // SEOSettings holds admin SEO / social-sharing configuration.

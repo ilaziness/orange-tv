@@ -17,6 +17,7 @@ const routes: RouteObject[] = [
           { path: 'video/:id', lazy: () => import('@/pages/video/VideoDetailPage') },
           { path: 'play/:id/:sourceId/:episodeId', lazy: () => import('@/pages/video/PlayPage') },
           { path: 'livetv', lazy: () => import('@/pages/livetv/LiveTVPage') },
+          { path: 'live', lazy: () => import('@/pages/live/LiveListPage') },
           { path: 'login', lazy: () => import('@/pages/auth/LoginPage') },
           { path: 'register', lazy: () => import('@/pages/auth/RegisterPage') },
           {
@@ -25,8 +26,10 @@ const routes: RouteObject[] = [
               { path: 'favorites', lazy: () => import('@/pages/user/FavoritesPage') },
               { path: 'history', lazy: () => import('@/pages/user/HistoryPage') },
               { path: 'profile', lazy: () => import('@/pages/user/ProfilePage') },
+              { path: 'live/studio', lazy: () => import('@/pages/live/LiveStudioPage') },
             ],
           },
+          { path: 'live/:id', lazy: () => import('@/pages/live/LiveWatchPage') },
         ],
       },
       {

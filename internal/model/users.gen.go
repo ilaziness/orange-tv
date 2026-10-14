@@ -27,6 +27,10 @@ type Users struct {
 	Avatar string `bun:"avatar,notnull" json:"avatar"`
 	// 状态：1启用 0禁用
 	Status uint8 `bun:"status,notnull" json:"status"`
+	// 是否主播：1是 0否
+	IsStreamer uint8 `bun:"is_streamer,notnull" json:"is_streamer"`
+	// 成为主播时间
+	StreamerAt *time.Time `bun:"streamer_at" json:"streamer_at"`
 	// 最后登录时间
 	LastLoginAt *time.Time `bun:"last_login_at" json:"last_login_at"`
 	CreatedAt   time.Time  `bun:"created_at,notnull" json:"created_at"`

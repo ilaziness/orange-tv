@@ -60,3 +60,33 @@ const (
 	CommentStatusHidden uint8 = 0 // 隐藏/待审核
 	CommentStatusNormal uint8 = 1 // 正常
 )
+
+// Streamer apply status (streamer_applies.status).
+const (
+	StreamerApplyPending  uint8 = 0 // 待审
+	StreamerApplyApproved uint8 = 1 // 通过
+	StreamerApplyRejected uint8 = 2 // 拒绝
+)
+
+// Live room status (live_rooms.status).
+const (
+	LiveRoomIdle   uint8 = 0 // 空闲
+	LiveRoomLiving uint8 = 1 // 直播中
+	LiveRoomBanned uint8 = 2 // 禁播
+)
+
+// Live session end reasons (live_sessions.end_reason).
+const (
+	LiveEndReasonHost   = "host"
+	LiveEndReasonAdmin  = "admin"
+	LiveEndReasonRevoke = "revoke"
+	LiveEndReasonBanned = "banned"
+)
+
+// Streamer apply status strings for client profile API.
+const (
+	StreamerApplyStatusNone     = "none"
+	StreamerApplyStatusPending  = "pending"
+	StreamerApplyStatusApproved = "approved"
+	StreamerApplyStatusRejected = "rejected"
+)

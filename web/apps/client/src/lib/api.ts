@@ -9,10 +9,16 @@ import {
   resolveApiUrl,
   type ClientBanner,
   type ClientCategory,
+  type ClientLiveApply,
+  type ClientLiveCategory,
+  type ClientLiveRoomDetail,
+  type ClientLiveRoomListItem,
   type ClientLiveTVChannel,
+  type ClientMyLiveRoom,
   type ClientVideoDetail,
   type ClientVideoListItem,
   type CommentItem,
+  type CreateLiveApplyRequest,
   type FavoriteItem,
   type FavoriteCheckResult,
   type HistoryItem,
@@ -23,6 +29,9 @@ import {
   type RefreshTokenResult,
   type SettingsResponse,
   type ClientAdItem,
+  type StartLiveRequest,
+  type StartLiveResponse,
+  type UpdateMyLiveRoomRequest,
   type UploadMediaResponse,
   type UserLoginResult,
   type UserProfile,
@@ -282,6 +291,30 @@ export const clientApi = {
       fd.append('file', file)
       return apiUpload<UploadMediaResponse>(CLIENT_API_BASE, '/media', fd, { token })
     }),
+
+  // User live streaming
+  liveCategories: () => apiGet<ClientLiveCategory[]>(CLIENT_API_BASE, '/live/categories'),
+  liveRooms: (query?: Record<string, string | number | undefined>) =>
+    apiGet<PageData<ClientLiveRoomListItem>>(CLIENT_API_BASE, '/live/rooms', { query }),
+  liveRoom: (id: number) => apiGet<ClientLiveRoomDetail>(CLIENT_API_BASE, `/live/rooms/${id}`),
+  createLiveApply: (body: CreateLiveApplyRequest) =>
+    withAuth((token) => apiPost<ClientLiveApply>(CLIENT_API_BASE, '/live/applies', body, { token })),
+  myLiveApply: () =>
+    withAuth((token) => apiGet<ClientLiveApply | null>(CLIENT_API_BASE, '/live/applies/me', { token })),
+  myLiveRoom: () =>
+    withAuth((token) => apiGet<ClientMyLiveRoom>(CLIENT_API_BASE, '/live/rooms/me', { token })),
+  updateMyLiveRoom: (body: UpdateMyLiveRoomRequest) =>
+    withAuth((token) => apiPut<ClientMyLiveRoom>(CLIENT_API_BASE, '/live/rooms/me', body, { token })),
+  regenerateLiveStreamKey: () =>
+    withAuth((token) =>
+      apiPost<ClientMyLiveRoom>(CLIENT_API_BASE, '/live/rooms/me/regenerate-key', null, { token }),
+    ),
+  startLive: (body?: StartLiveRequest) =>
+    withAuth((token) =>
+      apiPost<StartLiveResponse>(CLIENT_API_BASE, '/live/rooms/me/start', body ?? {}, { token }),
+    ),
+  stopLive: () =>
+    withAuth((token) => apiPost<void>(CLIENT_API_BASE, '/live/rooms/me/stop', null, { token })),
 }
 
 export function errorMessage(err: unknown): string {

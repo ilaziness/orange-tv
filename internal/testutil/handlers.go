@@ -39,15 +39,18 @@ type BusinessHandlers struct {
 	AdminData      *adminhandler.DataHandler
 	AdminAd        *adminhandler.AdHandler
 	AdminMedia     *adminhandler.MediaHandler
+	AdminLive      *adminhandler.LiveHandler
 	ClientCategory *clienthandler.CategoryHandler
 	ClientVideo    *clienthandler.VideoHandler
 	ClientLiveTV   *clienthandler.LiveTVHandler
+	ClientLive     *clienthandler.LiveHandler
 	ClientSettings *clienthandler.SettingsHandler
 	ClientUser     *clienthandler.UserHandler
 	ClientBanner   *clienthandler.BannerHandler
 	ClientAd       *clienthandler.AdHandler
 	ClientMedia    *clienthandler.MediaHandler
 	LiveTVFeature  gin.HandlerFunc
+	LiveFeature    gin.HandlerFunc
 	OpenResource   *openhandler.ResourceHandler
 	SEO            *seohandler.Handler
 }
@@ -488,6 +491,72 @@ func (s clientMediaSvc) Upload(ctx context.Context, userID uint32, fh *multipart
 	return &clientdto.UploadMediaResponse{}, nil
 }
 
+type adminUserLiveSvc struct{}
+
+func (s adminUserLiveSvc) ListCategories(ctx context.Context, req *admindto.LiveCategoryListRequest) ([]admindto.LiveCategoryItem, int, error) {
+	return nil, 0, nil
+}
+func (s adminUserLiveSvc) CreateCategory(ctx context.Context, req *admindto.CreateLiveCategoryRequest) (*admindto.LiveCategoryItem, error) {
+	return &admindto.LiveCategoryItem{}, nil
+}
+func (s adminUserLiveSvc) UpdateCategory(ctx context.Context, id uint32, req *admindto.UpdateLiveCategoryRequest) (*admindto.LiveCategoryItem, error) {
+	return &admindto.LiveCategoryItem{ID: id}, nil
+}
+func (s adminUserLiveSvc) DeleteCategory(ctx context.Context, id uint32) error { return nil }
+func (s adminUserLiveSvc) ListApplies(ctx context.Context, req *admindto.LiveApplyListRequest) ([]admindto.LiveApplyItem, int, error) {
+	return nil, 0, nil
+}
+func (s adminUserLiveSvc) ApproveApply(ctx context.Context, id, adminID uint32, req *admindto.ReviewLiveApplyRequest) error {
+	return nil
+}
+func (s adminUserLiveSvc) RejectApply(ctx context.Context, id, adminID uint32, req *admindto.ReviewLiveApplyRequest) error {
+	return nil
+}
+func (s adminUserLiveSvc) ListStreamers(ctx context.Context, req *admindto.LiveStreamerListRequest) ([]admindto.LiveStreamerItem, int, error) {
+	return nil, 0, nil
+}
+func (s adminUserLiveSvc) RevokeStreamer(ctx context.Context, userID uint32) error { return nil }
+func (s adminUserLiveSvc) ListRooms(ctx context.Context, req *admindto.LiveRoomListRequest) ([]admindto.LiveRoomItem, int, error) {
+	return nil, 0, nil
+}
+func (s adminUserLiveSvc) ForceStopRoom(ctx context.Context, roomID uint32) error { return nil }
+func (s adminUserLiveSvc) BanRoom(ctx context.Context, roomID uint32) error       { return nil }
+func (s adminUserLiveSvc) UnbanRoom(ctx context.Context, roomID uint32) error     { return nil }
+func (s adminUserLiveSvc) ListSessions(ctx context.Context, req *admindto.LiveSessionListRequest) ([]admindto.LiveSessionItem, int, error) {
+	return nil, 0, nil
+}
+
+type clientLiveSvcUser struct{}
+
+func (s clientLiveSvcUser) CreateApply(ctx context.Context, userID uint32, req *clientdto.CreateLiveApplyRequest) (*clientdto.LiveApplyItem, error) {
+	return &clientdto.LiveApplyItem{}, nil
+}
+func (s clientLiveSvcUser) GetMyApply(ctx context.Context, userID uint32) (*clientdto.LiveApplyItem, error) {
+	return nil, nil
+}
+func (s clientLiveSvcUser) ListCategories(ctx context.Context) ([]clientdto.LiveCategoryItem, error) {
+	return nil, nil
+}
+func (s clientLiveSvcUser) ListLivingRooms(ctx context.Context, req *clientdto.LiveRoomListRequest) ([]clientdto.LiveRoomListItem, int, error) {
+	return nil, 0, nil
+}
+func (s clientLiveSvcUser) GetRoom(ctx context.Context, roomID uint32) (*clientdto.LiveRoomDetail, error) {
+	return &clientdto.LiveRoomDetail{ID: roomID}, nil
+}
+func (s clientLiveSvcUser) GetMyRoom(ctx context.Context, userID uint32) (*clientdto.MyLiveRoom, error) {
+	return &clientdto.MyLiveRoom{}, nil
+}
+func (s clientLiveSvcUser) UpdateMyRoom(ctx context.Context, userID uint32, req *clientdto.UpdateMyLiveRoomRequest) (*clientdto.MyLiveRoom, error) {
+	return &clientdto.MyLiveRoom{}, nil
+}
+func (s clientLiveSvcUser) RegenerateKey(ctx context.Context, userID uint32) (*clientdto.MyLiveRoom, error) {
+	return &clientdto.MyLiveRoom{}, nil
+}
+func (s clientLiveSvcUser) Start(ctx context.Context, userID uint32, req *clientdto.StartLiveRequest) (*clientdto.StartLiveResponse, error) {
+	return &clientdto.StartLiveResponse{}, nil
+}
+func (s clientLiveSvcUser) Stop(ctx context.Context, userID uint32) error { return nil }
+
 // NewBusinessHandlers builds no-op business handlers for tests.
 func NewBusinessHandlers() BusinessHandlers {
 	auth := authSvc{}
@@ -511,15 +580,18 @@ func NewBusinessHandlers() BusinessHandlers {
 		AdminData:      adminhandler.NewDataHandler(adminDataSvc{}),
 		AdminAd:        adminhandler.NewAdHandler(adminAdSvc{}),
 		AdminMedia:     adminhandler.NewMediaHandler(adminMediaSvc{}),
+		AdminLive:      adminhandler.NewLiveHandler(adminUserLiveSvc{}),
 		ClientCategory: clienthandler.NewCategoryHandler(clientCategorySvc{}),
 		ClientVideo:    clienthandler.NewVideoHandler(clientVideoSvc{}),
 		ClientLiveTV:   clienthandler.NewLiveTVHandler(liveSvc, clientLiveProxySvc{}),
+		ClientLive:     clienthandler.NewLiveHandler(clientLiveSvcUser{}),
 		ClientSettings: clienthandler.NewSettingsHandler(clientSettingsSvc{}),
 		ClientUser:     clienthandler.NewUserHandler(userSvc),
 		ClientBanner:   clienthandler.NewBannerHandler(bannerSvc),
 		ClientAd:       clienthandler.NewAdHandler(clientAdSvc{}),
 		ClientMedia:    clienthandler.NewMediaHandler(clientMediaSvc{}),
 		LiveTVFeature:  func(c *gin.Context) { c.Next() },
+		LiveFeature:    func(c *gin.Context) { c.Next() },
 		OpenResource:   openhandler.NewResourceHandler(openResourceSvc{}),
 		SEO:            seohandler.NewHandler(seosvc.StubService{}, zap.NewNop()),
 	}

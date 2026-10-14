@@ -2,6 +2,7 @@ package http
 
 import (
 	"errors"
+	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -39,6 +40,19 @@ func BindUploadAndValidate(c *gin.Context, obj any) bool {
 // BindJSON 绑定JSON请求体，binding标签自动校验。
 func BindJSON(c *gin.Context, obj any) bool {
 	if err := c.ShouldBindJSON(obj); err != nil {
+		response.Error(c, errcode.Wrap(errcode.ParamError, validator.TranslateError(err)))
+		return false
+	}
+	return true
+}
+
+// BindOptionalJSON binds an optional JSON body. Empty body (EOF) is allowed and leaves obj zero-valued;
+// present but invalid JSON / binding failures still return an error response.
+func BindOptionalJSON(c *gin.Context, obj any) bool {
+	if err := c.ShouldBindJSON(obj); err != nil {
+		if errors.Is(err, io.EOF) {
+			return true
+		}
 		response.Error(c, errcode.Wrap(errcode.ParamError, validator.TranslateError(err)))
 		return false
 	}

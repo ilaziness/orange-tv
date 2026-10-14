@@ -1,0 +1,111 @@
+package client
+
+import "github.com/ilaziness/orange-tv/internal/dto"
+
+// ===== Applies =====
+
+// CreateLiveApplyRequest submits a streamer application.
+type CreateLiveApplyRequest struct {
+	Reason  string `json:"reason" binding:"required,min=1,max=500"`
+	Contact string `json:"contact" binding:"required,min=1,max=100"`
+}
+
+// LiveApplyItem is the current user's latest apply status.
+type LiveApplyItem struct {
+	ID           uint32 `json:"id"`
+	Reason       string `json:"reason"`
+	Contact      string `json:"contact"`
+	Status       uint8  `json:"status"`
+	ReviewRemark string `json:"review_remark"`
+	ReviewedAt   string `json:"reviewed_at,omitempty"`
+	CreatedAt    string `json:"created_at"`
+}
+
+// ===== Categories =====
+
+// LiveCategoryItem is a public enabled live category.
+type LiveCategoryItem struct {
+	ID   uint32 `json:"id"`
+	Name string `json:"name"`
+	Sort uint32 `json:"sort"`
+}
+
+// ===== Rooms =====
+
+// LiveRoomListRequest filters public living rooms.
+type LiveRoomListRequest struct {
+	dto.PaginationRequest
+	CategoryID *uint32 `form:"category_id" binding:"omitempty,min=1"`
+}
+
+// LiveRoomListItem is a public living room card.
+type LiveRoomListItem struct {
+	ID               uint32 `json:"id"`
+	Title            string `json:"title"`
+	Cover            string `json:"cover"`
+	CategoryID       uint32 `json:"category_id"`
+	CategoryName     string `json:"category_name"`
+	StreamerUserID   uint32 `json:"streamer_user_id"`
+	StreamerStrID    string `json:"streamer_str_id"`
+	StreamerNickname string `json:"streamer_nickname"`
+	StreamerAvatar   string `json:"streamer_avatar"`
+	StartedAt        string `json:"started_at,omitempty"`
+}
+
+// LiveRoomDetail is the public room detail (never includes stream_key / push_server).
+type LiveRoomDetail struct {
+	ID               uint32 `json:"id"`
+	Title            string `json:"title"`
+	Cover            string `json:"cover"`
+	Notice           string `json:"notice"`
+	CategoryID       uint32 `json:"category_id"`
+	CategoryName     string `json:"category_name"`
+	Status           uint8  `json:"status"`
+	StreamerUserID   uint32 `json:"streamer_user_id"`
+	StreamerStrID    string `json:"streamer_str_id"`
+	StreamerNickname string `json:"streamer_nickname"`
+	StreamerAvatar   string `json:"streamer_avatar"`
+	PlayHLSURL       string `json:"play_hls_url"`
+	PlayFLVURL       string `json:"play_flv_url"`
+	StartedAt        string `json:"started_at,omitempty"`
+}
+
+// MyLiveRoom is the streamer's own room (may include push credentials).
+type MyLiveRoom struct {
+	ID               uint32 `json:"id"`
+	CategoryID       uint32 `json:"category_id"`
+	CategoryName     string `json:"category_name"`
+	Title            string `json:"title"`
+	Cover            string `json:"cover"`
+	Notice           string `json:"notice"`
+	Status           uint8  `json:"status"`
+	StreamKey        string `json:"stream_key"`
+	PushServer       string `json:"push_server"`
+	CurrentSessionID uint32 `json:"current_session_id,omitempty"`
+	StartedAt        string `json:"started_at,omitempty"`
+	EndedAt          string `json:"ended_at,omitempty"`
+}
+
+// UpdateMyLiveRoomRequest updates the streamer's room profile.
+type UpdateMyLiveRoomRequest struct {
+	Title      *string `json:"title" binding:"omitempty,min=1,max=100"`
+	Cover      *string `json:"cover" binding:"omitempty,max=500"`
+	Notice     *string `json:"notice" binding:"omitempty,max=500"`
+	CategoryID *uint32 `json:"category_id" binding:"omitempty,min=1"`
+}
+
+// StartLiveRequest starts a broadcast (optional category override).
+type StartLiveRequest struct {
+	CategoryID *uint32 `json:"category_id" binding:"omitempty,min=1"`
+	Title      *string `json:"title" binding:"omitempty,min=1,max=100"`
+}
+
+// StartLiveResponse returns push credentials after start (or idempotent living).
+type StartLiveResponse struct {
+	RoomID     uint32 `json:"room_id"`
+	SessionID  uint32 `json:"session_id"`
+	Status     uint8  `json:"status"`
+	PushServer string `json:"push_server"`
+	StreamKey  string `json:"stream_key"`
+	StartedAt  string `json:"started_at"`
+}

@@ -391,6 +391,7 @@ make swagger-clean
 - [模块使用说明](module-usage.md) - 如何选择和删除不需要的服务模块
 - [部署文档](deployment.md) - 单实例、多实例和 Docker 部署指南
 - [可观测性指南](observability.md) - 分布式追踪和指标监控配置
+- [用户直播运维](live-streaming.md) - 主播开播、SRS/OBS、管理端推流配置（与 IPTV 电视直播区分）
 
 ## License
 

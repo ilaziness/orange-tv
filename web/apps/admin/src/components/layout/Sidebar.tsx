@@ -37,6 +37,12 @@ import {
   Cloud,
   Images,
   Wallet,
+  UserCheck,
+  Mic2,
+  DoorOpen,
+  History,
+  ListTree,
+  Server,
 } from 'lucide-react'
 
 const GITHUB_REPO_URL = 'https://github.com/ilaziness/orange-tv'
@@ -75,6 +81,15 @@ const userMenus = [
   { to: '/user/groups', label: '用户组', icon: Users },
   { to: '/user/users', label: '用户', icon: User2 },
   { to: '/user/login-logs', label: '登录日志', icon: LogIn },
+]
+
+const liveMenus = [
+  { to: '/live/applies', label: '主播申请', icon: UserCheck },
+  { to: '/live/streamers', label: '主播管理', icon: Mic2 },
+  { to: '/live/rooms', label: '直播间', icon: DoorOpen },
+  { to: '/live/sessions', label: '直播场次', icon: History },
+  { to: '/live/categories', label: '直播分类', icon: ListTree },
+  { to: '/live/stream-config', label: '推流配置', icon: Server },
 ]
 
 const financeMenus = [{ to: '/finance/payment-providers', label: '支付商管理', icon: Wallet }]
@@ -150,6 +165,24 @@ export function AppSidebar() {
           <SidebarGroupLabel>用户管理</SidebarGroupLabel>
           <SidebarMenu>
             {userMenus.map((item) => (
+              <SidebarMenuItem key={item.to}>
+                <SidebarMenuButton
+                  tooltip={item.label}
+                  isActive={location.pathname.startsWith(item.to)}
+                  render={<Link to={item.to} />}
+                >
+                  <item.icon />
+                  <span>{item.label}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>直播管理</SidebarGroupLabel>
+          <SidebarMenu>
+            {liveMenus.map((item) => (
               <SidebarMenuItem key={item.to}>
                 <SidebarMenuButton
                   tooltip={item.label}

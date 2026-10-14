@@ -64,12 +64,12 @@ func TestMapToFeatureSettings(t *testing.T) {
 
 	web := MapToFeatureSettings(m, constant.ClientTypeWeb)
 	assert.Equal(t, dto.FeatureSettings{
-		LiveTVEnabled: false, CommentEnabled: true, CommentReview: false, RatingEnabled: true,
+		LiveTVEnabled: false, LiveEnabled: false, CommentEnabled: true, CommentReview: false, RatingEnabled: true,
 	}, web)
 
 	app := MapToFeatureSettings(m, constant.ClientTypeApp)
 	assert.Equal(t, dto.FeatureSettings{
-		LiveTVEnabled: false, CommentEnabled: false, CommentReview: false, RatingEnabled: true,
+		LiveTVEnabled: false, LiveEnabled: false, CommentEnabled: false, CommentReview: false, RatingEnabled: true,
 	}, app)
 }
 

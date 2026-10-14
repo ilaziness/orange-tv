@@ -9,11 +9,12 @@ const (
 	SettingGroupSEO     = "seo"     // SEO / 社交分享设置
 	SettingGroupStorage = "storage" // 云存储设置
 	SettingGroupPayment = "payment" // 支付商设置
+	SettingGroupLive    = "live"    // 用户直播推流配置（admin-only）
 )
 
 // AllSettingGroups returns all valid setting group names.
 func AllSettingGroups() []string {
-	return []string{SettingGroupSite, SettingGroupAPI, SettingGroupFeature, SettingGroupLiveTV, SettingGroupSEO, SettingGroupStorage, SettingGroupPayment}
+	return []string{SettingGroupSite, SettingGroupAPI, SettingGroupFeature, SettingGroupLiveTV, SettingGroupSEO, SettingGroupStorage, SettingGroupPayment, SettingGroupLive}
 }
 
 // System setting keys.
@@ -29,9 +30,15 @@ const (
 
 	// Feature settings keys.
 	SettingFeatureLiveTVEnabled  = "livetv_enabled"  // 电视直播开关
+	SettingFeatureLiveEnabled    = "live_enabled"    // 用户直播开关
 	SettingFeatureCommentEnabled = "comment_enabled" // 视频评论开关
 	SettingFeatureCommentReview  = "comment_review"  // 评论是否需要审核
 	SettingFeatureRatingEnabled  = "rating_enabled"  // 视频评分开关
+
+	// User live streaming (admin-only group live) keys.
+	SettingLivePushServer      = "live_push_server"       // OBS 推流服务器
+	SettingLivePlayHLSTemplate = "live_play_hls_template" // HLS 播放模板
+	SettingLivePlayFLVTemplate = "live_play_flv_template" // FLV 播放模板
 
 	// LiveTV settings keys.
 	SettingLiveTVSyncSourceURL = "livetv_sync_source_url" // 直播源同步地址
@@ -91,9 +98,15 @@ var GroupKeys = map[string][]string{
 	},
 	SettingGroupFeature: {
 		SettingFeatureLiveTVEnabled,
+		SettingFeatureLiveEnabled,
 		SettingFeatureCommentEnabled,
 		SettingFeatureCommentReview,
 		SettingFeatureRatingEnabled,
+	},
+	SettingGroupLive: {
+		SettingLivePushServer,
+		SettingLivePlayHLSTemplate,
+		SettingLivePlayFLVTemplate,
 	},
 	SettingGroupLiveTV: {
 		SettingLiveTVSyncSourceURL,
@@ -133,9 +146,13 @@ var KeyToGroup = map[string]string{
 	SettingSiteAnalyticsCode:         SettingGroupSite,
 	SettingEnableThirdPartyCollect:   SettingGroupAPI,
 	SettingFeatureLiveTVEnabled:      SettingGroupFeature,
+	SettingFeatureLiveEnabled:        SettingGroupFeature,
 	SettingFeatureCommentEnabled:     SettingGroupFeature,
 	SettingFeatureCommentReview:      SettingGroupFeature,
 	SettingFeatureRatingEnabled:      SettingGroupFeature,
+	SettingLivePushServer:            SettingGroupLive,
+	SettingLivePlayHLSTemplate:       SettingGroupLive,
+	SettingLivePlayFLVTemplate:       SettingGroupLive,
 	SettingLiveTVSyncSourceURL:       SettingGroupLiveTV,
 	SettingSEOPublicBaseURL:          SettingGroupSEO,
 	SettingSEODefaultOGImage:         SettingGroupSEO,

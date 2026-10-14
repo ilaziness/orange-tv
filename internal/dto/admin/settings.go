@@ -22,10 +22,13 @@ type APISettings struct {
 // PaymentSettings is an alias for admin convenience.
 type PaymentSettings = dto.PaymentSettings
 
+// LiveSettings is an alias for admin convenience.
+type LiveSettings = dto.LiveSettings
+
 // GetSettingsQuery binds the group query parameter.
 type GetSettingsQuery struct {
-	// 配置分组（site=站点信息，api=API/资源站，feature=功能开关，seo=SEO设置，storage=云存储，payment=支付商）
-	Group string `form:"group" binding:"required,oneof=site api feature seo storage payment"`
+	// 配置分组（site=站点信息，api=API/资源站，feature=功能开关，seo=SEO设置，storage=云存储，payment=支付商，live=用户直播推流）
+	Group string `form:"group" binding:"required,oneof=site api feature seo storage payment live"`
 }
 
 // UpdateSettingsRequest updates settings for a single group.
@@ -35,8 +38,8 @@ type GetSettingsQuery struct {
 // is therefore never stored as a whole, so decoding it as `any` and re-marshaling is
 // semantically identical to keeping the raw bytes.
 type UpdateSettingsRequest struct {
-	// 配置分组（必填：site=站点信息，api=API/资源站，feature=功能开关，seo=SEO设置，storage=云存储，payment=支付商）
-	Group string `json:"group" binding:"required,oneof=site api feature seo storage payment"`
+	// 配置分组（必填：site=站点信息，api=API/资源站，feature=功能开关，seo=SEO设置，storage=云存储，payment=支付商，live=用户直播推流）
+	Group string `json:"group" binding:"required,oneof=site api feature seo storage payment live"`
 	// 分组配置键值 JSON 数据（结构随分组变化）
 	Data any `json:"data" binding:"required"`
 }
@@ -70,12 +73,24 @@ type UpdateAPISettings struct {
 type UpdateFeatureSettings struct {
 	// 是否启用电视直播功能（按端）
 	LiveTVEnabled *dto.PlatformFlags `json:"livetv_enabled"`
+	// 是否启用用户直播功能（按端）
+	LiveEnabled *dto.PlatformFlags `json:"live_enabled"`
 	// 是否启用评论功能（按端）
 	CommentEnabled *dto.PlatformFlags `json:"comment_enabled"`
 	// 评论是否需要审核（按端）
 	CommentReview *dto.PlatformFlags `json:"comment_review"`
 	// 是否启用评分功能（按端）
 	RatingEnabled *dto.PlatformFlags `json:"rating_enabled"`
+}
+
+// UpdateLiveSettings updates user-live push/play templates (all optional).
+type UpdateLiveSettings struct {
+	// OBS 推流服务器地址
+	PushServer *string `json:"push_server" binding:"omitempty,max=500"`
+	// HLS 播放地址模板（含 {stream_key}）
+	PlayHLSTemplate *string `json:"play_hls_template" binding:"omitempty,max=500"`
+	// FLV 播放地址模板（含 {stream_key}，可空）
+	PlayFLVTemplate *string `json:"play_flv_template" binding:"omitempty,max=500"`
 }
 
 // UpdateSEOSettings updates SEO / social-sharing fields (all optional).

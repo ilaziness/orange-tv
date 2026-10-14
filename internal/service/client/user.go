@@ -73,11 +73,17 @@ type UserService interface {
 	GetRating(ctx context.Context, userID, videoID uint32) (*clientdto.RatingResult, error)
 }
 
+// liveApplyLookup loads the latest streamer apply for profile enrichment.
+type liveApplyLookup interface {
+	GetLatestApplyByUser(ctx context.Context, userID uint32) (*model.StreamerApplies, error)
+}
+
 type userService struct {
 	adminRepo    repository.AdminRepository
 	userRepo     repository.UserFeatureRepository
 	videoRepo    repository.VideoRepository
 	categoryRepo repository.CategoryRepository
+	liveRepo     liveApplyLookup
 	jwtMgr       *auth.JWTManager
 	accessTTL    int
 	refreshTTL   int
@@ -93,6 +99,7 @@ func NewUserService(
 	userRepo repository.UserFeatureRepository,
 	videoRepo repository.VideoRepository,
 	categoryRepo repository.CategoryRepository,
+	liveRepo liveApplyLookup,
 	jwtMgr *auth.JWTManager,
 	accessTTL int,
 	refreshTTL int,
@@ -112,6 +119,7 @@ func NewUserService(
 		userRepo:     userRepo,
 		videoRepo:    videoRepo,
 		categoryRepo: categoryRepo,
+		liveRepo:     liveRepo,
 		jwtMgr:       jwtMgr,
 		accessTTL:    accessTTL,
 		refreshTTL:   refreshTTL,
@@ -284,7 +292,7 @@ func (s *userService) Login(ctx context.Context, req *clientdto.LoginRequest, ip
 		TokenType:        "Bearer",
 		ExpiresIn:        s.accessTTL,
 		RefreshExpiresIn: s.refreshTTL,
-		User:             toUserProfile(u),
+		User:             s.toUserProfile(ctx, u),
 	}, nil
 }
 
@@ -351,7 +359,7 @@ func (s *userService) Profile(ctx context.Context, userID uint32) (*clientdto.Pr
 	if u == nil {
 		return nil, errcode.UserNotFound
 	}
-	return toUserProfile(u), nil
+	return s.toUserProfile(ctx, u), nil
 }
 
 func (s *userService) UpdateProfile(ctx context.Context, userID uint32, req *clientdto.UpdateProfileRequest) (*clientdto.Profile, error) {
@@ -376,7 +384,7 @@ func (s *userService) UpdateProfile(ctx context.Context, userID uint32, req *cli
 		s.log.Error("client user: update profile failed", zap.Uint32("user_id", userID), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	return toUserProfile(u), nil
+	return s.toUserProfile(ctx, u), nil
 }
 
 func (s *userService) ChangePassword(ctx context.Context, userID uint32, req *clientdto.ChangePasswordRequest) error {
@@ -964,15 +972,31 @@ func (s *userService) GetRating(ctx context.Context, userID, videoID uint32) (*c
 
 // ===== helpers =====
 
-func toUserProfile(u *model.Users) *clientdto.Profile {
-	return &clientdto.Profile{
-		ID:       u.ID,
-		StrID:    u.StrID,
-		Nickname: u.Nickname,
-		Email:    u.Email,
-		Avatar:   u.Avatar,
-		Status:   uint8(u.Status),
+func (s *userService) toUserProfile(ctx context.Context, u *model.Users) *clientdto.Profile {
+	p := &clientdto.Profile{
+		ID:                  u.ID,
+		StrID:               u.StrID,
+		Nickname:            u.Nickname,
+		Email:               u.Email,
+		Avatar:              u.Avatar,
+		Status:              uint8(u.Status),
+		IsStreamer:          u.IsStreamer == 1,
+		StreamerApplyStatus: constant.StreamerApplyStatusNone,
 	}
+	if u.IsStreamer == 1 {
+		p.StreamerApplyStatus = constant.StreamerApplyStatusApproved
+		return p
+	}
+	if s.liveRepo == nil {
+		return p
+	}
+	a, err := s.liveRepo.GetLatestApplyByUser(ctx, u.ID)
+	if err != nil {
+		s.log.Error("client user: get streamer apply status failed", zap.Uint32("user_id", u.ID), zap.Error(err))
+		return p
+	}
+	p.StreamerApplyStatus = service.ResolveStreamerApplyStatus(u.IsStreamer, a)
+	return p
 }
 
 func boolToStatus(b bool) uint8 {

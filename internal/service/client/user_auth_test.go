@@ -90,7 +90,7 @@ func (f *fakeClientUserAdminRepo) ExistsUserStrID(context.Context, string) (bool
 }
 
 func newRefreshTestUserService(jwtMgr *auth.JWTManager, repo repository.AdminRepository) UserService {
-	return NewUserService(repo, nil, nil, nil, jwtMgr, 3600, 86400, nil, nil, nil, zap.NewNop())
+	return NewUserService(repo, nil, nil, nil, nil, jwtMgr, 3600, 86400, nil, nil, nil, zap.NewNop())
 }
 
 func TestUserService_RefreshTokenSuccess(t *testing.T) {

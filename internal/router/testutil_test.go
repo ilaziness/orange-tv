@@ -34,15 +34,18 @@ func applyBusinessHandlers(h *Handlers, b testutil.BusinessHandlers) {
 	h.AdminData = b.AdminData
 	h.AdminAd = b.AdminAd
 	h.AdminMedia = b.AdminMedia
+	h.AdminLive = b.AdminLive
 	h.ClientCategory = b.ClientCategory
 	h.ClientVideo = b.ClientVideo
 	h.ClientLiveTV = b.ClientLiveTV
+	h.ClientLive = b.ClientLive
 	h.ClientSettings = b.ClientSettings
 	h.ClientUser = b.ClientUser
 	h.ClientBanner = b.ClientBanner
 	h.ClientAd = b.ClientAd
 	h.ClientMedia = b.ClientMedia
 	h.LiveTVFeature = b.LiveTVFeature
+	h.LiveFeature = b.LiveFeature
 	h.OpenResource = b.OpenResource
 	h.SEO = b.SEO
 }

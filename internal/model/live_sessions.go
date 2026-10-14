@@ -1,0 +1,47 @@
+package model
+
+import (
+	"context"
+	"time"
+
+	"github.com/uptrace/bun"
+)
+
+// LiveSessions represents the live_sessions table.
+type LiveSessions struct {
+	bun.BaseModel `bun:"table:live_sessions,alias:ls"`
+
+	ID     uint32 `bun:"id,pk,autoincrement" json:"id"`
+	RoomID uint32 `bun:"room_id,notnull" json:"room_id"`
+	UserID uint32 `bun:"user_id,notnull" json:"user_id"`
+	// 开播时标题快照
+	Title string `bun:"title,notnull" json:"title"`
+	// 开播时分类快照
+	CategoryID uint32 `bun:"category_id,notnull" json:"category_id"`
+	// 开播时昵称快照
+	StreamerNickname string `bun:"streamer_nickname,notnull" json:"streamer_nickname"`
+	// 开播时头像快照
+	StreamerAvatar string `bun:"streamer_avatar,notnull" json:"streamer_avatar"`
+	// 开播时间
+	StartedAt time.Time `bun:"started_at,notnull" json:"started_at"`
+	// 结束时间
+	EndedAt *time.Time `bun:"ended_at" json:"ended_at"`
+	// 结束原因：host/admin/revoke/banned
+	EndReason string    `bun:"end_reason,notnull" json:"end_reason"`
+	CreatedAt time.Time `bun:"created_at,notnull" json:"created_at"`
+	UpdatedAt time.Time `bun:"updated_at,notnull" json:"updated_at"`
+}
+
+var _ bun.BeforeAppendModelHook = (*LiveSessions)(nil)
+
+func (m *LiveSessions) BeforeAppendModel(ctx context.Context, query bun.Query) error {
+	now := time.Now()
+	switch query.(type) {
+	case *bun.InsertQuery:
+		m.CreatedAt = now
+		m.UpdatedAt = now
+	case *bun.UpdateQuery:
+		m.UpdatedAt = now
+	}
+	return nil
+}

@@ -103,6 +103,8 @@ func (s *settingsService) parseUpdateData(ctx context.Context, group string, dat
 		return s.parseStorageUpdate(ctx, data)
 	case constant.SettingGroupPayment:
 		return s.parsePaymentUpdate(ctx, data)
+	case constant.SettingGroupLive:
+		return s.parseLiveUpdate(data)
 	default:
 		return nil, errcode.WithMessage(errcode.ParamError, "无效的设置分组")
 	}
@@ -131,6 +133,9 @@ func (s *settingsService) parseFeatureUpdate(ctx context.Context, data json.RawM
 	if req.LiveTVEnabled, err = decode("livetv_enabled"); err != nil {
 		return nil, err
 	}
+	if req.LiveEnabled, err = decode("live_enabled"); err != nil {
+		return nil, err
+	}
 	if req.CommentEnabled, err = decode("comment_enabled"); err != nil {
 		return nil, err
 	}
@@ -141,7 +146,7 @@ func (s *settingsService) parseFeatureUpdate(ctx context.Context, data json.RawM
 		return nil, err
 	}
 
-	if req.LiveTVEnabled == nil && req.CommentEnabled == nil && req.CommentReview == nil && req.RatingEnabled == nil {
+	if req.LiveTVEnabled == nil && req.LiveEnabled == nil && req.CommentEnabled == nil && req.CommentReview == nil && req.RatingEnabled == nil {
 		return nil, nil
 	}
 
@@ -254,6 +259,8 @@ func (s *settingsService) mapToResponse(group string, m map[string]model.SystemS
 		return service.MapToStorageSettings(m)
 	case constant.SettingGroupPayment:
 		return service.MapToPaymentSettings(m)
+	case constant.SettingGroupLive:
+		return service.MapToLiveSettings(m)
 	default:
 		return nil
 	}
@@ -272,6 +279,13 @@ func (s *settingsService) buildFeatureUpserts(f *admindto.UpdateFeatureSettings)
 			Key: constant.SettingFeatureLiveTVEnabled, Group: constant.SettingGroupFeature,
 			Value:       service.MarshalPlatformFlags(*f.LiveTVEnabled),
 			SettingType: constant.SettingTypeJSON, Description: "电视直播开关（按端）",
+		})
+	}
+	if f.LiveEnabled != nil {
+		upserts = append(upserts, repository.SettingUpsert{
+			Key: constant.SettingFeatureLiveEnabled, Group: constant.SettingGroupFeature,
+			Value:       service.MarshalPlatformFlags(*f.LiveEnabled),
+			SettingType: constant.SettingTypeJSON, Description: "用户直播开关（按端）",
 		})
 	}
 	if f.CommentEnabled != nil {
@@ -522,6 +536,61 @@ func keepBool(dst *bool, src *bool) {
 		return
 	}
 	*dst = *src
+}
+
+func (s *settingsService) parseLiveUpdate(data json.RawMessage) ([]repository.SettingUpsert, error) {
+	var req admindto.UpdateLiveSettings
+	if err := json.Unmarshal(data, &req); err != nil {
+		return nil, errcode.WithMessage(errcode.ParamError, "无效的设置数据")
+	}
+	if err := validator.Validate(&req); err != nil {
+		return nil, errcode.WithMessage(errcode.ParamError, err.Error())
+	}
+	if req.PushServer == nil && req.PlayHLSTemplate == nil && req.PlayFLVTemplate == nil {
+		return nil, nil
+	}
+
+	var upserts []repository.SettingUpsert
+	if req.PushServer != nil {
+		upserts = append(upserts, repository.SettingUpsert{
+			Key: constant.SettingLivePushServer, Group: constant.SettingGroupLive,
+			Value:       strings.TrimSpace(*req.PushServer),
+			SettingType: constant.SettingTypeString, Description: "OBS 推流服务器地址",
+		})
+	}
+	if req.PlayHLSTemplate != nil {
+		hls := strings.TrimSpace(*req.PlayHLSTemplate)
+		if err := validateLivePlayTemplate(hls); err != nil {
+			return nil, err
+		}
+		upserts = append(upserts, repository.SettingUpsert{
+			Key: constant.SettingLivePlayHLSTemplate, Group: constant.SettingGroupLive,
+			Value:       hls,
+			SettingType: constant.SettingTypeString, Description: "HLS 播放地址模板（含 {stream_key}）",
+		})
+	}
+	if req.PlayFLVTemplate != nil {
+		flv := strings.TrimSpace(*req.PlayFLVTemplate)
+		if err := validateLivePlayTemplate(flv); err != nil {
+			return nil, err
+		}
+		upserts = append(upserts, repository.SettingUpsert{
+			Key: constant.SettingLivePlayFLVTemplate, Group: constant.SettingGroupLive,
+			Value:       flv,
+			SettingType: constant.SettingTypeString, Description: "FLV 播放地址模板（含 {stream_key}，可空）",
+		})
+	}
+	return upserts, nil
+}
+
+func validateLivePlayTemplate(template string) error {
+	if template == "" {
+		return nil
+	}
+	if !strings.Contains(template, "{stream_key}") {
+		return errcode.WithMessage(errcode.ParamError, "播放模板须包含 {stream_key} 占位符")
+	}
+	return nil
 }
 
 func (s *settingsService) parsePaymentUpdate(ctx context.Context, data json.RawMessage) ([]repository.SettingUpsert, error) {

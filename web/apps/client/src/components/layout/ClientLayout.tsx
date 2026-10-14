@@ -38,6 +38,7 @@ import {
   TvIcon,
   FilmIcon,
   AlertCircleIcon,
+  RadioIcon,
 } from 'lucide-react'
 import { TopLoader } from '@/components/TopLoader'
 import { LoginDialog } from '@/components/auth/LoginDialog'
@@ -278,6 +279,17 @@ export function ClientLayout() {
           电视
         </Button>
       ) : null}
+      {feature.live_enabled ? (
+        <Button variant="nav" size="lg" nativeButton={false} render={<Link to="/live" />}>
+          <RadioIcon data-icon="inline-start" />
+          直播
+        </Button>
+      ) : null}
+      {feature.live_enabled && profile?.is_streamer ? (
+        <Button variant="nav" size="lg" nativeButton={false} render={<Link to="/live/studio" />}>
+          开始直播
+        </Button>
+      ) : null}
     </>
   )
 
@@ -370,6 +382,12 @@ export function ClientLayout() {
                 <HistoryIcon data-icon="inline-start" />
                 观看历史
               </DropdownMenuItem>
+              {feature.live_enabled && profile.is_streamer ? (
+                <DropdownMenuItem render={<Link to="/live/studio" />}>
+                  <RadioIcon data-icon="inline-start" />
+                  开始直播
+                </DropdownMenuItem>
+              ) : null}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
@@ -459,6 +477,28 @@ export function ClientLayout() {
                           onClick={() => setMobileOpen(false)}
                         >
                           电视
+                        </Button>
+                      ) : null}
+                      {feature.live_enabled ? (
+                        <Button
+                          variant="ghost"
+                          className="justify-start"
+                          nativeButton={false}
+                          render={<Link to="/live" />}
+                          onClick={() => setMobileOpen(false)}
+                        >
+                          直播
+                        </Button>
+                      ) : null}
+                      {feature.live_enabled && profile?.is_streamer ? (
+                        <Button
+                          variant="ghost"
+                          className="justify-start"
+                          nativeButton={false}
+                          render={<Link to="/live/studio" />}
+                          onClick={() => setMobileOpen(false)}
+                        >
+                          开始直播
                         </Button>
                       ) : null}
                       {roots.map((root) => (
@@ -559,6 +599,18 @@ export function ClientLayout() {
                           <HistoryIcon data-icon="inline-start" />
                           观看历史
                         </Button>
+                        {feature.live_enabled && profile.is_streamer ? (
+                          <Button
+                            variant="ghost"
+                            className="justify-start"
+                            nativeButton={false}
+                            render={<Link to="/live/studio" />}
+                            onClick={() => setMobileOpen(false)}
+                          >
+                            <RadioIcon data-icon="inline-start" />
+                            开始直播
+                          </Button>
+                        ) : null}
                         <Button
                           variant="ghost"
                           className="justify-start"

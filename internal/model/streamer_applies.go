@@ -1,0 +1,44 @@
+package model
+
+import (
+	"context"
+	"time"
+
+	"github.com/uptrace/bun"
+)
+
+// StreamerApplies represents the streamer_applies table.
+type StreamerApplies struct {
+	bun.BaseModel `bun:"table:streamer_applies,alias:sa"`
+
+	ID     uint32 `bun:"id,pk,autoincrement" json:"id"`
+	UserID uint32 `bun:"user_id,notnull" json:"user_id"`
+	// 申请理由
+	Reason string `bun:"reason,notnull" json:"reason"`
+	// 联系方式
+	Contact string `bun:"contact,notnull" json:"contact"`
+	// 状态：0待审 1通过 2拒绝
+	Status uint8 `bun:"status,notnull" json:"status"`
+	// 审核管理员ID
+	ReviewAdminID uint32 `bun:"review_admin_id,notnull" json:"review_admin_id"`
+	// 审核备注
+	ReviewRemark string `bun:"review_remark,notnull" json:"review_remark"`
+	// 审核时间
+	ReviewedAt *time.Time `bun:"reviewed_at" json:"reviewed_at"`
+	CreatedAt  time.Time  `bun:"created_at,notnull" json:"created_at"`
+	UpdatedAt  time.Time  `bun:"updated_at,notnull" json:"updated_at"`
+}
+
+var _ bun.BeforeAppendModelHook = (*StreamerApplies)(nil)
+
+func (m *StreamerApplies) BeforeAppendModel(ctx context.Context, query bun.Query) error {
+	now := time.Now()
+	switch query.(type) {
+	case *bun.InsertQuery:
+		m.CreatedAt = now
+		m.UpdatedAt = now
+	case *bun.UpdateQuery:
+		m.UpdatedAt = now
+	}
+	return nil
+}

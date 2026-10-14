@@ -132,6 +132,7 @@ func MapToFeatureMatrix(m map[string]model.SystemSettings) dto.FeatureMatrix {
 	commentReview := ParsePlatformFlags(StrVal(m, constant.SettingFeatureCommentReview), true)
 	return dto.FeatureMatrix{
 		LiveTVEnabled:  ParsePlatformFlags(StrVal(m, constant.SettingFeatureLiveTVEnabled), false),
+		LiveEnabled:    ParsePlatformFlags(StrVal(m, constant.SettingFeatureLiveEnabled), false),
 		CommentEnabled: commentEnabled,
 		CommentReview:  AndPlatformFlags(commentReview, commentEnabled),
 		RatingEnabled:  ParsePlatformFlags(StrVal(m, constant.SettingFeatureRatingEnabled), true),
@@ -143,9 +144,19 @@ func MapToFeatureSettings(m map[string]model.SystemSettings, clientType string) 
 	matrix := MapToFeatureMatrix(m)
 	return dto.FeatureSettings{
 		LiveTVEnabled:  PickPlatformFlag(matrix.LiveTVEnabled, clientType),
+		LiveEnabled:    PickPlatformFlag(matrix.LiveEnabled, clientType),
 		CommentEnabled: PickPlatformFlag(matrix.CommentEnabled, clientType),
 		CommentReview:  PickPlatformFlag(matrix.CommentReview, clientType),
 		RatingEnabled:  PickPlatformFlag(matrix.RatingEnabled, clientType),
+	}
+}
+
+// MapToLiveSettings maps live group rows to admin LiveSettings.
+func MapToLiveSettings(m map[string]model.SystemSettings) dto.LiveSettings {
+	return dto.LiveSettings{
+		PushServer:      StrVal(m, constant.SettingLivePushServer),
+		PlayHLSTemplate: StrVal(m, constant.SettingLivePlayHLSTemplate),
+		PlayFLVTemplate: StrVal(m, constant.SettingLivePlayFLVTemplate),
 	}
 }
 

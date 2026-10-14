@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
+	httpmiddleware "github.com/ilaziness/orange-tv/internal/middleware/http"
 )
 
 func registerClientRoutes(engine *gin.Engine, h *Handlers) {
@@ -24,6 +25,8 @@ func registerClientContentRoutes(v1 *gin.RouterGroup, h *Handlers) {
 	livetv.GET("", h.ClientLiveTV.List)
 	livetv.GET("/play/:id", h.ClientLiveTV.Play)
 	livetv.HEAD("/play/:id", h.ClientLiveTV.Play)
+
+	registerClientLiveRoutes(v1, h)
 
 	v1.GET("/settings", h.ClientSettings.GetSettings)
 	v1.GET("/banners", h.ClientBanner.List)
@@ -66,4 +69,22 @@ func registerClientContentRoutes(v1 *gin.RouterGroup, h *Handlers) {
 	// Ratings (C6) — get is public, create requires JWT
 	v1.GET("/ratings/:id", h.ClientUser.GetRating)
 	v1.POST("/ratings/:id", h.ClientUser.RateVideo)
+}
+
+func registerClientLiveRoutes(v1 *gin.RouterGroup, h *Handlers) {
+	live := v1.Group("/live", h.LiveFeature)
+
+	live.GET("/categories", h.ClientLive.ListCategories)
+	live.GET("/rooms", h.ClientLive.ListRooms)
+	// Static paths before :id
+	authLive := live.Group("", httpmiddleware.RequireAuth())
+	authLive.POST("/applies", h.ClientLive.CreateApply)
+	authLive.GET("/applies/me", h.ClientLive.GetMyApply)
+	authLive.GET("/rooms/me", h.ClientLive.GetMyRoom)
+	authLive.PUT("/rooms/me", h.ClientLive.UpdateMyRoom)
+	authLive.POST("/rooms/me/regenerate-key", h.ClientLive.RegenerateKey)
+	authLive.POST("/rooms/me/start", h.ClientLive.Start)
+	authLive.POST("/rooms/me/stop", h.ClientLive.Stop)
+
+	live.GET("/rooms/:id", h.ClientLive.GetRoom)
 }

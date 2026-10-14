@@ -30,6 +30,12 @@ const StorageSettingsPage = lazy(() => import('@/pages/system/storage/StorageSet
 const PaymentProvidersPage = lazy(
   () => import('@/pages/finance/payment-providers/PaymentProvidersPage'),
 )
+const LiveAppliesPage = lazy(() => import('@/pages/live/applies/LiveAppliesPage'))
+const LiveStreamersPage = lazy(() => import('@/pages/live/streamers/LiveStreamersPage'))
+const LiveRoomsPage = lazy(() => import('@/pages/live/rooms/LiveRoomsPage'))
+const LiveSessionsPage = lazy(() => import('@/pages/live/sessions/LiveSessionsPage'))
+const LiveCategoriesPage = lazy(() => import('@/pages/live/categories/LiveCategoriesPage'))
+const LiveStreamConfigPage = lazy(() => import('@/pages/live/stream-config/LiveStreamConfigPage'))
 const APISettingsPage = lazy(() => import('@/pages/system/api/APISettingsPage'))
 const AdsPage = lazy(() => import('@/pages/system/ad/AdsPage'))
 const SystemLogPage = lazy(() => import('@/pages/system/log/SystemLogPage'))
@@ -244,6 +250,54 @@ export function AppRoutes() {
             element={
               <Lazy>
                 <PaymentProvidersPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/live/applies"
+            element={
+              <Lazy>
+                <LiveAppliesPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/live/streamers"
+            element={
+              <Lazy>
+                <LiveStreamersPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/live/rooms"
+            element={
+              <Lazy>
+                <LiveRoomsPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/live/sessions"
+            element={
+              <Lazy>
+                <LiveSessionsPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/live/categories"
+            element={
+              <Lazy>
+                <LiveCategoriesPage />
+              </Lazy>
+            }
+          />
+          <Route
+            path="/live/stream-config"
+            element={
+              <Lazy>
+                <LiveStreamConfigPage />
               </Lazy>
             }
           />

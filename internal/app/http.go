@@ -56,10 +56,12 @@ func (a *App) wireHTTP() error {
 	userFeatureRepo := repository.NewUserFeatureRepo(a.db)
 	commentRepo := repository.NewCommentRepo(a.db)
 	adRepo := repository.NewAdRepo(a.db)
+	liveRepo := repository.NewLiveRepo(a.db)
 
 	sharedSettingsSvc := service.NewSettingsService(settingsRepo, a.cache, a.log)
 
 	handlers.LiveTVFeature = httpmiddleware.LiveTVFeatureMiddleware(sharedSettingsSvc, a.log)
+	handlers.LiveFeature = httpmiddleware.LiveFeatureMiddleware(sharedSettingsSvc, a.log)
 
 	recorder := audit.NewRecorder(logRepo, a.log)
 
@@ -100,7 +102,9 @@ func (a *App) wireHTTP() error {
 	}
 	captchaSvc := captcha.New(captchaOpts...)
 
-	clientUserSvc := clientsvc.NewUserService(adminRepo, userFeatureRepo, videoRepo, categoryRepo, a.jwtMgr, a.cfg.JWT.AccessTokenTTL, a.cfg.JWT.RefreshTokenTTL, sharedSettingsSvc, a.locker, captchaSvc, a.log)
+	adminUserLiveSvc := adminsvc.NewLiveService(liveRepo, a.locker, a.log)
+	clientUserLiveSvc := clientsvc.NewLiveService(liveRepo, sharedSettingsSvc, a.locker, a.log)
+	clientUserSvc := clientsvc.NewUserService(adminRepo, userFeatureRepo, videoRepo, categoryRepo, liveRepo, a.jwtMgr, a.cfg.JWT.AccessTokenTTL, a.cfg.JWT.RefreshTokenTTL, sharedSettingsSvc, a.locker, captchaSvc, a.log)
 	clientBannerSvc := clientsvc.NewBannerService(userFeatureRepo, a.log)
 	adminAdSvc := adminsvc.NewAdService(adRepo, a.log)
 	clientAdSvc := clientsvc.NewAdService(adRepo, a.log)
@@ -122,10 +126,12 @@ func (a *App) wireHTTP() error {
 	handlers.AdminData = adminhandler.NewDataHandler(adminDataSvc)
 	handlers.AdminAd = adminhandler.NewAdHandler(adminAdSvc)
 	handlers.AdminMedia = adminhandler.NewMediaHandler(adminMediaSvc)
+	handlers.AdminLive = adminhandler.NewLiveHandler(adminUserLiveSvc)
 
 	handlers.ClientCategory = clienthandler.NewCategoryHandler(clientCategorySvc)
 	handlers.ClientVideo = clienthandler.NewVideoHandler(clientVideoSvc)
 	handlers.ClientLiveTV = clienthandler.NewLiveTVHandler(clientLiveSvc, clientLiveProxySvc)
+	handlers.ClientLive = clienthandler.NewLiveHandler(clientUserLiveSvc)
 	handlers.ClientSettings = clienthandler.NewSettingsHandler(clientSettingsSvc)
 	handlers.ClientUser = clienthandler.NewUserHandler(clientUserSvc)
 	handlers.ClientBanner = clienthandler.NewBannerHandler(clientBannerSvc)

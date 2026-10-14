@@ -96,6 +96,10 @@ type Profile struct {
 	Avatar string `json:"avatar"`
 	// 账号状态（0=禁用，1=正常）
 	Status uint8 `json:"status"`
+	// 是否主播
+	IsStreamer bool `json:"is_streamer"`
+	// 主播申请状态：none/pending/approved/rejected
+	StreamerApplyStatus string `json:"streamer_apply_status"`
 }
 
 // UpdateProfileRequest updates the current user's profile.
