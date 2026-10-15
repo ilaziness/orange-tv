@@ -6,6 +6,7 @@ import { BannerCarousel, VideoGrid } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
+import { Separator } from '@/components/ui/separator'
 import { AlertCircleIcon, ChevronRightIcon } from 'lucide-react'
 import { usePageTitle } from '@/hooks/usePageTitle'
 import { usePageSeo } from '@/hooks/usePageSeo'
@@ -98,19 +99,25 @@ export function Component() {
   }, [categories.length])
 
   const renderSectionHeader = (title: string, categoryId?: number) => (
-    <div className="flex items-center justify-between">
-      <h2 className="text-lg font-semibold">{title}</h2>
-      {categoryId ? (
-        <Button
-          variant="ghost"
-          size="sm"
-          nativeButton={false}
-          render={<Link to={`/videos?parent_category_id=${categoryId}`} />}
-        >
-          查看更多
-          <ChevronRightIcon data-icon="inline-end" />
-        </Button>
-      ) : null}
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="h-5 w-1 shrink-0 rounded-full bg-primary" aria-hidden />
+          <h2 className="text-lg font-semibold">{title}</h2>
+        </div>
+        {categoryId ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            nativeButton={false}
+            render={<Link to={`/videos?parent_category_id=${categoryId}`} />}
+          >
+            查看更多
+            <ChevronRightIcon data-icon="inline-end" />
+          </Button>
+        ) : null}
+      </div>
+      <Separator />
     </div>
   )
 
@@ -132,7 +139,7 @@ export function Component() {
   }
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-10">
       {banners.length ? <BannerCarousel banners={banners} /> : null}
 
       {globalError ? (

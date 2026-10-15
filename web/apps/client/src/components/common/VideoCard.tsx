@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
 import type { ClientVideoListItem } from '@orange-tv/shared'
-import { Card } from '@/components/ui/card'
+import { Card, CardContent, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { FilmIcon } from 'lucide-react'
 
@@ -13,14 +13,17 @@ export function VideoCard({ item }: { item: ClientVideoListItem }) {
   )
   const tags = (item.tags || []).slice(0, 2)
   return (
-    <Link to={`/video/${item.id}`} className="cursor-pointer">
-      <Card className="gap-0 overflow-hidden pb-2 pt-0 transition-all hover:ring-primary/40 hover:transition-all">
+    <Link to={`/video/${item.id}`} className="block h-full cursor-pointer">
+      <Card
+        size="sm"
+        className="h-full gap-0 overflow-hidden pb-2 pt-0 transition-all hover:ring-primary/40 hover:transition-all"
+      >
         <div className="relative flex aspect-[2/3] w-full items-center justify-center bg-muted">
           {hasCover ? (
             <img
               src={item.cover}
               alt={item.title}
-              className="absolute inset-0 h-full w-full object-cover"
+              className="absolute inset-0 size-full object-cover"
               onError={() => setError(true)}
             />
           ) : (
@@ -34,21 +37,19 @@ export function VideoCard({ item }: { item: ClientVideoListItem }) {
             </div>
           ) : null}
         </div>
-        <div className="flex flex-col gap-0.5 p-2">
-          <h3 className="truncate text-sm font-medium">{item.title}</h3>
-          {metaParts.length > 0 && (
-            <p className="text-xs text-muted-foreground">{metaParts.join(' · ')}</p>
-          )}
-          {tags.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {tags.map((tag) => (
-                <Badge key={tag.id} variant="secondary">
-                  {tag.name}
-                </Badge>
-              ))}
-            </div>
-          )}
-        </div>
+        <CardContent className="flex flex-col gap-0.5 p-2">
+          <CardTitle className="truncate">{item.title}</CardTitle>
+          <p className="truncate text-xs text-muted-foreground">
+            {metaParts.length > 0 ? metaParts.join(' · ') : '\u00A0'}
+          </p>
+          <div className="flex h-5 flex-wrap gap-1 overflow-hidden">
+            {tags.map((tag) => (
+              <Badge key={tag.id} variant="secondary">
+                {tag.name}
+              </Badge>
+            ))}
+          </div>
+        </CardContent>
       </Card>
     </Link>
   )
