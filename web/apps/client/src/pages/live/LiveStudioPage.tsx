@@ -235,6 +235,13 @@ export function Component() {
 
   const isLiving = room?.status === LiveRoomStatusLiving
   const isBanned = room?.status === LiveRoomStatusBanned
+  const categoryItems: { label: string; value: string | null }[] = [
+    { label: '选择分类', value: null },
+    ...categories.map((cat) => ({
+      value: String(cat.id),
+      label: cat.name,
+    })),
+  ]
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
@@ -388,19 +395,20 @@ export function Component() {
                   />
                 </Field>
                 <Field>
-                  <FieldLabel>分类</FieldLabel>
+                  <FieldLabel htmlFor="live-category">分类</FieldLabel>
                   <Select
-                    value={form.category_id || null}
-                    onValueChange={(v) => update('category_id', Number(v))}
+                    items={categoryItems}
+                    value={form.category_id ? String(form.category_id) : null}
+                    onValueChange={(v) => update('category_id', v ? Number(v) : 0)}
                   >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="选择分类" />
+                    <SelectTrigger id="live-category" className="w-full">
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.id}>
-                            {cat.name}
+                        {categoryItems.map((item) => (
+                          <SelectItem key={item.value ?? 'none'} value={item.value}>
+                            {item.label}
                           </SelectItem>
                         ))}
                       </SelectGroup>
