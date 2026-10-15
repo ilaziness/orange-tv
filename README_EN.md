@@ -2,7 +2,7 @@
 
 > 中文版主文档：[README.md](README.md) · Technical docs: [docs/README.md](docs/README.md)
 
-An out-of-the-box video management system for building an online video website for viewers. It supports content management, playback and backend operations, with a responsive front-end for phones, tablets and desktops.
+An out-of-the-box video management system for building an online video website for viewers. It supports **VOD** (movies / series, etc.) and **streamer live broadcasting**, plus content management, playback and backend operations, with a responsive front-end for phones, tablets and desktops.
 
 ## Supported platforms
 
@@ -12,13 +12,15 @@ An out-of-the-box video management system for building an online video website f
 
 ## What can this system do?
 
-A viewing website for regular audiences. Visitors can:
+A viewing and live site for regular audiences. Visitors can:
 
 - See recommended videos, category entries and the latest content on the **home page**
 - Browse videos by **category** (movies, TV series, variety shows, anime, etc.)
 - Filter and sort videos by **region, year, language**
 - Open a **video detail page** to see poster, synopsis, director, cast, rating, play sources and episode list
-- Watch videos smoothly on the **play page** — switch play sources, select episodes, fast-forward/rewind, fullscreen
+- Watch VOD smoothly on the **play page** — switch play sources, select episodes, fast-forward/rewind, fullscreen
+- Browse **live rooms** and watch streamers in real time (HLS / HTTP-FLV)
+- Qualified streamers can go live from the **live studio** and push with OBS (or similar)
 - **Search** to quickly find videos they want to watch
 - Get a good browsing experience on phones, tablets and desktops (responsive)
 - Toggle light/dark theme
@@ -27,10 +29,10 @@ A viewing website for regular audiences. Visitors can:
 
 The system is split into two independent parts for different people:
 
-| Part                        | Users                             | Purpose                                                            |
-| --------------------------- | --------------------------------- | ------------------------------------------------------------------ |
-| **Client** (front-end site) | Regular viewers                   | Browse, search, watch videos                                       |
-| **Admin backend**           | Site owners / operators / editors | Manage content, configure collection, manage users, configure site |
+| Part                        | Users                             | Purpose                                                                              |
+| --------------------------- | --------------------------------- | ------------------------------------------------------------------------------------ |
+| **Client** (front-end site) | Viewers / streamers               | Browse, search, watch VOD; watch live; streamers go live                             |
+| **Admin backend**           | Site owners / operators / editors | Manage VOD and live, collection, streamer review, users, site settings               |
 
 ## What the admin backend can do
 
@@ -38,11 +40,15 @@ The system is split into two independent parts for different people:
 - **Content management**
   - Category management: multi-level category CRUD, sorting, enable/disable
   - Video management: create, edit, delete, publish/unpublish, bulk operations
-  - Live management: TV live channel CRUD, categories and stream URLs
+  - TV live (IPTV): channel CRUD, categories and stream URLs
   - Director / actor / tag management
   - Play source management: global play sources and episode play links
   - Banner management: home carousel configuration
   - Data collection: configure collection sources, scheduled collection, category mapping, play source binding, view collection logs
+- **Streamer live**
+  - Review streamer applications, grant / revoke streamer status
+  - Live categories, rooms and sessions (force stop, ban, etc.)
+  - Stream config: external media server push URL and audience play templates (e.g. SRS + OBS)
 - **User management**: admin accounts, user groups (roles), regular users, login logs
 - **System settings**: site name, logo, copyright, filing number, SEO keywords, API config, system logs
 
@@ -228,12 +234,13 @@ For detailed installation, configuration, commands and technical notes, see the 
 
 ## Documentation index
 
-| Document                                     | Content                                                             |
-| -------------------------------------------- | ------------------------------------------------------------------- |
-| [Technical docs](docs/README.md)             | Project structure, configuration, commands, database, observability |
-| [Deployment guide](docs/deployment.md)       | Single-instance, multi-instance and Docker deployment               |
-| [Module usage](docs/module-usage.md)         | How to select and remove unneeded service modules                   |
-| [Observability guide](docs/observability.md) | Logging, tracing and metrics configuration                          |
+| Document                                          | Content                                                                                    |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| [Technical docs](docs/README.md)                  | Project structure, configuration, commands, database, observability                        |
+| [Deployment guide](docs/deployment.md)            | Single-instance, multi-instance and Docker deployment                                      |
+| [Streamer live ops](docs/live-streaming.md)       | Going live, SRS/OBS, admin stream config (distinct from IPTV TV live)                      |
+| [Module usage](docs/module-usage.md)              | How to select and remove unneeded service modules                                          |
+| [Observability guide](docs/observability.md)      | Logging, tracing and metrics configuration                                                 |
 
 ## Disclaimer
 

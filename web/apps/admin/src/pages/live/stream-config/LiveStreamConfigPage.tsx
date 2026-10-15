@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { ExternalLink, Save } from 'lucide-react'
@@ -26,7 +26,7 @@ const emptyForm = (): LiveSettings => ({
   play_flv_template: '',
 })
 
-const optionalURL = z.string().refine((v) => {
+const pushURL = z.string().refine((v) => {
   const s = v.trim()
   if (!s) return true
   try {
@@ -35,7 +35,18 @@ const optionalURL = z.string().refine((v) => {
   } catch {
     return false
   }
-}, '须为合法 URL（支持 rtmp/http/https）')
+}, '推流服务器须为合法 URL（支持 rtmp/http/https）')
+
+const playURL = z.string().refine((v) => {
+  const s = v.trim()
+  if (!s) return true
+  try {
+    const u = new URL(s)
+    return u.protocol === 'http:' || u.protocol === 'https:'
+  } catch {
+    return false
+  }
+}, '播放模板须为 http 或 https 地址')
 
 const templateSchema = z.string().refine((v) => {
   const s = v.trim()
@@ -45,9 +56,9 @@ const templateSchema = z.string().refine((v) => {
 
 const liveSettingsSchema = z
   .object({
-    push_server: z.string().max(500).and(optionalURL),
-    play_hls_template: z.string().max(500).and(templateSchema).and(optionalURL),
-    play_flv_template: z.string().max(500).and(templateSchema).and(optionalURL),
+    push_server: z.string().max(500).and(pushURL),
+    play_hls_template: z.string().max(500).and(templateSchema).and(playURL),
+    play_flv_template: z.string().max(500).and(templateSchema).and(playURL),
   })
   .superRefine((data, ctx) => {
     const push = data.push_server.trim()
@@ -120,9 +131,9 @@ export default function LiveStreamConfigPage() {
         <CardHeader>
           <CardTitle>推流配置</CardTitle>
           <CardDescription>
-            配置外置媒体服务器地址与播放模板（仅管理端可见，不会下发给用户端）。占位符仅支持{' '}
+            配置外置媒体服务器地址与播放模板。占位符仅支持{' '}
             <code className="rounded bg-muted px-1 py-0.5 text-xs">{'{stream_key}'}</code>。
-            部署与 OBS 说明见{' '}
+            部署说明见{' '}
             <a
               href={LIVE_DOCS_URL}
               target="_blank"
@@ -157,7 +168,6 @@ export default function LiveStreamConfigPage() {
                     disabled={submitting}
                     maxLength={500}
                   />
-                  <FieldDescription>OBS「服务器」填入此地址</FieldDescription>
                 </Field>
                 <Field data-disabled={submitting ? true : undefined}>
                   <FieldLabel htmlFor="play_hls_template">HLS 播放模板</FieldLabel>
@@ -171,7 +181,6 @@ export default function LiveStreamConfigPage() {
                     disabled={submitting}
                     maxLength={500}
                   />
-                  <FieldDescription>须包含 {'{stream_key}'}，服务端替换后下发观众</FieldDescription>
                 </Field>
                 <Field data-disabled={submitting ? true : undefined}>
                   <FieldLabel htmlFor="play_flv_template">FLV 播放模板（可选）</FieldLabel>
@@ -185,7 +194,6 @@ export default function LiveStreamConfigPage() {
                     disabled={submitting}
                     maxLength={500}
                   />
-                  <FieldDescription>可空；与 HLS 至少配置其一才能开播</FieldDescription>
                 </Field>
               </FieldGroup>
               <div>

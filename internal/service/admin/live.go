@@ -33,6 +33,7 @@ type LiveService interface {
 	RejectApply(ctx context.Context, id, adminID uint32, req *admindto.ReviewLiveApplyRequest) error
 
 	ListStreamers(ctx context.Context, req *admindto.LiveStreamerListRequest) ([]admindto.LiveStreamerItem, int, error)
+	GrantStreamer(ctx context.Context, userID, adminID uint32) error
 	RevokeStreamer(ctx context.Context, userID uint32) error
 
 	ListRooms(ctx context.Context, req *admindto.LiveRoomListRequest) ([]admindto.LiveRoomItem, int, error)
@@ -206,26 +207,7 @@ func (s *liveService) ApproveApply(ctx context.Context, id, adminID uint32, req 
 		if !ok {
 			return errcode.LiveApplyInvalidStatus
 		}
-		if err := txRepo.MarkStreamer(ctx, apply.UserID, now); err != nil {
-			return err
-		}
-		room, err := txRepo.GetRoomByUser(ctx, apply.UserID)
-		if err != nil {
-			return err
-		}
-		if room != nil {
-			return nil
-		}
-		key, err := service.GenerateLiveStreamKey()
-		if err != nil {
-			return err
-		}
-		return txRepo.CreateRoom(ctx, &model.LiveRooms{
-			UserID:    apply.UserID,
-			StreamKey: key,
-			Status:    constant.LiveRoomIdle,
-			Title:     "我的直播间",
-		})
+		return markStreamerAndEnsureRoom(ctx, txRepo, apply.UserID, now)
 	})
 	if err != nil {
 		if code, ok := errcode.As(err); ok {
@@ -293,6 +275,84 @@ func (s *liveService) ListStreamers(ctx context.Context, req *admindto.LiveStrea
 		out = append(out, toAdminLiveStreamer(&items[i]))
 	}
 	return out, total, nil
+}
+
+func (s *liveService) GrantStreamer(ctx context.Context, userID, adminID uint32) error {
+	lock, err := s.locker.Lock(ctx, internallock.LiveApplyUserKey(userID), pkglock.WithTTL(liveWriteLockTTL))
+	if errors.Is(err, pkglock.ErrLockNotHeld) {
+		return errcode.TooManyRequests
+	}
+	if err != nil {
+		s.log.Error("admin live: acquire grant lock failed", zap.Uint32("user_id", userID), zap.Error(err))
+		return errcode.Wrap(errcode.TooManyRequests, err)
+	}
+	defer func() { _ = lock.Release(ctx) }()
+
+	user, err := s.repo.GetUser(ctx, userID)
+	if err != nil {
+		s.log.Error("admin live: get user for grant failed", zap.Uint32("user_id", userID), zap.Error(err))
+		return errcode.Wrap(errcode.DatabaseError, err)
+	}
+	if user == nil {
+		return errcode.UserNotFound
+	}
+	if user.Status != constant.StatusEnabled {
+		return errcode.UserDisabled
+	}
+	if user.IsStreamer == 1 {
+		return errcode.WithMessage(errcode.LiveApplyAlreadyStreamer, "该用户已是主播")
+	}
+
+	now := time.Now()
+	err = s.repo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
+		txRepo := repository.NewLiveRepoFromIDB(tx)
+		latest, err := txRepo.GetLatestApplyByUser(ctx, userID)
+		if err != nil {
+			return err
+		}
+		if latest != nil && latest.Status == constant.StreamerApplyPending {
+			ok, err := txRepo.ApproveApply(ctx, latest.ID, adminID, "管理员直接设为主播", now)
+			if err != nil {
+				return err
+			}
+			if !ok {
+				return errcode.LiveApplyInvalidStatus
+			}
+		}
+		return markStreamerAndEnsureRoom(ctx, txRepo, userID, now)
+	})
+	if err != nil {
+		if code, ok := errcode.As(err); ok {
+			return code
+		}
+		s.log.Error("admin live: grant streamer failed", zap.Uint32("user_id", userID), zap.Error(err))
+		return errcode.Wrap(errcode.DatabaseError, err)
+	}
+	return nil
+}
+
+// markStreamerAndEnsureRoom sets is_streamer and creates an idle room when missing.
+func markStreamerAndEnsureRoom(ctx context.Context, txRepo repository.LiveRepository, userID uint32, now time.Time) error {
+	if err := txRepo.MarkStreamer(ctx, userID, now); err != nil {
+		return err
+	}
+	room, err := txRepo.GetRoomByUser(ctx, userID)
+	if err != nil {
+		return err
+	}
+	if room != nil {
+		return nil
+	}
+	key, err := service.GenerateLiveStreamKey()
+	if err != nil {
+		return err
+	}
+	return txRepo.CreateRoom(ctx, &model.LiveRooms{
+		UserID:    userID,
+		StreamKey: key,
+		Status:    constant.LiveRoomIdle,
+		Title:     "我的直播间",
+	})
 }
 
 func (s *liveService) RevokeStreamer(ctx context.Context, userID uint32) error {

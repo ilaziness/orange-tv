@@ -212,6 +212,30 @@ func (h *LiveHandler) ListStreamers(c *gin.Context) {
 	response.SuccessPage(c, list, int64(total), req.GetPage(), req.GetPageSize(), req.GetTotalPages(total))
 }
 
+// GrantStreamer
+// @Summary 直接设为主播
+// @Tags 管理端｜直播管理
+// @Produce json
+// @Security BearerAuth
+// @Param userId path int true "用户ID"
+// @Success 200 {object} response.Response
+// @Router /api/admin/v1/live/streamers/{userId}/grant [put]
+func (h *LiveHandler) GrantStreamer(c *gin.Context) {
+	var uri admindto.UserIDURI
+	if !httphandler.BindURI(c, &uri) {
+		return
+	}
+	adminID := uint32(0)
+	if claims := httpmiddleware.GetClaims(c); claims != nil {
+		adminID = claims.UserID
+	}
+	if err := h.svc.GrantStreamer(c.Request.Context(), uri.UserID, adminID); err != nil {
+		response.Error(c, err)
+		return
+	}
+	response.Success(c, nil)
+}
+
 // RevokeStreamer
 // @Summary 撤销主播资格
 // @Tags 管理端｜直播管理

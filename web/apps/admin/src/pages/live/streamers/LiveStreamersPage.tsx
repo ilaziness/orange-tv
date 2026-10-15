@@ -25,9 +25,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { RefreshCw, Search, UserMinus } from 'lucide-react'
+import { RefreshCw, Search, UserMinus, UserPlus } from 'lucide-react'
 import { toast } from 'sonner'
 import { DEFAULT_PAGE_SIZE } from '@/lib/constants'
+import { UserPickerDialog } from './UserPickerDialog'
 
 type RoomStatusFilter = 'all' | '0' | '1' | '2'
 
@@ -40,6 +41,7 @@ export default function LiveStreamersPage() {
   const [loading, setLoading] = useState(false)
   const [revokeId, setRevokeId] = useState<number | null>(null)
   const [revoking, setRevoking] = useState(false)
+  const [pickerOpen, setPickerOpen] = useState(false)
 
   const keywordRef = useRef(keyword)
   const roomStatusRef = useRef(roomStatus)
@@ -109,14 +111,25 @@ export default function LiveStreamersPage() {
         <CardHeader>
           <CardTitle>主播管理</CardTitle>
           <CardAction>
-            <Button size="sm" variant="outline" onClick={() => void load(page)} disabled={loading}>
-              {loading ? (
-                <Spinner data-icon="inline-start" />
-              ) : (
-                <RefreshCw data-icon="inline-start" />
-              )}
-              刷新
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" onClick={() => setPickerOpen(true)} disabled={loading}>
+                <UserPlus data-icon="inline-start" />
+                添加主播
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => void load(page)}
+                disabled={loading}
+              >
+                {loading ? (
+                  <Spinner data-icon="inline-start" />
+                ) : (
+                  <RefreshCw data-icon="inline-start" />
+                )}
+                刷新
+              </Button>
+            </div>
           </CardAction>
         </CardHeader>
         <CardContent>
@@ -240,12 +253,18 @@ export default function LiveStreamersPage() {
             <Empty className="py-8">
               <EmptyHeader>
                 <EmptyTitle>暂无主播</EmptyTitle>
-                <EmptyDescription>审核通过申请后会出现在此列表</EmptyDescription>
+                <EmptyDescription>可通过审核申请或「添加主播」加入列表</EmptyDescription>
               </EmptyHeader>
             </Empty>
           )}
         </CardContent>
       </Card>
+
+      <UserPickerDialog
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        onGranted={() => void load(1)}
+      />
 
       <ConfirmDialog
         open={revokeId !== null}

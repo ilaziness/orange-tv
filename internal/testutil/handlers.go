@@ -515,6 +515,9 @@ func (s adminUserLiveSvc) RejectApply(ctx context.Context, id, adminID uint32, r
 func (s adminUserLiveSvc) ListStreamers(ctx context.Context, req *admindto.LiveStreamerListRequest) ([]admindto.LiveStreamerItem, int, error) {
 	return nil, 0, nil
 }
+func (s adminUserLiveSvc) GrantStreamer(ctx context.Context, userID, adminID uint32) error {
+	return nil
+}
 func (s adminUserLiveSvc) RevokeStreamer(ctx context.Context, userID uint32) error { return nil }
 func (s adminUserLiveSvc) ListRooms(ctx context.Context, req *admindto.LiveRoomListRequest) ([]admindto.LiveRoomItem, int, error) {
 	return nil, 0, nil

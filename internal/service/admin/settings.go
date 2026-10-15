@@ -590,6 +590,10 @@ func validateLivePlayTemplate(template string) error {
 	if !strings.Contains(template, "{stream_key}") {
 		return errcode.WithMessage(errcode.ParamError, "播放模板须包含 {stream_key} 占位符")
 	}
+	lower := strings.ToLower(template)
+	if !strings.HasPrefix(lower, "http://") && !strings.HasPrefix(lower, "https://") {
+		return errcode.WithMessage(errcode.ParamError, "播放模板须为 http 或 https 地址")
+	}
 	return nil
 }
 

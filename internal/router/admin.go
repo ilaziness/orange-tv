@@ -179,6 +179,7 @@ func registerAdminLiveRoutes(v1 *gin.RouterGroup, h *Handlers) {
 	live.PUT("/applies/:id/reject", h.AdminLive.RejectApply)
 
 	live.GET("/streamers", h.AdminLive.ListStreamers)
+	live.PUT("/streamers/:userId/grant", h.AdminLive.GrantStreamer)
 	live.PUT("/streamers/:userId/revoke", h.AdminLive.RevokeStreamer)
 
 	live.GET("/rooms", h.AdminLive.ListRooms)

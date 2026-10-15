@@ -461,6 +461,10 @@ export const adminApi = {
         query,
       }),
     ),
+  grantLiveStreamer: (userId: number) =>
+    withAuth((token) =>
+      apiPut(ADMIN_API_BASE, `/live/streamers/${userId}/grant`, null, { token }),
+    ),
   revokeLiveStreamer: (userId: number) =>
     withAuth((token) =>
       apiPut(ADMIN_API_BASE, `/live/streamers/${userId}/revoke`, null, { token }),
