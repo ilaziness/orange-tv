@@ -238,7 +238,7 @@ orange-tv.exe admin create --username admin --password your_password --email adm
 | ---------------------------------------- | ------------------------------------------------------------------ |
 | [技术文档](docs/README.md)               | 项目结构、配置、命令、数据库、可观测性等技术说明                   |
 | [部署文档](docs/deployment.md)           | 单实例、多实例、Docker 部署指南                                    |
-| [主播直播运维](docs/live-streaming.md)   | 主播开播、SRS/OBS、管理端推流配置（与 IPTV 电视直播区分）          |
+| [用户直播部署](docs/live-streaming.md)   | 媒体服、防火墙/HTTPS、管理端推流配置                               |
 | [模块使用说明](docs/module-usage.md)     | 如何选择和删除不需要的服务模块                                     |
 | [可观测性指南](docs/observability.md)    | 日志、链路追踪、指标监控配置                                       |
 

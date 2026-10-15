@@ -238,7 +238,7 @@ For detailed installation, configuration, commands and technical notes, see the 
 | ------------------------------------------------- | ------------------------------------------------------------------------------------------ |
 | [Technical docs](docs/README.md)                  | Project structure, configuration, commands, database, observability                        |
 | [Deployment guide](docs/deployment.md)            | Single-instance, multi-instance and Docker deployment                                      |
-| [Streamer live ops](docs/live-streaming.md)       | Going live, SRS/OBS, admin stream config (distinct from IPTV TV live)                      |
+| [Live streaming setup](docs/live-streaming.md)    | Media server, HTTPS/firewall, admin stream config                                          |
 | [Module usage](docs/module-usage.md)              | How to select and remove unneeded service modules                                          |
 | [Observability guide](docs/observability.md)      | Logging, tracing and metrics configuration                                                 |
 
