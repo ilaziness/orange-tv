@@ -568,6 +568,8 @@ export type AdminLiveStreamerItem = {
   room_status: number
   category_id: number
   category_name: string
+  sub_category_id: number
+  sub_category_name: string
 }
 
 /** Room status: 0=idle, 1=living, 2=banned */
@@ -579,6 +581,8 @@ export type AdminLiveRoomItem = {
   avatar: string
   category_id: number
   category_name: string
+  sub_category_id: number
+  sub_category_name: string
   title: string
   cover: string
   notice: string
@@ -598,6 +602,8 @@ export type AdminLiveSessionItem = {
   title: string
   category_id: number
   category_name: string
+  sub_category_id: number
+  sub_category_name: string
   streamer_nickname: string
   streamer_avatar: string
   started_at: string
@@ -609,10 +615,25 @@ export type AdminLiveSessionItem = {
 export type AdminLiveCategoryItem = {
   id: number
   name: string
+  /** 0 = top-level (L1) */
+  parent_id: number
+  /** Parent category name when parent_id > 0 */
+  parent_name?: string
   sort: number
   status: number
   created_at: string
   updated_at: string
+}
+
+/** Display "L1 · L2" when sub is present; otherwise L1 only. */
+export function formatLiveCategoryName(
+  categoryName?: string | null,
+  subCategoryName?: string | null,
+): string {
+  const l1 = (categoryName ?? '').trim()
+  const l2 = (subCategoryName ?? '').trim()
+  if (l1 && l2) return `${l1} · ${l2}`
+  return l1 || l2 || ''
 }
 
 export type SEOSettings = {
@@ -880,8 +901,11 @@ export type ClientLiveApply = {
 
 export type ClientLiveCategory = {
   id: number
+  /** 0 = top-level (L1) */
+  parent_id: number
   name: string
   sort: number
+  children?: ClientLiveCategory[]
 }
 
 export type ClientLiveRoomListItem = {
@@ -890,6 +914,8 @@ export type ClientLiveRoomListItem = {
   cover: string
   category_id: number
   category_name: string
+  sub_category_id: number
+  sub_category_name: string
   streamer_user_id: number
   streamer_str_id: string
   streamer_nickname: string
@@ -904,6 +930,8 @@ export type ClientLiveRoomDetail = {
   notice: string
   category_id: number
   category_name: string
+  sub_category_id: number
+  sub_category_name: string
   status: number
   streamer_user_id: number
   streamer_str_id: string
@@ -918,6 +946,8 @@ export type ClientMyLiveRoom = {
   id: number
   category_id: number
   category_name: string
+  sub_category_id: number
+  sub_category_name: string
   title: string
   cover: string
   notice: string
@@ -934,10 +964,12 @@ export type UpdateMyLiveRoomRequest = {
   cover?: string
   notice?: string
   category_id?: number
+  sub_category_id?: number
 }
 
 export type StartLiveRequest = {
   category_id?: number
+  sub_category_id?: number
   title?: string
 }
 

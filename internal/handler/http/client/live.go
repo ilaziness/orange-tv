@@ -69,7 +69,7 @@ func (h *LiveHandler) GetMyApply(c *gin.Context) {
 }
 
 // ListCategories
-// @Summary 直播分类列表
+// @Summary 直播分类树（启用节点，固定两级）
 // @Tags 用户端｜直播
 // @Produce json
 // @Success 200 {object} response.Response{data=[]clientdto.LiveCategoryItem}
@@ -84,7 +84,7 @@ func (h *LiveHandler) ListCategories(c *gin.Context) {
 }
 
 // ListRooms
-// @Summary 直播中房间列表
+// @Summary 直播中房间列表（category_id 可为一级或二级，服务端按 parent_id 分流筛选）
 // @Tags 用户端｜直播
 // @Produce json
 // @Param query query clientdto.LiveRoomListRequest true "分页筛选"
@@ -145,7 +145,7 @@ func (h *LiveHandler) GetMyRoom(c *gin.Context) {
 }
 
 // UpdateMyRoom
-// @Summary 更新我的直播间
+// @Summary 更新我的直播间（分类须成对提交 category_id + sub_category_id）
 // @Tags 用户端｜直播
 // @Accept json
 // @Produce json
@@ -193,7 +193,7 @@ func (h *LiveHandler) RegenerateKey(c *gin.Context) {
 }
 
 // Start
-// @Summary 开播
+// @Summary 开播（可选覆盖分类，须成对提交 category_id + sub_category_id）
 // @Tags 用户端｜直播
 // @Accept json
 // @Produce json

@@ -23,16 +23,19 @@ type LiveApplyItem struct {
 
 // ===== Categories =====
 
-// LiveCategoryItem is a public enabled live category.
+// LiveCategoryItem is a public enabled live category node (two-level tree).
 type LiveCategoryItem struct {
-	ID   uint32 `json:"id"`
-	Name string `json:"name"`
-	Sort uint32 `json:"sort"`
+	ID       uint32             `json:"id"`
+	ParentID uint32             `json:"parent_id"`
+	Name     string             `json:"name"`
+	Sort     uint32             `json:"sort"`
+	Children []LiveCategoryItem `json:"children,omitempty"`
 }
 
 // ===== Rooms =====
 
 // LiveRoomListRequest filters public living rooms.
+// CategoryID may be L1 or L2; the server resolves filter by parent_id.
 type LiveRoomListRequest struct {
 	dto.PaginationRequest
 	CategoryID *uint32 `form:"category_id" binding:"omitempty,min=1"`
@@ -45,6 +48,8 @@ type LiveRoomListItem struct {
 	Cover            string `json:"cover"`
 	CategoryID       uint32 `json:"category_id"`
 	CategoryName     string `json:"category_name"`
+	SubCategoryID    uint32 `json:"sub_category_id"`
+	SubCategoryName  string `json:"sub_category_name"`
 	StreamerUserID   uint32 `json:"streamer_user_id"`
 	StreamerStrID    string `json:"streamer_str_id"`
 	StreamerNickname string `json:"streamer_nickname"`
@@ -60,6 +65,8 @@ type LiveRoomDetail struct {
 	Notice           string `json:"notice"`
 	CategoryID       uint32 `json:"category_id"`
 	CategoryName     string `json:"category_name"`
+	SubCategoryID    uint32 `json:"sub_category_id"`
+	SubCategoryName  string `json:"sub_category_name"`
 	Status           uint8  `json:"status"`
 	StreamerUserID   uint32 `json:"streamer_user_id"`
 	StreamerStrID    string `json:"streamer_str_id"`
@@ -75,6 +82,8 @@ type MyLiveRoom struct {
 	ID               uint32 `json:"id"`
 	CategoryID       uint32 `json:"category_id"`
 	CategoryName     string `json:"category_name"`
+	SubCategoryID    uint32 `json:"sub_category_id"`
+	SubCategoryName  string `json:"sub_category_name"`
 	Title            string `json:"title"`
 	Cover            string `json:"cover"`
 	Notice           string `json:"notice"`
@@ -87,17 +96,20 @@ type MyLiveRoom struct {
 }
 
 // UpdateMyLiveRoomRequest updates the streamer's room profile.
+// When category fields are present, submit category_id + sub_category_id together (use 0 when no L2).
 type UpdateMyLiveRoomRequest struct {
-	Title      *string `json:"title" binding:"omitempty,min=1,max=100"`
-	Cover      *string `json:"cover" binding:"omitempty,max=500"`
-	Notice     *string `json:"notice" binding:"omitempty,max=500"`
-	CategoryID *uint32 `json:"category_id" binding:"omitempty,min=1"`
+	Title         *string `json:"title" binding:"omitempty,min=1,max=100"`
+	Cover         *string `json:"cover" binding:"omitempty,max=500"`
+	Notice        *string `json:"notice" binding:"omitempty,max=500"`
+	CategoryID    *uint32 `json:"category_id" binding:"omitempty,min=1"`
+	SubCategoryID *uint32 `json:"sub_category_id" binding:"omitempty,min=0"`
 }
 
-// StartLiveRequest starts a broadcast (optional category override).
+// StartLiveRequest starts a broadcast (optional category override; submit L1+L2 together).
 type StartLiveRequest struct {
-	CategoryID *uint32 `json:"category_id" binding:"omitempty,min=1"`
-	Title      *string `json:"title" binding:"omitempty,min=1,max=100"`
+	CategoryID    *uint32 `json:"category_id" binding:"omitempty,min=1"`
+	SubCategoryID *uint32 `json:"sub_category_id" binding:"omitempty,min=0"`
+	Title         *string `json:"title" binding:"omitempty,min=1,max=100"`
 }
 
 // StartLiveResponse returns push credentials after start (or idempotent living).

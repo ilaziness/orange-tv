@@ -3,6 +3,7 @@ import type { AdminLiveStreamerItem } from '@orange-tv/shared'
 import { adminApi, errorMessage } from '@/lib/api'
 import { PageContainer, Pagination, ConfirmDialog } from '@/components/shared'
 import { RoomStatusBadge } from '@/pages/live/_shared/liveStatus'
+import { liveCategoryCell } from '@/pages/live/_shared/liveLabels'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -206,7 +207,9 @@ export default function LiveStreamersPage() {
                             房间 #{item.room_id || '-'}
                           </div>
                         </TableCell>
-                        <TableCell>{item.category_name || '-'}</TableCell>
+                        <TableCell>
+                          {liveCategoryCell(item.category_name, item.sub_category_name)}
+                        </TableCell>
                         <TableCell>
                           {item.room_id ? (
                             <RoomStatusBadge status={item.room_status} />

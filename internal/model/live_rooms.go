@@ -14,8 +14,10 @@ type LiveRooms struct {
 	ID uint32 `bun:"id,pk,autoincrement" json:"id"`
 	// 主播用户ID
 	UserID uint32 `bun:"user_id,notnull,unique" json:"user_id"`
-	// 直播分类ID
+	// 一级直播分类ID
 	CategoryID uint32 `bun:"category_id,notnull" json:"category_id"`
+	// 二级直播分类ID，无启用子类时为 0
+	SubCategoryID uint32 `bun:"sub_category_id,notnull" json:"sub_category_id"`
 	// 直播间标题
 	Title string `bun:"title,notnull" json:"title"`
 	// 封面URL

@@ -1,7 +1,17 @@
+import { formatLiveCategoryName } from '@orange-tv/shared'
+
 const APPLY_LABELS: Record<number, string> = {
   0: '待审',
   1: '通过',
   2: '拒绝',
+}
+
+/** Admin table cell: "一级 · 二级" when sub present. */
+export function liveCategoryCell(
+  categoryName?: string | null,
+  subCategoryName?: string | null,
+): string {
+  return formatLiveCategoryName(categoryName, subCategoryName) || '-'
 }
 
 const ROOM_LABELS: Record<number, string> = {

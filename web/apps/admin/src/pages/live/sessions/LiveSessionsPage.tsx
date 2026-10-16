@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { AdminLiveSessionItem } from '@orange-tv/shared'
 import { adminApi, errorMessage } from '@/lib/api'
 import { PageContainer, Pagination } from '@/components/shared'
-import { endReasonLabel } from '@/pages/live/_shared/liveLabels'
+import { endReasonLabel, liveCategoryCell } from '@/pages/live/_shared/liveLabels'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -145,7 +145,9 @@ export default function LiveSessionsPage() {
                           <div>{item.streamer_nickname || '-'}</div>
                           <div className="text-xs text-muted-foreground">UID {item.user_id}</div>
                         </TableCell>
-                        <TableCell>{item.category_name || '-'}</TableCell>
+                        <TableCell>
+                          {liveCategoryCell(item.category_name, item.sub_category_name)}
+                        </TableCell>
                         <TableCell>{item.room_id}</TableCell>
                         <TableCell className="text-muted-foreground">
                           {item.started_at || '-'}

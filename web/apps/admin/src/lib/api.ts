@@ -432,8 +432,12 @@ export const adminApi = {
         query,
       }),
     ),
-  createLiveCategory: (body: { name: string; sort?: number; status?: number }) =>
-    withAuth((token) => apiPost(ADMIN_API_BASE, '/live/categories', body, { token })),
+  createLiveCategory: (body: {
+    name: string
+    parent_id?: number
+    sort?: number
+    status?: number
+  }) => withAuth((token) => apiPost(ADMIN_API_BASE, '/live/categories', body, { token })),
   updateLiveCategory: (
     id: number,
     body: { name?: string; sort?: number; status?: number },

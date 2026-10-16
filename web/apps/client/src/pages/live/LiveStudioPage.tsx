@@ -39,6 +39,17 @@ const roomStatusLabel: Record<number, string> = {
   2: '已禁播',
 }
 
+/** Keep sub only when it is an enabled child of the selected L1; otherwise 0. */
+function enabledSubCategoryId(
+  categories: ClientLiveCategory[],
+  categoryId: number,
+  subCategoryId: number,
+): number {
+  if (!categoryId || !subCategoryId) return 0
+  const children = categories.find((c) => c.id === categoryId)?.children || []
+  return children.some((c) => c.id === subCategoryId) ? subCategoryId : 0
+}
+
 async function copyText(label: string, value: string) {
   if (!value) {
     toast.error(`${label}为空`)
@@ -69,6 +80,7 @@ export function Component() {
     cover: '',
     notice: '',
     category_id: 0,
+    sub_category_id: 0,
   })
 
   usePageTitle('主播工作室')
@@ -84,13 +96,17 @@ export function Component() {
       ])
       const data = roomRes.data
       setRoom(data || null)
-      setCategories(catRes.data || [])
+      const cats = catRes.data || []
+      setCategories(cats)
       if (data) {
+        const storedL1 = data.category_id || 0
+        const categoryId = cats.some((c) => c.id === storedL1) ? storedL1 : 0
         setForm({
           title: data.title || '',
           cover: data.cover || '',
           notice: data.notice || '',
-          category_id: data.category_id || 0,
+          category_id: categoryId,
+          sub_category_id: enabledSubCategoryId(cats, categoryId, data.sub_category_id || 0),
         })
       }
     } catch (err) {
@@ -140,6 +156,13 @@ export function Component() {
       toast.error('请选择直播分类')
       return
     }
+    const selectedL1 = categories.find((c) => c.id === form.category_id)
+    const l2Children = selectedL1?.children || []
+    const subCategoryId = enabledSubCategoryId(categories, form.category_id, form.sub_category_id)
+    if (l2Children.length > 0 && !subCategoryId) {
+      toast.error('请选择二级分类')
+      return
+    }
 
     setSaving(true)
     try {
@@ -148,6 +171,7 @@ export function Component() {
         cover: form.cover.trim(),
         notice: form.notice.trim(),
         category_id: form.category_id,
+        sub_category_id: subCategoryId,
       })
       if (res.data) {
         setRoom(res.data)
@@ -182,10 +206,23 @@ export function Component() {
   }
 
   const handleStart = async () => {
+    if (!form.category_id) {
+      toast.error('请选择直播分类')
+      return
+    }
+    const selectedL1 = categories.find((c) => c.id === form.category_id)
+    const l2Children = selectedL1?.children || []
+    const subCategoryId = enabledSubCategoryId(categories, form.category_id, form.sub_category_id)
+    if (l2Children.length > 0 && !subCategoryId) {
+      toast.error('请选择二级分类')
+      return
+    }
     setStarting(true)
     try {
-      const body: { category_id?: number; title?: string } = {}
-      if (form.category_id) body.category_id = form.category_id
+      const body: { category_id: number; sub_category_id: number; title?: string } = {
+        category_id: form.category_id,
+        sub_category_id: subCategoryId,
+      }
       const title = form.title.trim()
       if (title) body.title = title
       const res = await clientApi.startLive(body)
@@ -235,9 +272,18 @@ export function Component() {
 
   const isLiving = room?.status === LiveRoomStatusLiving
   const isBanned = room?.status === LiveRoomStatusBanned
-  const categoryItems: { label: string; value: string | null }[] = [
-    { label: '选择分类', value: null },
+  const selectedL1 = categories.find((c) => c.id === form.category_id)
+  const l2Children = selectedL1?.children || []
+  const l1Items: { label: string; value: string | null }[] = [
+    { label: '选择一级分类', value: null },
     ...categories.map((cat) => ({
+      value: String(cat.id),
+      label: cat.name,
+    })),
+  ]
+  const l2Items: { label: string; value: string | null }[] = [
+    { label: '选择二级分类', value: null },
+    ...l2Children.map((cat) => ({
       value: String(cat.id),
       label: cat.name,
     })),
@@ -395,18 +441,25 @@ export function Component() {
                   />
                 </Field>
                 <Field>
-                  <FieldLabel htmlFor="live-category">分类</FieldLabel>
+                  <FieldLabel htmlFor="live-category-l1">一级分类</FieldLabel>
                   <Select
-                    items={categoryItems}
+                    items={l1Items}
                     value={form.category_id ? String(form.category_id) : null}
-                    onValueChange={(v) => update('category_id', v ? Number(v) : 0)}
+                    onValueChange={(v) => {
+                      const nextL1 = v ? Number(v) : 0
+                      setForm((prev) => ({
+                        ...prev,
+                        category_id: nextL1,
+                        sub_category_id: 0,
+                      }))
+                    }}
                   >
-                    <SelectTrigger id="live-category" className="w-full">
+                    <SelectTrigger id="live-category-l1" className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        {categoryItems.map((item) => (
+                        {l1Items.map((item) => (
                           <SelectItem key={item.value ?? 'none'} value={item.value}>
                             {item.label}
                           </SelectItem>
@@ -415,6 +468,29 @@ export function Component() {
                     </SelectContent>
                   </Select>
                 </Field>
+                {l2Children.length > 0 ? (
+                  <Field>
+                    <FieldLabel htmlFor="live-category-l2">二级分类</FieldLabel>
+                    <Select
+                      items={l2Items}
+                      value={form.sub_category_id ? String(form.sub_category_id) : null}
+                      onValueChange={(v) => update('sub_category_id', v ? Number(v) : 0)}
+                    >
+                      <SelectTrigger id="live-category-l2" className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          {l2Items.map((item) => (
+                            <SelectItem key={item.value ?? 'none'} value={item.value}>
+                              {item.label}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                ) : null}
                 <Field>
                   <FieldLabel htmlFor="live-cover">封面 URL</FieldLabel>
                   <Input

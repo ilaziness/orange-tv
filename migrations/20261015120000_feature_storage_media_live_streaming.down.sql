@@ -26,7 +26,6 @@ DROP TABLE IF EXISTS `streamer_applies`;
 --bun:split
 
 ALTER TABLE `users`
-    DROP INDEX `idx_users_is_streamer`,
     DROP COLUMN `streamer_at`,
     DROP COLUMN `is_streamer`;
 

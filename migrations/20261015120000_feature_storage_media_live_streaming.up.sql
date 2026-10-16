@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS `media_assets` (
     KEY `idx_media_type_created` (`media_type`, `created_at`),
     KEY `idx_owner` (`owner_kind`, `owner_id`),
     KEY `idx_object_key` (`object_key`(191))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='媒体库资源';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='媒体库资源';
 
 --bun:split
 
@@ -61,8 +61,7 @@ CREATE TABLE IF NOT EXISTS `media_assets` (
 
 ALTER TABLE `users`
     ADD COLUMN `is_streamer` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '是否主播：1是 0否' AFTER `status`,
-    ADD COLUMN `streamer_at` DATETIME NULL DEFAULT NULL COMMENT '成为主播时间' AFTER `is_streamer`,
-    ADD INDEX `idx_users_is_streamer` (`is_streamer`);
+    ADD COLUMN `streamer_at` DATETIME NULL DEFAULT NULL COMMENT '成为主播时间' AFTER `is_streamer`;
 
 --bun:split
 
@@ -77,24 +76,25 @@ CREATE TABLE IF NOT EXISTS `streamer_applies` (
     `reviewed_at` DATETIME NULL DEFAULT NULL COMMENT '审核时间',
     `created_at` DATETIME NOT NULL,
     `updated_at` DATETIME NOT NULL,
-    PRIMARY KEY (`id`),
-    KEY `idx_streamer_applies_user_status` (`user_id`, `status`),
-    KEY `idx_streamer_applies_status` (`status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='主播申请流水';
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='主播申请流水';
 
 --bun:split
 
+-- Live categories: fixed two-level tree (parent_id=0 is L1).
+-- Rooms/sessions: category_id is L1; sub_category_id is L2 or 0.
+
 CREATE TABLE IF NOT EXISTS `live_categories` (
     `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    `parent_id` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '父分类ID，0表示一级',
     `name` VARCHAR(50) NOT NULL DEFAULT '' COMMENT '分类名称',
     `sort` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '排序，越小越前',
     `status` TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '状态：1启用 0禁用',
     `created_at` DATETIME NOT NULL,
     `updated_at` DATETIME NOT NULL,
     `deleted_at` DATETIME NULL DEFAULT NULL COMMENT '软删除时间',
-    PRIMARY KEY (`id`),
-    KEY `idx_live_categories_status_sort` (`status`, `sort`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户直播分类';
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户直播分类';
 
 --bun:split
 
@@ -111,6 +111,7 @@ CREATE TABLE IF NOT EXISTS `live_rooms` (
     `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
     `user_id` INT UNSIGNED NOT NULL COMMENT '主播用户ID',
     `category_id` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '直播分类ID',
+    `sub_category_id` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '二级分类ID，无则0',
     `title` VARCHAR(100) NOT NULL DEFAULT '' COMMENT '直播间标题',
     `cover` VARCHAR(500) NOT NULL DEFAULT '' COMMENT '封面URL',
     `notice` VARCHAR(500) NOT NULL DEFAULT '' COMMENT '公告',
@@ -125,7 +126,7 @@ CREATE TABLE IF NOT EXISTS `live_rooms` (
     UNIQUE KEY `uk_live_rooms_user_id` (`user_id`),
     UNIQUE KEY `uk_live_rooms_stream_key` (`stream_key`),
     KEY `idx_live_rooms_status_category` (`status`, `category_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户直播间';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户直播间';
 
 --bun:split
 
@@ -135,6 +136,7 @@ CREATE TABLE IF NOT EXISTS `live_sessions` (
     `user_id` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '主播用户ID',
     `title` VARCHAR(100) NOT NULL DEFAULT '' COMMENT '开播时标题快照',
     `category_id` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '开播时分类快照',
+    `sub_category_id` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '开播时二级分类快照',
     `streamer_nickname` VARCHAR(15) NOT NULL DEFAULT '' COMMENT '开播时昵称快照',
     `streamer_avatar` VARCHAR(500) NOT NULL DEFAULT '' COMMENT '开播时头像快照',
     `started_at` DATETIME NOT NULL COMMENT '开播时间',
@@ -142,10 +144,8 @@ CREATE TABLE IF NOT EXISTS `live_sessions` (
     `end_reason` VARCHAR(16) NOT NULL DEFAULT '' COMMENT '结束原因：host/admin/revoke/banned',
     `created_at` DATETIME NOT NULL,
     `updated_at` DATETIME NOT NULL,
-    PRIMARY KEY (`id`),
-    KEY `idx_live_sessions_room_started` (`room_id`, `started_at`),
-    KEY `idx_live_sessions_user` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户直播场次';
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户直播场次';
 
 --bun:split
 

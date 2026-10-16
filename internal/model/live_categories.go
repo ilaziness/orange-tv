@@ -12,6 +12,8 @@ type LiveCategories struct {
 	bun.BaseModel `bun:"table:live_categories,alias:lc"`
 
 	ID uint32 `bun:"id,pk,autoincrement" json:"id"`
+	// 父分类ID，0表示一级分类
+	ParentID uint32 `bun:"parent_id,notnull" json:"parent_id"`
 	// 分类名称
 	Name string `bun:"name,notnull" json:"name"`
 	// 排序，越小越前

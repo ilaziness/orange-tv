@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import type { ClientLiveRoomDetail } from '@orange-tv/shared'
-import { LiveRoomStatusLiving } from '@orange-tv/shared'
+import { formatLiveCategoryName, LiveRoomStatusLiving } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
 import { VideoPlayer } from '@/components/Player'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -79,6 +79,9 @@ export function Component() {
   const nickname = room?.streamer_nickname || room?.streamer_str_id || '主播'
   const fallback = (nickname[0] || 'L').toUpperCase()
   const isLiving = room?.status === LiveRoomStatusLiving
+  const categoryLabel = room
+    ? formatLiveCategoryName(room.category_name, room.sub_category_name)
+    : ''
 
   if (loading) {
     return (
@@ -146,7 +149,7 @@ export function Component() {
           ) : (
             <Badge variant="secondary">未开播</Badge>
           )}
-          {room.category_name ? <Badge variant="outline">{room.category_name}</Badge> : null}
+          {categoryLabel ? <Badge variant="outline">{categoryLabel}</Badge> : null}
         </div>
 
         <div className="flex items-center gap-3">

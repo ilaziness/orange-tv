@@ -42,7 +42,7 @@ func (h *LiveHandler) ListCategories(c *gin.Context) {
 }
 
 // CreateCategory
-// @Summary 新建直播分类
+// @Summary 新建直播分类（可指定 parent_id 创建二级；创建后不可改挂）
 // @Tags 管理端｜直播管理
 // @Accept json
 // @Produce json
@@ -64,7 +64,7 @@ func (h *LiveHandler) CreateCategory(c *gin.Context) {
 }
 
 // UpdateCategory
-// @Summary 更新直播分类
+// @Summary 更新直播分类（不可改 parent_id）
 // @Tags 管理端｜直播管理
 // @Accept json
 // @Produce json
@@ -91,7 +91,7 @@ func (h *LiveHandler) UpdateCategory(c *gin.Context) {
 }
 
 // DeleteCategory
-// @Summary 删除直播分类
+// @Summary 删除直播分类（有子分类或被直播间引用时不可删）
 // @Tags 管理端｜直播管理
 // @Produce json
 // @Security BearerAuth
@@ -257,7 +257,7 @@ func (h *LiveHandler) RevokeStreamer(c *gin.Context) {
 }
 
 // ListRooms
-// @Summary 直播间列表
+// @Summary 直播间列表（category_id 可为一级或二级，服务端按 parent_id 分流筛选）
 // @Tags 管理端｜直播管理
 // @Produce json
 // @Security BearerAuth

@@ -15,10 +15,11 @@ import (
 
 // LiveCategoryListFilter filters live categories.
 type LiveCategoryListFilter struct {
-	Status  *uint8
-	Keyword string
-	Offset  int
-	Limit   int
+	Status   *uint8
+	ParentID *uint32
+	Keyword  string
+	Offset   int
+	Limit    int
 }
 
 // LiveApplyListFilter filters streamer applies.
@@ -57,28 +58,37 @@ type LiveSessionListFilter struct {
 	Limit  int
 }
 
+// LiveCategoryRow is a category joined with optional parent name.
+type LiveCategoryRow struct {
+	model.LiveCategories
+	ParentName string `bun:"parent_name"`
+}
+
 // LiveStreamerRow is a streamer joined with optional room/category.
 type LiveStreamerRow struct {
-	UserID       uint32     `bun:"user_id"`
-	UserStrID    string     `bun:"user_str_id"`
-	Nickname     string     `bun:"nickname"`
-	Email        string     `bun:"email"`
-	Avatar       string     `bun:"avatar"`
-	StreamerAt   *time.Time `bun:"streamer_at"`
-	RoomID       uint32     `bun:"room_id"`
-	RoomTitle    string     `bun:"room_title"`
-	RoomStatus   uint8      `bun:"room_status"`
-	CategoryID   uint32     `bun:"category_id"`
-	CategoryName string     `bun:"category_name"`
+	UserID          uint32     `bun:"user_id"`
+	UserStrID       string     `bun:"user_str_id"`
+	Nickname        string     `bun:"nickname"`
+	Email           string     `bun:"email"`
+	Avatar          string     `bun:"avatar"`
+	StreamerAt      *time.Time `bun:"streamer_at"`
+	RoomID          uint32     `bun:"room_id"`
+	RoomTitle       string     `bun:"room_title"`
+	RoomStatus      uint8      `bun:"room_status"`
+	CategoryID      uint32     `bun:"category_id"`
+	CategoryName    string     `bun:"category_name"`
+	SubCategoryID   uint32     `bun:"sub_category_id"`
+	SubCategoryName string     `bun:"sub_category_name"`
 }
 
 // LiveRoomRow is a room joined with user/category.
 type LiveRoomRow struct {
 	model.LiveRooms
-	UserStrID    string `bun:"user_str_id"`
-	Nickname     string `bun:"nickname"`
-	Avatar       string `bun:"avatar"`
-	CategoryName string `bun:"category_name"`
+	UserStrID       string `bun:"user_str_id"`
+	Nickname        string `bun:"nickname"`
+	Avatar          string `bun:"avatar"`
+	CategoryName    string `bun:"category_name"`
+	SubCategoryName string `bun:"sub_category_name"`
 }
 
 // LiveApplyRow is an apply joined with user.
@@ -90,10 +100,11 @@ type LiveApplyRow struct {
 	Avatar    string `bun:"avatar"`
 }
 
-// LiveSessionRow is a session joined with category name.
+// LiveSessionRow is a session joined with category names.
 type LiveSessionRow struct {
 	model.LiveSessions
-	CategoryName string `bun:"category_name"`
+	CategoryName    string `bun:"category_name"`
+	SubCategoryName string `bun:"sub_category_name"`
 }
 
 // LiveRepository manages user-live tables.
@@ -101,10 +112,13 @@ type LiveRepository interface {
 	RunInTx(ctx context.Context, fn func(ctx context.Context, tx bun.Tx) error) error
 
 	// Categories
-	ListCategories(ctx context.Context, f LiveCategoryListFilter) ([]model.LiveCategories, int, error)
+	ListCategories(ctx context.Context, f LiveCategoryListFilter) ([]LiveCategoryRow, int, error)
 	ListEnabledCategories(ctx context.Context) ([]model.LiveCategories, error)
 	GetCategory(ctx context.Context, id uint32) (*model.LiveCategories, error)
-	ExistsCategoryName(ctx context.Context, name string, status uint8, excludeID uint32) (bool, error)
+	ExistsCategoryName(ctx context.Context, name string, parentID, excludeID uint32) (bool, error)
+	CountCategoryChildren(ctx context.Context, parentID uint32) (int, error)
+	CountEnabledCategoryChildren(ctx context.Context, parentID uint32) (int, error)
+	CountRoomsUsingCategory(ctx context.Context, categoryID uint32) (int, error)
 	CreateCategory(ctx context.Context, c *model.LiveCategories) error
 	UpdateCategory(ctx context.Context, c *model.LiveCategories) error
 	SoftDeleteCategory(ctx context.Context, id uint32) error
@@ -163,20 +177,28 @@ func (r *liveRepo) RunInTx(ctx context.Context, fn func(ctx context.Context, tx 
 
 // ===== Categories =====
 
-func (r *liveRepo) ListCategories(ctx context.Context, f LiveCategoryListFilter) ([]model.LiveCategories, int, error) {
-	items := make([]model.LiveCategories, 0)
-	q := r.db.NewSelect().Model(&items).Where("deleted_at IS NULL")
+func (r *liveRepo) ListCategories(ctx context.Context, f LiveCategoryListFilter) ([]LiveCategoryRow, int, error) {
+	items := make([]LiveCategoryRow, 0)
+	q := r.db.NewSelect().
+		TableExpr("live_categories AS lc").
+		ColumnExpr("lc.*").
+		ColumnExpr("COALESCE(p.name, '') AS parent_name").
+		Join("LEFT JOIN live_categories AS p ON p.id = lc.parent_id AND p.deleted_at IS NULL").
+		Where("lc.deleted_at IS NULL")
 	if f.Status != nil {
-		q = q.Where("status = ?", *f.Status)
+		q = q.Where("lc.status = ?", *f.Status)
+	}
+	if f.ParentID != nil {
+		q = q.Where("lc.parent_id = ?", *f.ParentID)
 	}
 	if f.Keyword != "" {
-		q = q.Where("name LIKE ?", "%"+f.Keyword+"%")
+		q = q.Where("lc.name LIKE ?", "%"+f.Keyword+"%")
 	}
 	total, err := q.Count(ctx)
 	if err != nil {
 		return nil, 0, fmt.Errorf("count live categories: %w", err)
 	}
-	if err := q.Order("sort ASC, id ASC").Offset(f.Offset).Limit(f.Limit).Scan(ctx); err != nil {
+	if err := q.OrderExpr("lc.sort ASC, lc.id ASC").Offset(f.Offset).Limit(f.Limit).Scan(ctx, &items); err != nil {
 		return nil, 0, fmt.Errorf("list live categories: %w", err)
 	}
 	return items, total, nil
@@ -210,10 +232,10 @@ func (r *liveRepo) GetCategory(ctx context.Context, id uint32) (*model.LiveCateg
 	return c, nil
 }
 
-func (r *liveRepo) ExistsCategoryName(ctx context.Context, name string, status uint8, excludeID uint32) (bool, error) {
+func (r *liveRepo) ExistsCategoryName(ctx context.Context, name string, parentID, excludeID uint32) (bool, error) {
 	q := r.db.NewSelect().Model((*model.LiveCategories)(nil)).
 		Where("name = ?", name).
-		Where("status = ?", status).
+		Where("parent_id = ?", parentID).
 		Where("deleted_at IS NULL")
 	if excludeID > 0 {
 		q = q.Where("id <> ?", excludeID)
@@ -223,6 +245,39 @@ func (r *liveRepo) ExistsCategoryName(ctx context.Context, name string, status u
 		return false, fmt.Errorf("check live category name: %w", err)
 	}
 	return exists, nil
+}
+
+func (r *liveRepo) CountCategoryChildren(ctx context.Context, parentID uint32) (int, error) {
+	n, err := r.db.NewSelect().Model((*model.LiveCategories)(nil)).
+		Where("parent_id = ?", parentID).
+		Where("deleted_at IS NULL").
+		Count(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("count live category children: %w", err)
+	}
+	return n, nil
+}
+
+func (r *liveRepo) CountEnabledCategoryChildren(ctx context.Context, parentID uint32) (int, error) {
+	n, err := r.db.NewSelect().Model((*model.LiveCategories)(nil)).
+		Where("parent_id = ?", parentID).
+		Where("status = ?", constant.StatusEnabled).
+		Where("deleted_at IS NULL").
+		Count(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("count enabled live category children: %w", err)
+	}
+	return n, nil
+}
+
+func (r *liveRepo) CountRoomsUsingCategory(ctx context.Context, categoryID uint32) (int, error) {
+	n, err := r.db.NewSelect().Model((*model.LiveRooms)(nil)).
+		Where("category_id = ? OR sub_category_id = ?", categoryID, categoryID).
+		Count(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("count rooms using live category: %w", err)
+	}
+	return n, nil
 }
 
 func (r *liveRepo) CreateCategory(ctx context.Context, c *model.LiveCategories) error {
@@ -403,8 +458,11 @@ func (r *liveRepo) ListStreamers(ctx context.Context, f LiveStreamerListFilter) 
 		ColumnExpr("COALESCE(lr.status, 0) AS room_status").
 		ColumnExpr("COALESCE(lr.category_id, 0) AS category_id").
 		ColumnExpr("COALESCE(lc.name, '') AS category_name").
+		ColumnExpr("COALESCE(lr.sub_category_id, 0) AS sub_category_id").
+		ColumnExpr("COALESCE(lsc.name, '') AS sub_category_name").
 		Join("LEFT JOIN live_rooms AS lr ON lr.user_id = us.id").
 		Join("LEFT JOIN live_categories AS lc ON lc.id = lr.category_id AND lc.deleted_at IS NULL").
+		Join("LEFT JOIN live_categories AS lsc ON lsc.id = lr.sub_category_id AND lsc.deleted_at IS NULL").
 		Where("us.is_streamer = ?", 1).
 		Where("us.deleted_at IS NULL")
 	if f.RoomStatus != nil {
@@ -466,8 +524,10 @@ func (r *liveRepo) ListRooms(ctx context.Context, f LiveRoomListFilter) ([]LiveR
 		ColumnExpr("COALESCE(us.nickname, '') AS nickname").
 		ColumnExpr("COALESCE(us.avatar, '') AS avatar").
 		ColumnExpr("COALESCE(lc.name, '') AS category_name").
+		ColumnExpr("COALESCE(lsc.name, '') AS sub_category_name").
 		Join("LEFT JOIN users AS us ON us.id = lr.user_id AND us.deleted_at IS NULL").
-		Join("LEFT JOIN live_categories AS lc ON lc.id = lr.category_id AND lc.deleted_at IS NULL")
+		Join("LEFT JOIN live_categories AS lc ON lc.id = lr.category_id AND lc.deleted_at IS NULL").
+		Join("LEFT JOIN live_categories AS lsc ON lsc.id = lr.sub_category_id AND lsc.deleted_at IS NULL")
 	if f.LivingOnly {
 		q = q.Where("lr.status = ?", constant.LiveRoomLiving)
 	}
@@ -475,7 +535,18 @@ func (r *liveRepo) ListRooms(ctx context.Context, f LiveRoomListFilter) ([]LiveR
 		q = q.Where("lr.status = ?", *f.Status)
 	}
 	if f.CategoryID != nil {
-		q = q.Where("lr.category_id = ?", *f.CategoryID)
+		cat, err := r.GetCategory(ctx, *f.CategoryID)
+		if err != nil {
+			return nil, 0, err
+		}
+		if cat == nil {
+			return items, 0, nil
+		}
+		if cat.ParentID == 0 {
+			q = q.Where("lr.category_id = ?", cat.ID)
+		} else {
+			q = q.Where("lr.sub_category_id = ?", cat.ID).Where("lr.category_id = ?", cat.ParentID)
+		}
 	}
 	if f.UserID != nil {
 		q = q.Where("lr.user_id = ?", *f.UserID)
@@ -531,8 +602,10 @@ func (r *liveRepo) GetRoomRow(ctx context.Context, id uint32) (*LiveRoomRow, err
 		ColumnExpr("COALESCE(us.nickname, '') AS nickname").
 		ColumnExpr("COALESCE(us.avatar, '') AS avatar").
 		ColumnExpr("COALESCE(lc.name, '') AS category_name").
+		ColumnExpr("COALESCE(lsc.name, '') AS sub_category_name").
 		Join("LEFT JOIN users AS us ON us.id = lr.user_id AND us.deleted_at IS NULL").
 		Join("LEFT JOIN live_categories AS lc ON lc.id = lr.category_id AND lc.deleted_at IS NULL").
+		Join("LEFT JOIN live_categories AS lsc ON lsc.id = lr.sub_category_id AND lsc.deleted_at IS NULL").
 		Where("lr.id = ?", id).
 		Scan(ctx, row)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -644,7 +717,9 @@ func (r *liveRepo) ListSessions(ctx context.Context, f LiveSessionListFilter) ([
 		TableExpr("live_sessions AS ls").
 		ColumnExpr("ls.*").
 		ColumnExpr("COALESCE(lc.name, '') AS category_name").
-		Join("LEFT JOIN live_categories AS lc ON lc.id = ls.category_id AND lc.deleted_at IS NULL")
+		ColumnExpr("COALESCE(lsc.name, '') AS sub_category_name").
+		Join("LEFT JOIN live_categories AS lc ON lc.id = ls.category_id AND lc.deleted_at IS NULL").
+		Join("LEFT JOIN live_categories AS lsc ON lsc.id = ls.sub_category_id AND lsc.deleted_at IS NULL")
 	if f.RoomID != nil {
 		q = q.Where("ls.room_id = ?", *f.RoomID)
 	}
@@ -683,4 +758,3 @@ func (r *liveRepo) EndSession(ctx context.Context, sessionID uint32, endedAt tim
 	n, _ := res.RowsAffected()
 	return n > 0, nil
 }
-

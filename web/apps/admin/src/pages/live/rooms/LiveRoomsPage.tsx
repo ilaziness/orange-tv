@@ -3,6 +3,7 @@ import type { AdminLiveRoomItem } from '@orange-tv/shared'
 import { adminApi, errorMessage } from '@/lib/api'
 import { PageContainer, Pagination, ConfirmDialog } from '@/components/shared'
 import { RoomStatusBadge } from '@/pages/live/_shared/liveStatus'
+import { liveCategoryCell } from '@/pages/live/_shared/liveLabels'
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -219,7 +220,9 @@ export default function LiveRoomsPage() {
                             UID {item.user_id}
                           </div>
                         </TableCell>
-                        <TableCell>{item.category_name || '-'}</TableCell>
+                        <TableCell>
+                          {liveCategoryCell(item.category_name, item.sub_category_name)}
+                        </TableCell>
                         <TableCell>
                           <RoomStatusBadge status={item.status} />
                         </TableCell>

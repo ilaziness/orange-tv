@@ -16,8 +16,10 @@ type LiveSessions struct {
 	UserID uint32 `bun:"user_id,notnull" json:"user_id"`
 	// 开播时标题快照
 	Title string `bun:"title,notnull" json:"title"`
-	// 开播时分类快照
+	// 开播时一级分类快照
 	CategoryID uint32 `bun:"category_id,notnull" json:"category_id"`
+	// 开播时二级分类快照，无则 0
+	SubCategoryID uint32 `bun:"sub_category_id,notnull" json:"sub_category_id"`
 	// 开播时昵称快照
 	StreamerNickname string `bun:"streamer_nickname,notnull" json:"streamer_nickname"`
 	// 开播时头像快照

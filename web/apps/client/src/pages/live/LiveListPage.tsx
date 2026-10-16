@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import type { ClientLiveCategory, ClientLiveRoomListItem } from '@orange-tv/shared'
+import { formatLiveCategoryName } from '@orange-tv/shared'
 import { clientApi, errorMessage } from '@/lib/api'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -16,11 +17,48 @@ import { usePageSeo } from '@/hooks/usePageSeo'
 
 const PAGE_SIZE = 24
 
+type CategorySelection = {
+  l1Id: number
+  l2Id: number
+  children: ClientLiveCategory[]
+  /** False when category_id is set but missing from the tree (do not highlight 全部). */
+  matched: boolean
+}
+
+/** Missing or 0 means 全部. Any other non-id does not count as 全部. */
+function parseCategoryQuery(raw: string | null): { id: number; invalid: boolean } {
+  if (raw == null || raw.trim() === '') return { id: 0, invalid: false }
+  if (!/^\d+$/.test(raw.trim())) return { id: 0, invalid: true }
+  const n = Number(raw)
+  if (!Number.isSafeInteger(n)) return { id: 0, invalid: true }
+  return { id: n, invalid: false }
+}
+
+function resolveCategorySelection(
+  categories: ClientLiveCategory[],
+  categoryId: number,
+): CategorySelection {
+  if (categoryId <= 0) {
+    return { l1Id: 0, l2Id: 0, children: [], matched: true }
+  }
+  for (const cat of categories) {
+    if (cat.id === categoryId) {
+      return { l1Id: cat.id, l2Id: 0, children: cat.children || [], matched: true }
+    }
+    const child = (cat.children || []).find((c) => c.id === categoryId)
+    if (child) {
+      return { l1Id: cat.id, l2Id: child.id, children: cat.children || [], matched: true }
+    }
+  }
+  return { l1Id: 0, l2Id: 0, children: [], matched: false }
+}
+
 function LiveRoomCard({ item }: { item: ClientLiveRoomListItem }) {
   const [coverError, setCoverError] = useState(false)
   const hasCover = Boolean(item.cover) && !coverError
   const nickname = item.streamer_nickname || item.streamer_str_id || '主播'
   const fallback = (nickname[0] || 'L').toUpperCase()
+  const categoryLabel = formatLiveCategoryName(item.category_name, item.sub_category_name)
 
   return (
     <Link to={`/live/${item.id}`} className="cursor-pointer">
@@ -52,8 +90,8 @@ function LiveRoomCard({ item }: { item: ClientLiveRoomListItem }) {
             </Avatar>
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs text-muted-foreground">{nickname}</p>
-              {item.category_name ? (
-                <p className="truncate text-xs text-muted-foreground">{item.category_name}</p>
+              {categoryLabel ? (
+                <p className="truncate text-xs text-muted-foreground">{categoryLabel}</p>
               ) : null}
             </div>
           </div>
@@ -65,7 +103,8 @@ function LiveRoomCard({ item }: { item: ClientLiveRoomListItem }) {
 
 export function Component() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const categoryId = Number(searchParams.get('category_id') || 0) || 0
+  const categoryQuery = parseCategoryQuery(searchParams.get('category_id'))
+  const categoryId = categoryQuery.id
   const page = Number(searchParams.get('page') || 1) || 1
 
   const [categories, setCategories] = useState<ClientLiveCategory[]>([])
@@ -77,6 +116,11 @@ export function Component() {
   usePageTitle('直播')
   usePageSeo({ title: '直播', path: '/live' })
 
+  const selection = useMemo(() => {
+    if (categoryQuery.invalid) return { l1Id: 0, l2Id: 0, children: [], matched: false }
+    return resolveCategorySelection(categories, categoryId)
+  }, [categories, categoryId, categoryQuery.invalid])
+
   const loadCategories = useCallback(async () => {
     try {
       const res = await clientApi.liveCategories()
@@ -87,6 +131,13 @@ export function Component() {
   }, [])
 
   const loadRooms = useCallback(async () => {
+    if (categoryQuery.invalid) {
+      setRooms([])
+      setTotalPages(0)
+      setError('')
+      setLoading(false)
+      return
+    }
     setLoading(true)
     setError('')
     try {
@@ -104,7 +155,7 @@ export function Component() {
     } finally {
       setLoading(false)
     }
-  }, [page, categoryId])
+  }, [page, categoryId, categoryQuery.invalid])
 
   useEffect(() => {
     void loadCategories()
@@ -137,23 +188,48 @@ export function Component() {
       </div>
 
       {categories.length > 0 ? (
-        <ToggleGroup
-          variant="outline"
-          size="sm"
-          value={[String(categoryId)]}
-          onValueChange={(v) => {
-            if (!v[0]) return
-            setCategory(Number(v[0]) || 0)
-          }}
-          className="flex w-full flex-wrap justify-start"
-        >
-          <ToggleGroupItem value="0">全部</ToggleGroupItem>
-          {categories.map((cat) => (
-            <ToggleGroupItem key={cat.id} value={String(cat.id)}>
-              {cat.name}
-            </ToggleGroupItem>
-          ))}
-        </ToggleGroup>
+        <div className="flex flex-col gap-3">
+          <ToggleGroup
+            variant="outline"
+            size="sm"
+            value={selection.matched ? [String(selection.l1Id)] : []}
+            onValueChange={(v) => {
+              if (!v[0]) return
+              // Switching L1 clears L2 by writing L1 id (or 0 for 全部)
+              setCategory(Number(v[0]) || 0)
+            }}
+            className="flex w-full flex-wrap justify-start"
+          >
+            <ToggleGroupItem value="0">全部</ToggleGroupItem>
+            {categories.map((cat) => (
+              <ToggleGroupItem key={cat.id} value={String(cat.id)}>
+                {cat.name}
+              </ToggleGroupItem>
+            ))}
+          </ToggleGroup>
+
+          {selection.l1Id > 0 && selection.children.length > 0 ? (
+            <ToggleGroup
+              variant="outline"
+              size="sm"
+              value={[String(selection.l2Id)]}
+              onValueChange={(v) => {
+                if (!v[0]) return
+                const next = Number(v[0]) || 0
+                // L2 "全部" keeps L1 filter
+                setCategory(next > 0 ? next : selection.l1Id)
+              }}
+              className="flex w-full flex-wrap justify-start"
+            >
+              <ToggleGroupItem value="0">全部</ToggleGroupItem>
+              {selection.children.map((cat) => (
+                <ToggleGroupItem key={cat.id} value={String(cat.id)}>
+                  {cat.name}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          ) : null}
+        </div>
       ) : null}
 
       {error ? (

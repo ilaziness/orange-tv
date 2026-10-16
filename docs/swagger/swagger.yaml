@@ -631,6 +631,27 @@ definitions:
     - play_source_id
     - type
     type: object
+  admin.CreateLiveCategoryRequest:
+    properties:
+      name:
+        maxLength: 50
+        minLength: 1
+        type: string
+      parent_id:
+        description: 父分类ID，0=一级；大于0时必须是启用的一级分类
+        minimum: 0
+        type: integer
+      sort:
+        minimum: 0
+        type: integer
+      status:
+        enum:
+        - 0
+        - 1
+        type: integer
+    required:
+    - name
+    type: object
   admin.CreateLiveTVRequest:
     properties:
       category:
@@ -915,6 +936,153 @@ definitions:
         description: 视频总数
         type: integer
     type: object
+  admin.LiveApplyItem:
+    properties:
+      avatar:
+        type: string
+      contact:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      nickname:
+        type: string
+      reason:
+        type: string
+      review_admin_id:
+        type: integer
+      review_remark:
+        type: string
+      reviewed_at:
+        type: string
+      status:
+        type: integer
+      user_id:
+        type: integer
+      user_str_id:
+        type: string
+    type: object
+  admin.LiveCategoryItem:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      parent_id:
+        type: integer
+      parent_name:
+        type: string
+      sort:
+        type: integer
+      status:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  admin.LiveRoomItem:
+    properties:
+      avatar:
+        type: string
+      category_id:
+        type: integer
+      category_name:
+        type: string
+      cover:
+        type: string
+      created_at:
+        type: string
+      current_session_id:
+        type: integer
+      ended_at:
+        type: string
+      id:
+        type: integer
+      nickname:
+        type: string
+      notice:
+        type: string
+      started_at:
+        type: string
+      status:
+        type: integer
+      stream_key:
+        type: string
+      sub_category_id:
+        type: integer
+      sub_category_name:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+      user_str_id:
+        type: string
+    type: object
+  admin.LiveSessionItem:
+    properties:
+      category_id:
+        type: integer
+      category_name:
+        type: string
+      end_reason:
+        type: string
+      ended_at:
+        type: string
+      id:
+        type: integer
+      room_id:
+        type: integer
+      started_at:
+        type: string
+      streamer_avatar:
+        type: string
+      streamer_nickname:
+        type: string
+      sub_category_id:
+        type: integer
+      sub_category_name:
+        type: string
+      title:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  admin.LiveStreamerItem:
+    properties:
+      avatar:
+        type: string
+      category_id:
+        type: integer
+      category_name:
+        type: string
+      email:
+        type: string
+      nickname:
+        type: string
+      room_id:
+        type: integer
+      room_status:
+        type: integer
+      room_title:
+        type: string
+      streamer_at:
+        type: string
+      sub_category_id:
+        type: integer
+      sub_category_name:
+        type: string
+      user_id:
+        type: integer
+      user_str_id:
+        type: string
+    type: object
   admin.LiveTVChannelItem:
     properties:
       category:
@@ -1165,6 +1333,12 @@ definitions:
     required:
     - password
     type: object
+  admin.ReviewLiveApplyRequest:
+    properties:
+      remark:
+        maxLength: 500
+        type: string
+    type: object
   admin.SetCollectCategoriesRequest:
     properties:
       items:
@@ -1388,6 +1562,21 @@ definitions:
     required:
     - status
     type: object
+  admin.UpdateLiveCategoryRequest:
+    properties:
+      name:
+        maxLength: 50
+        minLength: 1
+        type: string
+      sort:
+        minimum: 0
+        type: integer
+      status:
+        enum:
+        - 0
+        - 1
+        type: integer
+    type: object
   admin.UpdateLiveTVRequest:
     properties:
       category:
@@ -1517,13 +1706,15 @@ definitions:
       data:
         description: 分组配置键值 JSON 数据（结构随分组变化）
       group:
-        description: 配置分组（必填：site=站点信息，api=API/资源站，feature=功能开关，seo=SEO设置，storage=云存储）
+        description: 配置分组（必填：site=站点信息，api=API/资源站，feature=功能开关，seo=SEO设置，storage=云存储，payment=支付商，live=用户直播推流）
         enum:
         - site
         - api
         - feature
         - seo
         - storage
+        - payment
+        - live
         type: string
     required:
     - data
@@ -2043,6 +2234,20 @@ definitions:
     - content
     - video_id
     type: object
+  client.CreateLiveApplyRequest:
+    properties:
+      contact:
+        maxLength: 100
+        minLength: 1
+        type: string
+      reason:
+        maxLength: 500
+        minLength: 1
+        type: string
+    required:
+    - contact
+    - reason
+    type: object
   client.FavoriteCheckResult:
     properties:
       favorited:
@@ -2104,6 +2309,100 @@ definitions:
         type: integer
       year:
         description: 上映年份
+        type: string
+    type: object
+  client.LiveApplyItem:
+    properties:
+      contact:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      reason:
+        type: string
+      review_remark:
+        type: string
+      reviewed_at:
+        type: string
+      status:
+        type: integer
+    type: object
+  client.LiveCategoryItem:
+    properties:
+      children:
+        items:
+          $ref: '#/definitions/client.LiveCategoryItem'
+        type: array
+      id:
+        type: integer
+      name:
+        type: string
+      parent_id:
+        type: integer
+      sort:
+        type: integer
+    type: object
+  client.LiveRoomDetail:
+    properties:
+      category_id:
+        type: integer
+      category_name:
+        type: string
+      cover:
+        type: string
+      id:
+        type: integer
+      notice:
+        type: string
+      play_flv_url:
+        type: string
+      play_hls_url:
+        type: string
+      started_at:
+        type: string
+      status:
+        type: integer
+      streamer_avatar:
+        type: string
+      streamer_nickname:
+        type: string
+      streamer_str_id:
+        type: string
+      streamer_user_id:
+        type: integer
+      sub_category_id:
+        type: integer
+      sub_category_name:
+        type: string
+      title:
+        type: string
+    type: object
+  client.LiveRoomListItem:
+    properties:
+      category_id:
+        type: integer
+      category_name:
+        type: string
+      cover:
+        type: string
+      id:
+        type: integer
+      started_at:
+        type: string
+      streamer_avatar:
+        type: string
+      streamer_nickname:
+        type: string
+      streamer_str_id:
+        type: string
+      streamer_user_id:
+        type: integer
+      sub_category_id:
+        type: integer
+      sub_category_name:
+        type: string
+      title:
         type: string
     type: object
   client.LiveTVChannelItem:
@@ -2198,6 +2497,37 @@ definitions:
         - $ref: '#/definitions/client.Profile'
         description: 用户公开资料
     type: object
+  client.MyLiveRoom:
+    properties:
+      category_id:
+        type: integer
+      category_name:
+        type: string
+      cover:
+        type: string
+      current_session_id:
+        type: integer
+      ended_at:
+        type: string
+      id:
+        type: integer
+      notice:
+        type: string
+      push_server:
+        type: string
+      started_at:
+        type: string
+      status:
+        type: integer
+      stream_key:
+        type: string
+      sub_category_id:
+        type: integer
+      sub_category_name:
+        type: string
+      title:
+        type: string
+    type: object
   client.PlayEpisodeResponse:
     properties:
       format:
@@ -2221,6 +2551,9 @@ definitions:
       id:
         description: 用户ID
         type: integer
+      is_streamer:
+        description: 是否主播
+        type: boolean
       nickname:
         description: 昵称
         type: string
@@ -2229,6 +2562,9 @@ definitions:
         type: integer
       str_id:
         description: 字符串形式用户ID
+        type: string
+      streamer_apply_status:
+        description: 主播申请状态：none/pending/approved/rejected
         type: string
     type: object
   client.RateVideoRequest:
@@ -2306,6 +2642,53 @@ definitions:
     - captcha_id
     - email
     - password
+    type: object
+  client.StartLiveRequest:
+    properties:
+      category_id:
+        minimum: 1
+        type: integer
+      sub_category_id:
+        minimum: 0
+        type: integer
+      title:
+        maxLength: 100
+        minLength: 1
+        type: string
+    type: object
+  client.StartLiveResponse:
+    properties:
+      push_server:
+        type: string
+      room_id:
+        type: integer
+      session_id:
+        type: integer
+      started_at:
+        type: string
+      status:
+        type: integer
+      stream_key:
+        type: string
+    type: object
+  client.UpdateMyLiveRoomRequest:
+    properties:
+      category_id:
+        minimum: 1
+        type: integer
+      cover:
+        maxLength: 500
+        type: string
+      notice:
+        maxLength: 500
+        type: string
+      sub_category_id:
+        minimum: 0
+        type: integer
+      title:
+        maxLength: 100
+        minLength: 1
+        type: string
     type: object
   client.UpdateProfileRequest:
     properties:
@@ -4458,6 +4841,535 @@ paths:
       summary: 更新用户组
       tags:
       - 管理端｜用户组管理
+  /api/admin/v1/live/applies:
+    get:
+      parameters:
+      - in: query
+        maxLength: 100
+        name: keyword
+        type: string
+      - description: 每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - description: 页码，从 1 开始
+        in: query
+        maximum: 1000000
+        minimum: 1
+        name: page
+        type: integer
+      - description: 每页数量（优先于 limit），范围 1-100
+        in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
+      - description: 状态（0=待审，1=通过，2=拒绝）
+        enum:
+        - 0
+        - 1
+        - 2
+        in: query
+        name: status
+        type: integer
+      - in: query
+        minimum: 1
+        name: user_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/admin.LiveApplyItem'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 主播申请列表
+      tags:
+      - 管理端｜直播管理
+  /api/admin/v1/live/applies/{id}/approve:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 申请ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 审核备注
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/admin.ReviewLiveApplyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 通过主播申请
+      tags:
+      - 管理端｜直播管理
+  /api/admin/v1/live/applies/{id}/reject:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 申请ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 审核备注
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/admin.ReviewLiveApplyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 拒绝主播申请
+      tags:
+      - 管理端｜直播管理
+  /api/admin/v1/live/categories:
+    get:
+      parameters:
+      - in: query
+        maxLength: 50
+        name: keyword
+        type: string
+      - description: 每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - description: 页码，从 1 开始
+        in: query
+        maximum: 1000000
+        minimum: 1
+        name: page
+        type: integer
+      - description: 每页数量（优先于 limit），范围 1-100
+        in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
+      - description: 父分类ID；传 0 只查一级。不传则不按层级过滤
+        in: query
+        minimum: 0
+        name: parent_id
+        type: integer
+      - description: 状态（0=禁用，1=启用）
+        enum:
+        - 0
+        - 1
+        in: query
+        name: status
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/admin.LiveCategoryItem'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 直播分类列表
+      tags:
+      - 管理端｜直播管理
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 分类参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/admin.CreateLiveCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.LiveCategoryItem'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 新建直播分类（可指定 parent_id 创建二级；创建后不可改挂）
+      tags:
+      - 管理端｜直播管理
+  /api/admin/v1/live/categories/{id}:
+    delete:
+      parameters:
+      - description: 分类ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 删除直播分类（有子分类或被直播间引用时不可删）
+      tags:
+      - 管理端｜直播管理
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 分类ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 分类参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/admin.UpdateLiveCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/admin.LiveCategoryItem'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 更新直播分类（不可改 parent_id）
+      tags:
+      - 管理端｜直播管理
+  /api/admin/v1/live/rooms:
+    get:
+      parameters:
+      - in: query
+        minimum: 1
+        name: category_id
+        type: integer
+      - in: query
+        maxLength: 100
+        name: keyword
+        type: string
+      - description: 每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - description: 页码，从 1 开始
+        in: query
+        maximum: 1000000
+        minimum: 1
+        name: page
+        type: integer
+      - description: 每页数量（优先于 limit），范围 1-100
+        in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
+      - enum:
+        - 0
+        - 1
+        - 2
+        in: query
+        name: status
+        type: integer
+      - in: query
+        minimum: 1
+        name: user_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/admin.LiveRoomItem'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 直播间列表（category_id 可为一级或二级，服务端按 parent_id 分流筛选）
+      tags:
+      - 管理端｜直播管理
+  /api/admin/v1/live/rooms/{id}/ban:
+    put:
+      parameters:
+      - description: 直播间ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 禁播直播间
+      tags:
+      - 管理端｜直播管理
+  /api/admin/v1/live/rooms/{id}/force-stop:
+    post:
+      parameters:
+      - description: 直播间ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 强制下播
+      tags:
+      - 管理端｜直播管理
+  /api/admin/v1/live/rooms/{id}/unban:
+    put:
+      parameters:
+      - description: 直播间ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 解禁直播间
+      tags:
+      - 管理端｜直播管理
+  /api/admin/v1/live/sessions:
+    get:
+      parameters:
+      - description: 每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - description: 页码，从 1 开始
+        in: query
+        maximum: 1000000
+        minimum: 1
+        name: page
+        type: integer
+      - description: 每页数量（优先于 limit），范围 1-100
+        in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
+      - in: query
+        minimum: 1
+        name: room_id
+        type: integer
+      - in: query
+        minimum: 1
+        name: user_id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/admin.LiveSessionItem'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 直播场次列表
+      tags:
+      - 管理端｜直播管理
+  /api/admin/v1/live/streamers:
+    get:
+      parameters:
+      - in: query
+        maxLength: 100
+        name: keyword
+        type: string
+      - description: 每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - description: 页码，从 1 开始
+        in: query
+        maximum: 1000000
+        minimum: 1
+        name: page
+        type: integer
+      - description: 每页数量（优先于 limit），范围 1-100
+        in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
+      - description: 房间状态（0=空闲，1=直播中，2=禁播）
+        enum:
+        - 0
+        - 1
+        - 2
+        in: query
+        name: room_status
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/admin.LiveStreamerItem'
+                        type: array
+                    type: object
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 主播列表
+      tags:
+      - 管理端｜直播管理
+  /api/admin/v1/live/streamers/{userId}/grant:
+    put:
+      parameters:
+      - description: 用户ID
+        in: path
+        name: userId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 直接设为主播
+      tags:
+      - 管理端｜直播管理
+  /api/admin/v1/live/streamers/{userId}/revoke:
+    put:
+      parameters:
+      - description: 用户ID
+        in: path
+        name: userId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 撤销主播资格
+      tags:
+      - 管理端｜直播管理
   /api/admin/v1/livetv:
     get:
       consumes:
@@ -5036,15 +5948,17 @@ paths:
     get:
       consumes:
       - application/json
-      description: 按分组获取系统设置。data 结构随 group 变化：site=SiteSettings，api=APISettings，feature=FeatureMatrix，seo=SEOSettings，storage=StorageSettings
+      description: 按分组获取系统设置。data 结构随 group 变化：site=SiteSettings，api=APISettings，feature=FeatureMatrix，seo=SEOSettings，storage=StorageSettings，payment=PaymentSettings，live=LiveSettings
       parameters:
-      - description: 配置分组（site=站点信息，api=API/资源站，feature=功能开关，seo=SEO设置，storage=云存储）
+      - description: 配置分组（site=站点信息，api=API/资源站，feature=功能开关，seo=SEO设置，storage=云存储，payment=支付商，live=用户直播推流）
         enum:
         - site
         - api
         - feature
         - seo
         - storage
+        - payment
+        - live
         in: query
         name: group
         required: true
@@ -5070,7 +5984,7 @@ paths:
     put:
       consumes:
       - application/json
-      description: 按分组更新系统设置，data 为对应分组的 key-value JSON（site/api/feature/seo），返回更新后的设置结构
+      description: 按分组更新系统设置，data 为对应分组的 key-value JSON（site/api/feature/seo/storage/payment），返回更新后的设置结构
       parameters:
       - description: 更新设置请求
         in: body
@@ -6444,6 +7358,248 @@ paths:
       summary: 获取单条播放历史
       tags:
       - 用户端｜用户中心
+  /api/client/v1/live/applies:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 申请参数
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/client.CreateLiveApplyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/client.LiveApplyItem'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 申请成为主播
+      tags:
+      - 用户端｜直播
+  /api/client/v1/live/applies/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/client.LiveApplyItem'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 我的主播申请
+      tags:
+      - 用户端｜直播
+  /api/client/v1/live/categories:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/client.LiveCategoryItem'
+                  type: array
+              type: object
+      summary: 直播分类树（启用节点，固定两级）
+      tags:
+      - 用户端｜直播
+  /api/client/v1/live/rooms:
+    get:
+      parameters:
+      - in: query
+        minimum: 1
+        name: category_id
+        type: integer
+      - description: 每页数量（兼容旧参数 page_size 存在时忽略），范围 1-100
+        in: query
+        maximum: 100
+        minimum: 1
+        name: limit
+        type: integer
+      - description: 页码，从 1 开始
+        in: query
+        maximum: 1000000
+        minimum: 1
+        name: page
+        type: integer
+      - description: 每页数量（优先于 limit），范围 1-100
+        in: query
+        maximum: 100
+        minimum: 1
+        name: page_size
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  allOf:
+                  - $ref: '#/definitions/response.PageData'
+                  - properties:
+                      list:
+                        items:
+                          $ref: '#/definitions/client.LiveRoomListItem'
+                        type: array
+                    type: object
+              type: object
+      summary: 直播中房间列表（category_id 可为一级或二级，服务端按 parent_id 分流筛选）
+      tags:
+      - 用户端｜直播
+  /api/client/v1/live/rooms/{id}:
+    get:
+      parameters:
+      - description: 直播间ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/client.LiveRoomDetail'
+              type: object
+      summary: 直播间详情
+      tags:
+      - 用户端｜直播
+  /api/client/v1/live/rooms/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/client.MyLiveRoom'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 我的直播间
+      tags:
+      - 用户端｜直播
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: 直播间资料
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/client.UpdateMyLiveRoomRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/client.MyLiveRoom'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 更新我的直播间（分类须成对提交 category_id + sub_category_id）
+      tags:
+      - 用户端｜直播
+  /api/client/v1/live/rooms/me/regenerate-key:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/client.MyLiveRoom'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 重置推流密钥
+      tags:
+      - 用户端｜直播
+  /api/client/v1/live/rooms/me/start:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 开播参数
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/client.StartLiveRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/client.StartLiveResponse'
+              type: object
+      security:
+      - BearerAuth: []
+      summary: 开播（可选覆盖分类，须成对提交 category_id + sub_category_id）
+      tags:
+      - 用户端｜直播
+  /api/client/v1/live/rooms/me/stop:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.Response'
+      security:
+      - BearerAuth: []
+      summary: 停播
+      tags:
+      - 用户端｜直播
   /api/client/v1/livetv:
     get:
       consumes:

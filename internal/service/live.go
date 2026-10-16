@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
@@ -8,7 +9,9 @@ import (
 	"time"
 
 	"github.com/ilaziness/orange-tv/internal/constant"
+	errcode "github.com/ilaziness/orange-tv/internal/errcode"
 	"github.com/ilaziness/orange-tv/internal/model"
+	"github.com/ilaziness/orange-tv/internal/repository"
 )
 
 const liveStreamKeyBytes = 16 // 32 hex chars
@@ -97,8 +100,78 @@ func NewLiveSessionSnapshot(room *model.LiveRooms, user *model.Users, startedAt 
 		UserID:           room.UserID,
 		Title:            room.Title,
 		CategoryID:       room.CategoryID,
+		SubCategoryID:    room.SubCategoryID,
 		StreamerNickname: user.Nickname,
 		StreamerAvatar:   user.Avatar,
 		StartedAt:        startedAt,
 	}
+}
+
+// ValidateLiveCategoryPair checks that categoryID is an enabled L1 and subCategoryID
+// matches the enabled-children rule (required L2 when children exist, else must be 0).
+func ValidateLiveCategoryPair(ctx context.Context, repo repository.LiveRepository, categoryID, subCategoryID uint32) error {
+	if categoryID == 0 {
+		return errcode.WithMessage(errcode.ParamError, "请选择直播分类")
+	}
+	cat, err := repo.GetCategory(ctx, categoryID)
+	if err != nil {
+		return errcode.Wrap(errcode.DatabaseError, err)
+	}
+	if cat == nil || cat.Status != constant.StatusEnabled || cat.ParentID != 0 {
+		return errcode.LiveCategoryDisabled
+	}
+	enabledChildren, err := repo.CountEnabledCategoryChildren(ctx, categoryID)
+	if err != nil {
+		return errcode.Wrap(errcode.DatabaseError, err)
+	}
+	if enabledChildren > 0 {
+		if subCategoryID == 0 {
+			return errcode.WithMessage(errcode.ParamError, "请选择二级分类")
+		}
+		sub, err := repo.GetCategory(ctx, subCategoryID)
+		if err != nil {
+			return errcode.Wrap(errcode.DatabaseError, err)
+		}
+		if sub == nil || sub.Status != constant.StatusEnabled || sub.ParentID != categoryID {
+			return errcode.WithMessage(errcode.LiveCategoryDisabled, "二级分类不可用或不属于所选一级分类")
+		}
+		return nil
+	}
+	if subCategoryID != 0 {
+		return errcode.WithMessage(errcode.ParamError, "该一级分类无启用子类，二级分类须为0")
+	}
+	return nil
+}
+
+// ResolveLiveCategoryOverride merges request category fields onto current values, then validates.
+// Rules: both → use request; only L1 → sub=0 if no enabled children else error; only L2 → error.
+func ResolveLiveCategoryOverride(
+	ctx context.Context,
+	repo repository.LiveRepository,
+	reqCategoryID, reqSubCategoryID *uint32,
+	currentCategoryID, currentSubCategoryID uint32,
+) (categoryID, subCategoryID uint32, err error) {
+	if reqCategoryID == nil && reqSubCategoryID == nil {
+		return currentCategoryID, currentSubCategoryID, nil
+	}
+	if reqCategoryID == nil {
+		return 0, 0, errcode.WithMessage(errcode.ParamError, "请选择一级分类")
+	}
+	categoryID = *reqCategoryID
+	if reqSubCategoryID != nil {
+		subCategoryID = *reqSubCategoryID
+	} else {
+		enabledChildren, err := repo.CountEnabledCategoryChildren(ctx, categoryID)
+		if err != nil {
+			return 0, 0, errcode.Wrap(errcode.DatabaseError, err)
+		}
+		if enabledChildren > 0 {
+			return 0, 0, errcode.WithMessage(errcode.ParamError, "请选择二级分类")
+		}
+		subCategoryID = 0
+	}
+	if err := ValidateLiveCategoryPair(ctx, repo, categoryID, subCategoryID); err != nil {
+		return 0, 0, err
+	}
+	return categoryID, subCategoryID, nil
 }

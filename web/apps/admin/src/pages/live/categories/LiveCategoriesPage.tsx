@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type SyntheticEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type SyntheticEvent } from 'react'
 import type { AdminLiveCategoryItem } from '@orange-tv/shared'
 import { z } from 'zod'
 import { adminApi, errorMessage } from '@/lib/api'
@@ -47,14 +47,19 @@ type StatusFilter = 'all' | '0' | '1'
 
 type CategoryForm = {
   name: string
+  parentId: string
   sort: string
   status: '0' | '1'
 }
 
-const emptyForm = (): CategoryForm => ({ name: '', sort: '0', status: '1' })
+const emptyForm = (): CategoryForm => ({ name: '', parentId: '0', sort: '0', status: '1' })
 
 const categorySchema = z.object({
   name: z.string().trim().min(1, '名称不能为空').max(50, '名称过长'),
+  parentId: z
+    .string()
+    .regex(/^\d+$/, '上级无效')
+    .transform((v) => Number(v)),
   sort: z
     .string()
     .regex(/^\d+$/, '排序须为非负整数')
@@ -62,8 +67,19 @@ const categorySchema = z.object({
   status: z.enum(['0', '1']),
 })
 
+function parentDisplayName(
+  item: AdminLiveCategoryItem,
+  nameById: Map<number, string>,
+): string {
+  const parentId = item.parent_id || 0
+  if (parentId <= 0) return '—'
+  if (item.parent_name?.trim()) return item.parent_name.trim()
+  return nameById.get(parentId) || `#${parentId}`
+}
+
 export default function LiveCategoriesPage() {
   const [items, setItems] = useState<AdminLiveCategoryItem[]>([])
+  const [l1Options, setL1Options] = useState<AdminLiveCategoryItem[]>([])
   const [keyword, setKeyword] = useState('')
   const [status, setStatus] = useState<StatusFilter>('all')
   const [page, setPage] = useState(1)
@@ -91,6 +107,35 @@ export default function LiveCategoriesPage() {
     pageRef.current = page
   }, [page])
 
+  const nameById = useMemo(() => {
+    const map = new Map<number, string>()
+    for (const it of items) map.set(it.id, it.name)
+    for (const it of l1Options) map.set(it.id, it.name)
+    return map
+  }, [items, l1Options])
+
+  const loadL1Options = useCallback(async () => {
+    try {
+      const pageSize = 100
+      const all: AdminLiveCategoryItem[] = []
+      for (let page = 1; page <= 50; page += 1) {
+        const res = await adminApi.listLiveCategories({
+          page,
+          page_size: pageSize,
+          status: 1,
+          parent_id: 0,
+        })
+        const list = res.data.list || []
+        all.push(...list.filter((it) => (it.parent_id || 0) === 0))
+        if (list.length < pageSize) break
+      }
+      setL1Options(all)
+    } catch (err) {
+      setL1Options([])
+      toast.error(errorMessage(err))
+    }
+  }, [])
+
   const load = useCallback(async (p = pageRef.current) => {
     setLoading(true)
     try {
@@ -115,18 +160,21 @@ export default function LiveCategoriesPage() {
 
   useEffect(() => {
     void load(1)
-  }, [load])
+    void loadL1Options()
+  }, [load, loadL1Options])
 
   function openCreate() {
     setEditing(null)
     setForm(emptyForm())
     setDialogOpen(true)
+    void loadL1Options()
   }
 
   function openEdit(item: AdminLiveCategoryItem) {
     setEditing(item)
     setForm({
       name: item.name,
+      parentId: String(item.parent_id || 0),
       sort: String(item.sort ?? 0),
       status: item.status === 1 ? '1' : '0',
     })
@@ -143,20 +191,24 @@ export default function LiveCategoriesPage() {
     }
     setSubmitting(true)
     try {
-      const body = {
-        name: parsed.data.name,
-        sort: parsed.data.sort,
-        status: Number(parsed.data.status) as 0 | 1,
-      }
       if (editing) {
-        await adminApi.updateLiveCategory(editing.id, body)
+        await adminApi.updateLiveCategory(editing.id, {
+          name: parsed.data.name,
+          sort: parsed.data.sort,
+          status: Number(parsed.data.status) as 0 | 1,
+        })
         toast.success('分类已更新')
       } else {
-        await adminApi.createLiveCategory(body)
+        await adminApi.createLiveCategory({
+          name: parsed.data.name,
+          parent_id: parsed.data.parentId,
+          sort: parsed.data.sort,
+          status: Number(parsed.data.status) as 0 | 1,
+        })
         toast.success('分类已创建')
       }
       setDialogOpen(false)
-      await load(editing ? page : 1)
+      await Promise.all([load(editing ? page : 1), loadL1Options()])
     } catch (err) {
       toast.error(errorMessage(err))
     } finally {
@@ -171,7 +223,7 @@ export default function LiveCategoriesPage() {
       await adminApi.deleteLiveCategory(deleteId)
       toast.success('分类已删除')
       setDeleteId(null)
-      await load(page)
+      await Promise.all([load(page), loadL1Options()])
     } catch (err) {
       toast.error(errorMessage(err))
     } finally {
@@ -186,6 +238,7 @@ export default function LiveCategoriesPage() {
       await adminApi.updateLiveCategory(item.id, { status: next })
       setItems((prev) => prev.map((it) => (it.id === item.id ? { ...it, status: next } : it)))
       toast.success(next === 1 ? '已启用' : '已禁用')
+      void loadL1Options()
     } catch (err) {
       toast.error(errorMessage(err))
     } finally {
@@ -197,6 +250,15 @@ export default function LiveCategoriesPage() {
     { value: 'all', label: '全部状态' },
     { value: '1', label: '启用' },
     { value: '0', label: '禁用' },
+  ]
+
+  const editingParentLabel = editing
+    ? parentDisplayName(editing, nameById)
+    : '—'
+
+  const parentSelectItems = [
+    { value: '0', label: '无（一级分类）' },
+    ...l1Options.map((it) => ({ value: String(it.id), label: it.name })),
   ]
 
   return (
@@ -269,6 +331,7 @@ export default function LiveCategoriesPage() {
                     <TableRow>
                       <TableHead className="w-16">ID</TableHead>
                       <TableHead>名称</TableHead>
+                      <TableHead className="w-36">上级</TableHead>
                       <TableHead className="w-20">排序</TableHead>
                       <TableHead className="w-20">状态</TableHead>
                       <TableHead className="w-36">更新时间</TableHead>
@@ -282,6 +345,9 @@ export default function LiveCategoriesPage() {
                         <TableRow key={item.id}>
                           <TableCell>{item.id}</TableCell>
                           <TableCell>{item.name}</TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {parentDisplayName(item, nameById)}
+                          </TableCell>
                           <TableCell>{item.sort}</TableCell>
                           <TableCell>
                             <StatusBadge status={item.status} />
@@ -375,6 +441,33 @@ export default function LiveCategoriesPage() {
                   autoFocus
                 />
               </Field>
+              <Field data-disabled={submitting || !!editing ? true : undefined}>
+                <FieldLabel htmlFor="live-cat-parent">上级分类</FieldLabel>
+                {editing ? (
+                  <Input id="live-cat-parent" value={editingParentLabel} readOnly disabled />
+                ) : (
+                  <Select
+                    items={parentSelectItems}
+                    value={form.parentId}
+                    onValueChange={(v) =>
+                      setForm((prev) => ({ ...prev, parentId: v ?? '0' }))
+                    }
+                  >
+                    <SelectTrigger id="live-cat-parent" disabled={submitting}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        {parentSelectItems.map((item) => (
+                          <SelectItem key={item.value} value={item.value}>
+                            {item.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                )}
+              </Field>
               <Field data-disabled={submitting ? true : undefined}>
                 <FieldLabel htmlFor="live-cat-sort">排序</FieldLabel>
                 <Input
@@ -433,7 +526,7 @@ export default function LiveCategoriesPage() {
           if (!open && !deleting) setDeleteId(null)
         }}
         title="删除分类"
-        description="确认删除该分类？已在播房间不受影响，新开播不可再选。"
+        description="确认删除该分类？有子分类或仍被直播间引用时不可删除。"
         destructive
         loading={deleting}
         onConfirm={() => void confirmDelete()}

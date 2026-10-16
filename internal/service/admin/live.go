@@ -59,10 +59,11 @@ func NewLiveService(repo repository.LiveRepository, locker pkglock.Locker, log *
 
 func (s *liveService) ListCategories(ctx context.Context, req *admindto.LiveCategoryListRequest) ([]admindto.LiveCategoryItem, int, error) {
 	items, total, err := s.repo.ListCategories(ctx, repository.LiveCategoryListFilter{
-		Status:  req.Status,
-		Keyword: strings.TrimSpace(req.Keyword),
-		Offset:  req.GetOffset(),
-		Limit:   req.GetLimit(),
+		Status:   req.Status,
+		ParentID: req.ParentID,
+		Keyword:  strings.TrimSpace(req.Keyword),
+		Offset:   req.GetOffset(),
+		Limit:    req.GetLimit(),
 	})
 	if err != nil {
 		s.log.Error("admin live: list categories failed", zap.Error(err))
@@ -70,18 +71,40 @@ func (s *liveService) ListCategories(ctx context.Context, req *admindto.LiveCate
 	}
 	out := make([]admindto.LiveCategoryItem, 0, len(items))
 	for i := range items {
-		out = append(out, toAdminLiveCategory(&items[i]))
+		out = append(out, toAdminLiveCategoryRow(&items[i]))
 	}
 	return out, total, nil
 }
 
 func (s *liveService) CreateCategory(ctx context.Context, req *admindto.CreateLiveCategoryRequest) (*admindto.LiveCategoryItem, error) {
 	name := strings.TrimSpace(req.Name)
+	if name == "" {
+		return nil, errcode.WithMessage(errcode.ParamError, "分类名称不能为空")
+	}
 	status := constant.StatusEnabled
 	if req.Status != nil {
 		status = *req.Status
 	}
-	exists, err := s.repo.ExistsCategoryName(ctx, name, status, 0)
+	parentID := req.ParentID
+	parentName := ""
+	if parentID > 0 {
+		parent, err := s.repo.GetCategory(ctx, parentID)
+		if err != nil {
+			s.log.Error("admin live: get parent category failed", zap.Uint32("parent_id", parentID), zap.Error(err))
+			return nil, errcode.Wrap(errcode.DatabaseError, err)
+		}
+		if parent == nil {
+			return nil, errcode.LiveCategoryNotFound
+		}
+		if parent.ParentID != 0 {
+			return nil, errcode.WithMessage(errcode.ParamError, "不能在二级分类下再建子分类")
+		}
+		if parent.Status != constant.StatusEnabled {
+			return nil, errcode.WithMessage(errcode.LiveCategoryDisabled, "禁用的一级分类下不能创建子分类")
+		}
+		parentName = parent.Name
+	}
+	exists, err := s.repo.ExistsCategoryName(ctx, name, parentID, 0)
 	if err != nil {
 		s.log.Error("admin live: check category name failed", zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
@@ -89,12 +112,12 @@ func (s *liveService) CreateCategory(ctx context.Context, req *admindto.CreateLi
 	if exists {
 		return nil, errcode.LiveCategoryNameExists
 	}
-	c := &model.LiveCategories{Name: name, Sort: req.Sort, Status: status}
+	c := &model.LiveCategories{ParentID: parentID, Name: name, Sort: req.Sort, Status: status}
 	if err := s.repo.CreateCategory(ctx, c); err != nil {
 		s.log.Error("admin live: create category failed", zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	item := toAdminLiveCategory(c)
+	item := toAdminLiveCategory(c, parentName)
 	return &item, nil
 }
 
@@ -108,7 +131,11 @@ func (s *liveService) UpdateCategory(ctx context.Context, id uint32, req *admind
 		return nil, errcode.LiveCategoryNotFound
 	}
 	if req.Name != nil {
-		c.Name = strings.TrimSpace(*req.Name)
+		name := strings.TrimSpace(*req.Name)
+		if name == "" {
+			return nil, errcode.WithMessage(errcode.ParamError, "分类名称不能为空")
+		}
+		c.Name = name
 	}
 	if req.Sort != nil {
 		c.Sort = *req.Sort
@@ -116,7 +143,8 @@ func (s *liveService) UpdateCategory(ctx context.Context, id uint32, req *admind
 	if req.Status != nil {
 		c.Status = *req.Status
 	}
-	exists, err := s.repo.ExistsCategoryName(ctx, c.Name, c.Status, c.ID)
+	// parent_id is immutable after create.
+	exists, err := s.repo.ExistsCategoryName(ctx, c.Name, c.ParentID, c.ID)
 	if err != nil {
 		s.log.Error("admin live: check category name failed", zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
@@ -128,7 +156,18 @@ func (s *liveService) UpdateCategory(ctx context.Context, id uint32, req *admind
 		s.log.Error("admin live: update category failed", zap.Uint32("id", id), zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	item := toAdminLiveCategory(c)
+	parentName := ""
+	if c.ParentID > 0 {
+		parent, err := s.repo.GetCategory(ctx, c.ParentID)
+		if err != nil {
+			s.log.Error("admin live: get parent category failed", zap.Uint32("parent_id", c.ParentID), zap.Error(err))
+			return nil, errcode.Wrap(errcode.DatabaseError, err)
+		}
+		if parent != nil {
+			parentName = parent.Name
+		}
+	}
+	item := toAdminLiveCategory(c, parentName)
 	return &item, nil
 }
 
@@ -140,6 +179,22 @@ func (s *liveService) DeleteCategory(ctx context.Context, id uint32) error {
 	}
 	if c == nil {
 		return errcode.LiveCategoryNotFound
+	}
+	children, err := s.repo.CountCategoryChildren(ctx, id)
+	if err != nil {
+		s.log.Error("admin live: count category children failed", zap.Uint32("id", id), zap.Error(err))
+		return errcode.Wrap(errcode.DatabaseError, err)
+	}
+	if children > 0 {
+		return errcode.LiveCategoryHasChildren
+	}
+	inUse, err := s.repo.CountRoomsUsingCategory(ctx, id)
+	if err != nil {
+		s.log.Error("admin live: count rooms using category failed", zap.Uint32("id", id), zap.Error(err))
+		return errcode.Wrap(errcode.DatabaseError, err)
+	}
+	if inUse > 0 {
+		return errcode.LiveCategoryInUse
 	}
 	if err := s.repo.SoftDeleteCategory(ctx, id); err != nil {
 		s.log.Error("admin live: delete category failed", zap.Uint32("id", id), zap.Error(err))
@@ -559,14 +614,21 @@ func stopLivingRoom(ctx context.Context, repo repository.LiveRepository, room *m
 	return nil
 }
 
-func toAdminLiveCategory(c *model.LiveCategories) admindto.LiveCategoryItem {
+func toAdminLiveCategoryRow(r *repository.LiveCategoryRow) admindto.LiveCategoryItem {
+	item := toAdminLiveCategory(&r.LiveCategories, r.ParentName)
+	return item
+}
+
+func toAdminLiveCategory(c *model.LiveCategories, parentName string) admindto.LiveCategoryItem {
 	return admindto.LiveCategoryItem{
-		ID:        c.ID,
-		Name:      c.Name,
-		Sort:      c.Sort,
-		Status:    c.Status,
-		CreatedAt: utils.FormatTimeStr(c.CreatedAt),
-		UpdatedAt: utils.FormatTimeStr(c.UpdatedAt),
+		ID:         c.ID,
+		ParentID:   c.ParentID,
+		ParentName: parentName,
+		Name:       c.Name,
+		Sort:       c.Sort,
+		Status:     c.Status,
+		CreatedAt:  utils.FormatTimeStr(c.CreatedAt),
+		UpdatedAt:  utils.FormatTimeStr(c.UpdatedAt),
 	}
 }
 
@@ -590,17 +652,19 @@ func toAdminLiveApply(a *repository.LiveApplyRow) admindto.LiveApplyItem {
 
 func toAdminLiveStreamer(r *repository.LiveStreamerRow) admindto.LiveStreamerItem {
 	return admindto.LiveStreamerItem{
-		UserID:       r.UserID,
-		UserStrID:    r.UserStrID,
-		Nickname:     r.Nickname,
-		Email:        r.Email,
-		Avatar:       r.Avatar,
-		StreamerAt:   utils.FormatTimePtrStr(r.StreamerAt),
-		RoomID:       r.RoomID,
-		RoomTitle:    r.RoomTitle,
-		RoomStatus:   r.RoomStatus,
-		CategoryID:   r.CategoryID,
-		CategoryName: r.CategoryName,
+		UserID:          r.UserID,
+		UserStrID:       r.UserStrID,
+		Nickname:        r.Nickname,
+		Email:           r.Email,
+		Avatar:          r.Avatar,
+		StreamerAt:      utils.FormatTimePtrStr(r.StreamerAt),
+		RoomID:          r.RoomID,
+		RoomTitle:       r.RoomTitle,
+		RoomStatus:      r.RoomStatus,
+		CategoryID:      r.CategoryID,
+		CategoryName:    r.CategoryName,
+		SubCategoryID:   r.SubCategoryID,
+		SubCategoryName: r.SubCategoryName,
 	}
 }
 
@@ -617,6 +681,8 @@ func toAdminLiveRoom(r *repository.LiveRoomRow) admindto.LiveRoomItem {
 		Avatar:           r.Avatar,
 		CategoryID:       r.CategoryID,
 		CategoryName:     r.CategoryName,
+		SubCategoryID:    r.SubCategoryID,
+		SubCategoryName:  r.SubCategoryName,
 		Title:            r.Title,
 		Cover:            r.Cover,
 		Notice:           r.Notice,
@@ -638,6 +704,8 @@ func toAdminLiveSession(s *repository.LiveSessionRow) admindto.LiveSessionItem {
 		Title:            s.Title,
 		CategoryID:       s.CategoryID,
 		CategoryName:     s.CategoryName,
+		SubCategoryID:    s.SubCategoryID,
+		SubCategoryName:  s.SubCategoryName,
 		StreamerNickname: s.StreamerNickname,
 		StreamerAvatar:   s.StreamerAvatar,
 		StartedAt:        utils.FormatTimeStr(s.StartedAt),

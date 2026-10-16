@@ -114,11 +114,51 @@ func (s *liveService) ListCategories(ctx context.Context) ([]clientdto.LiveCateg
 		s.log.Error("client live: list categories failed", zap.Error(err))
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
-	out := make([]clientdto.LiveCategoryItem, 0, len(items))
+	return buildLiveCategoryTree(items), nil
+}
+
+// buildLiveCategoryTree assembles a fixed two-level tree from enabled categories.
+// Children whose parent is missing or not enabled are discarded.
+func buildLiveCategoryTree(items []model.LiveCategories) []clientdto.LiveCategoryItem {
+	byID := make(map[uint32]model.LiveCategories, len(items))
 	for _, c := range items {
-		out = append(out, clientdto.LiveCategoryItem{ID: c.ID, Name: c.Name, Sort: c.Sort})
+		byID[c.ID] = c
 	}
-	return out, nil
+	childrenByParent := make(map[uint32][]clientdto.LiveCategoryItem)
+	for _, c := range items {
+		if c.ParentID == 0 {
+			continue
+		}
+		parent, ok := byID[c.ParentID]
+		// Fixed depth 2: only attach to an enabled L1. Deeper nodes and orphans are dropped.
+		if !ok || parent.ParentID != 0 {
+			continue
+		}
+		childrenByParent[c.ParentID] = append(childrenByParent[c.ParentID], clientdto.LiveCategoryItem{
+			ID:       c.ID,
+			ParentID: c.ParentID,
+			Name:     c.Name,
+			Sort:     c.Sort,
+		})
+	}
+	out := make([]clientdto.LiveCategoryItem, 0)
+	for _, c := range items {
+		if c.ParentID != 0 {
+			continue
+		}
+		children := childrenByParent[c.ID]
+		if children == nil {
+			children = []clientdto.LiveCategoryItem{}
+		}
+		out = append(out, clientdto.LiveCategoryItem{
+			ID:       c.ID,
+			ParentID: 0,
+			Name:     c.Name,
+			Sort:     c.Sort,
+			Children: children,
+		})
+	}
+	return out
 }
 
 func (s *liveService) ListLivingRooms(ctx context.Context, req *clientdto.LiveRoomListRequest) ([]clientdto.LiveRoomListItem, int, error) {
@@ -141,6 +181,8 @@ func (s *liveService) ListLivingRooms(ctx context.Context, req *clientdto.LiveRo
 			Cover:            r.Cover,
 			CategoryID:       r.CategoryID,
 			CategoryName:     r.CategoryName,
+			SubCategoryID:    r.SubCategoryID,
+			SubCategoryName:  r.SubCategoryName,
 			StreamerUserID:   r.UserID,
 			StreamerStrID:    r.UserStrID,
 			StreamerNickname: r.Nickname,
@@ -173,6 +215,8 @@ func (s *liveService) GetRoom(ctx context.Context, roomID uint32) (*clientdto.Li
 		Notice:           row.Notice,
 		CategoryID:       row.CategoryID,
 		CategoryName:     row.CategoryName,
+		SubCategoryID:    row.SubCategoryID,
+		SubCategoryName:  row.SubCategoryName,
 		Status:           row.Status,
 		StreamerUserID:   row.UserID,
 		StreamerStrID:    row.UserStrID,
@@ -220,15 +264,15 @@ func (s *liveService) UpdateMyRoom(ctx context.Context, userID uint32, req *clie
 	if req.Notice != nil {
 		room.Notice = strings.TrimSpace(*req.Notice)
 	}
-	if req.CategoryID != nil {
-		cat, err := s.repo.GetCategory(ctx, *req.CategoryID)
+	if req.CategoryID != nil || req.SubCategoryID != nil {
+		catID, subID, err := service.ResolveLiveCategoryOverride(
+			ctx, s.repo, req.CategoryID, req.SubCategoryID, room.CategoryID, room.SubCategoryID,
+		)
 		if err != nil {
-			return nil, errcode.Wrap(errcode.DatabaseError, err)
+			return nil, err
 		}
-		if cat == nil || cat.Status != constant.StatusEnabled {
-			return nil, errcode.LiveCategoryDisabled
-		}
-		room.CategoryID = *req.CategoryID
+		room.CategoryID = catID
+		room.SubCategoryID = subID
 	}
 	if err := s.repo.UpdateRoom(ctx, room); err != nil {
 		s.log.Error("client live: update my room failed", zap.Uint32("user_id", userID), zap.Error(err))
@@ -352,24 +396,25 @@ func (s *liveService) Start(ctx context.Context, userID uint32, req *clientdto.S
 		}, nil
 	}
 
+	var reqCat, reqSub *uint32
 	if req != nil {
 		if req.Title != nil {
 			room.Title = strings.TrimSpace(*req.Title)
 		}
-		if req.CategoryID != nil {
-			room.CategoryID = *req.CategoryID
-		}
+		reqCat = req.CategoryID
+		reqSub = req.SubCategoryID
 	}
-	if room.CategoryID == 0 {
-		return nil, errcode.WithMessage(errcode.ParamError, "请选择直播分类")
-	}
-	cat, err := s.repo.GetCategory(ctx, room.CategoryID)
+	catID, subID, err := service.ResolveLiveCategoryOverride(
+		ctx, s.repo, reqCat, reqSub, room.CategoryID, room.SubCategoryID,
+	)
 	if err != nil {
-		return nil, errcode.Wrap(errcode.DatabaseError, err)
+		return nil, err
 	}
-	if cat == nil || cat.Status != constant.StatusEnabled {
-		return nil, errcode.LiveCategoryDisabled
+	if err := service.ValidateLiveCategoryPair(ctx, s.repo, catID, subID); err != nil {
+		return nil, err
 	}
+	room.CategoryID = catID
+	room.SubCategoryID = subID
 	if strings.TrimSpace(room.Title) == "" {
 		return nil, errcode.WithMessage(errcode.ParamError, "请填写直播标题")
 	}
@@ -513,6 +558,16 @@ func (s *liveService) toMyRoom(ctx context.Context, room *model.LiveRooms) (*cli
 			catName = cat.Name
 		}
 	}
+	subCatName := ""
+	if room.SubCategoryID > 0 {
+		sub, err := s.repo.GetCategory(ctx, room.SubCategoryID)
+		if err != nil {
+			return nil, errcode.Wrap(errcode.DatabaseError, err)
+		}
+		if sub != nil {
+			subCatName = sub.Name
+		}
+	}
 	var sessionID uint32
 	if room.CurrentSessionID != nil {
 		sessionID = *room.CurrentSessionID
@@ -521,6 +576,8 @@ func (s *liveService) toMyRoom(ctx context.Context, room *model.LiveRooms) (*cli
 		ID:               room.ID,
 		CategoryID:       room.CategoryID,
 		CategoryName:     catName,
+		SubCategoryID:    room.SubCategoryID,
+		SubCategoryName:  subCatName,
 		Title:            room.Title,
 		Cover:            room.Cover,
 		Notice:           room.Notice,

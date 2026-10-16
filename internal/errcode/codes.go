@@ -112,6 +112,8 @@ var (
 	LiveCategoryDisabled     = &Code{4001113, "直播分类不可用", 400, nil}
 	LiveSessionNotFound      = &Code{4001114, "直播场次不存在", 404, nil}
 	LiveNotStreamer          = &Code{4001115, "非主播账号", 403, nil}
+	LiveCategoryHasChildren  = &Code{4001116, "直播分类下仍有子分类，无法删除", 409, nil}
+	LiveCategoryInUse        = &Code{4001117, "直播分类仍被直播间引用，无法删除", 409, nil}
 
 	// 支付 (500xxxx)
 	PaymentConfigInvalid    = &Code{5000001, "支付配置无效", 400, nil}
