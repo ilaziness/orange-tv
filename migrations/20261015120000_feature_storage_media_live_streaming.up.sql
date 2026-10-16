@@ -48,10 +48,7 @@ CREATE TABLE IF NOT EXISTS `media_assets` (
     `width` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '图片宽度（可选）',
     `height` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '图片高度（可选）',
     `created_at` DATETIME NOT NULL,
-    PRIMARY KEY (`id`),
-    KEY `idx_media_type_created` (`media_type`, `created_at`),
-    KEY `idx_owner` (`owner_kind`, `owner_id`),
-    KEY `idx_object_key` (`object_key`(191))
+    PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='媒体库资源';
 
 --bun:split
@@ -124,8 +121,7 @@ CREATE TABLE IF NOT EXISTS `live_rooms` (
     `updated_at` DATETIME NOT NULL,
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_live_rooms_user_id` (`user_id`),
-    UNIQUE KEY `uk_live_rooms_stream_key` (`stream_key`),
-    KEY `idx_live_rooms_status_category` (`status`, `category_id`)
+    UNIQUE KEY `uk_live_rooms_stream_key` (`stream_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户直播间';
 
 --bun:split
@@ -158,3 +154,71 @@ INSERT IGNORE INTO `system_settings` (`setting_key`, `setting_group`, `setting_v
 
 INSERT IGNORE INTO `system_settings` (`setting_key`, `setting_group`, `setting_value`, `setting_type`, `description`, `created_at`, `updated_at`) VALUES
 ('live_enabled', 'feature', '{"web":false,"desktop":false,"app":false,"tv":false}', 4, '用户直播开关（按端）', NOW(), NOW());
+
+--bun:split
+
+-- Drop secondary indexes that are unused, redundant, or not justified by expected volume.
+-- Unique keys and indexes on large selective lookups stay.
+
+ALTER TABLE `categories` DROP INDEX `idx_parent`;
+
+--bun:split
+
+ALTER TABLE `videos`
+    DROP INDEX `idx_collect_source`,
+    DROP INDEX `idx_search`,
+    DROP INDEX `idx_year_desc`;
+
+--bun:split
+
+ALTER TABLE `collect_source_categories` DROP INDEX `idx_category`;
+
+--bun:split
+
+ALTER TABLE `collect_logs` DROP INDEX `idx_created`;
+
+--bun:split
+
+ALTER TABLE `system_settings` DROP INDEX `idx_setting_group`;
+
+--bun:split
+
+ALTER TABLE `admins` DROP INDEX `idx_group`;
+
+--bun:split
+
+ALTER TABLE `admin_login_logs`
+    DROP INDEX `idx_admin_login_logs_user`,
+    DROP INDEX `idx_admin_login_logs_created`;
+
+--bun:split
+
+ALTER TABLE `system_logs` DROP INDEX `idx_module_created`;
+
+--bun:split
+
+ALTER TABLE `user_favorites`
+    DROP INDEX `idx_user_favorites_user_id`,
+    DROP INDEX `idx_user_favorites_video_id`;
+
+--bun:split
+
+ALTER TABLE `user_play_history` DROP INDEX `idx_user_play_history_user_id`;
+
+--bun:split
+
+ALTER TABLE `user_comment_votes` DROP INDEX `idx_comment_direction`;
+
+--bun:split
+
+ALTER TABLE `banners` DROP INDEX `idx_banners_status_sort`;
+
+--bun:split
+
+ALTER TABLE `advertisements`
+    DROP INDEX `idx_scene_status`,
+    DROP INDEX `idx_sort`;
+
+--bun:split
+
+ALTER TABLE `user_login_logs` DROP INDEX `idx_user_login_logs_created_at`;

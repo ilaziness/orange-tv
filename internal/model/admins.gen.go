@@ -16,7 +16,7 @@ type Admins struct {
 
 	ID uint32 `bun:"id,pk,autoincrement" json:"id"`
 	// 用户名
-	Username string `bun:"username,notnull" json:"username"`
+	Username string `bun:"username,notnull,unique" json:"username"`
 	// 昵称
 	Nickname string `bun:"nickname,notnull" json:"nickname"`
 	// 密码（加密存储）
