@@ -72,6 +72,7 @@ func setupTestRouter(t *testing.T) *gin.Engine {
 	handlers.LiveTVFeature = b.LiveTVFeature
 	handlers.LiveFeature = b.LiveFeature
 	handlers.OpenResource = b.OpenResource
+	handlers.OpenLive = b.OpenLive
 	handlers.SEO = b.SEO
 
 	engine := gin.New()

@@ -142,6 +142,8 @@ type LiveRepository interface {
 	ListRooms(ctx context.Context, f LiveRoomListFilter) ([]LiveRoomRow, int, error)
 	GetRoom(ctx context.Context, id uint32) (*model.LiveRooms, error)
 	GetRoomByUser(ctx context.Context, userID uint32) (*model.LiveRooms, error)
+	GetRoomByStreamKey(ctx context.Context, streamKey string) (*model.LiveRooms, error)
+	CountLivingRooms(ctx context.Context) (int, error)
 	GetRoomRow(ctx context.Context, id uint32) (*LiveRoomRow, error)
 	CreateRoom(ctx context.Context, room *model.LiveRooms) error
 	UpdateRoom(ctx context.Context, room *model.LiveRooms) error
@@ -579,6 +581,28 @@ func (r *liveRepo) GetRoom(ctx context.Context, id uint32) (*model.LiveRooms, er
 		return nil, fmt.Errorf("get live room: %w", err)
 	}
 	return room, nil
+}
+
+func (r *liveRepo) GetRoomByStreamKey(ctx context.Context, streamKey string) (*model.LiveRooms, error) {
+	room := new(model.LiveRooms)
+	err := r.db.NewSelect().Model(room).Where("stream_key = ?", streamKey).Limit(1).Scan(ctx)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("get live room by stream key: %w", err)
+	}
+	return room, nil
+}
+
+func (r *liveRepo) CountLivingRooms(ctx context.Context) (int, error) {
+	n, err := r.db.NewSelect().Model((*model.LiveRooms)(nil)).
+		Where("status = ?", constant.LiveRoomLiving).
+		Count(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("count living rooms: %w", err)
+	}
+	return n, nil
 }
 
 func (r *liveRepo) GetRoomByUser(ctx context.Context, userID uint32) (*model.LiveRooms, error) {

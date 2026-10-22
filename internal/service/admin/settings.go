@@ -28,18 +28,22 @@ type SettingsService interface {
 type settingsService struct {
 	shared   service.SettingsService
 	payments service.PaymentResolver
+	live     repository.LiveRepository
 	log      *zap.Logger
 }
 
 // NewSettingsService creates a SettingsService.
-func NewSettingsService(shared service.SettingsService, payments service.PaymentResolver, log *zap.Logger) SettingsService {
-	return &settingsService{shared: shared, payments: payments, log: log}
+func NewSettingsService(shared service.SettingsService, payments service.PaymentResolver, live repository.LiveRepository, log *zap.Logger) SettingsService {
+	return &settingsService{shared: shared, payments: payments, live: live, log: log}
 }
 
 func (s *settingsService) Get(ctx context.Context, group string) (any, error) {
 	m, err := s.shared.LoadMapByGroup(ctx, group)
 	if err != nil {
 		return nil, err
+	}
+	if group == constant.SettingGroupLive {
+		return s.liveSettingsView(ctx, m)
 	}
 	return s.mapToResponse(group, m), nil
 }
@@ -64,6 +68,9 @@ func (s *settingsService) Update(ctx context.Context, group string, data json.Ra
 	m, err := s.shared.LoadMapByGroup(ctx, group)
 	if err != nil {
 		return nil, err
+	}
+	if group == constant.SettingGroupLive {
+		return s.liveSettingsView(ctx, m)
 	}
 	return s.mapToResponse(group, m), nil
 }
@@ -104,7 +111,7 @@ func (s *settingsService) parseUpdateData(ctx context.Context, group string, dat
 	case constant.SettingGroupPayment:
 		return s.parsePaymentUpdate(ctx, data)
 	case constant.SettingGroupLive:
-		return s.parseLiveUpdate(data)
+		return s.parseLiveUpdate(ctx, data)
 	default:
 		return nil, errcode.WithMessage(errcode.ParamError, "无效的设置分组")
 	}
@@ -259,8 +266,6 @@ func (s *settingsService) mapToResponse(group string, m map[string]model.SystemS
 		return service.MapToStorageSettings(m)
 	case constant.SettingGroupPayment:
 		return service.MapToPaymentSettings(m)
-	case constant.SettingGroupLive:
-		return service.MapToLiveSettings(m)
 	default:
 		return nil
 	}
@@ -536,65 +541,6 @@ func keepBool(dst *bool, src *bool) {
 		return
 	}
 	*dst = *src
-}
-
-func (s *settingsService) parseLiveUpdate(data json.RawMessage) ([]repository.SettingUpsert, error) {
-	var req admindto.UpdateLiveSettings
-	if err := json.Unmarshal(data, &req); err != nil {
-		return nil, errcode.WithMessage(errcode.ParamError, "无效的设置数据")
-	}
-	if err := validator.Validate(&req); err != nil {
-		return nil, errcode.WithMessage(errcode.ParamError, err.Error())
-	}
-	if req.PushServer == nil && req.PlayHLSTemplate == nil && req.PlayFLVTemplate == nil {
-		return nil, nil
-	}
-
-	var upserts []repository.SettingUpsert
-	if req.PushServer != nil {
-		upserts = append(upserts, repository.SettingUpsert{
-			Key: constant.SettingLivePushServer, Group: constant.SettingGroupLive,
-			Value:       strings.TrimSpace(*req.PushServer),
-			SettingType: constant.SettingTypeString, Description: "OBS 推流服务器地址",
-		})
-	}
-	if req.PlayHLSTemplate != nil {
-		hls := strings.TrimSpace(*req.PlayHLSTemplate)
-		if err := validateLivePlayTemplate(hls); err != nil {
-			return nil, err
-		}
-		upserts = append(upserts, repository.SettingUpsert{
-			Key: constant.SettingLivePlayHLSTemplate, Group: constant.SettingGroupLive,
-			Value:       hls,
-			SettingType: constant.SettingTypeString, Description: "HLS 播放地址模板（含 {stream_key}）",
-		})
-	}
-	if req.PlayFLVTemplate != nil {
-		flv := strings.TrimSpace(*req.PlayFLVTemplate)
-		if err := validateLivePlayTemplate(flv); err != nil {
-			return nil, err
-		}
-		upserts = append(upserts, repository.SettingUpsert{
-			Key: constant.SettingLivePlayFLVTemplate, Group: constant.SettingGroupLive,
-			Value:       flv,
-			SettingType: constant.SettingTypeString, Description: "FLV 播放地址模板（含 {stream_key}，可空）",
-		})
-	}
-	return upserts, nil
-}
-
-func validateLivePlayTemplate(template string) error {
-	if template == "" {
-		return nil
-	}
-	if !strings.Contains(template, "{stream_key}") {
-		return errcode.WithMessage(errcode.ParamError, "播放模板须包含 {stream_key} 占位符")
-	}
-	lower := strings.ToLower(template)
-	if !strings.HasPrefix(lower, "http://") && !strings.HasPrefix(lower, "https://") {
-		return errcode.WithMessage(errcode.ParamError, "播放模板须为 http 或 https 地址")
-	}
-	return nil
 }
 
 func (s *settingsService) parsePaymentUpdate(ctx context.Context, data json.RawMessage) ([]repository.SettingUpsert, error) {

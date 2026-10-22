@@ -2359,6 +2359,9 @@ definitions:
         type: string
       play_hls_url:
         type: string
+      play_url_expires_at:
+        description: 播放地址过期时间（Unix 秒）。未签名时为 0
+        type: integer
       started_at:
         type: string
       status:
@@ -2513,6 +2516,9 @@ definitions:
         type: integer
       notice:
         type: string
+      push_expires_at:
+        description: 推流签名过期时间（Unix 秒）。未签名时为 0
+        type: integer
       push_server:
         type: string
       started_at:
@@ -2658,6 +2664,9 @@ definitions:
     type: object
   client.StartLiveResponse:
     properties:
+      push_expires_at:
+        description: 推流签名过期时间（Unix 秒）。未签名时为 0
+        type: integer
       push_server:
         type: string
       room_id:
@@ -3030,6 +3039,23 @@ definitions:
       url:
         description: 播放地址
         type: string
+    type: object
+  open.srsHookBody:
+    properties:
+      action:
+        maxLength: 32
+        type: string
+      app:
+        maxLength: 128
+        type: string
+      param:
+        maxLength: 2048
+        type: string
+      stream:
+        maxLength: 256
+        type: string
+    required:
+    - action
     type: object
   response.PageData:
     properties:
@@ -8156,6 +8182,67 @@ paths:
       summary: 开放分类列表
       tags:
       - 开放端｜开放资源
+  /api/open/v1/live/auth/play:
+    get:
+      description: 只校验 m3u8 与 flv。Nginx auth_request 必须把 $request_uri 放到 X-Original-URI。不要把
+        .ts 打到此接口。
+      parameters:
+      - description: 回调密钥
+        in: query
+        name: hook_secret
+        required: true
+        type: string
+      - description: 原始播放路径和查询串
+        in: header
+        name: X-Original-URI
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+        "403":
+          description: "1"
+          schema:
+            type: string
+      summary: Nginx 播放鉴权
+      tags:
+      - 开放端｜直播鉴权
+  /api/open/v1/live/hooks/srs:
+    post:
+      consumes:
+      - application/json
+      description: 校验 hook_secret、应用名、直播中的流名和自建 HMAC。on_unpublish 只记日志，不结束场次。成功正文为
+        0。
+      parameters:
+      - description: 回调密钥
+        in: query
+        name: hook_secret
+        required: true
+        type: string
+      - description: SRS http_hooks 正文
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/open.srsHookBody'
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: "0"
+          schema:
+            type: string
+        "403":
+          description: "1"
+          schema:
+            type: string
+      summary: SRS 推流/播放回调
+      tags:
+      - 开放端｜直播鉴权
   /api/open/v1/videos:
     get:
       consumes:

@@ -151,13 +151,11 @@ func MapToFeatureSettings(m map[string]model.SystemSettings, clientType string) 
 	}
 }
 
-// MapToLiveSettings maps live group rows to admin LiveSettings.
-func MapToLiveSettings(m map[string]model.SystemSettings) dto.LiveSettings {
-	return dto.LiveSettings{
-		PushServer:      StrVal(m, constant.SettingLivePushServer),
-		PlayHLSTemplate: StrVal(m, constant.SettingLivePlayHLSTemplate),
-		PlayFLVTemplate: StrVal(m, constant.SettingLivePlayFLVTemplate),
-	}
+// MapToLiveSettings maps live group rows to the masked admin DTO.
+// publicBase is the site origin without a trailing slash; empty yields path-only hook URLs.
+func MapToLiveSettings(m map[string]model.SystemSettings, publicBase string) dto.LiveSettings {
+	cfg := ParseLiveStreamConfig(m)
+	return maskLiveSettings(cfg, publicBase)
 }
 
 func mapToPublicSEOSettings(m map[string]model.SystemSettings) dto.PublicSEOSettings {

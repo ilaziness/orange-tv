@@ -64,6 +64,31 @@ export function Component() {
     }
   }, [roomId])
 
+  useEffect(() => {
+    const exp = room?.play_url_expires_at
+    if (!roomId || !exp) return
+    // Play TTL is at least 600s, so min(60s, TTL/2) is 60s before expiry.
+    let cancelled = false
+    let timer = 0
+    const schedule = (delayMs: number) => {
+      timer = window.setTimeout(() => {
+        void (async () => {
+          try {
+            const res = await clientApi.liveRoom(roomId)
+            if (!cancelled && res.data) setRoom(res.data)
+          } catch {
+            if (!cancelled) schedule(15_000)
+          }
+        })()
+      }, delayMs)
+    }
+    schedule(Math.max(exp * 1000 - Date.now() - 60_000, 0))
+    return () => {
+      cancelled = true
+      window.clearTimeout(timer)
+    }
+  }, [roomId, room?.play_url_expires_at])
+
   const playSrc = useMemo(() => {
     if (!room) return ''
     return room.play_hls_url || room.play_flv_url || ''

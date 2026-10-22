@@ -97,23 +97,24 @@ var (
 	MediaDeleteFailed    = &Code{4001007, "媒体删除失败", 502, nil}
 
 	// 用户直播 (40011xx) — 40010xx 已被媒体占用
-	LiveCategoryNotFound     = &Code{4001101, "直播分类不存在", 404, nil}
-	LiveCategoryNameExists   = &Code{4001102, "直播分类名称已存在", 409, nil}
-	LiveApplyNotFound        = &Code{4001103, "主播申请不存在", 404, nil}
-	LiveApplyPendingExists   = &Code{4001104, "已有待审核的主播申请", 409, nil}
-	LiveApplyAlreadyStreamer = &Code{4001105, "已是主播，无需申请", 409, nil}
-	LiveApplyInvalidStatus   = &Code{4001106, "申请状态不允许此操作", 400, nil}
-	LiveStreamerNotFound     = &Code{4001107, "主播不存在", 404, nil}
-	LiveRoomNotFound         = &Code{4001108, "直播间不存在", 404, nil}
-	LiveRoomBanned           = &Code{4001109, "直播间已被禁播", 403, nil}
-	LiveRoomLiving           = &Code{4001110, "直播进行中，无法执行此操作", 409, nil}
-	LiveRoomNotLiving        = &Code{4001111, "当前未在直播", 400, nil}
-	LiveConfigIncomplete     = &Code{4001112, "推流或播放配置未完成", 400, nil}
-	LiveCategoryDisabled     = &Code{4001113, "直播分类不可用", 400, nil}
-	LiveSessionNotFound      = &Code{4001114, "直播场次不存在", 404, nil}
-	LiveNotStreamer          = &Code{4001115, "非主播账号", 403, nil}
-	LiveCategoryHasChildren  = &Code{4001116, "直播分类下仍有子分类，无法删除", 409, nil}
-	LiveCategoryInUse        = &Code{4001117, "直播分类仍被直播间引用，无法删除", 409, nil}
+	LiveCategoryNotFound      = &Code{4001101, "直播分类不存在", 404, nil}
+	LiveCategoryNameExists    = &Code{4001102, "直播分类名称已存在", 409, nil}
+	LiveApplyNotFound         = &Code{4001103, "主播申请不存在", 404, nil}
+	LiveApplyPendingExists    = &Code{4001104, "已有待审核的主播申请", 409, nil}
+	LiveApplyAlreadyStreamer  = &Code{4001105, "已是主播，无需申请", 409, nil}
+	LiveApplyInvalidStatus    = &Code{4001106, "申请状态不允许此操作", 400, nil}
+	LiveStreamerNotFound      = &Code{4001107, "主播不存在", 404, nil}
+	LiveRoomNotFound          = &Code{4001108, "直播间不存在", 404, nil}
+	LiveRoomBanned            = &Code{4001109, "直播间已被禁播", 403, nil}
+	LiveRoomLiving            = &Code{4001110, "直播进行中，无法执行此操作", 409, nil}
+	LiveRoomNotLiving         = &Code{4001111, "当前未在直播", 400, nil}
+	LiveConfigIncomplete      = &Code{4001112, "推流或播放配置未完成", 400, nil}
+	LiveCategoryDisabled      = &Code{4001113, "直播分类不可用", 400, nil}
+	LiveSessionNotFound       = &Code{4001114, "直播场次不存在", 404, nil}
+	LiveNotStreamer           = &Code{4001115, "非主播账号", 403, nil}
+	LiveCategoryHasChildren   = &Code{4001116, "直播分类下仍有子分类，无法删除", 409, nil}
+	LiveCategoryInUse         = &Code{4001117, "直播分类仍被直播间引用，无法删除", 409, nil}
+	LiveMediaDisconnectFailed = &Code{4001118, "直播已结束，但媒体连接未断开，请到媒体服务器或云控制台手动断开", 502, nil}
 
 	// 支付 (500xxxx)
 	PaymentConfigInvalid    = &Code{5000001, "支付配置无效", 400, nil}

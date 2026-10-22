@@ -75,6 +75,22 @@ const (
 	LiveRoomBanned uint8 = 2 // 禁播
 )
 
+// Live providers (setting live_provider).
+const (
+	LiveProviderSelf   = "self"
+	LiveProviderAliyun = "aliyun"
+	LiveProviderQiniu  = "qiniu"
+)
+
+// Signed URL TTL bounds. Floor is 10 minutes so the watch page does not reload constantly.
+const (
+	LiveTTLMinSeconds       = 600
+	LiveTTLMaxSeconds       = 86400
+	LivePushTTLDefault      = 12 * 3600
+	LivePlayTTLDefault      = 2 * 3600
+	LiveAliyunRegionDefault = "cn-shanghai"
+)
+
 // Live session end reasons (live_sessions.end_reason).
 const (
 	LiveEndReasonHost   = "host"

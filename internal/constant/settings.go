@@ -36,9 +36,18 @@ const (
 	SettingFeatureRatingEnabled  = "rating_enabled"  // 视频评分开关
 
 	// User live streaming (admin-only group live) keys.
-	SettingLivePushServer      = "live_push_server"       // OBS 推流服务器
-	SettingLivePlayHLSTemplate = "live_play_hls_template" // HLS 播放模板
-	SettingLivePlayFLVTemplate = "live_play_flv_template" // FLV 播放模板
+	SettingLivePushServer      = "live_push_server"       // 自建 OBS 推流服务器
+	SettingLivePlayHLSTemplate = "live_play_hls_template" // 自建 HLS 播放模板
+	SettingLivePlayFLVTemplate = "live_play_flv_template" // 自建 FLV 播放模板
+	SettingLiveProvider        = "live_provider"          // self / aliyun / qiniu
+	SettingLiveAuthEnabled     = "live_auth_enabled"      // 仅自建：是否开启推流/播放鉴权
+	SettingLivePushTTLSeconds  = "live_push_ttl_seconds"  // 推流签名有效秒数
+	SettingLivePlayTTLSeconds  = "live_play_ttl_seconds"  // 播放签名有效秒数
+	SettingLiveSignSecret      = "live_sign_secret"       // 自建 HMAC 签名密钥
+	SettingLiveHookSecret      = "live_hook_secret"       // SRS 回调查询参数密钥
+	SettingLiveSRSAPIBase      = "live_srs_api_base"      // SRS HTTP API，如 http://127.0.0.1:1985
+	SettingLiveAliyun          = "live_aliyun"            // 阿里云直播 JSON
+	SettingLiveQiniu           = "live_qiniu"             // 七牛直播 JSON
 
 	// LiveTV settings keys.
 	SettingLiveTVSyncSourceURL = "livetv_sync_source_url" // 直播源同步地址
@@ -107,6 +116,15 @@ var GroupKeys = map[string][]string{
 		SettingLivePushServer,
 		SettingLivePlayHLSTemplate,
 		SettingLivePlayFLVTemplate,
+		SettingLiveProvider,
+		SettingLiveAuthEnabled,
+		SettingLivePushTTLSeconds,
+		SettingLivePlayTTLSeconds,
+		SettingLiveSignSecret,
+		SettingLiveHookSecret,
+		SettingLiveSRSAPIBase,
+		SettingLiveAliyun,
+		SettingLiveQiniu,
 	},
 	SettingGroupLiveTV: {
 		SettingLiveTVSyncSourceURL,
@@ -153,6 +171,15 @@ var KeyToGroup = map[string]string{
 	SettingLivePushServer:            SettingGroupLive,
 	SettingLivePlayHLSTemplate:       SettingGroupLive,
 	SettingLivePlayFLVTemplate:       SettingGroupLive,
+	SettingLiveProvider:              SettingGroupLive,
+	SettingLiveAuthEnabled:           SettingGroupLive,
+	SettingLivePushTTLSeconds:        SettingGroupLive,
+	SettingLivePlayTTLSeconds:        SettingGroupLive,
+	SettingLiveSignSecret:            SettingGroupLive,
+	SettingLiveHookSecret:            SettingGroupLive,
+	SettingLiveSRSAPIBase:            SettingGroupLive,
+	SettingLiveAliyun:                SettingGroupLive,
+	SettingLiveQiniu:                 SettingGroupLive,
 	SettingLiveTVSyncSourceURL:       SettingGroupLiveTV,
 	SettingSEOPublicBaseURL:          SettingGroupSEO,
 	SettingSEODefaultOGImage:         SettingGroupSEO,

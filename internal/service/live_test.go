@@ -50,25 +50,6 @@ func TestParseLiveStreamConfig(t *testing.T) {
 	assert.Equal(t, "", flv)
 }
 
-func TestResolvePublicPlayURLs_OnlyWhenLiving(t *testing.T) {
-	t.Parallel()
-	cfg := LiveStreamConfig{
-		PlayHLSTemplate: "https://x/{stream_key}.m3u8",
-		PlayFLVTemplate: "https://x/{stream_key}.flv",
-	}
-	hls, flv := cfg.ResolvePublicPlayURLs("abc", constant.LiveRoomLiving)
-	assert.Equal(t, "https://x/abc.m3u8", hls)
-	assert.Equal(t, "https://x/abc.flv", flv)
-
-	hls, flv = cfg.ResolvePublicPlayURLs("abc", constant.LiveRoomIdle)
-	assert.Equal(t, "", hls)
-	assert.Equal(t, "", flv)
-
-	hls, flv = cfg.ResolvePublicPlayURLs("abc", constant.LiveRoomBanned)
-	assert.Equal(t, "", hls)
-	assert.Equal(t, "", flv)
-}
-
 func TestResolveStreamerApplyStatus(t *testing.T) {
 	t.Parallel()
 	assert.Equal(t, constant.StreamerApplyStatusApproved, ResolveStreamerApplyStatus(1, nil))

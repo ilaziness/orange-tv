@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"errors"
+	"net/http"
 	"strings"
 	"time"
 
@@ -42,12 +43,13 @@ type liveService struct {
 	repo     repository.LiveRepository
 	settings service.SettingsService
 	locker   pkglock.Locker
+	http     *http.Client
 	log      *zap.Logger
 }
 
 // NewLiveService creates a client LiveService.
-func NewLiveService(repo repository.LiveRepository, settings service.SettingsService, locker pkglock.Locker, log *zap.Logger) LiveService {
-	return &liveService{repo: repo, settings: settings, locker: locker, log: log}
+func NewLiveService(repo repository.LiveRepository, settings service.SettingsService, locker pkglock.Locker, httpClient *http.Client, log *zap.Logger) LiveService {
+	return &liveService{repo: repo, settings: settings, locker: locker, http: httpClient, log: log}
 }
 
 func (s *liveService) CreateApply(ctx context.Context, userID uint32, req *clientdto.CreateLiveApplyRequest) (*clientdto.LiveApplyItem, error) {
@@ -207,7 +209,17 @@ func (s *liveService) GetRoom(ctx context.Context, roomID uint32) (*clientdto.Li
 	if err != nil {
 		return nil, err
 	}
-	hls, flv := cfg.ResolvePublicPlayURLs(row.StreamKey, row.Status)
+	var hls, flv string
+	var playExp int64
+	if row.Status == constant.LiveRoomLiving {
+		urls, err := service.IssueLiveMedia(cfg, row.StreamKey, time.Now())
+		if err != nil {
+			s.log.Error("client live: sign play url failed", zap.Uint32("room_id", roomID), zap.Error(err))
+			return nil, errcode.Wrap(errcode.InternalError, err)
+		}
+		hls, flv = urls.PlayHLS, urls.PlayFLV
+		playExp = unixSeconds(urls.PlayExpiresAt)
+	}
 	return &clientdto.LiveRoomDetail{
 		ID:               row.ID,
 		Title:            row.Title,
@@ -224,6 +236,7 @@ func (s *liveService) GetRoom(ctx context.Context, roomID uint32) (*clientdto.Li
 		StreamerAvatar:   row.Avatar,
 		PlayHLSURL:       hls,
 		PlayFLVURL:       flv,
+		PlayURLExpiresAt: playExp,
 		StartedAt:        utils.FormatTimePtrStr(row.StartedAt),
 	}, nil
 }
@@ -380,19 +393,24 @@ func (s *liveService) Start(ctx context.Context, userID uint32, req *clientdto.S
 	if room.Status == constant.LiveRoomBanned {
 		return nil, errcode.LiveRoomBanned
 	}
-	// Idempotent: already living → return push info.
+	// Idempotent: already living → return a freshly signed push key.
 	if room.Status == constant.LiveRoomLiving {
 		var sessionID uint32
 		if room.CurrentSessionID != nil {
 			sessionID = *room.CurrentSessionID
 		}
+		urls, mediaErr := service.IssueLiveMedia(cfg, room.StreamKey, time.Now())
+		if mediaErr != nil {
+			return nil, errcode.Wrap(errcode.InternalError, mediaErr)
+		}
 		return &clientdto.StartLiveResponse{
-			RoomID:     room.ID,
-			SessionID:  sessionID,
-			Status:     room.Status,
-			PushServer: cfg.PushServer,
-			StreamKey:  room.StreamKey,
-			StartedAt:  utils.FormatTimePtrStr(room.StartedAt),
+			RoomID:        room.ID,
+			SessionID:     sessionID,
+			Status:        room.Status,
+			PushServer:    urls.PushServer,
+			StreamKey:     urls.StreamKey,
+			PushExpiresAt: unixSeconds(urls.PushExpiresAt),
+			StartedAt:     utils.FormatTimePtrStr(room.StartedAt),
 		}, nil
 	}
 
@@ -410,8 +428,8 @@ func (s *liveService) Start(ctx context.Context, userID uint32, req *clientdto.S
 	if err != nil {
 		return nil, err
 	}
-	if err := service.ValidateLiveCategoryPair(ctx, s.repo, catID, subID); err != nil {
-		return nil, err
+	if pairErr := service.ValidateLiveCategoryPair(ctx, s.repo, catID, subID); pairErr != nil {
+		return nil, pairErr
 	}
 	room.CategoryID = catID
 	room.SubCategoryID = subID
@@ -421,26 +439,41 @@ func (s *liveService) Start(ctx context.Context, userID uint32, req *clientdto.S
 
 	now := time.Now()
 	var sessionID uint32
-	err = s.repo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
-		txRepo := repository.NewLiveRepoFromIDB(tx)
-		if err := txRepo.UpdateRoom(ctx, room); err != nil {
-			return err
-		}
-		session := service.NewLiveSessionSnapshot(room, user, now)
-		if err := txRepo.CreateSession(ctx, session); err != nil {
-			return err
-		}
-		sessionID = session.ID
-		ok, err := txRepo.ConditionalStartRoom(ctx, room.ID, session.ID, constant.LiveRoomIdle, now)
-		if err != nil {
-			return err
-		}
-		if !ok {
-			return errcode.LiveRoomLiving
-		}
-		return nil
+	err = service.ResumeForStart(ctx, s.http, cfg, room.StreamKey, func() error {
+		return s.repo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
+			txRepo := repository.NewLiveRepoFromIDB(tx)
+			if updateErr := txRepo.UpdateRoom(ctx, room); updateErr != nil {
+				return updateErr
+			}
+			session := service.NewLiveSessionSnapshot(room, user, now)
+			if createErr := txRepo.CreateSession(ctx, session); createErr != nil {
+				return createErr
+			}
+			sessionID = session.ID
+			ok, startErr := txRepo.ConditionalStartRoom(ctx, room.ID, session.ID, constant.LiveRoomIdle, now)
+			if startErr != nil {
+				return startErr
+			}
+			if !ok {
+				return errcode.LiveRoomLiving
+			}
+			return nil
+		})
 	})
 	if err != nil {
+		var reforbid *service.LiveReForbidError
+		if errors.As(err, &reforbid) {
+			s.log.Error("client live: re-forbid after failed start",
+				zap.Uint32("room_id", room.ID),
+				zap.String("provider", cfg.ProviderName()),
+				zap.NamedError("start_err", reforbid.Mark),
+				zap.Error(reforbid.Kick),
+			)
+		}
+		if errors.Is(err, service.ErrLiveResumeFailed) {
+			s.log.Error("client live: resume publish failed", zap.Uint32("room_id", room.ID), zap.String("provider", cfg.ProviderName()), zap.Error(err))
+			return nil, errcode.WithMessage(errcode.ExternalServiceError, "恢复推流失败，未开播")
+		}
 		if code, ok := errcode.As(err); ok {
 			return nil, code
 		}
@@ -448,13 +481,18 @@ func (s *liveService) Start(ctx context.Context, userID uint32, req *clientdto.S
 		return nil, errcode.Wrap(errcode.DatabaseError, err)
 	}
 
+	urls, err := service.IssueLiveMedia(cfg, room.StreamKey, now)
+	if err != nil {
+		return nil, errcode.Wrap(errcode.InternalError, err)
+	}
 	return &clientdto.StartLiveResponse{
-		RoomID:     room.ID,
-		SessionID:  sessionID,
-		Status:     constant.LiveRoomLiving,
-		PushServer: cfg.PushServer,
-		StreamKey:  room.StreamKey,
-		StartedAt:  utils.FormatTimeStr(now),
+		RoomID:        room.ID,
+		SessionID:     sessionID,
+		Status:        constant.LiveRoomLiving,
+		PushServer:    urls.PushServer,
+		StreamKey:     urls.StreamKey,
+		PushExpiresAt: unixSeconds(urls.PushExpiresAt),
+		StartedAt:     utils.FormatTimeStr(now),
 	}, nil
 }
 
@@ -497,13 +535,13 @@ func (s *liveService) Stop(ctx context.Context, userID uint32) error {
 	err = s.repo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
 		txRepo := repository.NewLiveRepoFromIDB(tx)
 		if room.CurrentSessionID != nil && *room.CurrentSessionID > 0 {
-			if _, err := txRepo.EndSession(ctx, *room.CurrentSessionID, now, constant.LiveEndReasonHost); err != nil {
-				return err
+			if _, endErr := txRepo.EndSession(ctx, *room.CurrentSessionID, now, constant.LiveEndReasonHost); endErr != nil {
+				return endErr
 			}
 		}
-		ok, err := txRepo.ConditionalStopRoom(ctx, room.ID, constant.LiveRoomIdle, now)
-		if err != nil {
-			return err
+		ok, stopErr := txRepo.ConditionalStopRoom(ctx, room.ID, constant.LiveRoomIdle, now)
+		if stopErr != nil {
+			return stopErr
 		}
 		if !ok {
 			return errcode.LiveRoomNotLiving
@@ -517,7 +555,7 @@ func (s *liveService) Stop(ctx context.Context, userID uint32) error {
 		s.log.Error("client live: stop failed", zap.Uint32("room_id", room.ID), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
 	}
-	return nil
+	return s.disconnectPublisher(ctx, room.StreamKey)
 }
 
 func (s *liveService) requireStreamer(ctx context.Context, userID uint32) error {
@@ -550,9 +588,9 @@ func (s *liveService) toMyRoom(ctx context.Context, room *model.LiveRooms) (*cli
 	}
 	catName := ""
 	if room.CategoryID > 0 {
-		cat, err := s.repo.GetCategory(ctx, room.CategoryID)
-		if err != nil {
-			return nil, errcode.Wrap(errcode.DatabaseError, err)
+		cat, catErr := s.repo.GetCategory(ctx, room.CategoryID)
+		if catErr != nil {
+			return nil, errcode.Wrap(errcode.DatabaseError, catErr)
 		}
 		if cat != nil {
 			catName = cat.Name
@@ -560,9 +598,9 @@ func (s *liveService) toMyRoom(ctx context.Context, room *model.LiveRooms) (*cli
 	}
 	subCatName := ""
 	if room.SubCategoryID > 0 {
-		sub, err := s.repo.GetCategory(ctx, room.SubCategoryID)
-		if err != nil {
-			return nil, errcode.Wrap(errcode.DatabaseError, err)
+		sub, subErr := s.repo.GetCategory(ctx, room.SubCategoryID)
+		if subErr != nil {
+			return nil, errcode.Wrap(errcode.DatabaseError, subErr)
 		}
 		if sub != nil {
 			subCatName = sub.Name
@@ -571,6 +609,24 @@ func (s *liveService) toMyRoom(ctx context.Context, room *model.LiveRooms) (*cli
 	var sessionID uint32
 	if room.CurrentSessionID != nil {
 		sessionID = *room.CurrentSessionID
+	}
+	// Push credentials are issued only while living. Cloud URL auth and self HMAC
+	// do not check room status by themselves; idle rooms must not get a usable key.
+	pushServer := service.LivePushServer(cfg)
+	streamKey := ""
+	var pushExp int64
+	if room.Status == constant.LiveRoomLiving {
+		urls, issueErr := service.IssueLiveMedia(cfg, room.StreamKey, time.Now())
+		if issueErr != nil {
+			return nil, errcode.Wrap(errcode.InternalError, issueErr)
+		}
+		if urls.StreamKey != "" {
+			streamKey = urls.StreamKey
+			if urls.PushServer != "" {
+				pushServer = urls.PushServer
+			}
+			pushExp = unixSeconds(urls.PushExpiresAt)
+		}
 	}
 	return &clientdto.MyLiveRoom{
 		ID:               room.ID,
@@ -582,12 +638,33 @@ func (s *liveService) toMyRoom(ctx context.Context, room *model.LiveRooms) (*cli
 		Cover:            room.Cover,
 		Notice:           room.Notice,
 		Status:           room.Status,
-		StreamKey:        room.StreamKey,
-		PushServer:       cfg.PushServer,
+		StreamKey:        streamKey,
+		PushServer:       pushServer,
+		PushExpiresAt:    pushExp,
 		CurrentSessionID: sessionID,
 		StartedAt:        utils.FormatTimePtrStr(room.StartedAt),
 		EndedAt:          utils.FormatTimePtrStr(room.EndedAt),
 	}, nil
+}
+
+func (s *liveService) disconnectPublisher(ctx context.Context, streamName string) error {
+	cfg, err := s.loadStreamConfig(ctx)
+	if err != nil {
+		s.log.Error("client live: load config for kick failed", zap.Error(err))
+		return errcode.LiveMediaDisconnectFailed
+	}
+	if err := service.KickLiveStream(ctx, s.http, cfg, streamName); err != nil {
+		s.log.Error("client live: kick publisher failed", zap.String("provider", cfg.ProviderName()), zap.String("stream", streamName), zap.Error(err))
+		return errcode.LiveMediaDisconnectFailed
+	}
+	return nil
+}
+
+func unixSeconds(t time.Time) int64 {
+	if t.IsZero() {
+		return 0
+	}
+	return t.Unix()
 }
 
 func toClientLiveApply(a *model.StreamerApplies) clientdto.LiveApplyItem {

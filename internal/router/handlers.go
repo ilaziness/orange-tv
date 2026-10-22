@@ -53,6 +53,8 @@ type Handlers struct {
 
 	// Open resource station
 	OpenResource *openhandler.ResourceHandler
+	// OpenLive serves SRS callbacks and Nginx play auth (no user JWT, no live feature gate).
+	OpenLive *openhandler.LiveHandler
 
 	// SEO well-known documents (robots/sitemap/llms)
 	SEO *seohandler.Handler
@@ -124,6 +126,7 @@ func (h *Handlers) validateForRoutes() error {
 		{"client livetv feature middleware", h.LiveTVFeature != nil},
 		{"client live feature middleware", h.LiveFeature != nil},
 		{"open resource handler", h.OpenResource != nil},
+		{"open live hook handler", h.OpenLive != nil},
 		{"seo handler", h.SEO != nil},
 	}
 	for _, item := range required {

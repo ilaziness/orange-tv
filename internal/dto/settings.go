@@ -58,14 +58,85 @@ type FeatureSettings struct {
 	RatingEnabled bool `json:"rating_enabled"`
 }
 
+// LiveAliyunSettings is the masked Aliyun live config returned to admin.
+type LiveAliyunSettings struct {
+	// 推流域名（不含协议和路径）
+	PushDomain string `json:"push_domain"`
+	// 播放域名（不含协议和路径）
+	PlayDomain string `json:"play_domain"`
+	// AppName
+	AppName string `json:"app_name"`
+	// 地域，默认 cn-shanghai
+	Region string `json:"region"`
+	// 推流鉴权 Key；GET 永远为空
+	PushAuthKey string `json:"push_auth_key"`
+	// 是否已配置推流鉴权 Key
+	PushAuthKeyConfigured bool `json:"push_auth_key_configured"`
+	// 播放鉴权 Key；GET 永远为空
+	PlayAuthKey string `json:"play_auth_key"`
+	// 是否已配置播放鉴权 Key
+	PlayAuthKeyConfigured bool `json:"play_auth_key_configured"`
+	// AccessKeyId；GET 永远为空
+	AccessKeyID string `json:"access_key_id"`
+	// 是否已配置 AccessKeyId
+	AccessKeyIDConfigured bool `json:"access_key_id_configured"`
+	// AccessKeySecret；GET 永远为空
+	AccessKeySecret string `json:"access_key_secret"`
+	// 是否已配置 AccessKeySecret
+	AccessKeySecretConfigured bool `json:"access_key_secret_configured"`
+}
+
+// LiveQiniuSettings is the masked Qiniu live config returned to admin.
+type LiveQiniuSettings struct {
+	// 直播空间 Hub
+	Hub string `json:"hub"`
+	// 推流域名（不含协议和路径）
+	PushDomain string `json:"push_domain"`
+	// 播放域名（不含协议和路径）
+	PlayDomain string `json:"play_domain"`
+	// AccessKey；GET 永远为空
+	AccessKey string `json:"access_key"`
+	// 是否已配置 AccessKey
+	AccessConfigured bool `json:"access_configured"`
+	// SecretKey；GET 永远为空
+	SecretKey string `json:"secret_key"`
+	// 是否已配置 SecretKey
+	SecretConfigured bool `json:"secret_configured"`
+}
+
 // LiveSettings is the admin live (user streaming) group response.
+// Self push/play templates stay on the original three fields. Secrets are never returned.
 type LiveSettings struct {
-	// OBS 推流服务器地址
+	// 厂商：self / aliyun / qiniu
+	Provider string `json:"provider"`
+	// 仅自建：是否开启鉴权
+	AuthEnabled bool `json:"auth_enabled"`
+	// 推流签名有效秒数
+	PushTTLSeconds int `json:"push_ttl_seconds"`
+	// 播放签名有效秒数
+	PlayTTLSeconds int `json:"play_ttl_seconds"`
+	// 是否已配置自建签名密钥（密钥本身不返回）
+	SignSecretConfigured bool `json:"sign_secret_configured"`
+	// 提交用；GET 永远为空，空字符串表示不修改
+	SignSecret string `json:"sign_secret"`
+	// 提交用；GET 永远为空，空字符串表示不修改
+	HookSecret string `json:"hook_secret"`
+	// SRS HTTP API 根地址
+	SRSAPIBase string `json:"srs_api_base"`
+	// 拼好的 SRS 回调 URL（含 hook_secret）。未配置回调密钥时为空
+	SRSHookURL string `json:"srs_hook_url"`
+	// 拼好的 Nginx 播放鉴权 URL（含 hook_secret）
+	PlayAuthURL string `json:"play_auth_url"`
+	// 自建 OBS 推流服务器地址
 	PushServer string `json:"push_server"`
-	// HLS 播放地址模板（含 {stream_key}）
+	// 自建 HLS 播放地址模板（含 {stream_key}）
 	PlayHLSTemplate string `json:"play_hls_template"`
-	// FLV 播放地址模板（含 {stream_key}，可空）
+	// 自建 FLV 播放地址模板（含 {stream_key}，可空）
 	PlayFLVTemplate string `json:"play_flv_template"`
+	// 阿里云
+	Aliyun LiveAliyunSettings `json:"aliyun"`
+	// 七牛
+	Qiniu LiveQiniuSettings `json:"qiniu"`
 }
 
 // SEOSettings holds admin SEO / social-sharing configuration.

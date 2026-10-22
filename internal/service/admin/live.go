@@ -3,6 +3,7 @@ package admin
 import (
 	"context"
 	"errors"
+	"net/http"
 	"strings"
 	"time"
 
@@ -45,14 +46,16 @@ type LiveService interface {
 }
 
 type liveService struct {
-	repo   repository.LiveRepository
-	locker pkglock.Locker
-	log    *zap.Logger
+	repo     repository.LiveRepository
+	settings service.SettingsService
+	locker   pkglock.Locker
+	http     *http.Client
+	log      *zap.Logger
 }
 
 // NewLiveService creates an admin LiveService.
-func NewLiveService(repo repository.LiveRepository, locker pkglock.Locker, log *zap.Logger) LiveService {
-	return &liveService{repo: repo, locker: locker, log: log}
+func NewLiveService(repo repository.LiveRepository, settings service.SettingsService, locker pkglock.Locker, httpClient *http.Client, log *zap.Logger) LiveService {
+	return &liveService{repo: repo, settings: settings, locker: locker, http: httpClient, log: log}
 }
 
 // ===== Categories =====
@@ -255,9 +258,9 @@ func (s *liveService) ApproveApply(ctx context.Context, id, adminID uint32, req 
 
 	err = s.repo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
 		txRepo := repository.NewLiveRepoFromIDB(tx)
-		ok, err := txRepo.ApproveApply(ctx, id, adminID, remark, now)
-		if err != nil {
-			return err
+		ok, approveErr := txRepo.ApproveApply(ctx, id, adminID, remark, now)
+		if approveErr != nil {
+			return approveErr
 		}
 		if !ok {
 			return errcode.LiveApplyInvalidStatus
@@ -361,14 +364,14 @@ func (s *liveService) GrantStreamer(ctx context.Context, userID, adminID uint32)
 	now := time.Now()
 	err = s.repo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
 		txRepo := repository.NewLiveRepoFromIDB(tx)
-		latest, err := txRepo.GetLatestApplyByUser(ctx, userID)
-		if err != nil {
-			return err
+		latest, latestErr := txRepo.GetLatestApplyByUser(ctx, userID)
+		if latestErr != nil {
+			return latestErr
 		}
 		if latest != nil && latest.Status == constant.StreamerApplyPending {
-			ok, err := txRepo.ApproveApply(ctx, latest.ID, adminID, "管理员直接设为主播", now)
-			if err != nil {
-				return err
+			ok, approveErr := txRepo.ApproveApply(ctx, latest.ID, adminID, "管理员直接设为主播", now)
+			if approveErr != nil {
+				return approveErr
 			}
 			if !ok {
 				return errcode.LiveApplyInvalidStatus
@@ -427,13 +430,13 @@ func (s *liveService) RevokeStreamer(ctx context.Context, userID uint32) error {
 	}
 
 	if room != nil {
-		lock, err := s.locker.Lock(ctx, internallock.LiveRoomKey(room.ID), pkglock.WithTTL(liveWriteLockTTL))
-		if errors.Is(err, pkglock.ErrLockNotHeld) {
+		lock, lockErr := s.locker.Lock(ctx, internallock.LiveRoomKey(room.ID), pkglock.WithTTL(liveWriteLockTTL))
+		if errors.Is(lockErr, pkglock.ErrLockNotHeld) {
 			return errcode.TooManyRequests
 		}
-		if err != nil {
-			s.log.Error("admin live: acquire room lock failed", zap.Uint32("room_id", room.ID), zap.Error(err))
-			return errcode.Wrap(errcode.TooManyRequests, err)
+		if lockErr != nil {
+			s.log.Error("admin live: acquire room lock failed", zap.Uint32("room_id", room.ID), zap.Error(lockErr))
+			return errcode.Wrap(errcode.TooManyRequests, lockErr)
 		}
 		defer func() { _ = lock.Release(ctx) }()
 
@@ -444,16 +447,21 @@ func (s *liveService) RevokeStreamer(ctx context.Context, userID uint32) error {
 		}
 	}
 
+	wasLiving := room != nil && room.Status == constant.LiveRoomLiving
+	var streamName string
+	if wasLiving {
+		streamName = room.StreamKey
+	}
 	err = s.repo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
 		txRepo := repository.NewLiveRepoFromIDB(tx)
-		if room != nil && room.Status == constant.LiveRoomLiving {
-			if err := stopLivingRoom(ctx, txRepo, room, constant.LiveEndReasonRevoke, false); err != nil {
-				return err
+		if wasLiving {
+			if stopErr := stopLivingRoom(ctx, txRepo, room, constant.LiveEndReasonRevoke, false); stopErr != nil {
+				return stopErr
 			}
 		}
-		ok, err := txRepo.RevokeStreamer(ctx, userID)
-		if err != nil {
-			return err
+		ok, revokeErr := txRepo.RevokeStreamer(ctx, userID)
+		if revokeErr != nil {
+			return revokeErr
 		}
 		if !ok {
 			return errcode.LiveStreamerNotFound
@@ -466,6 +474,9 @@ func (s *liveService) RevokeStreamer(ctx context.Context, userID uint32) error {
 		}
 		s.log.Error("admin live: revoke streamer failed", zap.Uint32("user_id", userID), zap.Error(err))
 		return errcode.Wrap(errcode.DatabaseError, err)
+	}
+	if wasLiving {
+		return s.disconnectPublisher(ctx, streamName)
 	}
 	return nil
 }
@@ -497,9 +508,13 @@ func (s *liveService) ForceStopRoom(ctx context.Context, roomID uint32) error {
 		if room.Status != constant.LiveRoomLiving {
 			return errcode.LiveRoomNotLiving
 		}
-		return s.repo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
+		streamName := room.StreamKey
+		if err := s.repo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
 			return stopLivingRoom(ctx, repository.NewLiveRepoFromIDB(tx), room, constant.LiveEndReasonAdmin, false)
-		})
+		}); err != nil {
+			return err
+		}
+		return s.disconnectPublisher(ctx, streamName)
 	})
 }
 
@@ -508,16 +523,24 @@ func (s *liveService) BanRoom(ctx context.Context, roomID uint32) error {
 		if room.Status == constant.LiveRoomBanned {
 			return nil
 		}
-		return s.repo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
+		wasLiving := room.Status == constant.LiveRoomLiving
+		streamName := room.StreamKey
+		if err := s.repo.RunInTx(ctx, func(ctx context.Context, tx bun.Tx) error {
 			txRepo := repository.NewLiveRepoFromIDB(tx)
-			if room.Status == constant.LiveRoomLiving {
+			if wasLiving {
 				if err := stopLivingRoom(ctx, txRepo, room, constant.LiveEndReasonBanned, true); err != nil {
 					return err
 				}
 				return nil
 			}
 			return txRepo.SetRoomBanned(ctx, room.ID)
-		})
+		}); err != nil {
+			return err
+		}
+		if wasLiving {
+			return s.disconnectPublisher(ctx, streamName)
+		}
+		return nil
 	})
 }
 
@@ -593,6 +616,20 @@ func (s *liveService) ListSessions(ctx context.Context, req *admindto.LiveSessio
 	return out, total, nil
 }
 
+func (s *liveService) disconnectPublisher(ctx context.Context, streamName string) error {
+	m, err := s.settings.LoadMapByGroup(ctx, constant.SettingGroupLive)
+	if err != nil {
+		s.log.Error("admin live: load config for kick failed", zap.Error(err))
+		return errcode.LiveMediaDisconnectFailed
+	}
+	cfg := service.ParseLiveStreamConfig(m)
+	if err := service.KickLiveStream(ctx, s.http, cfg, streamName); err != nil {
+		s.log.Error("admin live: kick publisher failed", zap.String("provider", cfg.ProviderName()), zap.String("stream", streamName), zap.Error(err))
+		return errcode.LiveMediaDisconnectFailed
+	}
+	return nil
+}
+
 func stopLivingRoom(ctx context.Context, repo repository.LiveRepository, room *model.LiveRooms, endReason string, ban bool) error {
 	now := time.Now()
 	toStatus := constant.LiveRoomIdle
@@ -615,8 +652,7 @@ func stopLivingRoom(ctx context.Context, repo repository.LiveRepository, room *m
 }
 
 func toAdminLiveCategoryRow(r *repository.LiveCategoryRow) admindto.LiveCategoryItem {
-	item := toAdminLiveCategory(&r.LiveCategories, r.ParentName)
-	return item
+	return toAdminLiveCategory(&r.LiveCategories, r.ParentName)
 }
 
 func toAdminLiveCategory(c *model.LiveCategories, parentName string) admindto.LiveCategoryItem {

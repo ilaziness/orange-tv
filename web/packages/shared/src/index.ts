@@ -67,6 +67,13 @@ export function getApiOrigin(): string {
   return buildTimeApiOrigin
 }
 
+/** Business ended but the publisher is still connected. UI should refresh as stopped. */
+export const LiveMediaDisconnectFailedCode = 4001118
+
+export function isLiveMediaDisconnectError(err: unknown): boolean {
+  return err instanceof ApiError && err.code === LiveMediaDisconnectFailedCode
+}
+
 export class ApiError extends Error {
   code: number
   httpStatus: number
@@ -531,11 +538,54 @@ export type FeatureMatrix = {
   rating_enabled: PlatformFlags
 }
 
-/** Admin settings group=live (push/play templates). Never expose to client app. */
+export type LiveProvider = 'self' | 'aliyun' | 'qiniu'
+
+/** Aliyun live config. Secret fields are empty on GET; empty string on save means unchanged. */
+export type LiveAliyunSettings = {
+  push_domain: string
+  play_domain: string
+  app_name: string
+  region: string
+  push_auth_key: string
+  push_auth_key_configured: boolean
+  play_auth_key: string
+  play_auth_key_configured: boolean
+  access_key_id: string
+  access_key_id_configured: boolean
+  access_key_secret: string
+  access_key_secret_configured: boolean
+}
+
+/** Qiniu live config. Secret fields are empty on GET; empty string on save means unchanged. */
+export type LiveQiniuSettings = {
+  hub: string
+  push_domain: string
+  play_domain: string
+  access_key: string
+  access_configured: boolean
+  secret_key: string
+  secret_configured: boolean
+}
+
+/** Admin settings group=live. Never expose to the client app. */
 export type LiveSettings = {
+  provider: LiveProvider
+  auth_enabled: boolean
+  push_ttl_seconds: number
+  play_ttl_seconds: number
+  sign_secret_configured: boolean
+  /** Always empty from GET. Non-empty save replaces the HMAC secret. */
+  sign_secret: string
+  /** Always empty from GET. Non-empty save replaces the SRS hook secret. */
+  hook_secret: string
+  srs_api_base: string
+  srs_hook_url: string
+  play_auth_url: string
   push_server: string
   play_hls_template: string
   play_flv_template: string
+  aliyun: LiveAliyunSettings
+  qiniu: LiveQiniuSettings
 }
 
 /** Apply status: 0=pending, 1=approved, 2=rejected */
@@ -939,6 +989,8 @@ export type ClientLiveRoomDetail = {
   streamer_avatar: string
   play_hls_url: string
   play_flv_url: string
+  /** Unix seconds. Absent when the play URL is not signed. */
+  play_url_expires_at?: number
   started_at?: string
 }
 
@@ -954,6 +1006,8 @@ export type ClientMyLiveRoom = {
   status: number
   stream_key: string
   push_server: string
+  /** Unix seconds. Absent when the push key is not signed. */
+  push_expires_at?: number
   current_session_id?: number
   started_at?: string
   ended_at?: string
@@ -979,6 +1033,8 @@ export type StartLiveResponse = {
   status: number
   push_server: string
   stream_key: string
+  /** Unix seconds. Absent when the push key is not signed. */
+  push_expires_at?: number
   started_at: string
 }
 

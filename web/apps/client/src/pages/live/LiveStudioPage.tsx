@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router'
 import type { ClientLiveCategory, ClientMyLiveRoom } from '@orange-tv/shared'
-import { LiveRoomStatusBanned, LiveRoomStatusLiving } from '@orange-tv/shared'
+import {
+  ApiError,
+  isLiveMediaDisconnectError,
+  LiveRoomStatusBanned,
+  LiveRoomStatusLiving,
+} from '@orange-tv/shared'
 import { useAuthStore } from '@/store/auth'
 import { useSettingsStore } from '@/store/settings'
 import { clientApi, errorMessage } from '@/lib/api'
@@ -50,6 +55,20 @@ function enabledSubCategoryId(
   return children.some((c) => c.id === subCategoryId) ? subCategoryId : 0
 }
 
+function bareStreamName(key: string): string {
+  const i = key.indexOf('?')
+  return (i === -1 ? key : key.slice(0, i)).trim()
+}
+
+/** Keep the key already shown for OBS unless the stream name, server, or signature shape changed. */
+function keepDisplayedPushKey(prev: ClientMyLiveRoom | null, next: ClientMyLiveRoom): ClientMyLiveRoom {
+  if (!prev?.stream_key || !next.stream_key) return next
+  if (bareStreamName(prev.stream_key) !== bareStreamName(next.stream_key)) return next
+  if ((prev.push_server || '') !== (next.push_server || '')) return next
+  if (prev.stream_key.includes('?') !== next.stream_key.includes('?')) return next
+  return { ...next, stream_key: prev.stream_key, push_expires_at: prev.push_expires_at }
+}
+
 async function copyText(label: string, value: string) {
   if (!value) {
     toast.error(`${label}为空`)
@@ -74,6 +93,8 @@ export function Component() {
   const [starting, setStarting] = useState(false)
   const [stopping, setStopping] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
+  const [refreshingPush, setRefreshingPush] = useState(false)
+  const [nowMs, setNowMs] = useState(() => Date.now())
   const [error, setError] = useState('')
   const [form, setForm] = useState({
     title: '',
@@ -86,6 +107,18 @@ export function Component() {
   usePageTitle('主播工作室')
   usePageSeo({ title: '主播工作室', path: '/live/studio', noindex: true })
 
+  const syncFormFromRoom = (data: ClientMyLiveRoom, cats: ClientLiveCategory[]) => {
+    const storedL1 = data.category_id || 0
+    const categoryId = cats.some((c) => c.id === storedL1) ? storedL1 : 0
+    setForm({
+      title: data.title || '',
+      cover: data.cover || '',
+      notice: data.notice || '',
+      category_id: categoryId,
+      sub_category_id: enabledSubCategoryId(cats, categoryId, data.sub_category_id || 0),
+    })
+  }
+
   const load = useCallback(async () => {
     setLoading(true)
     setError('')
@@ -95,20 +128,10 @@ export function Component() {
         clientApi.liveCategories(),
       ])
       const data = roomRes.data
-      setRoom(data || null)
+      setRoom((prev) => (data ? keepDisplayedPushKey(prev, data) : null))
       const cats = catRes.data || []
       setCategories(cats)
-      if (data) {
-        const storedL1 = data.category_id || 0
-        const categoryId = cats.some((c) => c.id === storedL1) ? storedL1 : 0
-        setForm({
-          title: data.title || '',
-          cover: data.cover || '',
-          notice: data.notice || '',
-          category_id: categoryId,
-          sub_category_id: enabledSubCategoryId(cats, categoryId, data.sub_category_id || 0),
-        })
-      }
+      if (data) syncFormFromRoom(data, cats)
     } catch (err) {
       setRoom(null)
       setError(errorMessage(err))
@@ -117,9 +140,24 @@ export function Component() {
     }
   }, [])
 
+  /** Reload room without full-page skeleton; used after stop. */
+  const refreshRoom = async () => {
+    const res = await clientApi.myLiveRoom()
+    const data = res.data
+    if (!data) return
+    setRoom(data)
+    syncFormFromRoom(data, categories)
+  }
+
   useEffect(() => {
     if (profile?.is_streamer) void load()
   }, [profile?.is_streamer, load])
+
+  useEffect(() => {
+    if (!room?.push_expires_at) return
+    const id = window.setInterval(() => setNowMs(Date.now()), 15000)
+    return () => window.clearInterval(id)
+  }, [room?.push_expires_at])
 
   if (!liveEnabled) {
     return <Navigate to="/" replace />
@@ -173,8 +211,9 @@ export function Component() {
         category_id: form.category_id,
         sub_category_id: subCategoryId,
       })
-      if (res.data) {
-        setRoom(res.data)
+      const saved = res.data
+      if (saved) {
+        setRoom((prev) => keepDisplayedPushKey(prev, saved))
         toast.success('直播间资料已保存')
       } else {
         toast.error(res.message || '保存失败')
@@ -227,8 +266,28 @@ export function Component() {
       if (title) body.title = title
       const res = await clientApi.startLive(body)
       if (res.data) {
+        const started = res.data
+        const l1 = categories.find((c) => c.id === form.category_id)
+        const l2 = l1?.children?.find((c) => c.id === subCategoryId)
+        setRoom((prev) =>
+          prev
+            ? {
+                ...prev,
+                status: started.status,
+                stream_key: started.stream_key,
+                push_server: started.push_server || prev.push_server,
+                push_expires_at: started.push_expires_at,
+                current_session_id: started.session_id,
+                started_at: started.started_at,
+                title: title || prev.title,
+                category_id: form.category_id || prev.category_id,
+                category_name: l1?.name || prev.category_name,
+                sub_category_id: subCategoryId,
+                sub_category_name: l2?.name || '',
+              }
+            : prev,
+        )
         toast.success('已开播，请在 OBS 中推流')
-        await load()
       } else {
         toast.error(res.message || '开播失败')
       }
@@ -244,22 +303,27 @@ export function Component() {
     try {
       await clientApi.stopLive()
       toast.success('已停播')
-      await load()
+      await refreshRoom()
     } catch (err) {
-      toast.error(errorMessage(err))
+      if (isLiveMediaDisconnectError(err)) {
+        toast.warning(err instanceof ApiError ? err.message : '直播已结束，请到媒体服务器手动断开')
+        await refreshRoom()
+      } else {
+        toast.error(errorMessage(err))
+      }
     } finally {
       setStopping(false)
     }
   }
 
   const handleRegenerate = async () => {
-    if (!window.confirm('重置后旧密钥将失效，确定继续？')) return
+    if (!window.confirm('重置后旧流名将失效，确定继续？')) return
     setRegenerating(true)
     try {
       const res = await clientApi.regenerateLiveStreamKey()
       if (res.data) {
         setRoom(res.data)
-        toast.success('推流密钥已重置')
+        toast.success('流名已重置，开播后可获取推流密钥')
       } else {
         toast.error(res.message || '重置失败')
       }
@@ -267,6 +331,23 @@ export function Component() {
       toast.error(errorMessage(err))
     } finally {
       setRegenerating(false)
+    }
+  }
+
+  const handleRefreshPush = async () => {
+    setRefreshingPush(true)
+    try {
+      const res = await clientApi.myLiveRoom()
+      if (res.data) {
+        setRoom(res.data)
+        toast.success('已刷新推流密钥。当前这条推流不会被切断，OBS 重连时再使用新密钥')
+      } else {
+        toast.error(res.message || '刷新失败')
+      }
+    } catch (err) {
+      toast.error(errorMessage(err))
+    } finally {
+      setRefreshingPush(false)
     }
   }
 
@@ -367,7 +448,7 @@ export function Component() {
               <AlertCircleIcon />
               <AlertTitle>推流服务器未配置</AlertTitle>
               <AlertDescription>
-                管理员尚未配置推流地址，暂时无法开播。密钥可先查看，待配置完成后再推流。
+                管理员尚未配置推流地址，暂时无法开播。
               </AlertDescription>
             </Alert>
           ) : null}
@@ -375,7 +456,7 @@ export function Component() {
           <section className="flex flex-col gap-4 rounded-lg border p-4">
             <h2 className="text-lg font-semibold">推流信息</h2>
             <p className="text-sm text-muted-foreground">
-              在 OBS 中填写服务器与推流密钥；开播前可先配置。请勿泄露密钥。
+              先点「开始直播」，再把服务器和推流密钥填进 OBS。未开播时不会给出推流密钥。
             </p>
             <FieldGroup>
               <Field>
@@ -408,6 +489,27 @@ export function Component() {
                   </InputGroupAddon>
                 </InputGroup>
                 <FieldDescription>
+                  {room.push_expires_at ? (
+                    <span className="block">
+                      推流签名到期：{new Date(room.push_expires_at * 1000).toLocaleString()}。
+                      当前这条推流不会因为到期被切断，只有 OBS 重连才需要新密钥。
+                      {room.push_expires_at * 1000 - nowMs <= 60_000
+                        ? ' 即将过期，请手动刷新后再重连。'
+                        : ''}
+                    </span>
+                  ) : null}
+                  {room.push_expires_at ? (
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="h-auto p-0"
+                      disabled={refreshingPush}
+                      onClick={() => void handleRefreshPush()}
+                    >
+                      {refreshingPush ? <Spinner data-icon="inline-start" /> : null}
+                      {refreshingPush ? '刷新中...' : '刷新推流密钥'}
+                    </Button>
+                  ) : null}
                   <Button
                     type="button"
                     variant="link"
@@ -416,9 +518,9 @@ export function Component() {
                     onClick={() => void handleRegenerate()}
                   >
                     {regenerating ? <Spinner data-icon="inline-start" /> : null}
-                    {regenerating ? '重置中...' : '重置密钥'}
+                    {regenerating ? '重置中...' : '重置流名'}
                   </Button>
-                  {isLiving ? '（直播中不可重置）' : null}
+                  {isLiving ? '（直播中不可重置流名）' : null}
                 </FieldDescription>
               </Field>
             </FieldGroup>

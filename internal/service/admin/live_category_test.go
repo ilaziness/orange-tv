@@ -13,7 +13,7 @@ import (
 
 func TestCreateCategoryRejectsBlankName(t *testing.T) {
 	t.Parallel()
-	svc := NewLiveService(nil, nil, zap.NewNop())
+	svc := NewLiveService(nil, nil, nil, nil, zap.NewNop())
 	_, err := svc.CreateCategory(context.Background(), &admindto.CreateLiveCategoryRequest{Name: " \t "})
 	got, ok := errcode.As(err)
 	require.True(t, ok)

@@ -16,11 +16,52 @@ import (
 
 const liveStreamKeyBytes = 16 // 32 hex chars
 
+// LiveAliyunConfig is the stored Aliyun live credential set.
+type LiveAliyunConfig struct {
+	PushDomain      string
+	PlayDomain      string
+	AppName         string
+	Region          string
+	PushAuthKey     string
+	PlayAuthKey     string
+	AccessKeyID     string
+	AccessKeySecret string
+}
+
+// LiveQiniuConfig is the stored Qiniu live credential set.
+type LiveQiniuConfig struct {
+	Hub        string
+	PushDomain string
+	PlayDomain string
+	AccessKey  string
+	SecretKey  string
+}
+
 // LiveStreamConfig holds admin-only push/play configuration.
+// PushServer and play templates are the self-hosted addresses only.
 type LiveStreamConfig struct {
+	Provider        string
+	AuthEnabled     bool
+	PushTTLSeconds  int
+	PlayTTLSeconds  int
+	SignSecret      string
+	HookSecret      string
+	SRSAPIBase      string
 	PushServer      string
 	PlayHLSTemplate string
 	PlayFLVTemplate string
+	Aliyun          LiveAliyunConfig
+	Qiniu           LiveQiniuConfig
+}
+
+// LiveMediaURLs is a freshly signed (or bare) push/play set.
+type LiveMediaURLs struct {
+	PushServer    string
+	StreamKey     string
+	PlayHLS       string
+	PlayFLV       string
+	PushExpiresAt time.Time
+	PlayExpiresAt time.Time
 }
 
 // GenerateLiveStreamKey returns a 32+ hex stream key.
@@ -43,33 +84,57 @@ func ApplyStreamKeyTemplate(template, streamKey string) string {
 
 // ParseLiveStreamConfig maps live settings rows to LiveStreamConfig.
 func ParseLiveStreamConfig(m map[string]model.SystemSettings) LiveStreamConfig {
-	return LiveStreamConfig{
+	cfg := LiveStreamConfig{
+		Provider:        strings.TrimSpace(StrVal(m, constant.SettingLiveProvider)),
+		AuthEnabled:     BoolVal(m, constant.SettingLiveAuthEnabled, false),
+		PushTTLSeconds:  IntVal(m, constant.SettingLivePushTTLSeconds, constant.LivePushTTLDefault),
+		PlayTTLSeconds:  IntVal(m, constant.SettingLivePlayTTLSeconds, constant.LivePlayTTLDefault),
+		SignSecret:      strings.TrimSpace(StrVal(m, constant.SettingLiveSignSecret)),
+		HookSecret:      strings.TrimSpace(StrVal(m, constant.SettingLiveHookSecret)),
+		SRSAPIBase:      strings.TrimRight(strings.TrimSpace(StrVal(m, constant.SettingLiveSRSAPIBase)), "/"),
 		PushServer:      strings.TrimSpace(StrVal(m, constant.SettingLivePushServer)),
 		PlayHLSTemplate: strings.TrimSpace(StrVal(m, constant.SettingLivePlayHLSTemplate)),
 		PlayFLVTemplate: strings.TrimSpace(StrVal(m, constant.SettingLivePlayFLVTemplate)),
+		Aliyun:          parseLiveAliyun(StrVal(m, constant.SettingLiveAliyun)),
+		Qiniu:           parseLiveQiniu(StrVal(m, constant.SettingLiveQiniu)),
 	}
+	if cfg.Provider == "" {
+		cfg.Provider = constant.LiveProviderSelf
+	}
+	if cfg.PushTTLSeconds <= 0 {
+		cfg.PushTTLSeconds = constant.LivePushTTLDefault
+	}
+	if cfg.PlayTTLSeconds <= 0 {
+		cfg.PlayTTLSeconds = constant.LivePlayTTLDefault
+	}
+	if cfg.Aliyun.Region == "" {
+		cfg.Aliyun.Region = constant.LiveAliyunRegionDefault
+	}
+	return cfg
 }
 
-// ReadyForBroadcast reports whether push server and at least one play template are set.
-func (c LiveStreamConfig) ReadyForBroadcast() bool {
-	if c.PushServer == "" {
-		return false
+// ProviderName returns the selected provider, defaulting to self.
+func (c LiveStreamConfig) ProviderName() string {
+	p := strings.TrimSpace(c.Provider)
+	if p == "" {
+		return constant.LiveProviderSelf
 	}
-	return c.PlayHLSTemplate != "" || c.PlayFLVTemplate != ""
+	return p
+}
+
+// SelfAuthOn reports whether self-hosted publish/play signatures are required.
+func (c LiveStreamConfig) SelfAuthOn() bool {
+	return c.ProviderName() == constant.LiveProviderSelf && c.AuthEnabled
+}
+
+// ReadyForBroadcast reports whether the active provider can issue push and play URLs.
+func (c LiveStreamConfig) ReadyForBroadcast() bool {
+	return c.Validate() == nil
 }
 
 // ResolvePlayURLs returns resolved HLS/FLV URLs for a stream key (empty if template blank).
 func (c LiveStreamConfig) ResolvePlayURLs(streamKey string) (hls, flv string) {
 	return ApplyStreamKeyTemplate(c.PlayHLSTemplate, streamKey), ApplyStreamKeyTemplate(c.PlayFLVTemplate, streamKey)
-}
-
-// ResolvePublicPlayURLs returns play URLs only while the room is living.
-// Idle/banned rooms must not expose URLs that embed stream_key.
-func (c LiveStreamConfig) ResolvePublicPlayURLs(streamKey string, roomStatus uint8) (hls, flv string) {
-	if roomStatus != constant.LiveRoomLiving {
-		return "", ""
-	}
-	return c.ResolvePlayURLs(streamKey)
 }
 
 // ResolveStreamerApplyStatus maps DB state to profile streamer_apply_status.

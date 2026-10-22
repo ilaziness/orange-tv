@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { AdminLiveRoomItem } from '@orange-tv/shared'
+import { ApiError, isLiveMediaDisconnectError } from '@orange-tv/shared'
 import { adminApi, errorMessage } from '@/lib/api'
 import { PageContainer, Pagination, ConfirmDialog } from '@/components/shared'
 import { RoomStatusBadge } from '@/pages/live/_shared/liveStatus'
@@ -100,7 +101,13 @@ export default function LiveRoomsPage() {
       setAction(null)
       await load(page)
     } catch (err) {
-      toast.error(errorMessage(err))
+      if (isLiveMediaDisconnectError(err) && action.kind !== 'unban') {
+        toast.warning(err instanceof ApiError ? err.message : '直播已结束，请到媒体服务器或云控制台手动断开')
+        setAction(null)
+        await load(page)
+      } else {
+        toast.error(errorMessage(err))
+      }
     } finally {
       setActing(false)
     }

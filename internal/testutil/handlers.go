@@ -18,6 +18,7 @@ import (
 	seohandler "github.com/ilaziness/orange-tv/internal/handler/http/seo"
 	"github.com/ilaziness/orange-tv/internal/model"
 	adminsvc "github.com/ilaziness/orange-tv/internal/service/admin"
+	opensvc "github.com/ilaziness/orange-tv/internal/service/open"
 	seosvc "github.com/ilaziness/orange-tv/internal/service/seo"
 	"go.uber.org/zap"
 )
@@ -52,6 +53,7 @@ type BusinessHandlers struct {
 	LiveTVFeature  gin.HandlerFunc
 	LiveFeature    gin.HandlerFunc
 	OpenResource   *openhandler.ResourceHandler
+	OpenLive       *openhandler.LiveHandler
 	SEO            *seohandler.Handler
 }
 
@@ -596,6 +598,17 @@ func NewBusinessHandlers() BusinessHandlers {
 		LiveTVFeature:  func(c *gin.Context) { c.Next() },
 		LiveFeature:    func(c *gin.Context) { c.Next() },
 		OpenResource:   openhandler.NewResourceHandler(openResourceSvc{}),
+		OpenLive:       openhandler.NewLiveHandler(openLiveHookSvc{}),
 		SEO:            seohandler.NewHandler(seosvc.StubService{}, zap.NewNop()),
 	}
+}
+
+type openLiveHookSvc struct{}
+
+func (openLiveHookSvc) SRSHook(ctx context.Context, hookSecret string, body opensvc.SRSHookBody) error {
+	return nil
+}
+
+func (openLiveHookSvc) PlayAuth(ctx context.Context, hookSecret, originalURI string) error {
+	return nil
 }

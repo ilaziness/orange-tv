@@ -76,7 +76,7 @@ func (a *App) wireHTTP() error {
 	adminCollectSvc := adminsvc.NewCollectService(collectRepo, playRepo, categoryRepo, collectEngine, a.log, a.cache)
 	pay := payment.New()
 	paymentResolver := service.NewPaymentResolver(sharedSettingsSvc, pay, a.log)
-	adminSettingsSvc := adminsvc.NewSettingsService(sharedSettingsSvc, paymentResolver, a.log)
+	adminSettingsSvc := adminsvc.NewSettingsService(sharedSettingsSvc, paymentResolver, liveRepo, a.log)
 	clientSettingsSvc := clientsvc.NewClientSettingsService(sharedSettingsSvc)
 	adminLogSvc := adminsvc.NewLogService(logRepo, a.log, a.cfg.Log.Filename)
 	adminMgmtSvc := adminsvc.NewManagementService(adminRepo, videoRepo, userFeatureRepo, recorder, a.log)
@@ -102,8 +102,9 @@ func (a *App) wireHTTP() error {
 	}
 	captchaSvc := captcha.New(captchaOpts...)
 
-	adminUserLiveSvc := adminsvc.NewLiveService(liveRepo, a.locker, a.log)
-	clientUserLiveSvc := clientsvc.NewLiveService(liveRepo, sharedSettingsSvc, a.locker, a.log)
+	liveHTTP := service.NewLiveHTTPClient()
+	adminUserLiveSvc := adminsvc.NewLiveService(liveRepo, sharedSettingsSvc, a.locker, liveHTTP, a.log)
+	clientUserLiveSvc := clientsvc.NewLiveService(liveRepo, sharedSettingsSvc, a.locker, liveHTTP, a.log)
 	clientUserSvc := clientsvc.NewUserService(adminRepo, userFeatureRepo, videoRepo, categoryRepo, liveRepo, a.jwtMgr, a.cfg.JWT.AccessTokenTTL, a.cfg.JWT.RefreshTokenTTL, sharedSettingsSvc, a.locker, captchaSvc, a.log)
 	clientBannerSvc := clientsvc.NewBannerService(userFeatureRepo, a.log)
 	adminAdSvc := adminsvc.NewAdService(adRepo, a.log)
@@ -138,6 +139,8 @@ func (a *App) wireHTTP() error {
 	handlers.ClientAd = clienthandler.NewAdHandler(clientAdSvc)
 	handlers.ClientMedia = clienthandler.NewMediaHandler(clientMediaSvc)
 	handlers.OpenResource = openhandler.NewResourceHandler(openResourceSvc)
+	openLiveSvc := opensvc.NewLiveHookService(liveRepo, sharedSettingsSvc, a.log)
+	handlers.OpenLive = openhandler.NewLiveHandler(openLiveSvc)
 
 	seoSvc := seosvc.NewService(sharedSettingsSvc, videoRepo, a.cache, a.log)
 	handlers.SEO = seohandler.NewHandler(seoSvc, a.log)

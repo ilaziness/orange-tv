@@ -74,22 +74,26 @@ type LiveRoomDetail struct {
 	StreamerAvatar   string `json:"streamer_avatar"`
 	PlayHLSURL       string `json:"play_hls_url"`
 	PlayFLVURL       string `json:"play_flv_url"`
+	// 播放地址过期时间（Unix 秒）。未签名时为 0
+	PlayURLExpiresAt int64  `json:"play_url_expires_at,omitempty"`
 	StartedAt        string `json:"started_at,omitempty"`
 }
 
 // MyLiveRoom is the streamer's own room (may include push credentials).
 type MyLiveRoom struct {
-	ID               uint32 `json:"id"`
-	CategoryID       uint32 `json:"category_id"`
-	CategoryName     string `json:"category_name"`
-	SubCategoryID    uint32 `json:"sub_category_id"`
-	SubCategoryName  string `json:"sub_category_name"`
-	Title            string `json:"title"`
-	Cover            string `json:"cover"`
-	Notice           string `json:"notice"`
-	Status           uint8  `json:"status"`
-	StreamKey        string `json:"stream_key"`
-	PushServer       string `json:"push_server"`
+	ID              uint32 `json:"id"`
+	CategoryID      uint32 `json:"category_id"`
+	CategoryName    string `json:"category_name"`
+	SubCategoryID   uint32 `json:"sub_category_id"`
+	SubCategoryName string `json:"sub_category_name"`
+	Title           string `json:"title"`
+	Cover           string `json:"cover"`
+	Notice          string `json:"notice"`
+	Status          uint8  `json:"status"`
+	StreamKey       string `json:"stream_key"`
+	PushServer      string `json:"push_server"`
+	// 推流签名过期时间（Unix 秒）。未签名时为 0
+	PushExpiresAt    int64  `json:"push_expires_at,omitempty"`
 	CurrentSessionID uint32 `json:"current_session_id,omitempty"`
 	StartedAt        string `json:"started_at,omitempty"`
 	EndedAt          string `json:"ended_at,omitempty"`
@@ -119,5 +123,7 @@ type StartLiveResponse struct {
 	Status     uint8  `json:"status"`
 	PushServer string `json:"push_server"`
 	StreamKey  string `json:"stream_key"`
-	StartedAt  string `json:"started_at"`
+	// 推流签名过期时间（Unix 秒）。未签名时为 0
+	PushExpiresAt int64  `json:"push_expires_at,omitempty"`
+	StartedAt     string `json:"started_at"`
 }

@@ -60,6 +60,7 @@ func TestNewHTTPServer_registersRoutes(t *testing.T) {
 	handlers.LiveTVFeature = b.LiveTVFeature
 	handlers.LiveFeature = b.LiveFeature
 	handlers.OpenResource = b.OpenResource
+	handlers.OpenLive = b.OpenLive
 	handlers.SEO = b.SEO
 
 	srv, err := NewHTTPServer(cfg, logger, logger, handlers, nil, nil)

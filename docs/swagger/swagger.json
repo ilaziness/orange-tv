@@ -8571,6 +8571,95 @@
                 }
             }
         },
+        "/api/open/v1/live/auth/play": {
+            "get": {
+                "description": "只校验 m3u8 与 flv。Nginx auth_request 必须把 $request_uri 放到 X-Original-URI。不要把 .ts 打到此接口。",
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "开放端｜直播鉴权"
+                ],
+                "summary": "Nginx 播放鉴权",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "回调密钥",
+                        "name": "hook_secret",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "原始播放路径和查询串",
+                        "name": "X-Original-URI",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "1",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/open/v1/live/hooks/srs": {
+            "post": {
+                "description": "校验 hook_secret、应用名、直播中的流名和自建 HMAC。on_unpublish 只记日志，不结束场次。成功正文为 0。",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "开放端｜直播鉴权"
+                ],
+                "summary": "SRS 推流/播放回调",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "回调密钥",
+                        "name": "hook_secret",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "SRS http_hooks 正文",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/open.srsHookBody"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "0",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "1",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/api/open/v1/videos": {
             "get": {
                 "description": "返回启用的影视列表，每项只包含 id、title、category_id、created_at",
@@ -12233,6 +12322,10 @@
                 "play_hls_url": {
                     "type": "string"
                 },
+                "play_url_expires_at": {
+                    "description": "播放地址过期时间（Unix 秒）。未签名时为 0",
+                    "type": "integer"
+                },
                 "started_at": {
                     "type": "string"
                 },
@@ -12454,6 +12547,10 @@
                 "notice": {
                     "type": "string"
                 },
+                "push_expires_at": {
+                    "description": "推流签名过期时间（Unix 秒）。未签名时为 0",
+                    "type": "integer"
+                },
                 "push_server": {
                     "type": "string"
                 },
@@ -12656,6 +12753,10 @@
         "client.StartLiveResponse": {
             "type": "object",
             "properties": {
+                "push_expires_at": {
+                    "description": "推流签名过期时间（Unix 秒）。未签名时为 0",
+                    "type": "integer"
+                },
                 "push_server": {
                     "type": "string"
                 },
@@ -13171,6 +13272,30 @@
                 "url": {
                     "description": "播放地址",
                     "type": "string"
+                }
+            }
+        },
+        "open.srsHookBody": {
+            "type": "object",
+            "required": [
+                "action"
+            ],
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "maxLength": 32
+                },
+                "app": {
+                    "type": "string",
+                    "maxLength": 128
+                },
+                "param": {
+                    "type": "string",
+                    "maxLength": 2048
+                },
+                "stream": {
+                    "type": "string",
+                    "maxLength": 256
                 }
             }
         },

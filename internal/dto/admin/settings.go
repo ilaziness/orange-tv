@@ -83,14 +83,52 @@ type UpdateFeatureSettings struct {
 	RatingEnabled *dto.PlatformFlags `json:"rating_enabled"`
 }
 
-// UpdateLiveSettings updates user-live push/play templates (all optional).
+// UpdateLiveAliyunSettings updates Aliyun live JSON. Empty secret strings keep stored values.
+type UpdateLiveAliyunSettings struct {
+	PushDomain      *string `json:"push_domain" binding:"omitempty,max=253"`
+	PlayDomain      *string `json:"play_domain" binding:"omitempty,max=253"`
+	AppName         *string `json:"app_name" binding:"omitempty,max=64"`
+	Region          *string `json:"region" binding:"omitempty,max=64"`
+	PushAuthKey     *string `json:"push_auth_key" binding:"omitempty,max=256"`
+	PlayAuthKey     *string `json:"play_auth_key" binding:"omitempty,max=256"`
+	AccessKeyID     *string `json:"access_key_id" binding:"omitempty,max=128"`
+	AccessKeySecret *string `json:"access_key_secret" binding:"omitempty,max=256"`
+}
+
+// UpdateLiveQiniuSettings updates Qiniu live JSON. Empty secret strings keep stored values.
+type UpdateLiveQiniuSettings struct {
+	Hub        *string `json:"hub" binding:"omitempty,max=64"`
+	PushDomain *string `json:"push_domain" binding:"omitempty,max=253"`
+	PlayDomain *string `json:"play_domain" binding:"omitempty,max=253"`
+	AccessKey  *string `json:"access_key" binding:"omitempty,max=128"`
+	SecretKey  *string `json:"secret_key" binding:"omitempty,max=256"`
+}
+
+// UpdateLiveSettings updates user-live provider config.
+// Empty sign/hook/cloud secret strings mean do not change the stored secret.
 type UpdateLiveSettings struct {
-	// OBS 推流服务器地址
+	// 厂商 self / aliyun / qiniu
+	Provider *string `json:"provider" binding:"omitempty,oneof=self aliyun qiniu"`
+	// 仅自建鉴权开关
+	AuthEnabled *bool `json:"auth_enabled"`
+	// 推流签名 TTL，600–86400
+	PushTTLSeconds *int `json:"push_ttl_seconds" binding:"omitempty,min=600,max=86400"`
+	// 播放签名 TTL，600–86400
+	PlayTTLSeconds *int `json:"play_ttl_seconds" binding:"omitempty,min=600,max=86400"`
+	// 自建 HMAC 密钥；空字符串表示不修改
+	SignSecret *string `json:"sign_secret" binding:"omitempty,max=256"`
+	// SRS 回调密钥；空字符串表示不修改
+	HookSecret *string `json:"hook_secret" binding:"omitempty,max=256"`
+	// SRS HTTP API 根地址
+	SRSAPIBase *string `json:"srs_api_base" binding:"omitempty,max=500"`
+	// 自建 OBS 推流服务器地址
 	PushServer *string `json:"push_server" binding:"omitempty,max=500"`
-	// HLS 播放地址模板（含 {stream_key}）
+	// 自建 HLS 播放地址模板（含 {stream_key}）
 	PlayHLSTemplate *string `json:"play_hls_template" binding:"omitempty,max=500"`
-	// FLV 播放地址模板（含 {stream_key}，可空）
-	PlayFLVTemplate *string `json:"play_flv_template" binding:"omitempty,max=500"`
+	// 自建 FLV 播放地址模板（含 {stream_key}，可空）
+	PlayFLVTemplate *string                   `json:"play_flv_template" binding:"omitempty,max=500"`
+	Aliyun          *UpdateLiveAliyunSettings `json:"aliyun"`
+	Qiniu           *UpdateLiveQiniuSettings  `json:"qiniu"`
 }
 
 // UpdateSEOSettings updates SEO / social-sharing fields (all optional).
