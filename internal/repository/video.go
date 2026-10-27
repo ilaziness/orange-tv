@@ -210,6 +210,8 @@ func videoSortExpr(sort string) string {
 		return "view_count DESC, id DESC"
 	case "created_at_asc":
 		return "id ASC"
+	case "created_at_desc":
+		return "id DESC, year DESC"
 	case "id_desc":
 		return "id DESC"
 	default:

@@ -46,10 +46,10 @@ func NewVideoService(
 }
 
 func (s *videoService) List(ctx context.Context, req *clientdto.VideoListRequest) ([]clientdto.VideoListItem, int, error) {
-	// 默认按年份倒序；首页等场景可通过 sort 参数指定其他排序
+	// 默认先按创建时间倒序，同年份再按视频年份倒序；可通过 sort 指定其他排序
 	sort := strings.TrimSpace(req.Sort)
 	if sort == "" {
-		sort = "year_desc"
+		sort = "created_at_desc"
 	}
 	// Cache hot home/list queries without keyword search complexity.
 	cacheable := strings.TrimSpace(req.Region) == "" && req.YearStart == 0 && req.YearEnd == 0 &&
