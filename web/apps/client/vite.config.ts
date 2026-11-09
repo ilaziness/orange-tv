@@ -40,7 +40,7 @@ export default defineConfig(({ mode }) => {
           start_url: '/',
           scope: '/',
           display: 'standalone',
-          theme_color: '#FF0000',
+          theme_color: '#FF6B00',
           background_color: '#0a0a0a',
           icons: [
             {

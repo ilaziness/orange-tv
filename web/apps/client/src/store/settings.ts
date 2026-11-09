@@ -34,7 +34,7 @@ interface SettingsState {
 
 const DEFAULT_SETTINGS: Omit<SettingsState, 'loadSettings'> = {
   name: '小橘TV',
-  logo: '/logo.svg',
+  logo: '/logo.png',
   copyright: '',
   icp: '',
   seo_keywords: '',

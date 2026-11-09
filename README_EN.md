@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="web/apps/client/public/logo.png" alt="Orange TV" width="96" height="96" />
+</p>
+
 # 小橘TV
 
 > 中文版主文档：[README.md](README.md) · Technical docs: [docs/README.md](docs/README.md)

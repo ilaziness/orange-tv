@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="web/apps/client/public/logo.png" alt="小橘TV" width="96" height="96" />
+</p>
+
 # 小橘TV 视频管理系统
 
 > English version: [README_EN.md](README_EN.md) · 技术文档：[docs/README.md](docs/README.md)

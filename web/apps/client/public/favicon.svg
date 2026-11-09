@@ -1,6 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none" role="img" aria-label="Orange TV favicon">
-  <title>Orange TV favicon</title>
-  <circle cx="16" cy="17" r="12" fill="#FF0000"/>
-  <path d="M16 2v7" stroke="#5D4037" stroke-width="2.5" stroke-linecap="round"/>
-  <path d="M16 3 Q23 -2 30 5 Q23 9 16 3 Z" fill="#2E7D32"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32" fill="none" role="img" aria-label="Orange TV logo">
+  <title>Orange TV logo</title>
+  <defs>
+    <clipPath id="otvf-play">
+      <path d="M 6.30 9.14 Q 6.30 3.52 11.22 6.25 L 23.85 13.27 Q 28.77 16.00 23.85 18.73 L 11.22 25.75 Q 6.30 28.48 6.30 22.86 Z"/>
+    </clipPath>
+    <mask id="otvf-gaps" maskUnits="userSpaceOnUse">
+      <rect width="32" height="32" fill="#fff"/>
+      <g fill="#000" stroke="#000" stroke-width="0.69" stroke-linecap="round">
+        <line x1="13.79" y1="16.00" x2="6.30" y2="16.00"/>
+        <line x1="13.79" y1="16.00" x2="17.54" y2="9.76"/>
+        <line x1="13.79" y1="16.00" x2="17.54" y2="22.24"/>
+        <circle cx="13.79" cy="16.00" r="0.59"/>
+      </g>
+    </mask>
+  </defs>
+  <g clip-path="url(#otvf-play)" mask="url(#otvf-gaps)">
+    <polygon fill="#FF8518" points="6.30,3.52 6.30,16.00 13.79,16.00 17.54,9.76"/>
+    <polygon fill="#FF6B00" points="28.77,16.00 17.54,9.76 13.79,16.00 17.54,22.24"/>
+    <polygon fill="#FFA030" points="6.30,28.48 17.54,22.24 13.79,16.00 6.30,16.00"/>
+  </g>
 </svg>

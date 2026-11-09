@@ -1,6 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none" role="img" aria-label="Orange TV logo">
   <title>Orange TV logo</title>
-  <circle cx="256" cy="292" r="190" fill="#FF0000"/>
-  <rect x="244" y="56" width="24" height="60" rx="6" fill="#5D4037"/>
-  <path d="M266 56 Q330 10 400 62 Q330 100 266 56 Z" fill="#2E7D32"/>
+  <defs>
+    <clipPath id="otv-play">
+      <path d="M 100.86 146.32 Q 100.86 56.32 179.54 100.03 L 381.61 212.29 Q 460.29 256.00 381.61 299.71 L 179.54 411.97 Q 100.86 455.68 100.86 365.68 Z"/>
+    </clipPath>
+    <mask id="otv-gaps" maskUnits="userSpaceOnUse">
+      <rect width="512" height="512" fill="#fff"/>
+      <g fill="#000" stroke="#000" stroke-width="11.00" stroke-linecap="round">
+        <line x1="220.67" y1="256.00" x2="100.86" y2="256.00"/>
+        <line x1="220.67" y1="256.00" x2="280.58" y2="156.16"/>
+        <line x1="220.67" y1="256.00" x2="280.58" y2="355.84"/>
+        <circle cx="220.67" cy="256.00" r="9.50"/>
+      </g>
+    </mask>
+  </defs>
+  <g clip-path="url(#otv-play)" mask="url(#otv-gaps)">
+    <polygon fill="#FF8518" points="100.86,56.32 100.86,256.00 220.67,256.00 280.58,156.16"/>
+    <polygon fill="#FF6B00" points="460.29,256.00 280.58,156.16 220.67,256.00 280.58,355.84"/>
+    <polygon fill="#FFA030" points="100.86,455.68 280.58,355.84 220.67,256.00 100.86,256.00"/>
+  </g>
 </svg>
