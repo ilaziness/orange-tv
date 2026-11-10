@@ -11,6 +11,16 @@ import { useAuthStore } from '@/store/auth'
 import { useSettingsStore } from '@/store/settings'
 import { clientApi, errorMessage } from '@/lib/api'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
@@ -93,6 +103,7 @@ export function Component() {
   const [starting, setStarting] = useState(false)
   const [stopping, setStopping] = useState(false)
   const [regenerating, setRegenerating] = useState(false)
+  const [confirmingReset, setConfirmingReset] = useState(false)
   const [refreshingPush, setRefreshingPush] = useState(false)
   const [nowMs, setNowMs] = useState(() => Date.now())
   const [error, setError] = useState('')
@@ -317,13 +328,12 @@ export function Component() {
   }
 
   const handleRegenerate = async () => {
-    if (!window.confirm('重置后旧流名将失效，确定继续？')) return
     setRegenerating(true)
     try {
       const res = await clientApi.regenerateLiveStreamKey()
       if (res.data) {
         setRoom(res.data)
-        toast.success('流名已重置，开播后可获取推流密钥')
+        toast.success('推流密钥已重置，开播后可获取新密钥')
       } else {
         toast.error(res.message || '重置失败')
       }
@@ -331,6 +341,7 @@ export function Component() {
       toast.error(errorMessage(err))
     } finally {
       setRegenerating(false)
+      setConfirmingReset(false)
     }
   }
 
@@ -477,7 +488,11 @@ export function Component() {
               <Field>
                 <FieldLabel>推流密钥</FieldLabel>
                 <InputGroup>
-                  <InputGroupInput value={room.stream_key || ''} readOnly />
+                  <InputGroupInput
+                    value={room.stream_key || ''}
+                    placeholder="开始直播后展示"
+                    readOnly
+                  />
                   <InputGroupAddon align="inline-end">
                     <InputGroupButton
                       type="button"
@@ -515,15 +530,36 @@ export function Component() {
                     variant="link"
                     className="h-auto p-0"
                     disabled={regenerating || isLiving}
-                    onClick={() => void handleRegenerate()}
+                    onClick={() => setConfirmingReset(true)}
                   >
                     {regenerating ? <Spinner data-icon="inline-start" /> : null}
-                    {regenerating ? '重置中...' : '重置流名'}
+                    {regenerating ? '重置中...' : '重置推流密钥'}
                   </Button>
-                  {isLiving ? '（直播中不可重置流名）' : null}
+                  {isLiving ? '（直播中不可重置推流密钥）' : null}
                 </FieldDescription>
               </Field>
             </FieldGroup>
+            <AlertDialog open={confirmingReset} onOpenChange={setConfirmingReset}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>重置推流密钥？</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    重置后旧推流密钥立即失效，需要重新填写到 OBS。直播中的直播间不可重置。
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>取消</AlertDialogCancel>
+                  <AlertDialogAction
+                    variant="destructive"
+                    disabled={regenerating}
+                    onClick={() => void handleRegenerate()}
+                  >
+                    {regenerating ? <Spinner data-icon="inline-start" /> : null}
+                    {regenerating ? '重置中...' : '确认重置'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </section>
 
           <Separator />
