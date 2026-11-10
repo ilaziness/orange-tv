@@ -121,9 +121,10 @@ server {
 | FLV 播放模板       | `https://media.example.com/live/{stream_key}.flv`                                        |
 | 签名密钥           | 一长串随机字符。留空表示不改                                                             |
 | 回调密钥           | 另一串随机字符，不能和签名密钥相同                                                       |
+| 本服务 API 地址    | Orange TV 后端对外可达根地址，如 `https://api.example.com`（不要带路径）                   |
 | SRS API 地址       | 同机填 `http://127.0.0.1:1985`，分机填 `http://192.168.1.10:1985`。Orange TV 必须能访问   |
-| SRS 回调 URL       | 自动生成，保存后整段复制到 SRS 的 `http_hooks`。`hook_secret` 参数就是上面的回调密钥      |
-| Nginx 播放鉴权 URL | 自动生成，只有走 Nginx 鉴权时才用。`hook_secret` 参数同样是回调密钥                       |
+| SRS 回调 URL       | 按本服务 API 地址自动生成，保存后整段复制到 SRS 的 `http_hooks`。`hook_secret` 参数就是上面的回调密钥 |
+| Nginx 播放鉴权 URL | 按本服务 API 地址自动生成，只有走 Nginx 鉴权时才用。`hook_secret` 参数同样是回调密钥     |
 
 ### 4. OBS
 

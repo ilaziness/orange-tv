@@ -152,10 +152,10 @@ func MapToFeatureSettings(m map[string]model.SystemSettings, clientType string) 
 }
 
 // MapToLiveSettings maps live group rows to the masked admin DTO.
-// publicBase is the site origin without a trailing slash; empty yields path-only hook URLs.
-func MapToLiveSettings(m map[string]model.SystemSettings, publicBase string) dto.LiveSettings {
+// Hook URLs use live_api_base_url; empty yields path-only hook URLs.
+func MapToLiveSettings(m map[string]model.SystemSettings) dto.LiveSettings {
 	cfg := ParseLiveStreamConfig(m)
-	return maskLiveSettings(cfg, publicBase)
+	return maskLiveSettings(cfg)
 }
 
 func mapToPublicSEOSettings(m map[string]model.SystemSettings) dto.PublicSEOSettings {

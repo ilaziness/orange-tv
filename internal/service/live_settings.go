@@ -96,17 +96,17 @@ func MarshalLiveQiniu(cfg LiveQiniuConfig) (string, error) {
 	return string(b), nil
 }
 
-func maskLiveSettings(cfg LiveStreamConfig, publicBase string) dto.LiveSettings {
-	publicBase = strings.TrimRight(strings.TrimSpace(publicBase), "/")
+func maskLiveSettings(cfg LiveStreamConfig) dto.LiveSettings {
 	return dto.LiveSettings{
 		Provider:             cfg.ProviderName(),
 		AuthEnabled:          cfg.AuthEnabled,
 		PushTTLSeconds:       cfg.PushTTLSeconds,
 		PlayTTLSeconds:       cfg.PlayTTLSeconds,
 		SignSecretConfigured: cfg.SignSecret != "",
+		APIBaseURL:           cfg.APIBaseURL,
 		SRSAPIBase:           cfg.SRSAPIBase,
-		SRSHookURL:           liveHookURL(publicBase, liveSRSHookPath, cfg.HookSecret),
-		PlayAuthURL:          liveHookURL(publicBase, livePlayAuthPath, cfg.HookSecret),
+		SRSHookURL:           liveHookURL(cfg.APIBaseURL, liveSRSHookPath, cfg.HookSecret),
+		PlayAuthURL:          liveHookURL(cfg.APIBaseURL, livePlayAuthPath, cfg.HookSecret),
 		PushServer:           cfg.PushServer,
 		PlayHLSTemplate:      cfg.PlayHLSTemplate,
 		PlayFLVTemplate:      cfg.PlayFLVTemplate,
@@ -130,17 +130,17 @@ func maskLiveSettings(cfg LiveStreamConfig, publicBase string) dto.LiveSettings 
 	}
 }
 
-func liveHookURL(publicBase, path, hookSecret string) string {
+func liveHookURL(apiBase, path, hookSecret string) string {
 	if strings.TrimSpace(hookSecret) == "" {
 		return ""
 	}
 	q := url.Values{}
 	q.Set("hook_secret", hookSecret)
 	rel := path + "?" + q.Encode()
-	if publicBase == "" {
+	if apiBase == "" {
 		return rel
 	}
-	return publicBase + rel
+	return apiBase + rel
 }
 
 // ValidateForSave checks a settings write. Self with auth off may be incomplete.
@@ -173,6 +173,9 @@ func (c LiveStreamConfig) ValidateForSave() error {
 	case constant.LiveProviderSelf:
 		if !c.AuthEnabled {
 			return nil
+		}
+		if c.APIBaseURL == "" {
+			return errcode.WithMessage(errcode.LiveConfigIncomplete, "打开自建鉴权需要填写本服务 API 地址")
 		}
 		return c.validateSelf()
 	case constant.LiveProviderAliyun:

@@ -158,20 +158,23 @@ func TestMapToLiveSettingsHidesSignSecret(t *testing.T) {
 		constant.SettingLiveAuthEnabled: {SettingValue: "1"},
 		constant.SettingLiveSignSecret:  {SettingValue: "sign-secret-value"},
 		constant.SettingLiveHookSecret:  {SettingValue: "hook-secret-value"},
+		constant.SettingLiveAPIBaseURL:  {SettingValue: "https://api.example.com"},
 		constant.SettingLiveSRSAPIBase:  {SettingValue: "http://127.0.0.1:1985"},
 		constant.SettingLivePushServer:  {SettingValue: "rtmp://media.example.com/live"},
 	}
-	view := MapToLiveSettings(m, "https://tv.example.com")
+	view := MapToLiveSettings(m)
 	assert.True(t, view.SignSecretConfigured)
 	assert.Empty(t, view.SignSecret)
 	assert.Empty(t, view.HookSecret)
+	assert.Equal(t, "https://api.example.com", view.APIBaseURL)
 	assert.Contains(t, view.SRSHookURL, "hook_secret=hook-secret-value")
-	assert.Contains(t, view.SRSHookURL, "https://tv.example.com/api/open/v1/live/hooks/srs")
+	assert.Contains(t, view.SRSHookURL, "https://api.example.com/api/open/v1/live/hooks/srs")
 	assert.NotContains(t, view.SRSHookURL, "sign-secret-value")
 	assert.Contains(t, view.PlayAuthURL, "/api/open/v1/live/auth/play")
-	assert.Equal(t, "https://tv.example.com/api/open/v1/live/hooks/srs?hook_secret=hook-secret-value", view.SRSHookURL)
+	assert.Equal(t, "https://api.example.com/api/open/v1/live/hooks/srs?hook_secret=hook-secret-value", view.SRSHookURL)
 
-	pathOnly := MapToLiveSettings(m, "")
+	delete(m, constant.SettingLiveAPIBaseURL)
+	pathOnly := MapToLiveSettings(m)
 	assert.Equal(t, "/api/open/v1/live/hooks/srs?hook_secret=hook-secret-value", pathOnly.SRSHookURL)
 }
 
@@ -183,6 +186,7 @@ func readySelfAuth() LiveStreamConfig {
 		PlayTTLSeconds:  3600,
 		SignSecret:      "sign-secret",
 		HookSecret:      "hook-secret",
+		APIBaseURL:      "https://api.example.com",
 		SRSAPIBase:      "http://127.0.0.1:1985",
 		PushServer:      "rtmp://media.example.com/live",
 		PlayHLSTemplate: "https://media.example.com/live/{stream_key}.m3u8",

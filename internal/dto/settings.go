@@ -121,6 +121,8 @@ type LiveSettings struct {
 	SignSecret string `json:"sign_secret"`
 	// 提交用；GET 永远为空，空字符串表示不修改
 	HookSecret string `json:"hook_secret"`
+	// 本服务 API 根地址（无尾斜杠），用于拼 SRS/Nginx 回调
+	APIBaseURL string `json:"api_base_url"`
 	// SRS HTTP API 根地址
 	SRSAPIBase string `json:"srs_api_base"`
 	// 拼好的 SRS 回调 URL（含 hook_secret）。未配置回调密钥时为空

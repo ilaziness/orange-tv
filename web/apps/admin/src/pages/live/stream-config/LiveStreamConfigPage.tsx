@@ -12,10 +12,17 @@ import {
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from '@/components/ui/input-group'
 import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -23,7 +30,7 @@ import {
 import { Switch } from '@/components/ui/switch'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
-import { ExternalLink, Save } from 'lucide-react'
+import { Copy, ExternalLink, Save } from 'lucide-react'
 import { toast } from 'sonner'
 
 const LIVE_DOCS_URL = 'https://github.com/ilaziness/orange-tv/blob/main/docs/live-streaming.md'
@@ -61,6 +68,7 @@ const emptyForm = (): LiveSettings => ({
   sign_secret_configured: false,
   sign_secret: '',
   hook_secret: '',
+  api_base_url: '',
   srs_api_base: '',
   srs_hook_url: '',
   play_auth_url: '',
@@ -70,6 +78,22 @@ const emptyForm = (): LiveSettings => ({
   aliyun: emptyAliyun(),
   qiniu: emptyQiniu(),
 })
+
+const httpOrigin = z.string().refine((v) => {
+  const s = v.trim()
+  if (!s) return true
+  try {
+    const u = new URL(s)
+    return (u.protocol === 'http:' || u.protocol === 'https:') && u.pathname === '/' && !u.search && !u.hash
+  } catch {
+    return false
+  }
+}, '须为 http/https 根地址，不要带路径')
+
+/** Display-only: hide hook_secret query value. */
+function maskHookSecretURL(url: string): string {
+  return url.replace(/([?&]hook_secret=)[^&]*/i, '$1****')
+}
 
 const domain = z.string().refine((v) => {
   const s = v.trim()
@@ -116,6 +140,7 @@ const liveSettingsSchema = z
     sign_secret_configured: z.boolean(),
     sign_secret: z.string().max(256),
     hook_secret: z.string().max(256),
+    api_base_url: z.string().max(500).and(httpOrigin),
     srs_api_base: z.string().max(500),
     srs_hook_url: z.string(),
     play_auth_url: z.string(),
@@ -153,6 +178,9 @@ const liveSettingsSchema = z
       }
       if (!data.hook_secret.trim() && !data.srs_hook_url) {
         ctx.addIssue({ code: 'custom', path: ['hook_secret'], message: '打开鉴权需要回调密钥' })
+      }
+      if (!data.api_base_url.trim()) {
+        ctx.addIssue({ code: 'custom', path: ['api_base_url'], message: '打开鉴权需要本服务 API 地址' })
       }
       if (!data.srs_api_base.trim()) {
         ctx.addIssue({ code: 'custom', path: ['srs_api_base'], message: '打开鉴权需要 SRS API 地址' })
@@ -259,6 +287,7 @@ export default function LiveStreamConfigPage() {
           play_ttl_seconds: data.play_ttl_seconds,
           sign_secret: data.sign_secret.trim(),
           hook_secret: data.hook_secret.trim(),
+          api_base_url: data.api_base_url.trim(),
           srs_api_base: data.srs_api_base.trim(),
           push_server: data.push_server.trim(),
           play_hls_template: data.play_hls_template.trim(),
@@ -341,9 +370,11 @@ export default function LiveStreamConfigPage() {
                       <SelectValue placeholder="选择厂商" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="self">自建 SRS</SelectItem>
-                      <SelectItem value="aliyun">阿里云直播</SelectItem>
-                      <SelectItem value="qiniu">七牛直播</SelectItem>
+                      <SelectGroup>
+                        <SelectItem value="self">自建 SRS</SelectItem>
+                        <SelectItem value="aliyun">阿里云直播</SelectItem>
+                        <SelectItem value="qiniu">七牛直播</SelectItem>
+                      </SelectGroup>
                     </SelectContent>
                   </Select>
                 </Field>
@@ -479,6 +510,22 @@ export default function LiveStreamConfigPage() {
                         <FieldDescription>系统访问 SRS 接口时使用的密钥，包含在下方生成的回调地址里。必须与签名密钥设置为不同的值。</FieldDescription>
                       </Field>
                       <Field data-disabled={submitting ? true : undefined}>
+                        <FieldLabel htmlFor="api_base_url">本服务 API 地址</FieldLabel>
+                        <Input
+                          id="api_base_url"
+                          placeholder="https://api.example.com"
+                          value={form.api_base_url}
+                          onChange={(e) =>
+                            setForm((prev) => ({ ...prev, api_base_url: e.target.value }))
+                          }
+                          disabled={submitting}
+                          maxLength={500}
+                        />
+                        <FieldDescription>
+                          Orange TV 后端对外可达的根地址（不要带路径），用于生成下方 SRS 回调和播放鉴权 URL。
+                        </FieldDescription>
+                      </Field>
+                      <Field data-disabled={submitting ? true : undefined}>
                         <FieldLabel htmlFor="srs_api_base">SRS API 地址</FieldLabel>
                         <Input
                           id="srs_api_base"
@@ -492,18 +539,19 @@ export default function LiveStreamConfigPage() {
                         />
                         <FieldDescription>SRS 管理接口的地址，默认端口 1985。该端口只应监听内网，不要暴露到公网。</FieldDescription>
                       </Field>
-                      <Field>
-                        <FieldLabel>SRS 回调 URL</FieldLabel>
-                        <Input readOnly value={form.srs_hook_url} placeholder="保存回调密钥后生成" />
-                      </Field>
-                      <Field>
-                        <FieldLabel>Nginx 播放鉴权 URL</FieldLabel>
-                        <Input readOnly value={form.play_auth_url} placeholder="保存回调密钥后生成" />
-                        <FieldDescription>
-                          在 Nginx 中将 m3u8 和 flv 播放请求转发到这个地址做鉴权，并把原始请求地址放进请求头
-                          X-Original-URI。ts 分片请求不需要走鉴权。
-                        </FieldDescription>
-                      </Field>
+                      <CopyableURLField
+                        id="srs_hook_url"
+                        label="SRS 回调 URL"
+                        value={form.srs_hook_url}
+                        placeholder="保存本服务 API 地址和回调密钥后生成"
+                      />
+                      <CopyableURLField
+                        id="play_auth_url"
+                        label="Nginx 播放鉴权 URL"
+                        value={form.play_auth_url}
+                        placeholder="保存本服务 API 地址和回调密钥后生成"
+                        description="在 Nginx 中将 m3u8 和 flv 播放请求转发到这个地址做鉴权，并把原始请求地址放进请求头 X-Original-URI。ts 分片请求不需要走鉴权。"
+                      />
                     </>
                   ) : null}
                 </FieldGroup>
@@ -735,6 +783,55 @@ function SecretField({
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
       />
+    </Field>
+  )
+}
+
+function CopyableURLField({
+  id,
+  label,
+  value,
+  placeholder,
+  description,
+}: {
+  id: string
+  label: string
+  value: string
+  placeholder: string
+  description?: string
+}) {
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(value)
+      toast.success('已复制完整 URL')
+    } catch {
+      toast.error('复制失败')
+    }
+  }
+
+  return (
+    <Field>
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <InputGroup>
+        <InputGroupInput
+          id={id}
+          readOnly
+          value={maskHookSecretURL(value)}
+          placeholder={placeholder}
+        />
+        <InputGroupAddon align="inline-end">
+          <InputGroupButton
+            type="button"
+            size="icon-xs"
+            aria-label={`复制${label}`}
+            disabled={!value}
+            onClick={() => void copy()}
+          >
+            <Copy aria-hidden />
+          </InputGroupButton>
+        </InputGroupAddon>
+      </InputGroup>
+      {description ? <FieldDescription>{description}</FieldDescription> : null}
     </Field>
   )
 }

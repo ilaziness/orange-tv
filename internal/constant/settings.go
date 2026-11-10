@@ -45,6 +45,7 @@ const (
 	SettingLivePlayTTLSeconds  = "live_play_ttl_seconds"  // 播放签名有效秒数
 	SettingLiveSignSecret      = "live_sign_secret"       // 自建 HMAC 签名密钥
 	SettingLiveHookSecret      = "live_hook_secret"       // SRS 回调查询参数密钥
+	SettingLiveAPIBaseURL      = "live_api_base_url"      // 本服务 API 根地址，用于拼 SRS/Nginx 回调
 	SettingLiveSRSAPIBase      = "live_srs_api_base"      // SRS HTTP API，如 http://127.0.0.1:1985
 	SettingLiveAliyun          = "live_aliyun"            // 阿里云直播 JSON
 	SettingLiveQiniu           = "live_qiniu"             // 七牛直播 JSON
@@ -122,6 +123,7 @@ var GroupKeys = map[string][]string{
 		SettingLivePlayTTLSeconds,
 		SettingLiveSignSecret,
 		SettingLiveHookSecret,
+		SettingLiveAPIBaseURL,
 		SettingLiveSRSAPIBase,
 		SettingLiveAliyun,
 		SettingLiveQiniu,
@@ -177,6 +179,7 @@ var KeyToGroup = map[string]string{
 	SettingLivePlayTTLSeconds:        SettingGroupLive,
 	SettingLiveSignSecret:            SettingGroupLive,
 	SettingLiveHookSecret:            SettingGroupLive,
+	SettingLiveAPIBaseURL:            SettingGroupLive,
 	SettingLiveSRSAPIBase:            SettingGroupLive,
 	SettingLiveAliyun:                SettingGroupLive,
 	SettingLiveQiniu:                 SettingGroupLive,

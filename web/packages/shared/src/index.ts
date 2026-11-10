@@ -578,6 +578,8 @@ export type LiveSettings = {
   sign_secret: string
   /** Always empty from GET. Non-empty save replaces the SRS hook secret. */
   hook_secret: string
+  /** Orange TV service origin for SRS/Nginx callback URLs (no path). */
+  api_base_url: string
   srs_api_base: string
   srs_hook_url: string
   play_auth_url: string

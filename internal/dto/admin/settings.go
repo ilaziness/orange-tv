@@ -119,6 +119,8 @@ type UpdateLiveSettings struct {
 	SignSecret *string `json:"sign_secret" binding:"omitempty,max=256"`
 	// SRS 回调密钥；空字符串表示不修改
 	HookSecret *string `json:"hook_secret" binding:"omitempty,max=256"`
+	// 本服务 API 根地址（无尾斜杠），用于拼 SRS/Nginx 回调
+	APIBaseURL *string `json:"api_base_url" binding:"omitempty,max=500"`
 	// SRS HTTP API 根地址
 	SRSAPIBase *string `json:"srs_api_base" binding:"omitempty,max=500"`
 	// 自建 OBS 推流服务器地址

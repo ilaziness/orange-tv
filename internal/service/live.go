@@ -46,6 +46,7 @@ type LiveStreamConfig struct {
 	PlayTTLSeconds  int
 	SignSecret      string
 	HookSecret      string
+	APIBaseURL      string
 	SRSAPIBase      string
 	PushServer      string
 	PlayHLSTemplate string
@@ -91,6 +92,7 @@ func ParseLiveStreamConfig(m map[string]model.SystemSettings) LiveStreamConfig {
 		PlayTTLSeconds:  IntVal(m, constant.SettingLivePlayTTLSeconds, constant.LivePlayTTLDefault),
 		SignSecret:      strings.TrimSpace(StrVal(m, constant.SettingLiveSignSecret)),
 		HookSecret:      strings.TrimSpace(StrVal(m, constant.SettingLiveHookSecret)),
+		APIBaseURL:      strings.TrimRight(strings.TrimSpace(StrVal(m, constant.SettingLiveAPIBaseURL)), "/"),
 		SRSAPIBase:      strings.TrimRight(strings.TrimSpace(StrVal(m, constant.SettingLiveSRSAPIBase)), "/"),
 		PushServer:      strings.TrimSpace(StrVal(m, constant.SettingLivePushServer)),
 		PlayHLSTemplate: strings.TrimSpace(StrVal(m, constant.SettingLivePlayHLSTemplate)),

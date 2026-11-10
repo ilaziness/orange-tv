@@ -16,13 +16,8 @@ import (
 	"go.uber.org/zap"
 )
 
-func (s *settingsService) liveSettingsView(ctx context.Context, m map[string]model.SystemSettings) (any, error) {
-	seo, err := s.shared.LoadMapByGroup(ctx, constant.SettingGroupSEO)
-	if err != nil {
-		return nil, err
-	}
-	base := strings.TrimRight(strings.TrimSpace(service.StrVal(seo, constant.SettingSEOPublicBaseURL)), "/")
-	return service.MapToLiveSettings(m, base), nil
+func (s *settingsService) liveSettingsView(_ context.Context, m map[string]model.SystemSettings) (any, error) {
+	return service.MapToLiveSettings(m), nil
 }
 
 func (s *settingsService) parseLiveUpdate(ctx context.Context, data json.RawMessage) ([]repository.SettingUpsert, error) {
@@ -49,7 +44,10 @@ func (s *settingsService) parseLiveUpdate(ctx context.Context, data json.RawMess
 	if err != nil {
 		return nil, err
 	}
-	cfg := mergeLiveSettings(service.ParseLiveStreamConfig(currentMap), &req)
+	cfg, err := mergeLiveSettings(service.ParseLiveStreamConfig(currentMap), &req)
+	if err != nil {
+		return nil, err
+	}
 	if err := cfg.ValidateForSave(); err != nil {
 		return nil, err
 	}
@@ -58,12 +56,12 @@ func (s *settingsService) parseLiveUpdate(ctx context.Context, data json.RawMess
 
 func liveUpdateEmpty(req *admindto.UpdateLiveSettings) bool {
 	return req.Provider == nil && req.AuthEnabled == nil && req.PushTTLSeconds == nil && req.PlayTTLSeconds == nil &&
-		req.SignSecret == nil && req.HookSecret == nil && req.SRSAPIBase == nil &&
+		req.SignSecret == nil && req.HookSecret == nil && req.APIBaseURL == nil && req.SRSAPIBase == nil &&
 		req.PushServer == nil && req.PlayHLSTemplate == nil && req.PlayFLVTemplate == nil &&
 		req.Aliyun == nil && req.Qiniu == nil
 }
 
-func mergeLiveSettings(cfg service.LiveStreamConfig, req *admindto.UpdateLiveSettings) service.LiveStreamConfig {
+func mergeLiveSettings(cfg service.LiveStreamConfig, req *admindto.UpdateLiveSettings) (service.LiveStreamConfig, error) {
 	if req.Provider != nil {
 		cfg.Provider = strings.TrimSpace(*req.Provider)
 	}
@@ -78,6 +76,13 @@ func mergeLiveSettings(cfg service.LiveStreamConfig, req *admindto.UpdateLiveSet
 	}
 	keepSecret(&cfg.SignSecret, req.SignSecret)
 	keepSecret(&cfg.HookSecret, req.HookSecret)
+	if req.APIBaseURL != nil {
+		normalized, err := service.NormalizeAPIBaseURL(*req.APIBaseURL)
+		if err != nil {
+			return cfg, errcode.WithMessage(errcode.ParamError, err.Error())
+		}
+		cfg.APIBaseURL = normalized
+	}
 	if req.SRSAPIBase != nil {
 		cfg.SRSAPIBase = strings.TrimRight(strings.TrimSpace(*req.SRSAPIBase), "/")
 	}
@@ -115,7 +120,7 @@ func mergeLiveSettings(cfg service.LiveStreamConfig, req *admindto.UpdateLiveSet
 	if cfg.Provider == "" {
 		cfg.Provider = constant.LiveProviderSelf
 	}
-	return cfg
+	return cfg, nil
 }
 
 func liveUpserts(cfg service.LiveStreamConfig) ([]repository.SettingUpsert, error) {
@@ -138,6 +143,7 @@ func liveUpserts(cfg service.LiveStreamConfig) ([]repository.SettingUpsert, erro
 		{Key: constant.SettingLivePlayTTLSeconds, Group: constant.SettingGroupLive, Value: strconv.Itoa(cfg.PlayTTLSeconds), SettingType: constant.SettingTypeNumber, Description: "播放签名有效秒数"},
 		{Key: constant.SettingLiveSignSecret, Group: constant.SettingGroupLive, Value: cfg.SignSecret, SettingType: constant.SettingTypeString, Description: "自建 HMAC 签名密钥"},
 		{Key: constant.SettingLiveHookSecret, Group: constant.SettingGroupLive, Value: cfg.HookSecret, SettingType: constant.SettingTypeString, Description: "SRS 回调密钥"},
+		{Key: constant.SettingLiveAPIBaseURL, Group: constant.SettingGroupLive, Value: cfg.APIBaseURL, SettingType: constant.SettingTypeString, Description: "本服务 API 根地址（用于拼 SRS/Nginx 回调）"},
 		{Key: constant.SettingLiveSRSAPIBase, Group: constant.SettingGroupLive, Value: cfg.SRSAPIBase, SettingType: constant.SettingTypeString, Description: "SRS HTTP API 根地址"},
 		{Key: constant.SettingLivePushServer, Group: constant.SettingGroupLive, Value: cfg.PushServer, SettingType: constant.SettingTypeString, Description: "自建 OBS 推流服务器地址"},
 		{Key: constant.SettingLivePlayHLSTemplate, Group: constant.SettingGroupLive, Value: cfg.PlayHLSTemplate, SettingType: constant.SettingTypeString, Description: "自建 HLS 播放地址模板（含 {stream_key}）"},
