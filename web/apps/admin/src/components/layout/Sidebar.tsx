@@ -114,9 +114,7 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" tooltip="首页" render={<Link to="/" />}>
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                <LayoutDashboard />
-              </div>
+              <img src="/logo.svg" alt="小橘TV" className="size-8" />
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-semibold">小橘TV</span>
                 <span className="truncate text-xs">管理后台</span>
