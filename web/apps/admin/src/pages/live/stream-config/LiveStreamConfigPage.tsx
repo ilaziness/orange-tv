@@ -299,8 +299,8 @@ export default function LiveStreamConfigPage() {
         <CardHeader>
           <CardTitle>推流配置</CardTitle>
           <CardDescription>
-            选择自建 SRS、阿里云直播或七牛直播。自建地址仍使用原来的推流服务器和播放模板，不会另存一份。
-            密钥留空表示不修改。有房间正在直播时不能保存。部署说明见{' '}
+            选择自建 SRS、阿里云直播或七牛直播。切换厂商后，自建的推流和播放地址会保留，切回来时无需重新填写。
+            密钥输入框留空表示不修改。有房间正在直播时无法保存。部署说明见{' '}
             <a
               href={LIVE_DOCS_URL}
               target="_blank"
@@ -347,56 +347,65 @@ export default function LiveStreamConfigPage() {
                     </SelectContent>
                   </Select>
                 </Field>
-                <Field data-disabled={submitting ? true : undefined}>
-                  <FieldLabel htmlFor="push_ttl">推流签名有效期（秒）</FieldLabel>
-                  <Input
-                    id="push_ttl"
-                    type="number"
-                    min={600}
-                    max={86400}
-                    value={form.push_ttl_seconds}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, push_ttl_seconds: Number(e.target.value) }))
-                    }
-                    disabled={submitting}
-                  />
-                  <FieldDescription>默认 12 小时（43200）。范围 600–86400。</FieldDescription>
-                </Field>
-                <Field data-disabled={submitting ? true : undefined}>
-                  <FieldLabel htmlFor="play_ttl">播放签名有效期（秒）</FieldLabel>
-                  <Input
-                    id="play_ttl"
-                    type="number"
-                    min={600}
-                    max={86400}
-                    value={form.play_ttl_seconds}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, play_ttl_seconds: Number(e.target.value) }))
-                    }
-                    disabled={submitting}
-                  />
-                  <FieldDescription>默认 2 小时（7200）。观看页会在到期前换地址。</FieldDescription>
-                </Field>
+                {provider === 'self' && (
+                  <>
+                    <Field orientation="horizontal" data-disabled={submitting ? true : undefined}>
+                      <Switch
+                        id="auth_enabled"
+                        checked={form.auth_enabled}
+                        onCheckedChange={(checked) =>
+                          setForm((prev) => ({ ...prev, auth_enabled: checked }))
+                        }
+                        disabled={submitting}
+                      />
+                      <FieldLabel htmlFor="auth_enabled">开启自建鉴权</FieldLabel>
+                    </Field>
+                    <FieldDescription>
+                      打开后，系统会校验推流和播放地址是否带有效签名，防止别人拿到地址就能推流或观看。注意：SRS
+                      侧也需要按部署文档完成对应配置。未打开鉴权时，直接使用下面的推流服务器和播放地址。
+                    </FieldDescription>
+                  </>
+                )}
+                {(provider !== 'self' || form.auth_enabled) && (
+                  <>
+                    <Field data-disabled={submitting ? true : undefined}>
+                      <FieldLabel htmlFor="push_ttl">推流地址有效期（秒）</FieldLabel>
+                      <Input
+                        id="push_ttl"
+                        type="number"
+                        min={600}
+                        max={86400}
+                        value={form.push_ttl_seconds}
+                        onChange={(e) =>
+                          setForm((prev) => ({ ...prev, push_ttl_seconds: Number(e.target.value) }))
+                        }
+                        disabled={submitting}
+                      />
+                      <FieldDescription>主播的推流地址在这个时间内有效，默认 12 小时（43200 秒），可填 600–86400。</FieldDescription>
+                    </Field>
+                    <Field data-disabled={submitting ? true : undefined}>
+                      <FieldLabel htmlFor="play_ttl">播放地址有效期（秒）</FieldLabel>
+                      <Input
+                        id="play_ttl"
+                        type="number"
+                        min={600}
+                        max={86400}
+                        value={form.play_ttl_seconds}
+                        onChange={(e) =>
+                          setForm((prev) => ({ ...prev, play_ttl_seconds: Number(e.target.value) }))
+                        }
+                        disabled={submitting}
+                      />
+                      <FieldDescription>观众的播放地址在这个时间内有效，默认 2 小时（7200 秒）。观看页会自动获取新地址，不影响观看。</FieldDescription>
+                    </Field>
+                  </>
+                )}
               </FieldGroup>
 
               {provider === 'self' ? (
                 <FieldGroup>
-                  <Field orientation="horizontal" data-disabled={submitting ? true : undefined}>
-                    <Switch
-                      id="auth_enabled"
-                      checked={form.auth_enabled}
-                      onCheckedChange={(checked) =>
-                        setForm((prev) => ({ ...prev, auth_enabled: checked }))
-                      }
-                      disabled={submitting}
-                    />
-                    <FieldLabel htmlFor="auth_enabled">开启自建鉴权</FieldLabel>
-                  </Field>
-                  <FieldDescription>
-                    鉴权开关不会替你改 SRS。回调没配好时，裸流名仍然能推。未打开鉴权时，继续用下面三个地址拼裸 URL。
-                  </FieldDescription>
                   <Field data-disabled={submitting ? true : undefined}>
-                    <FieldLabel htmlFor="push_server">推流服务器</FieldLabel>
+                    <FieldLabel htmlFor="push_server">推流服务器地址</FieldLabel>
                     <Input
                       id="push_server"
                       placeholder="rtmp://media.example.com/live"
@@ -405,9 +414,10 @@ export default function LiveStreamConfigPage() {
                       disabled={submitting}
                       maxLength={500}
                     />
+                    <FieldDescription>主播在 OBS 等软件里填写的服务器地址，会展示在开播页。</FieldDescription>
                   </Field>
                   <Field data-disabled={submitting ? true : undefined}>
-                    <FieldLabel htmlFor="play_hls_template">HLS 播放模板</FieldLabel>
+                    <FieldLabel htmlFor="play_hls_template">HLS 播放地址模板</FieldLabel>
                     <Input
                       id="play_hls_template"
                       placeholder="https://media.example.com/live/{stream_key}.m3u8"
@@ -418,9 +428,10 @@ export default function LiveStreamConfigPage() {
                       disabled={submitting}
                       maxLength={500}
                     />
+                    <FieldDescription>把 {'{stream_key}'} 替换成房间的推流密钥，就是实际的播放地址。必填。</FieldDescription>
                   </Field>
                   <Field data-disabled={submitting ? true : undefined}>
-                    <FieldLabel htmlFor="play_flv_template">FLV 播放模板（可选）</FieldLabel>
+                    <FieldLabel htmlFor="play_flv_template">FLV 播放地址模板（可选）</FieldLabel>
                     <Input
                       id="play_flv_template"
                       placeholder="https://media.example.com/live/{stream_key}.flv"
@@ -431,6 +442,7 @@ export default function LiveStreamConfigPage() {
                       disabled={submitting}
                       maxLength={500}
                     />
+                    <FieldDescription>格式同上，不填则只提供 HLS 播放。</FieldDescription>
                   </Field>
                   {form.auth_enabled ? (
                     <>
@@ -448,7 +460,7 @@ export default function LiveStreamConfigPage() {
                           disabled={submitting}
                           maxLength={256}
                         />
-                        <FieldDescription>只用于推流和播放 HMAC，接口不回传。</FieldDescription>
+                        <FieldDescription>用于给推流和播放地址生成签名，防止地址被盗用。保存后不会再显示。</FieldDescription>
                       </Field>
                       <Field data-disabled={submitting ? true : undefined}>
                         <FieldLabel htmlFor="hook_secret">回调密钥</FieldLabel>
@@ -464,7 +476,7 @@ export default function LiveStreamConfigPage() {
                           disabled={submitting}
                           maxLength={256}
                         />
-                        <FieldDescription>只放在 SRS 回调 URL 里，必须和签名密钥不同。</FieldDescription>
+                        <FieldDescription>系统访问 SRS 接口时使用的密钥，包含在下方生成的回调地址里。必须与签名密钥设置为不同的值。</FieldDescription>
                       </Field>
                       <Field data-disabled={submitting ? true : undefined}>
                         <FieldLabel htmlFor="srs_api_base">SRS API 地址</FieldLabel>
@@ -478,7 +490,7 @@ export default function LiveStreamConfigPage() {
                           disabled={submitting}
                           maxLength={500}
                         />
-                        <FieldDescription>1985 只监听内网，不要暴露到公网。</FieldDescription>
+                        <FieldDescription>SRS 管理接口的地址，默认端口 1985。该端口只应监听内网，不要暴露到公网。</FieldDescription>
                       </Field>
                       <Field>
                         <FieldLabel>SRS 回调 URL</FieldLabel>
@@ -488,7 +500,8 @@ export default function LiveStreamConfigPage() {
                         <FieldLabel>Nginx 播放鉴权 URL</FieldLabel>
                         <Input readOnly value={form.play_auth_url} placeholder="保存回调密钥后生成" />
                         <FieldDescription>
-                          只给 m3u8 和 flv 使用，并把 $request_uri 放到 X-Original-URI。不要把每个 .ts 打到这里。
+                          在 Nginx 中将 m3u8 和 flv 播放请求转发到这个地址做鉴权，并把原始请求地址放进请求头
+                          X-Original-URI。ts 分片请求不需要走鉴权。
                         </FieldDescription>
                       </Field>
                     </>
@@ -498,6 +511,7 @@ export default function LiveStreamConfigPage() {
 
               {provider === 'aliyun' ? (
                 <FieldGroup>
+                  <FieldDescription>域名只填本身，不要带 http:// 或路径。域名和密钥需要在阿里云控制台先配置好。</FieldDescription>
                   <Field data-disabled={submitting ? true : undefined}>
                     <FieldLabel htmlFor="aliyun_push">推流域名</FieldLabel>
                     <Input
@@ -557,6 +571,7 @@ export default function LiveStreamConfigPage() {
                       }
                       disabled={submitting}
                     />
+                    <FieldDescription>直播服务所在的地域，如 cn-shanghai（华东 2）。</FieldDescription>
                   </Field>
                   <SecretField
                     id="aliyun_push_key"
@@ -602,17 +617,20 @@ export default function LiveStreamConfigPage() {
                     }
                   />
                   <FieldDescription>
-                    控制台鉴权方式选 A，推流和播放各一把 Key。AccessKey 只用于禁推和恢复，RAM 不要授其它直播权限。
+                    阿里云控制台中的 URL 鉴权请选择"方式 A"，推流域名和播放域名各配置一把鉴权 Key。AccessKey
+                    仅用于强制结束直播和恢复推流，RAM 授权时只开放直播相关权限。
                   </FieldDescription>
                 </FieldGroup>
               ) : null}
 
               {provider === 'qiniu' ? (
                 <FieldGroup>
+                  <FieldDescription>域名只填本身，不要带 http:// 或路径。域名和密钥需要在七牛控制台先配置好。</FieldDescription>
                   <Field data-disabled={submitting ? true : undefined}>
-                    <FieldLabel htmlFor="qiniu_hub">Hub</FieldLabel>
+                    <FieldLabel htmlFor="qiniu_hub">Hub（直播空间名称）</FieldLabel>
                     <Input
                       id="qiniu_hub"
+                      placeholder="我的直播空间"
                       value={form.qiniu.hub}
                       onChange={(e) =>
                         setForm((prev) => ({ ...prev, qiniu: { ...prev.qiniu, hub: e.target.value } }))
@@ -671,7 +689,7 @@ export default function LiveStreamConfigPage() {
                     }
                   />
                   <FieldDescription>
-                    播放使用时间戳防盗链，控制台密钥必须与这里的 SecretKey 相同。推流使用带过期时间的管理凭证。
+                    播放地址使用时间戳防盗链，播放鉴权密钥要与七牛控制台中配置的密钥保持一致。推流地址会自动带上过期时间。
                   </FieldDescription>
                 </FieldGroup>
               ) : null}
