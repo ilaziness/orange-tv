@@ -2,6 +2,7 @@ package open
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/ilaziness/orange-tv/internal/constant"
@@ -56,6 +57,10 @@ func (s *liveHookService) SRSHook(ctx context.Context, hookSecret string, body S
 		s.log.Info("live hook: srs unpublish", zap.String("app", body.App), zap.String("stream", body.Stream))
 		return nil
 	}
+	// SRS reports HTTP playback as "xxx.flv" / "xxx.m3u8"; rooms are stored by bare stream key.
+	if body.Action == "on_play" {
+		body.Stream = srsPlayStreamName(body.Stream)
+	}
 	var room *model.LiveRooms
 	if body.Stream != "" {
 		room, err = s.repo.GetRoomByStreamKey(ctx, body.Stream)
@@ -103,4 +108,16 @@ func (s *liveHookService) load(ctx context.Context) (service.LiveStreamConfig, e
 		return service.LiveStreamConfig{}, err
 	}
 	return service.ParseLiveStreamConfig(m), nil
+}
+
+// srsPlayStreamName strips the playback extension from an on_play stream name.
+func srsPlayStreamName(stream string) string {
+	stream = strings.TrimSpace(stream)
+	lower := strings.ToLower(stream)
+	for _, ext := range []string{".flv", ".m3u8"} {
+		if strings.HasSuffix(lower, ext) {
+			return stream[:len(stream)-len(ext)]
+		}
+	}
+	return stream
 }
