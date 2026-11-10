@@ -114,7 +114,7 @@ var (
 	LiveNotStreamer           = &Code{4001115, "非主播账号", 403, nil}
 	LiveCategoryHasChildren   = &Code{4001116, "直播分类下仍有子分类，无法删除", 409, nil}
 	LiveCategoryInUse         = &Code{4001117, "直播分类仍被直播间引用，无法删除", 409, nil}
-	LiveMediaDisconnectFailed = &Code{4001118, "直播已结束，但媒体连接未断开，请到媒体服务器或云控制台手动断开", 502, nil}
+	LiveMediaDisconnectFailed = &Code{4001118, "直播已结束，但推流连接断开失败，请手动停止推流", 502, nil}
 
 	// 支付 (500xxxx)
 	PaymentConfigInvalid    = &Code{5000001, "支付配置无效", 400, nil}

@@ -317,7 +317,7 @@ export function Component() {
       await refreshRoom()
     } catch (err) {
       if (isLiveMediaDisconnectError(err)) {
-        toast.warning(err instanceof ApiError ? err.message : '直播已结束，请到媒体服务器手动断开')
+        toast.warning(err instanceof ApiError ? err.message : '直播已结束，但推流连接断开失败，请手动停止推流')
         await refreshRoom()
       } else {
         toast.error(errorMessage(err))

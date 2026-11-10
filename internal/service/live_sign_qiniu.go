@@ -161,6 +161,11 @@ func qiniuStreamDisabled(ctx context.Context, client *http.Client, cfg LiveQiniu
 	missing := resp.StatusCode == http.StatusNotFound || resp.StatusCode == 612 ||
 		strings.Contains(blob, "not found") || strings.Contains(blob, "no such") || strings.Contains(blob, "not exist")
 	if missing {
+		// Resuming a stream that was never disabled is normal success.
+		// Kicking a missing stream usually means a wrong hub config; fail so it gets noticed.
+		if disabledTill < 0 {
+			return fmt.Errorf("qiniu disable: stream not found, status %d body %s", resp.StatusCode, string(body))
+		}
 		return nil
 	}
 	if disabledTill == 0 && (strings.Contains(blob, "not disabled") || strings.Contains(blob, "not forbidden")) {

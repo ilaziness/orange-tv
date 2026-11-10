@@ -197,6 +197,29 @@ func TestQiniuDisableUsesURLSafeBase64(t *testing.T) {
 	assert.JSONEq(t, `{"disabledTill":0}`, gotBody)
 }
 
+func TestQiniuKickMissingStreamFailsButResumeSucceeds(t *testing.T) {
+	t.Parallel()
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = io.WriteString(w, `{"error":"stream not found"}`)
+	}))
+	t.Cleanup(srv.Close)
+
+	cfg := LiveStreamConfig{
+		Provider: constant.LiveProviderQiniu,
+		Qiniu: LiveQiniuConfig{
+			Hub: "hub", PushDomain: "push.example.com", PlayDomain: "play.example.com",
+			AccessKey: "ak", SecretKey: "sk",
+		},
+	}
+	client := rewriteHostClient(srv)
+	err := KickLiveStream(context.Background(), client, cfg, "stream1")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "stream not found")
+
+	require.NoError(t, ResumeLiveStream(context.Background(), client, cfg, "stream1"))
+}
+
 func rewriteHostClient(srv *httptest.Server) *http.Client {
 	return &http.Client{
 		Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
