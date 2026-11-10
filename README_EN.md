@@ -236,16 +236,6 @@ If you are a developer or operator and want to build from source, deploy as foll
 
 For detailed installation, configuration, commands and technical notes, see the [technical docs](docs/README.md).
 
-## Documentation index
-
-| Document                                          | Content                                                                                    |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| [Technical docs](docs/README.md)                  | Project structure, configuration, commands, database, observability                        |
-| [Deployment guide](docs/deployment.md)            | Single-instance, multi-instance and Docker deployment                                      |
-| [Live streaming setup](docs/live-streaming.md)    | Media server, HTTPS/firewall, admin stream config                                          |
-| [Module usage](docs/module-usage.md)              | How to select and remove unneeded service modules                                          |
-| [Observability guide](docs/observability.md)      | Logging, tracing and metrics configuration                                                 |
-
 ## Disclaimer
 
 This project is for learning and technical research purposes only. It does not provide, host, distribute or bundle any video content.

@@ -4,41 +4,51 @@
 
 有房间正在直播时不能保存这组配置。先让主播停播，再改厂商或密钥。
 
-主播先在网页点「开始直播」，工作室才会给出推流密钥（含签名时是整串，不要只填流名）。密钥快到期时，在工作室点「刷新推流密钥」，再更新 OBS；页面不会自动改掉已经复制出去的密钥。
-
-密钥输入框留空表示不修改。推流有效期默认 12 小时，播放有效期默认 2 小时，允许 600–86400 秒。
-
 站点用 HTTPS 时，播放地址也必须是 HTTPS。
 
 ## 自建 SRS
 
-安装见 [SRS 文档](https://ossrs.io/lts/zh-cn/docs/v5/doc/getting-started)。媒体服和应用分开部署。应用名用 `live`，和推流地址路径一致，例如 `rtmp://media.example.com/live`。
+以下按 **SRS 6** 说明，安装见 [SRS 6 文档](https://ossrs.io/lts/zh-cn/docs/v6/doc/getting-started)，推荐 Docker 部署：
 
-| 用途 | 端口 | 谁能访问 |
-|------|------|----------|
-| 推流 RTMP | 1935 | 主播 |
-| 播放 HTTP | 8080 | 观众，或只给本机 Nginx |
-| SRS HTTP API | 1985 | 只绑 `127.0.0.1`，不要映射到公网 |
+```sh
+docker run -d --name srs --restart always \
+  -p 1935:1935 -p 8080:8080 \
+  -v ./srs.conf:/usr/local/srs/conf/srs.conf \
+  ossrs/srs:6
+```
+
+> SRS HTTP API（1985）只在 Orange TV 与 SRS 分机部署时才需要映射端口，并要用防火墙只放行 Orange TV 服务器，不要暴露到公网。
+
+本节假定 Orange TV 的服务地址为 `https://tv.example.com`（站点对外地址，经 Nginx 等反代到 443），下文所有回调、鉴权地址都按它填写，替换成你的实际地址即可。SRS 6 全部使用默认端口：RTMP 1935、HTTP API 1985、HTTP Server 8080。
+
+媒体服（SRS）和应用（Orange TV）分开部署。应用名用 `live`，和推流地址路径一致，例如 `rtmp://media.example.com/live`。
+
+| 用途         | 端口 | 说明                                                                    |
+| ------------ | ---- | ----------------------------------------------------------------------- |
+| 推流 RTMP    | 1935 | 主播访问                                                                |
+| 播放 HTTP    | 8080 | 观众直连时绑 `0.0.0.0`；只给本机 Nginx 反代时绑 `127.0.0.1`             |
+| SRS HTTP API | 1985 | Orange TV 用它断开播流。分机部署时绑定内网地址并只放行 Orange TV 服务器 |
+
+> Orange TV 默认端口也是 8080。假定 Orange TV 经域名对外服务时不会与 SRS 的默认 8080 冲突；如果两者部署在同一台机器且直接按端口访问，必须改掉其中一个端口，并同步更新播放模板和下文地址。
 
 ### 1. 写入 SRS 配置
 
-`http://127.0.0.1:8080` 是 Orange TV 的地址，不是 SRS 的 8080。先在管理端保存配置，再把页面上的回调 URL 贴进 `http_hooks`。
-
-未开鉴权时，删掉下面的 `http_hooks` 整段即可。
+先在管理端保存配置，再把页面给出的回调 URL 贴进 `http_hooks`。回调 URL 的主机部分必须填 **SRS 所在机器能访问到的 Orange TV 服务地址**，本节假定为 `https://tv.example.com`。
 
 ```conf
+daemon off;         # Docker 必须前台运行；源码部署后台运行时可去掉或改为 on
 listen              1935;
 max_connections     1000;
 srs_log_tank        console;
 
 http_api {
     enabled         on;
-    listen          127.0.0.1:1985;
+    listen          1985;
 }
 
 http_server {
     enabled         on;
-    listen          127.0.0.1:8080;
+    listen          8080;
 }
 
 vhost __defaultVhost__ {
@@ -54,19 +64,19 @@ vhost __defaultVhost__ {
     }
     http_hooks {
         enabled         on;
-        on_publish      http://127.0.0.1:8080/api/open/v1/live/hooks/srs?hook_secret=管理端回调URL里的密钥;
-        on_unpublish    http://127.0.0.1:8080/api/open/v1/live/hooks/srs?hook_secret=管理端回调URL里的密钥;
-        on_play         http://127.0.0.1:8080/api/open/v1/live/hooks/srs?hook_secret=管理端回调URL里的密钥;
+        on_publish      https://tv.example.com/api/open/v1/live/hooks/srs?hook_secret=管理端回调URL里的密钥;
+        on_unpublish    https://tv.example.com/api/open/v1/live/hooks/srs?hook_secret=管理端回调URL里的密钥;
+        on_play         https://tv.example.com/api/open/v1/live/hooks/srs?hook_secret=管理端回调URL里的密钥;
     }
 }
 ```
 
-改完后重载 SRS。回调没配好时，不带密钥的流名仍然能推。
+改完后重载 SRS：源码安装 `./etc/init.d/srs reload`，Docker 直接 `docker restart srs`。回调没配好时，不带密钥的流名仍然能推。
 
 ### 2. 播放鉴权二选一
 
-- 观众直接访问 SRS 的 FLV/HLS：保留上面的 `on_play`，不要再配 Nginx 鉴权。
-- 观众访问前面的 Nginx：删掉 `on_play`，只给 m3u8 和 flv 配 `auth_request`。不要给 `.ts` 做鉴权。
+- 观众直接访问 SRS 的 FLV/HLS：播放模板直接写 SRS 的播放地址，保留上面的 `on_play`，不要再配 Nginx 鉴权。
+- 观众访问前面的 Nginx：删掉 `on_play`，只给 m3u8 和 flv 配 `auth_request`。`.ts` 分片不做鉴权（鉴权接口也不校验 `.ts`），由 m3u8 保护。
 
 Nginx 示例（播放域名和站点不同时需要 CORS）：
 
@@ -75,67 +85,59 @@ server {
     listen 443 ssl;
     server_name media.example.com;
 
+    # m3u8 / flv：先鉴权，再转发给 SRS
     location /live/ {
         auth_request /orange_live_auth;
-        alias /usr/local/srs/objs/nginx/html/live/;
-        # 播放由 SRS HTTP 提供时，改为：
-        # proxy_pass http://127.0.0.1:8080/live/;
+        proxy_pass http://127.0.0.1:8080;    # SRS 的 http_server
+        add_header Access-Control-Allow-Origin *;
+    }
+
+    # ts 分片：不鉴权，直接转发给 SRS
+    location ~* \.ts$ {
+        proxy_pass http://127.0.0.1:8080;    # SRS 的 http_server
         add_header Access-Control-Allow-Origin *;
     }
 
     location = /orange_live_auth {
         internal;
-        proxy_pass http://127.0.0.1:8080/api/open/v1/live/auth/play?hook_secret=回调密钥;
+        proxy_pass https://tv.example.com/api/open/v1/live/auth/play?hook_secret=回调密钥;
         proxy_pass_request_body off;
         proxy_set_header Content-Length "";
         proxy_set_header X-Original-URI $request_uri;
     }
-
-    location ~* \.ts$ {
-        root /usr/local/srs/objs/nginx/html;
-    }
 }
 ```
 
-`proxy_pass` 里的地址同样是 Orange TV，不是 SRS 的 8080。`hook_secret` 用管理端的回调密钥。
+两个 `proxy_pass` 不是同一个服务：播放和 ts 分片转发的是 SRS 的 http_server（默认 8080），鉴权转发的是前面假定的 Orange TV 服务地址 `https://tv.example.com`。`hook_secret` 用管理端的回调密钥。
 
 ### 3. 填写管理端
 
-未开鉴权：
-
-| 字段 | 示例 |
-|------|------|
-| 厂商 | 自建 SRS |
-| 开启自建鉴权 | 关 |
-| 推流服务器 | `rtmp://media.example.com/live` |
-| HLS 播放模板 | `https://media.example.com/live/{stream_key}.m3u8` |
-| FLV 播放模板 | `https://media.example.com/live/{stream_key}.flv` |
-
-打开鉴权后再填：
-
-| 字段 | 填什么 |
-|------|--------|
-| 签名密钥 | 一长串随机字符。留空表示不改 |
-| 回调密钥 | 另一串随机字符，不能和签名密钥相同 |
-| SRS API 地址 | `http://127.0.0.1:1985`，Orange TV 要能访问 |
-| SRS 回调 URL | 保存后整段复制到 SRS 的 `http_hooks` |
-| Nginx 播放鉴权 URL | 只有走 Nginx 鉴权时才用 |
-
-公开站点 URL 在 SEO 设置里。没填时，回调 URL 只有路径，前面自己补上 Orange TV 的对外地址。
+| 字段               | 填什么                                                                                  |
+| ------------------ | ---------------------------------------------------------------------------------------- |
+| 厂商               | 自建 SRS                                                                                 |
+| 开启自建鉴权       | 开                                                                                       |
+| 推流服务器         | `rtmp://media.example.com/live`                                                          |
+| HLS 播放模板       | `https://media.example.com/live/{stream_key}.m3u8`                                       |
+| FLV 播放模板       | `https://media.example.com/live/{stream_key}.flv`                                        |
+| 签名密钥           | 一长串随机字符。留空表示不改                                                             |
+| 回调密钥           | 另一串随机字符，不能和签名密钥相同                                                       |
+| SRS API 地址       | 同机填 `http://127.0.0.1:1985`，分机填 `http://192.168.1.10:1985`。Orange TV 必须能访问   |
+| SRS 回调 URL       | 自动生成，保存后整段复制到 SRS 的 `http_hooks`。`hook_secret` 参数就是上面的回调密钥      |
+| Nginx 播放鉴权 URL | 自动生成，只有走 Nginx 鉴权时才用。`hook_secret` 参数同样是回调密钥                       |
 
 ### 4. OBS
 
 1. 网页点「开始直播」。
 2. OBS → 设置 → 推流 → 服务选自定义。
 3. 服务器填推流服务器，例如 `rtmp://media.example.com/live`。
-4. 串流密钥填工作室里的整串。开了鉴权时是 `流名?token=...`。
+4. 串流密钥填工作室里的整串，形如 `流名?token=...`。
 
 ### 5. 检查
 
 - 鉴权和回调都生效后，不带 `token` 推不上去。
 - 网页停播后，OBS 断开。
 - 改错或改过期播放地址里的 `token`，下一次请求 m3u8 或 flv 失败。
-- 页面提示媒体连接未断开时，确认 Orange TV 能访问 1985，或在 SRS 上手动断开该路推流。
+- 页面提示媒体连接未断开时，确认 Orange TV 能访问 SRS API 地址（1985），或在 SRS 上手动断开该路推流。
 
 ## 阿里云直播
 
@@ -151,15 +153,15 @@ server {
 
 ### 2. 填写管理端
 
-| 字段 | 示例 |
-|------|------|
-| 厂商 | 阿里云直播 |
-| 推流域名 | `push.example.com` |
-| 播放域名 | `play.example.com` |
-| AppName | `live` |
-| 地域 | `cn-shanghai` |
-| 推流鉴权 Key | 控制台推流鉴权 Key |
-| 播放鉴权 Key | 控制台播放鉴权 Key |
+| 字段                          | 示例                      |
+| ----------------------------- | ------------------------- |
+| 厂商                          | 阿里云直播                |
+| 推流域名                      | `push.example.com`        |
+| 播放域名                      | `play.example.com`        |
+| AppName                       | `live`                    |
+| 地域                          | `cn-shanghai`             |
+| 推流鉴权 Key                  | 控制台推流鉴权 Key        |
+| 播放鉴权 Key                  | 控制台播放鉴权 Key        |
 | AccessKeyId / AccessKeySecret | 上面那个 RAM 子账号的密钥 |
 
 ### 3. OBS
@@ -188,12 +190,12 @@ server {
 
 ### 2. 填写管理端
 
-| 字段 | 示例 |
-|------|------|
-| 厂商 | 七牛直播 |
-| Hub | 控制台空间名 |
-| 推流域名 | `push.example.com` |
-| 播放域名 | `play.example.com` |
+| 字段                  | 示例                                         |
+| --------------------- | -------------------------------------------- |
+| 厂商                  | 七牛直播                                     |
+| Hub                   | 控制台空间名                                 |
+| 推流域名              | `push.example.com`                           |
+| 播放域名              | `play.example.com`                           |
 | AccessKey / SecretKey | 七牛账号密钥。SecretKey 与播放防盗链密钥相同 |
 
 ### 3. OBS
