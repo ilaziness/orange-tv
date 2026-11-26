@@ -44,7 +44,9 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
       ))}
 
       <div className="absolute inset-0 flex flex-col justify-end gap-6 p-6 md:p-10">
-        <div className="flex max-w-2xl flex-col gap-4">
+        <div
+          className={cn('flex max-w-2xl flex-col gap-4', banners.length > 1 && 'max-md:pb-12')}
+        >
           <h1 className="text-3xl font-bold tracking-tight text-gray-300 md:text-4xl lg:text-5xl">
             {activeBanner.title}
           </h1>
@@ -94,20 +96,31 @@ export function BannerCarousel({ banners }: BannerCarouselProps) {
             >
               <ChevronRightIcon />
             </Button>
-            <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2">
-              {banners.map((_, i) => (
+            <div className="absolute bottom-4 right-4 z-10 flex gap-2 md:bottom-6 md:right-6">
+              {banners.map((banner, i) => (
                 <button
-                  key={i}
+                  key={banner.id}
                   type="button"
                   className={cn(
-                    'h-1.5 rounded-full transition-all duration-300',
+                    'h-10 w-16 overflow-hidden rounded-md border-2 transition-all duration-300 md:h-14 md:w-24',
                     i === bannerIdx
-                      ? 'w-6 bg-primary'
-                      : 'w-1.5 bg-foreground/40 hover:bg-foreground/80',
+                      ? 'border-primary opacity-100 ring-1 ring-primary/40'
+                      : 'border-muted-foreground/40 opacity-70 hover:border-muted-foreground/70 hover:opacity-100',
                   )}
                   onClick={() => setBannerIdx(i)}
+                  aria-label={banner.title || `Banner ${i + 1}`}
+                  aria-current={i === bannerIdx ? 'true' : undefined}
                 >
-                  <span className="sr-only">Banner {i + 1}</span>
+                  {banner.cover ? (
+                    <img
+                      src={banner.cover}
+                      alt=""
+                      className="h-full w-full object-cover"
+                      draggable={false}
+                    />
+                  ) : (
+                    <div className="h-full w-full bg-muted" />
+                  )}
                 </button>
               ))}
             </div>
