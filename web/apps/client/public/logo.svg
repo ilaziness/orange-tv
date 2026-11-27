@@ -1,22 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none" role="img" aria-label="Orange TV logo">
   <title>Orange TV logo</title>
+  <rect x="28.16" y="28.16" width="455.68" height="455.68" rx="122.88" fill="#FFECDC" stroke="#E4C4A8" stroke-width="6.50"/>
   <defs>
     <clipPath id="otv-play">
-      <path d="M 100.86 146.32 Q 100.86 56.32 179.54 100.03 L 381.61 212.29 Q 460.29 256.00 381.61 299.71 L 179.54 411.97 Q 100.86 455.68 100.86 365.68 Z"/>
+      <path d="M 129.00 171.92 Q 129.00 81.92 207.67 125.63 L 363.67 212.29 Q 442.34 256.00 363.67 299.71 L 207.67 386.37 Q 129.00 430.08 129.00 340.08 Z"/>
     </clipPath>
     <mask id="otv-gaps" maskUnits="userSpaceOnUse">
       <rect width="512" height="512" fill="#fff"/>
       <g fill="#000" stroke="#000" stroke-width="11.00" stroke-linecap="round">
-        <line x1="220.67" y1="256.00" x2="100.86" y2="256.00"/>
-        <line x1="220.67" y1="256.00" x2="280.58" y2="156.16"/>
-        <line x1="220.67" y1="256.00" x2="280.58" y2="355.84"/>
-        <circle cx="220.67" cy="256.00" r="9.50"/>
+        <line x1="233.44" y1="256.00" x2="129.00" y2="256.00"/>
+        <line x1="233.44" y1="256.00" x2="285.67" y2="168.96"/>
+        <line x1="233.44" y1="256.00" x2="285.67" y2="343.04"/>
+        <circle cx="233.44" cy="256.00" r="9.50"/>
       </g>
     </mask>
   </defs>
   <g clip-path="url(#otv-play)" mask="url(#otv-gaps)">
-    <polygon fill="#FF8518" points="100.86,56.32 100.86,256.00 220.67,256.00 280.58,156.16"/>
-    <polygon fill="#FF6B00" points="460.29,256.00 280.58,156.16 220.67,256.00 280.58,355.84"/>
-    <polygon fill="#FFA030" points="100.86,455.68 280.58,355.84 220.67,256.00 100.86,256.00"/>
+    <polygon fill="#FF8518" points="129.00,81.92 129.00,256.00 233.44,256.00 285.67,168.96"/>
+    <polygon fill="#FF6B00" points="442.34,256.00 285.67,168.96 233.44,256.00 285.67,343.04"/>
+    <polygon fill="#FFA030" points="129.00,430.08 285.67,343.04 233.44,256.00 129.00,256.00"/>
   </g>
 </svg>
